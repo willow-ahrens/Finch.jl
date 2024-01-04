@@ -38,20 +38,28 @@ export Scalar, SparseScalar, ShortCircuitScalar, SparseShortCircuitScalar
 export walk, gallop, follow, extrude, laminate
 export fiber, fiber!, Fiber!, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
-export offset, permissive, protocolize, swizzle, toeplitz, window
+export scale, product, offset, permissive, protocolize, swizzle, toeplitz, window
 
 export choose, minby, maxby, overwrite, initwrite, d
 
 export default, AsArray
 
 export parallelAnalysis, ParallelAnalysisResults
-export parallel, extent, dimless
+export parallel, realextent, extent, dimless
 export CPU, CPULocalVector, CPULocalMemory
 
-include("base/limits.jl")
 export Limit
 
-include("util.jl")
+struct FinchProtocolError <: Exception
+    msg::String
+end
+
+struct FinchExtensionError <: Exception
+    msg::String
+end
+
+include("util/util.jl")
+include("util/limits.jl")
 
 include("environment.jl")
 include("FinchNotation/FinchNotation.jl")
@@ -115,6 +123,8 @@ include("tensors/combinators/offset.jl")
 include("tensors/combinators/toeplitz.jl")
 include("tensors/combinators/windowed.jl")
 include("tensors/combinators/swizzle.jl")
+include("tensors/combinators/scale.jl")
+include("tensors/combinators/product.jl")
 
 
 include("traits.jl")
@@ -126,14 +136,15 @@ export ftnsread, ftnswrite, fttread, fttwrite
 
 export moveto
 
-include("base/abstractarrays.jl")
-include("base/abstractunitranges.jl")
-include("base/broadcast.jl")
-include("base/index.jl")
-include("base/mapreduce.jl")
-include("base/compare.jl")
-include("base/copy.jl")
-include("base/fsparse.jl")
+include("interface/abstractarrays.jl")
+include("interface/abstractunitranges.jl")
+include("interface/broadcast.jl")
+include("interface/index.jl")
+include("interface/mapreduce.jl")
+include("interface/compare.jl")
+include("interface/copy.jl")
+include("interface/fsparse.jl")
+include("interface/fileio/fileio.jl")
 
 @static if !isdefined(Base, :get_extension)
     function __init__()
@@ -160,7 +171,5 @@ end
 
     end
 end
-
-include("fileio/fileio.jl")
 
 end

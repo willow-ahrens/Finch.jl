@@ -28,11 +28,11 @@ Finch.bspwrite_header(g::NPYPath, str::String) = write(joinpath(mkpath(g.dirname
 Finch.bspread_vector(g::NPYPath, key) = g[key]
 Finch.bspwrite_vector(g::NPYPath, vec, key) = (g[key] = vec)
 
-function Finch.bspread_bspnpy(fname)
+function Finch.bspread_bspnpy(fname::AbstractString)
     bspread(NPYPath(fname))
 end
 
-function Finch.bspwrite_bspnpy(fname, arr, attrs = OrderedDict())
+function Finch.bspwrite_bspnpy(fname::AbstractString, arr, attrs = OrderedDict())
     bspwrite(NPYPath(fname), arr, attrs)
     fname
 end

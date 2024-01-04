@@ -10,7 +10,11 @@ using BenchmarkTools
 using MatrixDepot
 using SparseArrays
 
-include(joinpath(@__DIR__, "../apps/apps.jl"))
+include(joinpath(@__DIR__, "../docs/examples/bfs.jl"))
+include(joinpath(@__DIR__, "../docs/examples/pagerank.jl"))
+include(joinpath(@__DIR__, "../docs/examples/shortest_paths.jl"))
+include(joinpath(@__DIR__, "../docs/examples/spgemm.jl"))
+include(joinpath(@__DIR__, "../docs/examples/triangle_counting.jl"))
 
 SUITE = BenchmarkGroup()
 
@@ -39,44 +43,22 @@ let
     end
 end
 
-SUITE["embed"] = BenchmarkGroup()
-
-libembedbenchmarks_file = joinpath(@__DIR__, "libembedbenchmarks.so")
-if isfile(libembedbenchmarks_file)
-    Base.Libc.Libdl.dlopen(libembedbenchmarks_file)
-
-    ccall((:benchmarks_initialize, "libembedbenchmarks.so"), Cvoid, ())
-
-    function sample_spmv_tiny((), params::BenchmarkTools.Parameters)
-        evals = params.evals
-        sample_time = ccall((:benchmark_spmv_tiny, "libembedbenchmarks.so"), Clong, (Cint,), evals)
-        time = max((sample_time / evals) - params.overhead, 0.001)
-        gctime = memory = allocs = return_val = 0
-        return time, gctime, memory, allocs, return_val
-    end
-
-    SUITE["embed"]["spmv_tiny"] = BenchmarkTools.Benchmark(sample_spmv_tiny, (), BenchmarkTools.Parameters())
-
-    #TODO how to call this at the right time?
-    #println(ccall((:benchmarks_finalize, "libembedbenchmarks.so"), Cvoid, ()))
-end
-
 SUITE["graphs"] = BenchmarkGroup()
 
 SUITE["graphs"]["pagerank"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
-    SUITE["graphs"]["pagerank"][mtx] = @benchmarkable FinchApps.pagerank($(pattern!(fiber(SparseMatrixCSC(matrixdepot(mtx)))))) 
+    SUITE["graphs"]["pagerank"][mtx] = @benchmarkable pagerank($(pattern!(fiber(SparseMatrixCSC(matrixdepot(mtx)))))) 
 end
 
 SUITE["graphs"]["bfs"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
-    SUITE["graphs"]["bfs"][mtx] = @benchmarkable FinchApps.bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
+    SUITE["graphs"]["bfs"][mtx] = @benchmarkable bfs($(fiber(SparseMatrixCSC(matrixdepot(mtx))))) 
 end
 
 SUITE["graphs"]["bellmanford"] = BenchmarkGroup()
 for mtx in ["Newman/netscience", "SNAP/roadNet-CA"]
     A = redefault!(fiber(SparseMatrixCSC(matrixdepot(mtx))), Inf)
-    SUITE["graphs"]["bellmanford"][mtx] = @benchmarkable FinchApps.bellmanford($A)
+    SUITE["graphs"]["bellmanford"][mtx] = @benchmarkable bellmanford($A)
 end
 
 SUITE["matrices"] = BenchmarkGroup()
@@ -84,48 +66,48 @@ SUITE["matrices"] = BenchmarkGroup()
 SUITE["matrices"]["ATA_spgemm_inner"] = BenchmarkGroup()
 for mtx in []#"SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
     A = fiber(permutedims(SparseMatrixCSC(matrixdepot(mtx))))
-    SUITE["matrices"]["ATA_spgemm_inner"][mtx] = @benchmarkable FinchApps.spgemm_inner($A, $A) 
+    SUITE["matrices"]["ATA_spgemm_inner"][mtx] = @benchmarkable spgemm_inner($A, $A) 
 end
 
 SUITE["matrices"]["ATA_spgemm_gustavson"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1"]#], "SNAP/soc-LiveJournal1"]
     A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
-    SUITE["matrices"]["ATA_spgemm_gustavson"][mtx] = @benchmarkable FinchApps.spgemm_gustavson($A, $A) 
+    SUITE["matrices"]["ATA_spgemm_gustavson"][mtx] = @benchmarkable spgemm_gustavson($A, $A) 
 end
 
 SUITE["matrices"]["ATA_spgemm_outer"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
-    SUITE["matrices"]["ATA_spgemm_outer"][mtx] = @benchmarkable FinchApps.spgemm_outer($A, $A) 
+    SUITE["matrices"]["ATA_spgemm_outer"][mtx] = @benchmarkable spgemm_outer($A, $A) 
 end
 
 SUITE["indices"] = BenchmarkGroup()
 
 function spmv32(A, x)
-    y = Fiber!(Dense{Int32}(Element(0.0)))
+    y = Fiber!(Dense{Int32}(Element{0.0, Float64, Int32}()))
     @finch (y .= 0; for i=_, j=_; y[i] += A[j, i] * x[j] end)
     return y
 end
 
 SUITE["indices"]["SpMV_32"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
-    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
-    A = copyto!(Fiber!(Dense{Int32}(SparseList{Int32, Int32}(Element(0.0)))), A)
-    x = copyto!(Fiber!(Dense{Int32}(Element(0.0))), rand(size(A)[2]))
+    A = SparseMatrixCSC(matrixdepot(mtx))
+    A = Fiber!(Dense{Int32}(SparseList{Int32}(Element{0.0, Float64, Int32}())), A)
+    x = Fiber!(Dense{Int32}(Element{0.0, Float64, Int32}()), rand(size(A)[2]))
     SUITE["indices"]["SpMV_32"][mtx] = @benchmarkable spmv32($A, $x) 
 end
 
 function spmv64(A, x)
-    y = Fiber!(Dense{Int64}(Element(0.0)))
+    y = Fiber!(Dense{Int64}(Element{0.0, Float64, Int64}()))
     @finch (y .= 0; for i=_, j=_; y[i] += A[j, i] * x[j] end)
     return y
 end
 
 SUITE["indices"]["SpMV_64"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
-    A = fiber(SparseMatrixCSC(matrixdepot(mtx)))
-    A = copyto!(Fiber!(Dense{Int64}(SparseList{Int64, Int64}(Element(0.0)))), A)
-    x = copyto!(Fiber!(Dense{Int64}(Element(0.0))), rand(size(A)[2]))
+    A = SparseMatrixCSC(matrixdepot(mtx))
+    A = Fiber!(Dense{Int64}(SparseList{Int64}(Element{0.0, Float64, Int64}())), A)
+    x = Fiber!(Dense{Int64}(Element{0.0, Float64, Int64}()), rand(size(A)[2]))
     SUITE["indices"]["SpMV_64"][mtx] = @benchmarkable spmv64($A, $x) 
 end
 

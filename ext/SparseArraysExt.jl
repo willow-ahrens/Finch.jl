@@ -3,7 +3,8 @@ module SparseArraysExt
 using Finch
 using Finch: AbstractCompiler, DefaultStyle, Extent
 using Finch: Unfurled, Furlable, Stepper, Jumper, Run, Fill, Lookup, Simplify, Sequence, Phase, Thunk, Spike 
-using Finch: virtual_size, virtual_default, getstart, getstop, freshen
+using Finch: virtual_size, virtual_default, getstart, getstop, freshen, SwizzleArray
+using Finch: FinchProtocolError
 using Finch.FinchNotation
 
 using Base: @kwdef
@@ -32,6 +33,36 @@ function Finch.fiber!(arr::SparseVector{Tv, Ti}; default=zero(Tv)) where {Tv, Ti
     @assert iszero(default)
     (n,) = size(arr)
     return Fiber(SparseList{Ti}(Element{zero(Tv)}(arr.nzval), n, [1, length(arr.nzind) + 1], arr.nzind))
+end
+
+"""
+    SparseMatrixCSC(arr::Union{Fiber, SwizzleArray})
+
+Construct a sparse matrix from a fiber or swizzle. May reuse the underlying storage if possible.
+"""
+function SparseArrays.SparseMatrixCSC(arr::Union{Fiber, SwizzleArray})
+    default(arr) === zero(eltype(arr)) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero default values, was given $(default(arr)) as default"))
+    return SparseMatrixCSC(Fiber!(Dense(SparseList(Element(0.0))), arr))
+end
+
+function SparseArrays.SparseMatrixCSC(arr::Fiber{<:Dense{Ti, <:SparseList{Ti, Ptr, Idx, <:Element{D, Tv}}}}) where {D, Ti, Ptr, Idx, Tv}
+    D === zero(Tv) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero default values, was given $D as default"))
+    return SparseMatrixCSC{Tv, Ti}(size(arr)..., arr.lvl.lvl.ptr, arr.lvl.lvl.idx, arr.lvl.lvl.lvl.val)
+end
+
+"""
+    sparse(arr::Union{Fiber, SwizzleArray})
+
+Construct a SparseArray from a Fiber or Swizzle. May reuse the underlying storage if possible.
+"""
+function SparseArrays.sparse(fbr::Union{Fiber, SwizzleArray})
+    if ndims(fbr) == 1
+        return SparseVector(fbr)
+    elseif ndims(fbr) == 2
+        return SparseMatrixCSC(fbr)
+    else
+        throw(ArgumentError("SparseArrays, a Julia stdlib, only supports 1-D and 2-D arrays, was given a $(ndims(fbr))-D array"))
+    end
 end
 
 @kwdef mutable struct VirtualSparseMatrixCSC
@@ -123,7 +154,7 @@ function Finch.instantiate(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, m
 end
 
 function Finch.instantiate(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, mode::Updater, subprotos, protos...)
-    throw(Finch.FinchProtocolError("Finch does not support writes to SparseMatrixCSC"))
+    throw(FinchProtocolError("Finch does not support writes to SparseMatrixCSC"))
 end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseMatrixCSC) = virtual(x)
@@ -131,6 +162,20 @@ Finch.FinchNotation.finch_leaf(x::VirtualSparseMatrixCSC) = virtual(x)
 Finch.virtual_default(arr::VirtualSparseMatrixCSC, ctx) = zero(arr.Tv)
 Finch.virtual_eltype(tns::VirtualSparseMatrixCSC, ctx) = tns.Tv
 
+"""
+    SparseVector(arr::Union{Fiber, SwizzleArray})
+
+Construct a sparse matrix from a fiber or swizzle. May reuse the underlying storage if possible.
+"""
+function SparseArrays.SparseVector(arr::Union{Fiber, SwizzleArray})
+    default(arr) === zero(eltype(arr)) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero default values, was given $(default(arr)) as default"))
+    return SparseVector(Fiber!(SparseList(Element(0.0)), arr))
+end
+
+function SparseArrays.SparseVector(arr::Fiber{<:SparseList{Ti, Ptr, Idx, <:Element{D, Tv}}}) where {Ti, Ptr, Idx, Tv, D}
+    D === zero(Tv) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero default values, was given $D as default"))
+    return SparseVector{Tv, Ti}(size(arr)..., arr.lvl.idx, arr.lvl.lvl.val)
+end
 @kwdef mutable struct VirtualSparseVector
     ex
     Tv
@@ -216,7 +261,7 @@ function Finch.instantiate(arr::VirtualSparseVector, ctx::AbstractCompiler, mode
 end
 
 function Finch.instantiate(arr::VirtualSparseVector, ctx::AbstractCompiler, mode::Updater, subprotos)
-    throw(Finch.FinchProtocolError("Finch does not support writes to SparseVector"))
+    throw(FinchProtocolError("Finch does not support writes to SparseVector"))
 end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseVector) = virtual(x)

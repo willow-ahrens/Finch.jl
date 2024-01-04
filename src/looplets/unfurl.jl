@@ -11,9 +11,6 @@ FinchNotation.finch_leaf(x::Furlable) = virtual(x)
 #    print(io, "Furlable()")
 #end
 
-struct FinchProtocolError <: Exception
-    msg::String
-end
 
 """
     unfurl(tns, ctx, ext, protos...)

@@ -18,7 +18,7 @@ concordant traversal of a sparse matrix, as the outer loops access the higher
 levels of the fiber tree:
 
 ```jldoctest example1; setup=:(using Finch)
-A = Fiber!(Dense(SparseList(Element(0.0))), fsparse(([2, 3, 4, 1, 3], [1, 1, 1, 3, 3]), [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
+A = Fiber!(Dense(SparseList(Element(0.0))), fsparse([2, 3, 4, 1, 3], [1, 1, 1, 3, 3], [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
 s = Scalar(0.0)
 @finch for j=_, i=_ ; s[] += A[i, j] end
 
@@ -55,19 +55,24 @@ quote
         end
         phase_stop = min(A_lvl_2_i1, A_lvl_2.shape)
         if phase_stop >= 1
-            i = 1
             if A_lvl_idx[A_lvl_2_q] < 1
                 A_lvl_2_q = Finch.scansearch(A_lvl_idx, 1, A_lvl_2_q, A_lvl_2_q_stop - 1)
             end
-            while i <= phase_stop
+            while true
                 A_lvl_2_i = A_lvl_idx[A_lvl_2_q]
-                phase_stop_2 = min(phase_stop, A_lvl_2_i)
-                if A_lvl_2_i == phase_stop_2
+                if A_lvl_2_i < phase_stop
                     A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                     s_val = A_lvl_3_val + s_val
                     A_lvl_2_q += 1
+                else
+                    phase_stop_3 = min(A_lvl_2_i, phase_stop)
+                    if A_lvl_2_i == phase_stop_3
+                        A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
+                        s_val = s_val + A_lvl_3_val
+                        A_lvl_2_q += 1
+                    end
+                    break
                 end
-                i = phase_stop_2 + 1
             end
         end
     end
@@ -112,19 +117,24 @@ quote
             end
             phase_stop = min(i_3, A_lvl_2_i1)
             if phase_stop >= i_3
-                s_2 = i_3
                 if A_lvl_idx[A_lvl_2_q] < i_3
                     A_lvl_2_q = Finch.scansearch(A_lvl_idx, i_3, A_lvl_2_q, A_lvl_2_q_stop - 1)
                 end
-                while s_2 <= phase_stop
+                while true
                     A_lvl_2_i = A_lvl_idx[A_lvl_2_q]
-                    phase_stop_2 = min(phase_stop, A_lvl_2_i)
-                    if A_lvl_2_i == phase_stop_2
+                    if A_lvl_2_i < phase_stop
                         A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                         s_val = A_lvl_3_val + s_val
                         A_lvl_2_q += 1
+                    else
+                        phase_stop_3 = min(A_lvl_2_i, phase_stop)
+                        if A_lvl_2_i == phase_stop_3
+                            A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
+                            s_val = s_val + A_lvl_3_val
+                            A_lvl_2_q += 1
+                        end
+                        break
                     end
-                    s_2 = phase_stop_2 + 1
                 end
             end
         end
@@ -146,7 +156,7 @@ For example, if `A` is `m × n` with `nnz` nonzeros, the following Finch kernel 
 densify `B`, filling it with `m * n` stored values:
 
 ```jldoctest example1
-A = Fiber!(Dense(SparseList(Element(0.0))), fsparse(([2, 3, 4, 1, 3], [1, 1, 1, 3, 3]), [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
+A = Fiber!(Dense(SparseList(Element(0.0))), fsparse([2, 3, 4, 1, 3], [1, 1, 1, 3, 3], [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
 B = Fiber!(Dense(SparseList(Element(0.0)))) #DO NOT DO THIS, B has the wrong fill value
 @finch (B .= 0; for j=_, i=_; B[i, j] = A[i, j] + 1 end)
 countstored(B)
@@ -159,7 +169,7 @@ countstored(B)
 Since `A` is filled with `0.0`, adding `1` to the fill value produces `1.0`. However, `B` can only represent a fill value of `0.0`. Instead, we should specify `1.0` for the fill.
 
 ```jldoctest example1
-A = Fiber!(Dense(SparseList(Element(0.0))), fsparse(([2, 3, 4, 1, 3], [1, 1, 1, 3, 3]), [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
+A = Fiber!(Dense(SparseList(Element(0.0))), fsparse([2, 3, 4, 1, 3], [1, 1, 1, 3, 3], [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
 B = Fiber!(Dense(SparseList(Element(1.0))))
 @finch (B .= 1; for j=_, i=_; B[i, j] = A[i, j] + 1 end)
 countstored(B)
@@ -176,7 +186,7 @@ program variables. Continuing our above example, if we obscure the value of `1`
 behind a variable `x`, Finch can only determine that `x` has type `Int`, not that it is `1`.
 
 ```jldoctest example1
-A = Fiber!(Dense(SparseList(Element(0.0))), fsparse(([2, 3, 4, 1, 3], [1, 1, 1, 3, 3]), [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
+A = Fiber!(Dense(SparseList(Element(0.0))), fsparse([2, 3, 4, 1, 3], [1, 1, 1, 3, 3], [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
 B = Fiber!(Dense(SparseList(Element(1.0))))
 x = 1 #DO NOT DO THIS, Finch cannot see the value of x anymore
 @finch (B .= 1; for j=_, i=_; B[i, j] = A[i, j] + x end)
@@ -202,7 +212,7 @@ Unless you declare the properties of your functions using Finch's [Custom Functi
 the meaning of `*`.
 
 ```jldoctest example1
-A = Fiber!(Dense(SparseList(Element(0.0))), fsparse(([2, 3, 4, 1, 3], [1, 1, 1, 3, 3]), [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
+A = Fiber!(Dense(SparseList(Element(0.0))), fsparse([2, 3, 4, 1, 3], [1, 1, 1, 3, 3], [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
 B = ones(4, 3)
 C = Scalar(0.0)
 f(x, y) = x * y # DO NOT DO THIS, Obscures *
@@ -235,6 +245,9 @@ quote
     B_mode2_stop == A_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(B_mode2_stop) != $(A_lvl.shape))"))
     C_val = 0
     for j_4 = 1:B_mode2_stop
+        sugar_2 = size(B)
+        B_mode1_stop = sugar_2[1]
+        B_mode2_stop = sugar_2[2]
         A_lvl_q = (1 - 1) * A_lvl.shape + j_4
         A_lvl_2_q = A_lvl_ptr[A_lvl_q]
         A_lvl_2_q_stop = A_lvl_ptr[A_lvl_q + 1]
@@ -249,28 +262,57 @@ quote
             if A_lvl_idx[A_lvl_2_q] < 1
                 A_lvl_2_q = Finch.scansearch(A_lvl_idx, 1, A_lvl_2_q, A_lvl_2_q_stop - 1)
             end
-            while i <= phase_stop
+            while true
                 A_lvl_2_i = A_lvl_idx[A_lvl_2_q]
-                phase_stop_2 = min(phase_stop, A_lvl_2_i)
-                if A_lvl_2_i == phase_stop_2
-                    for i_6 = i:phase_stop_2 - 1
-                        C_val = f(0.0, B[i_6, j_4]) + C_val
+                if A_lvl_2_i < phase_stop
+                    for i_6 = i:A_lvl_2_i - 1
+                        val = B[i_6, j_4]
+                        C_val = f(0.0, val) + C_val
                     end
                     A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
-                    C_val = C_val + f(A_lvl_3_val, B[phase_stop_2, j_4])
+                    sugar_4 = size(B)
+                    B_mode1_stop = sugar_4[1]
+                    B_mode2_stop = sugar_4[2]
+                    val = B[A_lvl_2_i, j_4]
+                    C_val = C_val + f(A_lvl_3_val, val)
                     A_lvl_2_q += 1
+                    i = A_lvl_2_i + 1
                 else
-                    for i_8 = i:phase_stop_2
-                        C_val = f(0.0, B[i_8, j_4]) + C_val
+                    phase_stop_3 = min(A_lvl_2_i, phase_stop)
+                    if A_lvl_2_i == phase_stop_3
+                        for i_8 = i:phase_stop_3 - 1
+                            val = B[i_8, j_4]
+                            C_val = C_val + f(0.0, val)
+                        end
+                        A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
+                        sugar_6 = size(B)
+                        B_mode1_stop = sugar_6[1]
+                        B_mode2_stop = sugar_6[2]
+                        val = B[phase_stop_3, j_4]
+                        C_val = C_val + f(A_lvl_3_val, val)
+                        A_lvl_2_q += 1
+                    else
+                        for i_10 = i:phase_stop_3
+                            sugar_7 = size(B)
+                            B_mode1_stop = sugar_7[1]
+                            B_mode2_stop = sugar_7[2]
+                            val = B[i_10, j_4]
+                            C_val = C_val + f(0.0, val)
+                        end
                     end
+                    i = phase_stop_3 + 1
+                    break
                 end
-                i = phase_stop_2 + 1
             end
         end
         phase_start_3 = max(1, 1 + A_lvl_2_i1)
         if B_mode1_stop >= phase_start_3
-            for i_10 = phase_start_3:B_mode1_stop
-                C_val = f(0.0, B[i_10, j_4]) + C_val
+            for i_12 = phase_start_3:B_mode1_stop
+                sugar_8 = size(B)
+                B_mode1_stop = sugar_8[1]
+                B_mode2_stop = sugar_8[2]
+                val = B[i_12, j_4]
+                C_val = C_val + f(0.0, val)
             end
         end
     end

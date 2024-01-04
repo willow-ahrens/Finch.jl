@@ -2,7 +2,7 @@ using Finch: AsArray
 
 @testset "base" begin
     @info "Testing Julia Base Functions"
-    A = Fiber!(SparseList(Element(0.0)), fsparse(([1, 3, 5, 7, 9],), [2.0, 3.0, 4.0, 5.0, 6.0], (10,)))
+    A = Fiber!(SparseList(Element(0.0)), fsparse([1, 3, 5, 7, 9], [2.0, 3.0, 4.0, 5.0, 6.0], (10,)))
     B = Fiber!(SparseList(Element(0.0)), A)
     @test A == B
 
@@ -119,5 +119,37 @@ using Finch: AsArray
         @repl io countstored(A)
         
         @test check_output("countstored.txt", String(take!(io)))
+    end
+
+    let
+        io = IOBuffer()
+        println(io, "+,-, *, / tests")
+
+        @repl io A = Fiber!(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        @repl io A + 1
+        @repl io 1 + A 
+        @repl io A + A 
+        @repl io 2 * A 
+        @repl io A * 3
+        @repl io A / 3
+        @repl io 3 / A
+        
+        @test check_output("asmd.txt", String(take!(io)))
+    end
+
+    let
+        A_ref = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
+        A_ref = A_ref * floatmax()/sum(A_ref)
+        A= Fiber!(Dense(SparseList(Element(0.0))), A_ref)
+        @test sum(A) == sum(A_ref)
+        @test minimum(A) == minimum(A_ref)
+        @test maximum(A) == maximum(A_ref)
+        @test extrema(A) == extrema(A_ref)
+        @test norm(A) == norm(A_ref)
+        @test norm(A, -Inf) == norm(A_ref, -Inf)
+        @test norm(A, 0) == norm(A_ref, 0)
+        @test norm(A, 1) == norm(A_ref, 1)
+        @test norm(A, 1.5) == norm(A_ref, 1.5)
+        @test norm(A, Inf) == norm(A_ref, Inf)
     end
 end

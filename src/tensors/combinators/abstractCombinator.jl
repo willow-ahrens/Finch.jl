@@ -1,6 +1,7 @@
 abstract type AbstractCombinator end
 abstract type AbstractVirtualCombinator <: AbstractVirtualTensor end
 
+
 #=
 """
     is_laminable(tns, ctx, protos)

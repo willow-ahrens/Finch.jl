@@ -266,9 +266,9 @@
         Fiber!(Dense(SparseHash{1}(Element(0.0))))
         Fiber!(Dense(SparseByteMap(Element(0.0))))
     ]
-        arr_1 = fsprand((10, 10), 0.5)
+        arr_1 = fsprand(10, 10, 0.5)
         fmt = copyto!(fmt, arr_1)
-        arr_2 = fsprand((10, 10), 0.5)
+        arr_2 = fsprand(10, 10, 0.5)
         check_output("increment_to_$(summary(fmt)).jl", @finch_code begin
             for j = _
                 for i = _

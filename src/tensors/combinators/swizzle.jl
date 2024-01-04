@@ -74,7 +74,7 @@ getroot(tns::VirtualSwizzleArray) = getroot(tns.body)
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualSwizzleArray)
     if !isempty(node.idxs)
-        error("oh no! $node")
+        error("SwizzleArray not lowered completely")
     end
     lower_access(ctx, node, tns.body)
 end

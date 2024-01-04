@@ -57,7 +57,7 @@ end
 
 function main()
     for i = 1:10
-        A2 = Fiber!(Dense(SparseList(Element(0.0))), fsprand((10, 10), 0.1))
+        A2 = Fiber!(Dense(SparseList(Element(0.0))), fsprand(10, 10, 0.1))
         x2 = Fiber!(Dense(Element(0.0)), rand(10))
         y2 = Fiber!(Dense(Element(0.0)))
         spmv(y2, A2, x2)

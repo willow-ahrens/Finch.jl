@@ -4,62 +4,72 @@
 [ddocs]:https://willow-ahrens.github.io/Finch.jl/dev
 [ci]:https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml?query=branch%3Amain
 [cov]:https://codecov.io/gh/willow-ahrens/Finch.jl
-[tool]:https://mybinder.org/v2/gh/willow-ahrens/Finch.jl/gh-pages?labpath=dev%2Finteractive.ipynb
+[example]:https://github.com/willow-ahrens/Finch.jl/tree/main/docs/examples
 
 [docs_ico]:https://img.shields.io/badge/docs-stable-blue.svg
 [ddocs_ico]:https://img.shields.io/badge/docs-dev-blue.svg
 [ci_ico]:https://github.com/willow-ahrens/Finch.jl/actions/workflows/CI.yml/badge.svg?branch=main
 [cov_ico]:https://codecov.io/gh/willow-ahrens/Finch.jl/branch/main/graph/badge.svg
-[tool_ico]:https://mybinder.org/badge_logo.svg
+[example_ico]:https://img.shields.io/badge/examples-docs%2Fexamples-blue.svg
 
-| **Documentation**                             | **Build Status**                      | **Try It Online!**    |
+| **Documentation**                             | **Build Status**                      | **Examples**    |
 |:---------------------------------------------:|:-------------------------------------:|:---------------------:|
-| [![][docs_ico]][docs] [![][ddocs_ico]][ddocs] | [![][ci_ico]][ci] [![][cov_ico]][cov] | [![][tool_ico]][tool] |
+| [![][docs_ico]][docs] [![][ddocs_ico]][ddocs] | [![][ci_ico]][ci] [![][cov_ico]][cov] | [![][example_ico]][example] |
 
-Finch is a adaptable Julia-to-Julia compiler for loop nests over sparse or
-structured multidimensional arrays.  Finch allows you to write `for`-loops as if
-they are dense, but compile them to be sparse! Finch compiles the loops based on
-the structure of the data. The compiler takes care of applying rules like `x * 0
-=> 0` and the like to avoid redundant computation. 
+Finch is a cutting-edge Julia-to-Julia compiler specially designed for optimizing loop nests over sparse or structured multidimensional arrays. Finch empowers users to write conventional `for` loops which are transformed behind-the-scenes into fast sparse code.
 
-| **Features**                             | **Syntax (e.g. ...)** |
-|:---------------------------------------------:|:------------------:|
-| Major Sparse Formats (CSC, CSF, COO, Hash, Bytemap, Dense Triangular) |  `Fiber!(Dense(SparseList(Element(0.0)))`|
-| RLE (Run Length Encoding) and Sparse RLE |  `Fiber!(Dense(RepeatRLE(0.0)))`|
-| Arbitrary Fill Values Other Than Zero |  `Fiber!(SparseList(Element(1.0)))`|
-| Arbitrary Operators |  `x[] <<min>>= y[i] + z[i]`|
-| Multiple Outputs |  `x[] <<min>>= y; z[] <<max>>=y`|
+## Key Features
+
+- **Ease of Writing**: Maintain readable, dense loop structures in your code, and let Finch handle the complexities of sparse data manipulation.
+- **Smart Compilation**: Finch’s compiler is intuitive and modular, applying optimizations such as constant propagation and term rewriting. Rules like `x * 0 => 0` eliminate unnecessary computations in sparse code automatically.
+- **Wide Format Support**: Seamlessly works with major sparse formats (CSC, CSF, COO, Hash, Bytemap, Dense Triangular) and unique structures like Run Length Encoding or user-defined background (zero) values.
+- **Enhanced Control Structures**: Introduces flexibility in computations by supporting conditionals, multiple outputs, and even user-defined types and functions.
+
+### Comprehensive Sparse Formats
+
+Finch supports a wide variety of array structure beyond sparsity. Whether you're dealing with [custom background (zero) values](https://en.wikipedia.org/wiki/GraphBLAS), [run-length encoding](https://en.wikipedia.org/wiki/Run-length_encoding), or matrices with [special structures](https://en.wikipedia.org/wiki/Sparse_matrix#Special_structure) like banded or triangular matrices, Finch’s compiler can understand and optimize various data patterns and computational rules to adapt to the structure of data.
+
+### Supported Syntax and Structures
+
+| Feature/Structure | Example Usage |
+|-------------------|---------------|
+| Major Sparse Formats and Structured Arrays |  `A = Fiber!(Dense(SparseList(Element(0.0)))`|
+| Background Values Other Than Zero |  `B = Fiber!(SparseList(Element(1.0)))`|
+| Broadcasts and Reductions |  `sum(A .* B)`|
+| Custom Operators |  `x[] <<min>>= y[i] + z[i]`|
+| Multiple Outputs |  `x[] <<min>>= y[i]; z[] <<max>>= y[i]`|
 | Multicore Parallelism |  `for i = parallel(1:100)`|
 | Conditionals |  `if dist[] < best_dist[]`|
-| Convolution |  `A[i + j]`|
-| Concatenation |  `coalesce(A[~i], B[~i - size(A, 1)])`|
+| Affine Indexing (e.g. Convolution) |  `A[i + j]`|
 
-In addition to supporting [sparse
-arrays](https://en.wikipedia.org/wiki/Sparse_matrix), Finch can also handle
-[custom operators and fill values other than
-zero](https://en.wikipedia.org/wiki/GraphBLAS),
-[runs](https://en.wikipedia.org/wiki/Run-length_encoding) of repeated values, or
-even [special
-structures](https://en.wikipedia.org/wiki/Sparse_matrix#Special_structure) such
-as clustered nonzeros or triangular patterns. Finch also supports
-`if`-statements and custom user types and functions.  Users can add rewrite
-rules to inform the compiler about any special user-defined properties or
-optimizations.  You can even modify indexing expressions to express sparse
-convolution, or to describe windows into structured arrays.
+## Who Should Use Finch.jl?
 
+### Sparse Kernel Developers:
+If you often find yourself needing to write sparse code for unusual or specific problems that don't have existing library solutions, Finch.jl is for you. Finch lets you outline a high-level plan and then compiles it into efficient code, making your task much easier.
 
-As an example, here's a program which calculates the minimum, maximum, sum, and
-variance of a sparse vector, reading the vector only once, and only reading
-nonzero values:
+### Custom Array Enthusiasts:
+If you're trying to implement a new array type (e.g. blocked, padded, ragged, etc...), Finch can help. You can use the Finch tensor interface to describe the structure of the array, and Finch will take care of creating a full implementation. This includes functionalities like getindex, map, reduce, and more, all of which will work inside other Finch kernels.
 
-````julia
+### Users Seeking Convenience for Sparse Operations:
+If you need flexible and convenient support for sparse array operations, Finch.jl may be a good choice. The formats in Finch can adapt to many use cases, and it supports high-level commands like broadcast and reduce. By understanding how Finch generates implementations, you can get decent performance for a variety of problems.
+
+Note: Finch is currently optimized for sparse code and does not implement traditional dense optimizations. We are currently adding these features, but if you need dense performance, you may want to look at [LoopVectorization.jl](https://github.com/JuliaSIMD/LoopVectorization.jl) [Tullio.jl](https://github.com/mcabbott/Tullio.jl) or [JuliaGPU](https://github.com/JuliaGPU)
+
+## Quick Start: Examples
+
+### Calculating Sparse Vector Statistics
+
+Below is a Julia program using Finch to compute the minimum, maximum, sum, and variance of a sparse vector. This program efficiently reads the vector once, focusing only on nonzero values.
+
+```julia
 using Finch
 
-X = Fiber!(SparseList(Element(0.0)), fsprand((10,), 0.5))
+X = Fiber!(SparseList(Element(0.0)), fsprand(10, 0.5))
 x_min = Scalar(Inf)
 x_max = Scalar(-Inf)
 x_sum = Scalar(0.0)
 x_var = Scalar(0.0)
+
 @finch begin
     for i = _
         let x = X[i]
@@ -70,33 +80,24 @@ x_var = Scalar(0.0)
         end
     end
 end;
-````
+```
 
-Array formats in Finch are described recursively mode by mode.  Semantically, an
-array in Finch can be understood as a tree, where each level in the tree
-corresponds to a dimension and each edge corresponds to an index. For example,
-`Fiber!(Dense(SparseList(Element(0.0))))` constructs a `Float64` CSC-format sparse matrix, and
-`Fiber!(SparseList(SparseList(Element(0.0))))` constructs a DCSC-format hypersparse matrix. As another
-example, here's a column-major sparse matrix-vector multiply:
+### Sparse Matrix-Vector Multiplication
 
-````julia
+As a more traditional example, what follows is a sparse matrix-vector multiplication using a column-major approach.
+
+```julia
 x = Fiber!(Dense(Element(0.0)), rand(42));
-A = Fiber!(Dense(SparseList(Element(0.0))), fsprand((42, 42), 0.1));
+A = Fiber!(Dense(SparseList(Element(0.0))), fsprand(42, 42, 0.1));
 y = Fiber!(Dense(Element(0.0)));
+
 @finch begin
     y .= 0
     for j=_, i=_
         y[i] += A[i, j] * x[j]
     end
-end;
-````
-
-At it's heart, Finch is powered by a new domain specific language for
-coiteration, breaking structured iterators into control flow units we call
-**Looplets**. Looplets are lowered progressively with
-several stages for rewriting and simplification.
-
-The technologies enabling Finch are described in our [manuscript](https://doi.org/10.1145/3579990.3580020).
+end
+```
 
 # Installation
 
@@ -106,3 +107,11 @@ At the [Julia](https://julialang.org/downloads/) REPL, install the latest stable
 julia> using Pkg; Pkg.add("Finch")
 ````
 
+## Learn More
+
+At it's heart, Finch is powered by a new domain specific language for
+coiteration, breaking structured iterators into control flow units we call
+**Looplets**. Looplets are lowered progressively with
+several stages for rewriting and simplification.
+
+The technologies enabling Finch are described in our [manuscript](https://doi.org/10.1145/3579990.3580020).

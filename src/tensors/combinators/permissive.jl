@@ -166,7 +166,7 @@ end
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualPermissiveArray)
     if !isempty(node.idxs)
-        error("oh no! $node")
+        error("PermissiveArray not lowered completely")
     end
     lower_access(ctx, node, tns.body)
 end

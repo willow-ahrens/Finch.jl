@@ -17,21 +17,15 @@ function contain(f, ctx::LowerJulia; bindings = ctx.bindings, kwargs...)
 end
 
 struct StaticHash
-    counts::Dict{Any, Int}
+    counts::Dict{Tuple{Any, DataType}, UInt}
 end
-StaticHash() = StaticHash(Dict{Any, Int}())
+StaticHash() = StaticHash(Dict{Tuple{Any, DataType}, UInt}())
 
-function (h::StaticHash)(x)
-    if haskey(h.counts, x)
-        return h.counts[x]
-    else
-        return (h.counts[x] = UInt(length(h.counts)))
-    end
-end
+(h::StaticHash)(x) = get!(h.counts, (x, typeof(x)), UInt(length(h.counts)))
 
 (ctx::AbstractCompiler)(root) = ctx(root, Stylize(root, ctx)(root))
-#(ctx::AbstractCompiler)(root, style) = (display(root); display(style); lower(root, ctx, style))
 (ctx::AbstractCompiler)(root, style) = lower(root, ctx, style)
+#(ctx::AbstractCompiler)(root, style) = (println(); println(); display(root); display(style); lower(root, ctx, style))
 
 function open_scope(prgm, ctx::AbstractCompiler)
     ctx_2 = shallowcopy(ctx)

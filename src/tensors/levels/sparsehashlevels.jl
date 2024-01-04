@@ -277,7 +277,7 @@ function thaw_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos)
         $(lvl.ptr)[1] = 1
         $(lvl.qos_fill) = length($(lvl.tbl))
     end)
-    lvl.lvl = thaw_level!(lvl.lvl, ctx, call(*, pos, lvl.shape))
+    lvl.lvl = thaw_level!(lvl.lvl, ctx, value(lvl.qos_fill, Tp))
     return lvl
 end
 

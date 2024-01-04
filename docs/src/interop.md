@@ -1,22 +1,9 @@
 # Using Finch with Other Languages
 
-You can use Finch in other languages through our C interface! We also include
-convenience types for converting between 0-indexed and 1-indexed arrays.
-
-## finch.h
-
-Refer to
-[finch.h](https://github.com/willow-ahrens/Finch.jl/blob/main/embed/finch.h) for
-detailed documentation. The public functions include a few shortcuts for
-constructing finch datatypes, as well as convenience functions for calling Julia
-from C. Refer also to the [Julia
-documentation](https://docs.julialang.org/en/v1/manual/embedding/) for more
-general advice. Refer to the tests for a [working
-example](https://github.com/willow-ahrens/Finch.jl/blob/main/test/embed/test_embed_simple.c)
-of embedding in C. Note that calling `finch_init` will call `jl_init`, as well
-as initializing a few function pointers for the interface. Julia cannot see C
-references to Julia objects, so `finch.h` includes a few functions to introduce
-references on the Julia side that mirror C objects.
+You can use Finch in other languages through interfaces like
+[julia.h](https://docs.julialang.org/en/v1/manual/embedding/) or
+[PyJulia](https://github.com/JuliaPy/pyjulia), but sparse arrays require special
+considerations for converting between 0-indexed and 1-indexed arrays.
 
 ## 0-Index Compatibility
 

@@ -47,11 +47,10 @@ quote
         if X_lvl_idx[X_lvl_q] < 1
             X_lvl_q = Finch.scansearch(X_lvl_idx, 1, X_lvl_q, X_lvl_q_stop - 1)
         end
-        while i <= phase_stop
+        while true
             X_lvl_i = X_lvl_idx[X_lvl_q]
-            phase_stop_2 = min(phase_stop, X_lvl_i)
-            if X_lvl_i == phase_stop_2
-                cond = 0 < -i + phase_stop_2
+            if X_lvl_i < phase_stop
+                cond = 0 < -i + X_lvl_i
                 if cond
                     x_min_val = min(0.0, x_min_val)
                     x_max_val = max(0.0, x_max_val)
@@ -62,21 +61,38 @@ quote
                 x_sum_val = X_lvl_2_val + x_sum_val
                 x_var_val = X_lvl_2_val * X_lvl_2_val + x_var_val
                 X_lvl_q += 1
+                i = X_lvl_i + 1
             else
-                cond_2 = 0 < 1 + -i + phase_stop_2
-                if cond_2
-                    x_min_val = min(0.0, x_min_val)
-                    x_max_val = max(0.0, x_max_val)
+                phase_stop_3 = min(X_lvl_i, phase_stop)
+                if X_lvl_i == phase_stop_3
+                    cond_2 = 0 < -i + phase_stop_3
+                    if cond_2
+                        x_min_val = min(0.0, x_min_val)
+                        x_max_val = max(0.0, x_max_val)
+                    end
+                    X_lvl_2_val = X_lvl_val[X_lvl_q]
+                    x_min_val = min(X_lvl_2_val, x_min_val)
+                    x_max_val = max(X_lvl_2_val, x_max_val)
+                    x_sum_val = X_lvl_2_val + x_sum_val
+                    x_var_val = X_lvl_2_val * X_lvl_2_val + x_var_val
+                    X_lvl_q += 1
+                else
+                    cond_3 = 0 < 1 + -i + phase_stop_3
+                    if cond_3
+                        x_min_val = min(0.0, x_min_val)
+                        x_max_val = max(0.0, x_max_val)
+                    end
                 end
+                i = phase_stop_3 + 1
+                break
             end
-            i = phase_stop_2 + 1
         end
     end
     phase_start_3 = max(1, 1 + X_lvl_i1)
-    phase_stop_3 = X_lvl.shape
-    if phase_stop_3 >= phase_start_3
-        cond_3 = 0 < 1 + -phase_start_3 + phase_stop_3
-        if cond_3
+    phase_stop_4 = X_lvl.shape
+    if phase_stop_4 >= phase_start_3
+        cond_4 = 0 < 1 + -phase_start_3 + phase_stop_4
+        if cond_4
             x_min_val = min(0.0, x_min_val)
             x_max_val = max(0.0, x_max_val)
         end

@@ -22,14 +22,12 @@ begin
     end
     phase_stop = min(tmp_lvl_i_stop, tmp_lvl.shape)
     if phase_stop >= 1
-        i = 1
         while tmp_lvl_r + 1 < tmp_lvl_r_stop && last(tmp_lvl_srt[tmp_lvl_r]) < 1
             tmp_lvl_r += 1
         end
-        while i <= phase_stop
+        while true
             tmp_lvl_i = last(tmp_lvl_srt[tmp_lvl_r])
-            phase_stop_2 = min(phase_stop, tmp_lvl_i)
-            if tmp_lvl_i == phase_stop_2
+            if tmp_lvl_i < phase_stop
                 tmp_lvl_q = (1 - 1) * tmp_lvl.shape + tmp_lvl_i
                 tmp_lvl_2_val = tmp_lvl_val[tmp_lvl_q]
                 if res_lvl_qos > res_lvl_qos_stop
@@ -39,16 +37,32 @@ begin
                     Finch.fill_range!(res_lvl_val, false, res_lvl_qos, res_lvl_qos_stop)
                 end
                 res = (res_lvl_val[res_lvl_qos] = tmp_lvl_2_val)
-                res_lvl_idx[res_lvl_qos] = phase_stop_2
+                res_lvl_idx[res_lvl_qos] = tmp_lvl_i
                 res_lvl_qos += 1
                 tmp_lvl_r += 1
+            else
+                phase_stop_3 = min(tmp_lvl_i, phase_stop)
+                if tmp_lvl_i == phase_stop_3
+                    tmp_lvl_q = (1 - 1) * tmp_lvl.shape + tmp_lvl_i
+                    tmp_lvl_2_val_2 = tmp_lvl_val[tmp_lvl_q]
+                    if res_lvl_qos > res_lvl_qos_stop
+                        res_lvl_qos_stop = max(res_lvl_qos_stop << 1, 1)
+                        Finch.resize_if_smaller!(res_lvl_idx, res_lvl_qos_stop)
+                        Finch.resize_if_smaller!(res_lvl_val, res_lvl_qos_stop)
+                        Finch.fill_range!(res_lvl_val, false, res_lvl_qos, res_lvl_qos_stop)
+                    end
+                    res_lvl_val[res_lvl_qos] = tmp_lvl_2_val_2
+                    res_lvl_idx[res_lvl_qos] = phase_stop_3
+                    res_lvl_qos += 1
+                    tmp_lvl_r += 1
+                end
+                break
             end
-            i = phase_stop_2 + 1
         end
     end
-    res_lvl_ptr[1 + 1] = (res_lvl_qos - 0) - 1
-    for p = 2:1 + 1
-        res_lvl_ptr[p] += res_lvl_ptr[p - 1]
+    res_lvl_ptr[1 + 1] += (res_lvl_qos - 0) - 1
+    for p = 1:1
+        res_lvl_ptr[p + 1] += res_lvl_ptr[p]
     end
     resize!(res_lvl_ptr, 1 + 1)
     qos = res_lvl_ptr[end] - 1

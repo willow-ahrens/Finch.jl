@@ -6,7 +6,7 @@ function (ctx::ShortCircuitVisitor)(node::FinchNode)
     if @capture node assign(access(~tns::isvirtual, ~m, ~i...), ~op, ~rhs)
         short_circuit_cases(tns.val, ctx.ctx, op)
     elseif istree(node)
-        mapreduce(vcat, enumerate(arguments(node))) do (n, arg)
+        mapreduce(vcat, enumerate(arguments(node)), init=[]) do (n, arg)
             map(ctx(arg)) do (guard, body)
                 args_2 = copy(arguments(node))
                 args_2[n] = body

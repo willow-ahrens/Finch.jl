@@ -40,15 +40,27 @@ combinedim(ctx, a::Dimensionless, b) = b
     stop
 end
 
+@kwdef struct ContinuousExtent
+    start
+    stop
+end
+
 function virtual_call(::typeof(extent), ctx, start, stop)
     if isconstant(start) && isconstant(stop)
         Extent(start, stop)
     end
 end
+function virtual_call(::typeof(realextent), ctx, start, stop)
+    if isconstant(start) && isconstant(stop)
+        ContinuousExtent(start, stop)
+    end
+end
 
 virtual_uncall(ext::Extent) = call(extent, ext.start, ext.stop)
+virtual_uncall(ext::ContinuousExtent) = call(realextent, ext.start, ext.stop)
 
 FinchNotation.finch_leaf(x::Extent) = virtual(x)
+FinchNotation.finch_leaf(x::ContinuousExtent) = virtual(x)
 
 Base.:(==)(a::Extent, b::Extent) =
     a.start == b.start &&
@@ -162,6 +174,13 @@ function shiftdim(ext::Extent, delta)
         stop = call(+, ext.stop, delta)
     )
 end
+function shiftdim(ext::ContinuousExtent, delta)
+    ContinuousExtent(
+        start = call(+, ext.start, delta),
+        stop = call(+, ext.stop, delta)
+    )
+end
+
 
 shiftdim(ext::Dimensionless, delta) = dimless
 shiftdim(ext::ParallelDimension, delta) = ParallelDimension(ext, shiftdim(ext.ext, delta), ext.device)
@@ -173,6 +192,32 @@ function shiftdim(ext::FinchNode, body)
         error("unimplemented")
     end
 end
+
+
+function scaledim(ext::Extent, scale)
+    Extent(
+        start = call(*, ext.start, scale),
+        stop = call(*, ext.stop, scale)
+    )
+end
+function scaledim(ext::ContinuousExtent, scale)
+    ContinuousExtent(
+        start = call(*, ext.start, scale),
+        stop = call(*, ext.stop, scale)
+    )
+end
+
+scaledim(ext::Dimensionless, scale) = dimless
+scaledim(ext::ParallelDimension, scale) = ParallelDimension(ext, scaledim(ext.ext, scale), ext.device)
+
+function scaledim(ext::FinchNode, body)
+    if ext.kind === virtual
+        scaledim(ext.val, body)
+    else
+        error("unimplemented")
+    end
+end
+
 
 #virtual_intersect(ctx, a, b) = virtual_intersect(ctx, promote(a, b)...)
 function virtual_intersect(ctx, a, b)
@@ -203,13 +248,6 @@ function virtual_union(ctx, a::Extent, b::Extent)
         stop = @f(max($(getstop(a)), $(getstop(b))))
     )
 end
-
-@kwdef struct ContinuousExtent
-    start
-    stop
-end
-
-FinchNotation.finch_leaf(x::ContinuousExtent) = virtual(x)
 
 make_extent(::Type, start, stop) = throw(ArgumentError("Unsupported type"))
 make_extent(::Type{T}, start, stop) where T <: Integer = Extent(start, stop)
