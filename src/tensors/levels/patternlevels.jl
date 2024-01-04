@@ -13,7 +13,7 @@ Dense [1:3]
 ├─[3]: true
 ```
 """
-struct PatternLevel{Tp} <: AbstractLevel end
+struct PatternLevel{Tp} end
 const Pattern = PatternLevel
 
 PatternLevel() = PatternLevel{Int}()

@@ -22,7 +22,7 @@ Dense [:,1:2]
 │ ├─[2]: 4.0
 ```
 """
-struct DenseLevel{Ti, Lvl} <: AbstractLevel
+struct DenseLevel{Ti, Lvl}
     lvl::Lvl
     shape::Ti
 end

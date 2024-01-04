@@ -14,7 +14,7 @@ Dense [1:3]
 ├─[3]: 3.0
 ```
 """
-struct PointerLevel{Val, Lvl} <: AbstractLevel
+struct PointerLevel{Val, Lvl}
     val::Val
     lvl::Lvl
 end
