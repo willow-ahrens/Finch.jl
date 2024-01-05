@@ -286,7 +286,6 @@
         @test fmt == arr_1 .+ arr_2
     end
 
-    @info "Testing Fiber Conversions with pointer"
     for inner in [
         () -> Dense(Element{false}()),
         () -> Dense(Pointer(Element{false}())),

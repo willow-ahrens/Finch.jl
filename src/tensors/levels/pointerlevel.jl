@@ -8,24 +8,10 @@ Each sublevel is stored in a vector of type `Val` with `eltype(Val) = Lvl`.
 
 ```jldoctest
 julia> Fiber!(Dense(Pointer(Element(0.0))), [1, 2, 3])
-ERROR: DimensionMismatch: more dimensions in destination than source
-Stacktrace:
- [1] macro expansion
-   @ ~/Projects/Finch.jl/src/interface/copy.jl:52 [inlined]
- [2] (::Finch.var"#1581#1586"{DataType, DataType})()
-   @ Finch ~/Projects/Finch.jl/src/util/util.jl:71
- [3] #s358#1580
-   @ ~/Projects/Finch.jl/src/util/util.jl:80 [inlined]
- [4] var"#s358#1580"(::Any, dst::Any, src::Any)
-   @ Finch ./none:0
- [5] (::Core.GeneratedFunctionStub)(::Any, ::Vararg{Any})
-   @ Core ./boot.jl:602
- [6] dropdefaults!
-   @ ~/Projects/Finch.jl/src/interface/copy.jl:49 [inlined]
- [7] Fiber!(lvl::DenseLevel{Int64, PointerLevel{Vector{DenseLevel{Int64, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}}, DenseLevel{Int64, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}}}, arg::Vector{Vector{Int64}})
-   @ Finch ~/Projects/Finch.jl/src/tensors/fibers.jl:275
- [8] top-level scope
-   @ none:1
+Dense [1:3]
+├─[1]: Pointer -> 1.0
+├─[2]: Pointer -> 2.0
+├─[3]: Pointer -> 3.0
 ```
 """
 struct PointerLevel{Val, Lvl}
