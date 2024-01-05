@@ -242,6 +242,11 @@ function thaw_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos_sto
         $(lvl.qos_fill) = $(lvl.ptr)[$pos_stop + 1] - 1
         $(lvl.qos_stop) = $(lvl.qos_fill)
         $qos_stop = $(lvl.qos_fill)
+        $(if issafe(ctx.mode)
+            quote
+                $(lvl.prev_pos) = Finch.scansearch($(lvl.ptr), $(lvl.qos_stop) + 1, 1, $pos_stop) - 1
+            end
+        end)
         for $p = $pos_stop:-1:1
             $(lvl.ptr)[$p + 1] -= $(lvl.ptr)[$p]
         end

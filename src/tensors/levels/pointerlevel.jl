@@ -182,9 +182,11 @@ function instantiate(fbr::VirtualSubFiber{VirtualPointerLevel}, ctx, mode::Reade
     D = level_default(lvl.Lvl)
     sym = freshen(ctx.code, :pointer_to_lvl)
     val = freshen(ctx.code, lvl.ex, :_val)
-    lvl_2 = virtualize(:($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, ctx.code, sym)
     return body = Thunk(
-        body = (ctx) -> instantiate(VirtualSubFiber(lvl_2, literal(1)), ctx, mode, protos),
+        body = (ctx) -> begin
+            lvl_2 = virtualize(:($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, ctx.code, sym)
+            instantiate(VirtualSubFiber(lvl_2, literal(1)), ctx, mode, protos)
+        end,
     )
 end
 
@@ -192,10 +194,10 @@ function instantiate(fbr::VirtualSubFiber{VirtualPointerLevel}, ctx, mode::Updat
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     sym = freshen(ctx.code, :pointer_to_lvl)
-    lvl_2 = virtualize(:($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, ctx.code, sym)
 
     return body = Thunk(
         body = (ctx) -> begin
+            lvl_2 = virtualize(:($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, ctx.code, sym)
             thaw_level!(lvl_2, ctx, literal(1))
             push!(ctx.code.preamble, assemble_level!(lvl_2, ctx, literal(1), literal(1)))
             res = instantiate(VirtualSubFiber(lvl_2, literal(1)), ctx, mode, protos)
@@ -208,10 +210,10 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualPointerLevel}, ctx, mode:
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     sym = freshen(ctx.code, :pointer_to_lvl)
-    lvl_2 = virtualize(:($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, ctx.code, sym)
 
     return body = Thunk(
         body = (ctx) -> begin
+            lvl_2 = virtualize(:($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, ctx.code, sym)
             thaw_level!(lvl_2, ctx, literal(1))
             push!(ctx.code.preamble, assemble_level!(lvl_2, ctx, literal(1), literal(1)))
             res = instantiate(VirtualHollowSubFiber(lvl_2, literal(1), fbr.dirty), ctx, mode, protos)
