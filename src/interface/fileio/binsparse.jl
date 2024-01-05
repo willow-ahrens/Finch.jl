@@ -245,10 +245,10 @@ bspread_format_lookup = OrderedDict(
 
 bspwrite_format_lookup = OrderedDict(v => k for (k, v) in bspread_format_lookup)
 
-#indices_zero_to_one(vec::Vector{Ti}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Ti}}, Separation(vec)), length(vec); own = true)
+#indices_zero_to_one(vec::Vector{Ti}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Ti}}, pointer(vec)), length(vec); own = true)
 indices_zero_to_one(vec::Vector) = vec .+ one(eltype(vec))
 indices_one_to_zero(vec::Vector) = vec .- one(eltype(vec))
-#indices_one_to_zero(vec::Vector{<:CIndex{Ti}}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{Ti}, Separation(vec)), length(vec); own = true)
+#indices_one_to_zero(vec::Vector{<:CIndex{Ti}}) where {Ti} = unsafe_wrap(Array, reinterpret(Ptr{Ti}, pointer(vec)), length(vec); own = true)
 
 struct NPYPath
     dirname::String
@@ -368,7 +368,7 @@ function bspwrite_level(f, desc, fmt, lvl::SparseListLevel)
     n = level_ndims(typeof(lvl))
     N = length(desc["shape"])
     if N - n > 0
-        bspwrite_data(f, desc, "Separations_to_$(N - n)", indices_one_to_zero(lvl.ptr))
+        bspwrite_data(f, desc, "pointers_to_$(N - n)", indices_one_to_zero(lvl.ptr))
     end
     bspwrite_data(f, desc, "indices_$(N - n)", indices_one_to_zero(lvl.idx))
     fmt["subformat"] = OrderedDict()
@@ -380,7 +380,7 @@ function bspwrite_level(f, desc, fmt, lvl::SparseCOOLevel{R}) where {R}
     n = level_ndims(typeof(lvl))
     N = length(desc["shape"])
     if N - n > 0
-        bspwrite_data(f, desc, "Separations_to_$(N - n)", indices_one_to_zero(lvl.ptr))
+        bspwrite_data(f, desc, "pointers_to_$(N - n)", indices_one_to_zero(lvl.ptr))
     end
     for r = 1:R
         bspwrite_data(f, desc, "indices_$(N - n + r - 1)", indices_one_to_zero(lvl.tbl[r]))
@@ -397,7 +397,7 @@ function bspread_level(f, desc, fmt, ::Val{:sparse})
         indices_zero_to_one(bspread_data(f, desc, "indices_$(N - n + r - 1)"))
     end...,)
     if N - n > 0
-        ptr = bspread_data(f, desc, "Separations_to_$(N - n)")
+        ptr = bspread_data(f, desc, "pointers_to_$(N - n)")
     else
         ptr = [0, length(tbl[1])]
     end

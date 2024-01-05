@@ -164,7 +164,7 @@ relating to types and storage.
 
 ## Types and Storage of Level
 
-All levels have a `postype`, typically denoted as `Tp` in the constructors, used for internal Separation types but accessible by the
+All levels have a `postype`, typically denoted as `Tp` in the constructors, used for internal pointer types but accessible by the
 function:
 
 ```@docs
