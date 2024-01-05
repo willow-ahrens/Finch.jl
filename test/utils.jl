@@ -33,7 +33,7 @@ isstructequal(a::T, b::T)  where {T <: Pattern} = true
 isstructequal(a::T, b::T) where {T <: Element} =
     a.val == b.val
 
-isstructequal(a::T, b::T) where {T <: Pointer} =
+isstructequal(a::T, b::T) where {T <: Separation} =
   all(isstructequal(x,y) for (x,y) in zip(a.val, b.val)) && isstructequal(a.lvl, b.lvl)
 
 isstructequal(a::T, b::T) where {T <: RepeatRLE} =

@@ -1,44 +1,44 @@
 """
-    PointerLevel{Lvl, [Val]}()
+    SeparationLevel{Lvl, [Val]}()
 
-A subfiber of a pointer level is a separate fiber of type `Lvl`, in it's 
+A subfiber of a Separation level is a separate fiber of type `Lvl`, in it's 
 own memory space.
 
 Each sublevel is stored in a vector of type `Val` with `eltype(Val) = Lvl`. 
 
 ```jldoctest
-julia> Fiber!(Dense(Pointer(Element(0.0))), [1, 2, 3])
+julia> Fiber!(Dense(Separation(Element(0.0))), [1, 2, 3])
 Dense [1:3]
 ├─[1]: Pointer -> 1.0
 ├─[2]: Pointer -> 2.0
 ├─[3]: Pointer -> 3.0
 ```
 """
-struct PointerLevel{Val, Lvl}
+struct SeparationLevel{Val, Lvl}
     val::Val
     lvl::Lvl
 end
-const Pointer = PointerLevel
+const Separation = SeparationLevel
 
-PointerLevel(lvl::Lvl) where {Lvl} = PointerLevel([lvl], lvl)
-PointerLevel{Val, Lvl}(lvl::Lvl) where {Val, Lvl} =  PointerLevel{Val, Lvl}([lvl], lvl)
-Base.summary(::Pointer{Val, Lvl}) where {Val, Lvl} = "Pointer($(Lvl))"
+SeparationLevel(lvl::Lvl) where {Lvl} = SeparationLevel([lvl], lvl)
+SeparationLevel{Val, Lvl}(lvl::Lvl) where {Val, Lvl} =  SeparationLevel{Val, Lvl}([lvl], lvl)
+Base.summary(::Separation{Val, Lvl}) where {Val, Lvl} = "Separation($(Lvl))"
 
-similar_level(lvl::Pointer{Val, Lvl}) where {Val, Lvl} = PointerLevel{Val, Lvl}(similar_level(lvl.lvl))
+similar_level(lvl::Separation{Val, Lvl}) where {Val, Lvl} = SeparationLevel{Val, Lvl}(similar_level(lvl.lvl))
 
-postype(::Type{<:Pointer{Val, Lvl}}) where {Val, Lvl} = postype(Lvl)
+postype(::Type{<:Separation{Val, Lvl}}) where {Val, Lvl} = postype(Lvl)
 
-function moveto(lvl::PointerLevel, device)
+function moveto(lvl::SeparationLevel, device)
     lvl_2 = moveto(lvl.lvl, device)
     val_2 = moveto(lvl.val, device)
-    return PointerLevel(val_2, lvl_2)
+    return SeparationLevel(val_2, lvl_2)
 end
 
-pattern!(lvl::PointerLevel) = PointerLevel(map(pattern!, lvl.val), pattern!(lvl.lvl))
-redefault!(lvl::PointerLevel, init) = PointerLevel(map(lvl_2->redefault!(lvl_2, init), lvl.val), redefault!(lvl.lvl, init))
+pattern!(lvl::SeparationLevel) = SeparationLevel(map(pattern!, lvl.val), pattern!(lvl.lvl))
+redefault!(lvl::SeparationLevel, init) = SeparationLevel(map(lvl_2->redefault!(lvl_2, init), lvl.val), redefault!(lvl.lvl, init))
 
-function Base.show(io::IO, lvl::PointerLevel{Val, Lvl}) where {Val, Lvl}
-    print(io, "Pointer(")
+function Base.show(io::IO, lvl::SeparationLevel{Val, Lvl}) where {Val, Lvl}
+    print(io, "Separation(")
     if get(io, :compact, false)
         print(io, "…")
     else
@@ -49,28 +49,28 @@ function Base.show(io::IO, lvl::PointerLevel{Val, Lvl}) where {Val, Lvl}
     print(io, ")")
 end 
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:PointerLevel}, depth)
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SeparationLevel}, depth)
     p = fbr.pos
     print(io, "Pointer -> ")
     display_fiber(io, mime, SubFiber(fbr.lvl.val[p], 1), depth)
 end
 
-@inline level_ndims(::Type{<:PointerLevel{Val, Lvl}}) where {Val, Lvl} = level_ndims(Lvl)
-@inline level_size(lvl::PointerLevel{Val, Lvl}) where {Val, Lvl} = level_size(lvl.lvl)
-@inline level_axes(lvl::PointerLevel{Val, Lvl}) where {Val, Lvl} = level_axes(lvl.lvl)
-@inline level_eltype(::Type{PointerLevel{Val, Lvl}}) where {Val, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:PointerLevel{Val, Lvl}}) where {Val, Lvl} = level_default(Lvl)
+@inline level_ndims(::Type{<:SeparationLevel{Val, Lvl}}) where {Val, Lvl} = level_ndims(Lvl)
+@inline level_size(lvl::SeparationLevel{Val, Lvl}) where {Val, Lvl} = level_size(lvl.lvl)
+@inline level_axes(lvl::SeparationLevel{Val, Lvl}) where {Val, Lvl} = level_axes(lvl.lvl)
+@inline level_eltype(::Type{SeparationLevel{Val, Lvl}}) where {Val, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SeparationLevel{Val, Lvl}}) where {Val, Lvl} = level_default(Lvl)
 
-(fbr::Fiber{<:PointerLevel})() = SubFiber(fbr.lvl, 1)()
-(fbr::SubFiber{<:PointerLevel})() = fbr #TODO this is not consistent somehow
-function (fbr::SubFiber{<:PointerLevel})(idxs...)
+(fbr::Fiber{<:SeparationLevel})() = SubFiber(fbr.lvl, 1)()
+(fbr::SubFiber{<:SeparationLevel})() = fbr #TODO this is not consistent somehow
+function (fbr::SubFiber{<:SeparationLevel})(idxs...)
     q = fbr.pos
     return Fiber(fbr.lvl.val[q])(idxs...)
 end
 
-countstored_level(lvl::PointerLevel, pos) = pos
+countstored_level(lvl::SeparationLevel, pos) = pos
 
-mutable struct VirtualPointerLevel <: AbstractVirtualLevel
+mutable struct VirtualSeparationLevel <: AbstractVirtualLevel
     lvl  # stand in for the sublevel for virutal resize, etc.
     ex
     Tv
@@ -78,40 +78,40 @@ mutable struct VirtualPointerLevel <: AbstractVirtualLevel
     Lvl
 end
 
-postype(lvl:: VirtualPointerLevel) = postype(lvl.lvl)
+postype(lvl:: VirtualSeparationLevel) = postype(lvl.lvl)
 
-is_level_injective(::VirtualPointerLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
-is_level_concurrent(::VirtualPointerLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
-is_level_atomic(lvl::VirtualPointerLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
+is_level_injective(::VirtualSeparationLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
+is_level_concurrent(::VirtualSeparationLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
+is_level_atomic(lvl::VirtualSeparationLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
 
-function lower(lvl::VirtualPointerLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(lvl::VirtualSeparationLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
-        $PointerLevel{$(lvl.Val), $(lvl.Lvl)}($(lvl.ex).val, $(ctx(lvl.lvl)))
+        $SeparationLevel{$(lvl.Val), $(lvl.Lvl)}($(lvl.ex).val, $(ctx(lvl.lvl)))
     end
 end
 
-function virtualize(ex, ::Type{PointerLevel{Val, Lvl}}, ctx, tag=:lvl) where {Val, Lvl}
+function virtualize(ex, ::Type{SeparationLevel{Val, Lvl}}, ctx, tag=:lvl) where {Val, Lvl}
     sym = freshen(ctx, tag)
     push!(ctx.preamble, quote
         $sym = $ex
     end)
     lvl_2 = virtualize(:($ex.lvl), Lvl, ctx, sym)
-    VirtualPointerLevel(lvl_2, sym, typeof(level_default(Lvl)), Val, Lvl)
+    VirtualSeparationLevel(lvl_2, sym, typeof(level_default(Lvl)), Val, Lvl)
 end
 
-Base.summary(lvl::VirtualPointerLevel) = "Pointer($(lvl.Lvl))"
+Base.summary(lvl::VirtualSeparationLevel) = "Separation($(lvl.Lvl))"
 
-virtual_level_resize!(lvl::VirtualPointerLevel, ctx, dims...) = (lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims...); lvl)
-virtual_level_size(lvl::VirtualPointerLevel, ctx) = virtual_level_size(lvl.lvl, ctx)
-virtual_level_eltype(lvl::VirtualPointerLevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualPointerLevel) = virtual_level_default(lvl.lvl)
+virtual_level_resize!(lvl::VirtualSeparationLevel, ctx, dims...) = (lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims...); lvl)
+virtual_level_size(lvl::VirtualSeparationLevel, ctx) = virtual_level_size(lvl.lvl, ctx)
+virtual_level_eltype(lvl::VirtualSeparationLevel) = virtual_level_eltype(lvl.lvl)
+virtual_level_default(lvl::VirtualSeparationLevel) = virtual_level_default(lvl.lvl)
 
-function declare_level!(lvl::VirtualPointerLevel, ctx, pos, init)
+function declare_level!(lvl::VirtualSeparationLevel, ctx, pos, init)
     #declare_level!(lvl.lvl, ctx_2, literal(1), init)
     return lvl
 end
 
-function assemble_level!(lvl::VirtualPointerLevel, ctx, pos_start, pos_stop)
+function assemble_level!(lvl::VirtualSeparationLevel, ctx, pos_start, pos_stop)
     pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
     pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
     idx = freshen(ctx.code, :idx)
@@ -133,8 +133,8 @@ function assemble_level!(lvl::VirtualPointerLevel, ctx, pos_start, pos_stop)
     lvl
 end
 
-supports_reassembly(::VirtualPointerLevel) = true
-function reassemble_level!(lvl::VirtualPointerLevel, ctx, pos_start, pos_stop)
+supports_reassembly(::VirtualSeparationLevel) = true
+function reassemble_level!(lvl::VirtualSeparationLevel, ctx, pos_start, pos_stop)
     pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
     pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
     idx = freshen(ctx.code, :idx)
@@ -152,15 +152,15 @@ function reassemble_level!(lvl::VirtualPointerLevel, ctx, pos_start, pos_stop)
     lvl
 end
 
-function freeze_level!(lvl::VirtualPointerLevel, ctx, pos)
+function freeze_level!(lvl::VirtualSeparationLevel, ctx, pos)
     return lvl
 end
 
-function thaw_level!(lvl::VirtualPointerLevel, ctx::AbstractCompiler, pos)
+function thaw_level!(lvl::VirtualSeparationLevel, ctx::AbstractCompiler, pos)
     return lvl
 end
 
-function trim_level!(lvl::VirtualPointerLevel, ctx::AbstractCompiler, pos)
+function trim_level!(lvl::VirtualSeparationLevel, ctx::AbstractCompiler, pos)
     idx = freshen(ctx.code, :idx)
     sym = freshen(ctx.code, :pointer_to_lvl)
     
@@ -175,7 +175,7 @@ function trim_level!(lvl::VirtualPointerLevel, ctx::AbstractCompiler, pos)
     lvl
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualPointerLevel}, ctx, mode::Reader, protos)
+function instantiate(fbr::VirtualSubFiber{VirtualSeparationLevel}, ctx, mode::Reader, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     isnulltest = freshen(ctx.code, tag, :_nulltest)
@@ -190,7 +190,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualPointerLevel}, ctx, mode::Reade
     )
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualPointerLevel}, ctx, mode::Updater, protos)
+function instantiate(fbr::VirtualSubFiber{VirtualSeparationLevel}, ctx, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     sym = freshen(ctx.code, :pointer_to_lvl)
@@ -206,7 +206,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualPointerLevel}, ctx, mode::Updat
         end
     )
 end
-function instantiate(fbr::VirtualHollowSubFiber{VirtualPointerLevel}, ctx, mode::Updater, protos)
+function instantiate(fbr::VirtualHollowSubFiber{VirtualSeparationLevel}, ctx, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     sym = freshen(ctx.code, :pointer_to_lvl)

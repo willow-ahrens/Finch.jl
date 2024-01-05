@@ -14,7 +14,7 @@ positions in the level.
 
 The type `Tbl` is an NTuple type where each entry k is a subtype `AbstractVector{TI[k]}`.
 
-The type `Ptr` is the type for the pointer array.
+The type `Ptr` is the type for the Separation array.
 
 ```jldoctest
 julia> Fiber!(Dense(SparseCOO{1}(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
