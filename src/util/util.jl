@@ -78,7 +78,6 @@ macro staged(def)
                 end
             end
             Core._apply_pure(body_2, ())
-            
         end
 
     end
