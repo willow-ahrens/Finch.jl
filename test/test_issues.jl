@@ -176,8 +176,8 @@ using CIndices
     let 
         m = 4; n = 3; ptr_c = [0, 3, 3, 5]; idx_c = [1, 2, 3, 0, 2]; val_c = [1.1, 2.2, 3.3, 4.4, 5.5];
 
-        ptr_jl = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Int}}, Separation(ptr_c)), length(ptr_c); own = false)
-        idx_jl = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Int}}, Separation(idx_c)), length(idx_c); own = false)
+        ptr_jl = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Int}}, Pointer(ptr_c)), length(ptr_c); own = false)
+        idx_jl = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Int}}, Pointer(idx_c)), length(idx_c); own = false)
         A = Fiber(Dense(SparseList{CIndex{Int}}(Element{0.0, Float64, CIndex{Int}}(val_c), m, ptr_jl, idx_jl), n))
 
         @test A == [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
