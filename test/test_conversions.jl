@@ -24,6 +24,7 @@
                 () -> Dense(base()),
                 () -> RepeatRLE{false}(),
                 () -> SparseRLE(base()),
+                () -> Dense(Separation(base())),
             ]
                 for (idx, arr) in enumerate([
                     fill(false, 5),
@@ -283,5 +284,37 @@
             end
         end
         @test fmt == arr_1 .+ arr_2
+    end
+
+    for inner in [
+        () -> Dense(Element{false}()),
+        () -> Dense(Separation(Element{false}())),
+    ]
+        for outer in [
+            () -> Dense(Separation(inner())),
+            () -> SparseList(inner()),
+            () -> SparseList(Separation(inner())),
+        ]
+
+            for (arr_key, arr) in [
+                ("5x5_falses", fill(false, 5, 5)),
+                ("5x5_trues", fill(true, 5, 5)),
+                ("4x4_bool_mix", [false true  false true ;
+                false false false false
+                true  true  true  true
+                false true  false true ])
+            ]
+                ref = Fiber!(SparseList(SparseList(Element(false))))
+                res = Fiber!(SparseList(SparseList(Element(false))))
+                ref = dropdefaults!(ref, arr)
+                tmp = Fiber!(outer())
+                @testset "convert Separation $arr_key $(summary(tmp))"  begin
+                    @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
+                    check = Scalar(true)
+                    @finch for j=_, i=_; check[] &= tmp[i, j] == ref[i, j] end
+                    @test check[]
+                end
+            end
+        end
     end
 end

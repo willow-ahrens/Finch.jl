@@ -590,4 +590,128 @@
 
         @test check_output("format_constructors_srl_e.txt", String(take!(io)))
     end
+
+      @testset "Fiber!(Dense(Separation(Dense(Element(0)))))" begin
+          io = IOBuffer()
+          arr = [0.0 2.0 2.0 0.0 3.0 3.0;
+              1.0 0.0 7.0 1.0 0.0 0.0;
+              0.0 0.0 0.0 0.0 0.0 9.0]
+          
+          println(io, "Fiber!(Dense(Separation(Dense(Element(0))))):")
+          
+          fbr = dropdefaults!(Fiber!(Dense(Separation(Dense(Element(0))))), arr)
+
+          # sublvl = Fiber!(Dense(Element(0)), [])
+          # col1 = dropdefaults!(Fiber!((Dense(Element(0)))), arr[:, 1])
+          # col2 = dropdefaults!(Fiber!((Dense(Element(0)))), arr[:, 2])
+          # col3 = dropdefaults!(Fiber!((Dense(Element(0)))), arr[:, 3])
+          # col4 = dropdefaults!(Fiber!((Dense(Element(0)))), arr[:, 4])
+          # col5 = dropdefaults!(Fiber!((Dense(Element(0)))), arr[:, 5])
+          # col6 = dropdefaults!(Fiber!((Dense(Element(0)))), arr[:, 6])
+          # vals = [col1, col2, col3, col4, col5, col6]
+          
+          
+          println(io, "initialized fiber: ", fbr)
+          @test Structure(fbr) == Structure(Fiber(Dense(Separation(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
+          @test Structure(fbr) == Structure(Fiber(Dense(Separation{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
+
+          fbr = Fiber!(Dense(Separation(Dense(Element(0), 3)), 6))
+          println(io, "sized fiber: ", fbr)
+          @test Structure(fbr) == Structure(Fiber!(Dense(Separation(Dense(Element(0), 3)), 6)))
+
+
+          fbr = Fiber!(Dense(Separation(Dense(Element(0)))))
+          println(io, "empty fiber: ", fbr)
+          @test Structure(fbr) == Structure(Fiber!(Dense(Separation(Dense(Element(0))))))
+
+          @test check_output("format_constructors_d_p_d_e.txt", String(take!(io)))
+      end
+
+    @testset "Fiber!(Dense(Separation(SparseList(Element(0)))))" begin
+          io = IOBuffer()
+          arr = [0.0 2.0 2.0 0.0 3.0 3.0;
+              1.0 0.0 7.0 1.0 0.0 0.0;
+              0.0 0.0 0.0 0.0 0.0 9.0]
+          
+          println(io, "Fiber!(Dense(Separation(SparseList(Element(0))))):")
+          
+          fbr = dropdefaults!(Fiber!(Dense(Separation(SparseList(Element(0))))), arr)
+
+          # sublvl = Fiber!(Dense(Element(0)), [])
+          # col1 = dropdefaults!(Fiber!((Dense(Element(0)))), arr[:, 1])
+          # col2 = dropdefaults!(Fiber!((Dense(Element(0)))), arr[:, 2])
+          # col3 = dropdefaults!(Fiber!((Dense(Element(0)))), arr[:, 3])
+          # col4 = dropdefaults!(Fiber!((Dense(Element(0)))), arr[:, 4])
+          # col5 = dropdefaults!(Fiber!((Dense(Element(0)))), arr[:, 5])
+          # col6 = dropdefaults!(Fiber!((Dense(Element(0)))), arr[:, 6])
+          # vals = [col1, col2, col3, col4, col5, col6]
+          
+          
+          println(io, "initialized fiber: ", fbr)
+          @test Structure(fbr) == Structure(Fiber(Dense(Separation(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
+          @test Structure(fbr) == Structure(Fiber(Dense(Separation{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
+
+          fbr = Fiber!(Dense(Separation(SparseList(Element(0), 3)), 6))
+          println(io, "sized fiber: ", fbr)
+          @test Structure(fbr) == Structure(Fiber!(Dense(Separation(SparseList(Element(0), 3)), 6)))
+
+
+          fbr = Fiber!(Dense(Separation(SparseList(Element(0)))))
+          println(io, "empty fiber: ", fbr)
+          @test Structure(fbr) == Structure(Fiber!(Dense(Separation(SparseList(Element(0))))))
+
+          @test check_output("format_constructors_d_p_sl_e.txt", String(take!(io)))
+    end
+
+        @testset "Fiber!(SparseList(Separation(Dense(Element(0)))))" begin
+          io = IOBuffer()
+          arr = [0.0 2.0 2.0 0.0 3.0 3.0;
+              1.0 0.0 7.0 1.0 0.0 0.0;
+              0.0 0.0 0.0 0.0 0.0 9.0]
+          
+          println(io, "Fiber!(SparseList(Separation(Dense(Element(0))))):")
+          
+          fbr = dropdefaults!(Fiber(SparseList(Separation(Dense(Element(0))))), arr)
+          
+          println(io, "initialized fiber: ", fbr)
+          @test Structure(fbr) == Structure(Fiber(SparseList(Separation(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6, fbr.lvl.ptr, fbr.lvl.idx)))
+          @test Structure(fbr) == Structure(Fiber(SparseList(Separation{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6, fbr.lvl.ptr, fbr.lvl.idx)))
+
+          fbr = Fiber!(SparseList(Separation(Dense(Element(0), 3)), 6))
+          println(io, "sized fiber: ", fbr)
+          @test Structure(fbr) == Structure(Fiber!(SparseList(Separation(Dense(Element(0), 3)), 6)))
+
+
+          fbr = Fiber!(SparseList(Separation(Dense(Element(0)))))
+          println(io, "empty fiber: ", fbr)
+          @test Structure(fbr) == Structure(Fiber!(SparseList(Separation(Dense(Element(0))))))
+
+          @test check_output("format_constructors_sl_p_d_e.txt", String(take!(io)))
+        end
+
+    @testset "Fiber!(SparseList(Separation(SparseList(Element(0)))))" begin
+          io = IOBuffer()
+          arr = [0.0 2.0 2.0 0.0 3.0 3.0;
+              1.0 0.0 7.0 1.0 0.0 0.0;
+              0.0 0.0 0.0 0.0 0.0 9.0]
+          
+          println(io, "Fiber!(SparseList(Separation(SparseList(Element(0))))):")
+          
+          fbr = dropdefaults!(Fiber(SparseList(Separation(SparseList(Element(0))))), arr)
+          
+          println(io, "initialized fiber: ", fbr)
+          @test Structure(fbr) == Structure(Fiber(SparseList(Separation(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6, fbr.lvl.ptr, fbr.lvl.idx)))
+          @test Structure(fbr) == Structure(Fiber(SparseList(Separation{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6, fbr.lvl.ptr, fbr.lvl.idx)))
+
+          fbr = Fiber!(SparseList(Separation(SparseList(Element(0), 3)), 6))
+          println(io, "sized fiber: ", fbr)
+          @test Structure(fbr) == Structure(Fiber!(SparseList(Separation(SparseList(Element(0), 3)), 6)))
+
+          fbr = Fiber!(SparseList(Separation(SparseList(Element(0)))))
+          println(io, "empty fiber: ", fbr)
+          @test Structure(fbr) == Structure(Fiber!(SparseList(Separation(SparseList(Element(0))))))
+
+        @test check_output("format_constructors_sl_p_sl_e.txt", String(take!(io)))
+    end
+
 end

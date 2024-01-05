@@ -252,11 +252,23 @@ function Fiber! end
 @staged function Fiber!(lvl)
     contain(LowerJulia()) do ctx
         lvl = virtualize(:lvl, lvl, ctx.code)
-        lvl = declare_level!(lvl, ctx, literal(0), literal(virtual_level_default(lvl)))
+        def = literal(virtual_level_default(lvl))
+        lvl = declare_level!(lvl, ctx, literal(0), def)
         push!(ctx.code.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
         lvl = freeze_level!(lvl, ctx, literal(1))
         :(Fiber($(ctx(lvl))))
     end
+end
+
+function FiberCode!(lvl)
+    contain(LowerJulia()) do ctx
+        lvl = virtualize(:lvl, lvl, ctx.code)
+        def = literal(virtual_level_default(lvl))
+        lvl = declare_level!(lvl, ctx, literal(0), def)
+        push!(ctx.code.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
+        lvl = freeze_level!(lvl, ctx, literal(1))
+        ctx(lvl)
+    end |> unblock |> pretty |> dataflow |> unquote_literals
 end
 
 function Fiber!(lvl, arg)
