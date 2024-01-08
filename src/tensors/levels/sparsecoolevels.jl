@@ -17,7 +17,7 @@ The type `Tbl` is an NTuple type where each entry k is a subtype `AbstractVector
 The type `Ptr` is the type for the pointer array.
 
 ```jldoctest
-julia> Fiber!(Dense(SparseCOO{1}(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+julia> Fiber(Dense(SparseCOO{1}(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
 ├─[:,1]: SparseCOO (0.0) [1:3]
 │ ├─[1]: 10.0
@@ -27,7 +27,7 @@ Dense [:,1:3]
 │ ├─[1]: 20.0
 │ ├─[3]: 40.0
 
-julia> Fiber!(SparseCOO{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
+julia> Fiber(SparseCOO{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
 SparseCOO (0.0) [1:3,1:3]
 ├─├─[1, 1]: 10.0
 ├─├─[2, 1]: 30.0
@@ -43,7 +43,7 @@ struct SparseCOOLevel{N, TI<:Tuple, Ptr, Tbl, Lvl} <: AbstractLevel
 end
 const SparseCOO = SparseCOOLevel
 
-SparseCOOLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseCOOLevel, e.g. Fiber!(SparseCOO{2}(Element(0.0)))"))
+SparseCOOLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseCOOLevel, e.g. Fiber(SparseCOO{2}(Element(0.0)))"))
 SparseCOOLevel(lvl, shape::NTuple{N, Any}, args...) where {N} = SparseCOOLevel{N}(lvl, shape, args...)
 
 SparseCOOLevel{N}(lvl) where {N} = SparseCOOLevel{N, NTuple{N, Int}}(lvl)
@@ -80,7 +80,7 @@ end
 redefault!(lvl::SparseCOOLevel{N, TI}, init) where {N, TI} = 
     SparseCOOLevel{N, TI}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl)
 
-resize!(lvl::SparseCOOLevel{N, TI}, dims...) where {N, TI} = 
+Base.resize!(lvl::SparseCOOLevel{N, TI}, dims...) where {N, TI} = 
     SparseCOOLevel{N, TI}(resize!(lvl.lvl, dims[1:end-N]...), (dims[end-N + 1:end]...,), lvl.ptr, lvl.tbl)
 
 function Base.show(io::IO, lvl::SparseCOOLevel{N, TI}) where {N, TI}
@@ -109,6 +109,12 @@ end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseCOOLevel{N}}, depth) where {N}
     p = fbr.pos
+    lvl = fbr.lvl
+    if p + 1 > length(lvl.ptr)
+        print(io, "SparseCOO(undef...)")
+        return
+    end
+
     crds = fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1
 
     print_coord(io, q) = join(io, map(n -> fbr.lvl.tbl[n][q], 1:N), ", ")

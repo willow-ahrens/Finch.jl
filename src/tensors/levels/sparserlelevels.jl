@@ -40,7 +40,7 @@ end
 redefault!(lvl::SparseRLELevel{Ti}, init) where {Ti} = 
     SparseRLELevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.left, lvl.right)
 
-resize!(lvl::SparseRLELevel{Ti}, dims...) where {Ti} = 
+Base.resize!(lvl::SparseRLELevel{Ti}, dims...) where {Ti} = 
     SparseRLELevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.left, lvl.right)
 
 function Base.show(io::IO, lvl::SparseRLELevel{Ti, Ptr, Left, Right, Lvl}) where {Ti, Ptr, Left, Right, Lvl}
@@ -68,6 +68,10 @@ end
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseRLELevel}, depth)
     p = fbr.pos
     lvl = fbr.lvl
+    if p + 1 > length(lvl.ptr)
+        print(io, "SparseHash(undef...)")
+        return
+    end
     left_endpoints = @view(lvl.left[lvl.ptr[p]:lvl.ptr[p + 1] - 1])
 
     crds = []

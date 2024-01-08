@@ -10,7 +10,7 @@ the first argument.  `Ti` is the type of the last fiber index, and `Tp` is the
 type used for positions in the level.
 
 ```jldoctest
-julia> Fiber!(RepeatRLE(0.0), [11, 11, 22, 22, 00, 00, 00, 33, 33])
+julia> Fiber(RepeatRLE(0.0), [11, 11, 22, 22, 00, 00, 00, 33, 33])
 RepeatRLE (0.0) [1:9]
 ├─[1:2]: 11.0
 ├─[3:4]: 22.0
@@ -66,7 +66,7 @@ pattern!(lvl::RepeatRLELevel{D, Ti}) where {D, Ti} =
 redefault!(lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}, init) where {D, Ti, Tp, Tv, Ptr, Idx, Val} = 
     RepeatRLELevel{init, Ti, Tp, Tv, Ptr, Idx, Val}(lvl.shape, lvl.ptr, lvl.idx, lvl.val)
 
-resize!(lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}, dim) where {D, Ti, Tp, Tv, Ptr, Idx, Val} = 
+Base.resize!(lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}, dim) where {D, Ti, Tp, Tv, Ptr, Idx, Val} = 
     RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}(dim, lvl.ptr, lvl.idx, lvl.val)
 
 function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}) where {D, Ti, Tp, Tv, Ptr, Idx, Val}
@@ -94,6 +94,12 @@ end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:RepeatRLELevel}, depth)
     p = fbr.pos
+    lvl = fbr.lvl
+    if p + 1 > length(lvl.ptr)
+        print(io, "RepeatRLELevel(undef...)")
+        return
+    end
+
     crds = fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1
 
     print_coord(io, crd) = print(io, crd == fbr.lvl.ptr[p] ? 1 : fbr.lvl.idx[crd - 1] + 1, ":", fbr.lvl.idx[crd])

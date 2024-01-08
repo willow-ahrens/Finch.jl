@@ -33,7 +33,7 @@ include(joinpath(@__DIR__, "../docs/examples/triangle_counting.jl"))
         input = sprand(size, size, sparsity)
     
         graphs_input = Graphs.SimpleDiGraph(transpose(input))
-        finch_input = Fiber!(Dense(SparseList(Element(0.0))), input) 
+        finch_input = Fiber(Dense(SparseList(Element(0.0))), input) 
     
         expected = Graphs.bfs_parents(graphs_input, source)
         output = bfs(finch_input, source)
@@ -47,7 +47,7 @@ include(joinpath(@__DIR__, "../docs/examples/triangle_counting.jl"))
         input = sprand(size, size, sparsity)
         
         graphs_input = SimpleWeightedDiGraph(transpose(input))
-        finch_input = redefault!(Fiber!(Dense(SparseList(Element(0.0))), input), Inf)
+        finch_input = redefault!(Fiber(Dense(SparseList(Element(0.0))), input), Inf)
         
         expected = Graphs.bellman_ford_shortest_paths(graphs_input, source)
         output = bellmanford(finch_input, source)
@@ -61,7 +61,7 @@ include(joinpath(@__DIR__, "../docs/examples/triangle_counting.jl"))
         input = SparseMatrixCSC(Symmetric(input))
         
         graphs_input = SimpleDiGraph(input)
-        finch_input = pattern!(Fiber!(Dense(SparseList(Element(0.0))), input))
+        finch_input = pattern!(Fiber(Dense(SparseList(Element(0.0))), input))
     
         expected = sum(Graphs.triangles(graphs_input))
         output = tricount(finch_input) * 6
@@ -75,8 +75,8 @@ include(joinpath(@__DIR__, "../docs/examples/triangle_counting.jl"))
         A_ref = sprand(Int, m, k, p)
         B_ref = sprand(Int, k, n, p)
         C_ref = A_ref * B_ref
-        A = Fiber!(Dense(SparseList(Element(0))), A_ref)
-        B = Fiber!(Dense(SparseList(Element(0))), B_ref)
+        A = Fiber(Dense(SparseList(Element(0))), A_ref)
+        B = Fiber(Dense(SparseList(Element(0))), B_ref)
 
         for (key, fn) in [
             (:spgemm_inner, spgemm_inner),

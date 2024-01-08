@@ -1,4 +1,4 @@
-Fiber!(SparseTriangle{1}(Element(zero))) representation:
+Fiber(SparseTriangle{1}(Element(zero))) representation:
 
 array: [0.0, 2.0, 2.0, 0.0, 3.0, 3.0]
 fiber: Fiber(SparseTriangle{1, Int64}(Element{0.0, Float64, Int64}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0]), 6))

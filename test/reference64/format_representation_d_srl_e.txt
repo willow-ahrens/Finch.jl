@@ -1,4 +1,4 @@
-Fiber!(Dense(SparseRLE(Element(zero)))) representation:
+Fiber(Dense(SparseRLE(Element(zero)))) representation:
 
 array: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
 fiber: Fiber(Dense{Int64}(SparseRLE{Int64}(Element{0.0, Float64, Int64}(Float64[]), 5, [1, 1, 1, 1, 1, 1], Int64[], Int64[]), 5))

@@ -4,9 +4,9 @@
 
     let
         io = IOBuffer()
-        A = Fiber!(Dense(SparseList(Element(0.0))), [1 2; 3 4])
-        x = Fiber!(Dense(Element(0.0)), [1, 1])
-        y = Fiber!(Dense(Element(0.0)))
+        A = Fiber(Dense(SparseList(Element(0.0))), [1 2; 3 4])
+        x = Fiber(Dense(Element(0.0)), [1, 1])
+        y = Fiber(Dense(Element(0.0)))
         @repl io @finch_code begin
             y .= 0
             for j = parallel(_)
@@ -29,9 +29,9 @@
     end
 
     let
-        A = Fiber!(Dense(SparseList(Element(0.0))))
-        x = Fiber!(Dense(Element(0.0)))
-        y = Fiber!(Dense(Element(0.0)))
+        A = Fiber(Dense(SparseList(Element(0.0))))
+        x = Fiber(Dense(Element(0.0)))
+        y = Fiber(Dense(Element(0.0)))
         @test_throws Finch.FinchConcurrencyError begin
             @finch_code begin
                 y .= 0
@@ -45,9 +45,9 @@
     end
 
     let
-        A = Fiber!(Dense(SparseList(Element(0.0))))
-        x = Fiber!(Dense(Element(0.0)))
-        y = Fiber!(Dense(Element(0.0)))
+        A = Fiber(Dense(SparseList(Element(0.0))))
+        x = Fiber(Dense(Element(0.0)))
+        y = Fiber(Dense(Element(0.0)))
 
         @test_throws Finch.FinchConcurrencyError begin
             @finch_code begin
@@ -62,9 +62,9 @@
         end
     end
     let
-        A = Fiber!(Dense(SparseList(Element(0.0))))
-        x = Fiber!(Dense(Element(0.0)))
-        y = Fiber!(Dense(Element(0.0)))
+        A = Fiber(Dense(SparseList(Element(0.0))))
+        x = Fiber(Dense(Element(0.0)))
+        y = Fiber(Dense(Element(0.0)))
 
         @test_throws Finch.FinchConcurrencyError begin
             @finch_code begin
@@ -98,10 +98,10 @@
 
     let
         # Computes a horizontal blur a row at a time
-        input = Fiber!(Dense(Dense(Element(0.0))))
-        output = Fiber!(Dense(Dense(Element(0.0))))
+        input = Fiber(Dense(Dense(Element(0.0))))
+        output = Fiber(Dense(Dense(Element(0.0))))
         cpu = CPU(Threads.nthreads())
-        tmp = moveto(Fiber!(Dense(Element(0))), CPULocalMemory(cpu))
+        tmp = moveto(Fiber(Dense(Element(0))), CPULocalMemory(cpu))
 
         check_output("parallel_blur.jl", @finch_code begin
             output .= 0
@@ -120,10 +120,10 @@
 
     let
         # Computes a horizontal blur a row at a time
-        input = Fiber!(Dense(SparseList(Element(0.0))))
-        output = Fiber!(Dense(Dense(Element(0.0))))
+        input = Fiber(Dense(SparseList(Element(0.0))))
+        output = Fiber(Dense(Dense(Element(0.0))))
         cpu = CPU(Threads.nthreads())
-        tmp = moveto(Fiber!(Dense(Element(0))), CPULocalMemory(cpu))
+        tmp = moveto(Fiber(Dense(Element(0))), CPULocalMemory(cpu))
 
         check_output("parallel_blur_sparse.jl", @finch_code begin
             output .= 0

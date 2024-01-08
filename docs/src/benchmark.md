@@ -41,11 +41,11 @@ using MatrixDepot
 Load a sparse matrix from MatrixDepot.jl and convert it to a Finch fiber
 
 ````julia
-A = Fiber!(Dense(SparseList(Element(0.0))), matrixdepot("HB/west0067"))
+A = Fiber(Dense(SparseList(Element(0.0))), matrixdepot("HB/west0067"))
 (m, n) = size(A)
 
-x = Fiber!(Dense(Element(0.0)), rand(n))
-y = Fiber!(Dense(Element(0.0)))
+x = Fiber(Dense(Element(0.0)), rand(n))
+y = Fiber(Dense(Element(0.0)))
 ````
 
 ````
@@ -97,7 +97,7 @@ benchmark kernel
 
 ````julia
 @benchmark begin
-    y = Fiber!(Dense(Element(0.0)))
+    y = Fiber(Dense(Element(0.0)))
     y = spmv(y, $A, $x).y
 end
 ````

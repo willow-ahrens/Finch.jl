@@ -9,7 +9,7 @@ of type `Val` with `eltype(Val) = Tv`. The type `Ti` is the index type used to
 access Val.
 
 ```jldoctest
-julia> Fiber!(Dense(Element(0.0)), [1, 2, 3])
+julia> Fiber(Dense(Element(0.0)), [1, 2, 3])
 Dense [1:3]
 ├─[1]: 1.0
 ├─[2]: 2.0
@@ -46,7 +46,7 @@ pattern!(lvl::ElementLevel{D, Tv, Tp}) where  {D, Tv, Tp} =
     Pattern{Tp}()
 redefault!(lvl::ElementLevel{D, Tv, Tp}, init) where {D, Tv, Tp} = 
     ElementLevel{init, Tv, Tp}(lvl.val)
-resize!(lvl::ElementLevel) = lvl
+Base.resize!(lvl::ElementLevel) = lvl
 
 
 function Base.show(io::IO, lvl::ElementLevel{D, Tv, Tp, Val}) where {D, Tv, Tp, Val}
@@ -63,6 +63,11 @@ end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:ElementLevel}, depth)
     p = fbr.pos
+    lvl = fbr.lvl
+    if p > length(fbr.lvl.val)
+        show(io, mime, undef)
+        return
+    end
     show(io, mime, fbr.lvl.val[p])
 end
 

@@ -1,4 +1,4 @@
-Fiber!(SparseList(SparseHash{1}(Element(zero)))) representation:
+Fiber(SparseList(SparseHash{1}(Element(zero)))) representation:
 
 array: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
 fiber: Fiber(SparseList{Int64}(SparseHash{1, Tuple{Int64}}(Element{0.0, Float64, Int64}(Float64[]), (5,), [1], Dict{Tuple{Int64, Tuple{Int64}}, Int64}(), Pair{Tuple{Int64, Tuple{Int64}}, Int64}[]), 5, [1, 1], Int64[]))

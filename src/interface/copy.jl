@@ -39,7 +39,7 @@ function Base.copyto!(dst::SwizzleArray{dims1}, src::SwizzleArray{dims2}) where 
 end
 
 function Base.copyto!(dst::SwizzleArray{dims}, src::Union{Fiber, AbstractArray}) where {dims}
-    tmp = Fiber!(SparseHash{ndims(src)}(Element(default(src))))
+    tmp = Fiber(SparseHash{ndims(src)}(Element(default(src))))
     tmp = copyto_helper!(swizzle(tmp, dims...), src)
     swizzle(copyto_helper!(dst.body, tmp), dims...)
 end

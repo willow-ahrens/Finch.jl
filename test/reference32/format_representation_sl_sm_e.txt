@@ -1,4 +1,4 @@
-Fiber!(SparseList(SparseByteMap(Element(zero)))) representation:
+Fiber(SparseList(SparseByteMap(Element(zero)))) representation:
 
 array: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
 fiber: Fiber(SparseList{Int32}(SparseByteMap{Int32}(Element{0.0, Float64, Int32}(Float64[]), 5, [1], Bool[], Tuple{Int32, Int32}[]), 5, [1, 1], Int32[]))

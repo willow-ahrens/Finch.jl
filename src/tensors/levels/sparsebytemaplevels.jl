@@ -8,7 +8,7 @@ which slices are stored. This allows the ByteMap level to support random access.
 positions in the level. 
 
 ```jldoctest
-julia> Fiber!(Dense(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+julia> Fiber(Dense(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
 ├─[:,1]: SparseByteMap (0.0) [1:3]
 │ ├─[1]: 10.0
@@ -18,7 +18,7 @@ Dense [:,1:3]
 │ ├─[1]: 20.0
 │ ├─[3]: 40.0
 
-julia> Fiber!(SparseByteMap(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+julia> Fiber(SparseByteMap(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 SparseByteMap (0.0) [:,1:3]
 ├─[:,1]: SparseByteMap (0.0) [1:3]
 │ ├─[1]: 10.0
@@ -67,7 +67,7 @@ pattern!(lvl::SparseByteMapLevel{Ti}) where {Ti} =
 redefault!(lvl::SparseByteMapLevel{Ti}, init) where {Ti} = 
     SparseByteMapLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
 
-resize!(lvl::SparseByteMapLevel{Ti}, dims...) where {Ti} = 
+Base.resize!(lvl::SparseByteMapLevel{Ti}, dims...) where {Ti} = 
     SparseByteMapLevel{Ti}(redefault!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.tbl, lvl.srt)
 
 function countstored_level(lvl::SparseByteMapLevel, pos)
@@ -98,6 +98,12 @@ end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseByteMapLevel}, depth)
     p = fbr.pos
+    lvl = fbr.lvl
+    if p + 1 > length(lvl.ptr)
+        print(io, "SparseBytemap(undef...)")
+        return
+    end
+
     crds = @view(fbr.lvl.srt[fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1])
 
     print_coord(io, (p, i)) = show(io, i)

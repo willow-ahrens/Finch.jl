@@ -6,13 +6,13 @@ i]` as a distinct subfiber in `lvl`. Optionally, `dim` is the size of the last
 dimension. `Ti` is the type of the indices used to index the level.
 
 ```jldoctest
-julia> ndims(Fiber!(Dense(Element(0.0))))
+julia> ndims(Fiber(Dense(Element(0.0))))
 1
 
-julia> ndims(Fiber!(Dense(Dense(Element(0.0)))))
+julia> ndims(Fiber(Dense(Dense(Element(0.0)))))
 2
 
-julia> Fiber!(Dense(Dense(Element(0.0))), [1 2; 3 4])
+julia> Fiber(Dense(Dense(Element(0.0))), [1 2; 3 4])
 Dense [:,1:2]
 ├─[:,1]: Dense [1:2]
 │ ├─[1]: 1.0
@@ -51,8 +51,8 @@ pattern!(lvl::DenseLevel{Ti, Lvl}) where {Ti, Lvl} =
 redefault!(lvl::DenseLevel{Ti}, init) where {Ti} = 
     DenseLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape)
 
-resize!(lvl::DenseLevel{Ti}, dims...) where {Ti} = 
-    DenseLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]), dims[end])
+Base.resize!(lvl::DenseLevel{Ti}, dims...) where {Ti} = 
+    DenseLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end])
 
 @inline level_ndims(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::DenseLevel) = (level_size(lvl.lvl)..., lvl.shape)

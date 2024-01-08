@@ -6,18 +6,19 @@ abstract type AbstractVirtualFiber{Lvl} <: AbstractVirtualTensor end
     Fiber(lvl)
 
 `Fiber` represents the root of a level-tree tensor. To easily construct a valid
-fiber, use [`Fiber!`](@ref) or [`fiber`](@ref). Users should avoid calling
+fiber, use [`Fiber`](@ref) or [`fiber`](@ref). Users should avoid calling
 this constructor directly.
 
 In particular, `Fiber` represents the tensor at position 1 of `lvl`. The
 constructor `Fiber(lvl)` wraps a level assuming it is already in a valid state.
-The constructor `Fiber!(lvl)` first initializes `lvl` assuming no positions are
+The constructor `Fiber(lvl)` first initializes `lvl` assuming no positions are
 valid.
 """
 struct Fiber{Lvl} <: AbstractFiber{Lvl}
     lvl::Lvl
 end
-Fiber(lvl::AbstractLevel, dims...) = Fiber(lvl, undef, dims...)
+Fiber(lvl::Lvl) where {Lvl<:AbstractLevel} = Fiber{Lvl}(lvl)
+Fiber(lvl::AbstractLevel, dims::Number...) = Fiber(lvl, undef, dims...)
 Fiber(lvl::AbstractLevel, init::UndefInitializer, dims...) = Fiber(assemble!(resize!(lvl, dims...)))
 Fiber(lvl::AbstractLevel, init::UndefInitializer) = Fiber(assemble!(lvl))
 Fiber(lvl::AbstractLevel, arr) = dropdefaults!(Fiber(lvl), arr)
@@ -128,7 +129,7 @@ set to `init`.  May reuse memory and render the original fiber unusable when
 modified.
 
 ```jldoctest
-julia> A = Fiber!(SparseList(Element(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
+julia> A = Fiber(SparseList(Element(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
 SparseList (0.0) [1:10]
 ├─[1]: 2.0
 ├─[3]: 3.0
@@ -153,7 +154,7 @@ redefault!(fbr::Fiber, init) = Fiber(redefault!(fbr.lvl, init))
 Set the shape of `fbr` equal to `dims`. May reuse memory and render the original
 fiber unusable when modified.
 """
-resize!(fbr::Fiber, dims...) = Fiber(resize!(fbr.lvl, dims...))
+Base.resize!(fbr::Fiber, dims...) = Fiber(resize!(fbr.lvl, dims...))
 
 data_rep(fbr::Fiber) = data_rep(typeof(fbr))
 data_rep(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = data_rep_level(Lvl)
@@ -179,7 +180,7 @@ end
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber)
     if get(io, :compact, false)
-        print(io, "Fiber!($(summary(fbr.lvl)))")
+        print(io, "Fiber($(summary(fbr.lvl)))")
     else
         display_fiber(io, mime, fbr, 0)
     end
@@ -250,13 +251,13 @@ countstored(arr::Array) = length(arr)
 
 
 """
-    Fiber!(ctr, [arg])
+    Fiber(ctr, [arg])
 
 Construct a fiber from a nest of levels. This function may allocate memory.
 Optionally, an argument may be specified to copy into the fiber. This expression
 allocates. Use `fiber(arg)` for a zero-cost copy, if available.
 """
-function Fiber! end
+function Fiber end
 
 @staged function assemble!(lvl)
     contain(LowerJulia()) do ctx
@@ -269,7 +270,7 @@ function Fiber! end
     end
 end
 
-Base.summary(fbr::Fiber) = "$(join(size(fbr), "×")) Fiber!($(summary(fbr.lvl)))"
+Base.summary(fbr::Fiber) = "$(join(size(fbr), "×")) Fiber($(summary(fbr.lvl)))"
 Base.summary(fbr::SubFiber) = "$(join(size(fbr), "×")) SubFiber($(summary(fbr.lvl)))"
 
 Base.similar(fbr::AbstractFiber) = Fiber(similar_level(fbr.lvl))

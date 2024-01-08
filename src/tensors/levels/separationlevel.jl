@@ -7,7 +7,7 @@ own memory space.
 Each sublevel is stored in a vector of type `Val` with `eltype(Val) = Lvl`. 
 
 ```jldoctest
-julia> Fiber!(Dense(Separation(Element(0.0))), [1, 2, 3])
+julia> Fiber(Dense(Separation(Element(0.0))), [1, 2, 3])
 Dense [1:3]
 ├─[1]: Pointer -> 1.0
 ├─[2]: Pointer -> 2.0
@@ -36,7 +36,7 @@ end
 
 pattern!(lvl::SeparationLevel) = SeparationLevel(map(pattern!, lvl.val), pattern!(lvl.lvl))
 redefault!(lvl::SeparationLevel, init) = SeparationLevel(map(lvl_2->redefault!(lvl_2, init), lvl.val), redefault!(lvl.lvl, init))
-resize!(lvl::SeparationLevel, dims...) = SeparationLevel(map(lvl_2->resize!(lvl_2, dims...), lvl.val), resize!(lvl.lvl, dims...))
+Base.resize!(lvl::SeparationLevel, dims...) = SeparationLevel(map(lvl_2->resize!(lvl_2, dims...), lvl.val), resize!(lvl.lvl, dims...))
 
 
 function Base.show(io::IO, lvl::SeparationLevel{Val, Lvl}) where {Val, Lvl}
@@ -53,6 +53,11 @@ end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SeparationLevel}, depth)
     p = fbr.pos
+    lvl = fbr.lvl
+    if p > length(lvl.val)
+        print(io, "Pointer -> undef")
+        return
+    end
     print(io, "Pointer -> ")
     display_fiber(io, mime, SubFiber(fbr.lvl.val[p], 1), depth)
 end

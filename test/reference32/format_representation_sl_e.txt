@@ -1,4 +1,4 @@
-Fiber!(SparseList(Element(zero))) representation:
+Fiber(SparseList(Element(zero))) representation:
 
 array: [0.0, 2.0, 2.0, 0.0, 3.0, 3.0]
 fiber: Fiber(SparseList{Int32}(Element{0.0, Float64, Int32}([2.0, 2.0, 3.0, 3.0]), 6, [1, 5], [2, 3, 5, 6]))

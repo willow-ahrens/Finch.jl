@@ -9,7 +9,7 @@ subfiber. Optionally, `dims` are the sizes of the last dimensions.
 `Ti` is the type of the last `N` fiber indices.
 
 ```jldoctest
-julia> Fiber!(SparseTriangle{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
+julia> Fiber(SparseTriangle{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
 SparseTriangle (0.0) [1:3]
 ├─├─[1, 1]: 10.0
 ├─├─[1, 2]: 0.0
@@ -24,7 +24,7 @@ struct SparseTriangleLevel{N, Ti, Lvl} <: AbstractLevel
     # FUTURE: uplo (upper or lower) - trait 
     # shift/delta
 end
-SparseTriangleLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseTriangleLevel, e.g. Fiber!(SparseTriangle{2}(Element(0.0)))"))
+SparseTriangleLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseTriangleLevel, e.g. Fiber(SparseTriangle{2}(Element(0.0)))"))
 SparseTriangleLevel{N}(lvl::Lvl, args...) where {Lvl, N} = SparseTriangleLevel{N, Int}(lvl, args...)
 SparseTriangleLevel{N}(lvl, shape, args...) where {N} = SparseTriangleLevel{N, typeof(shape)}(lvl, shape, args...)
 SparseTriangleLevel{N, Ti}(lvl, args...) where {N, Ti} = SparseTriangleLevel{N, Ti, typeof(lvl)}(lvl, args...)

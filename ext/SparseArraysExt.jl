@@ -42,7 +42,7 @@ Construct a sparse matrix from a fiber or swizzle. May reuse the underlying stor
 """
 function SparseArrays.SparseMatrixCSC(arr::Union{Fiber, SwizzleArray})
     default(arr) === zero(eltype(arr)) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero default values, was given $(default(arr)) as default"))
-    return SparseMatrixCSC(Fiber!(Dense(SparseList(Element(0.0))), arr))
+    return SparseMatrixCSC(Fiber(Dense(SparseList(Element(0.0))), arr))
 end
 
 function SparseArrays.SparseMatrixCSC(arr::Fiber{<:Dense{Ti, <:SparseList{Ti, Ptr, Idx, <:Element{D, Tv}}}}) where {D, Ti, Ptr, Idx, Tv}
@@ -169,7 +169,7 @@ Construct a sparse matrix from a fiber or swizzle. May reuse the underlying stor
 """
 function SparseArrays.SparseVector(arr::Union{Fiber, SwizzleArray})
     default(arr) === zero(eltype(arr)) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero default values, was given $(default(arr)) as default"))
-    return SparseVector(Fiber!(SparseList(Element(0.0)), arr))
+    return SparseVector(Fiber(SparseList(Element(0.0)), arr))
 end
 
 function SparseArrays.SparseVector(arr::Fiber{<:SparseList{Ti, Ptr, Idx, <:Element{D, Tv}}}) where {Ti, Ptr, Idx, Tv, D}

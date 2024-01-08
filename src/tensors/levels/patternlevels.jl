@@ -6,7 +6,7 @@ false. PatternLevels are used to create tensors that represent which values
 are stored by other fibers. See [`pattern`](@ref) for usage examples.
 
 ```jldoctest
-julia> Fiber!(Dense(Pattern()), 3)
+julia> Fiber(Dense(Pattern()), 3)
 Dense [1:3]
 ├─[1]: true
 ├─[2]: true
@@ -27,7 +27,7 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:PatternLe
     show(io, mime, true)
 end
 
-resize!(lvl::PatternLevel) = lvl
+Base.resize!(lvl::PatternLevel) = lvl
 
 pattern!(::PatternLevel{Tp}) where {Tp} = Pattern{Tp}()
 
@@ -58,7 +58,7 @@ Return the pattern of `fbr`. That is, return a fiber which is true wherever
 original fiber unusable when modified.
 
 ```jldoctest
-julia> A = Fiber!(SparseList(Element(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
+julia> A = Fiber(SparseList(Element(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
 SparseList (0.0) [1:10]
 ├─[1]: 2.0
 ├─[3]: 3.0

@@ -3,9 +3,9 @@ struct MyAlgebra2 <: Finch.AbstractAlgebra end
 
 @testset "algebra" begin
     @info "Testing Custom Algebras"
-    u = Fiber!(SparseList(Element(1)), [3, 1, 6, 1, 9, 1, 4, 1, 8, 1])
-    v = Fiber!(SparseList(Element(1)), [1, 2, 3, 1, 1, 1, 1, 4, 1, 1])
-    w = Fiber!(SparseList(Element(1)))
+    u = Fiber(SparseList(Element(1)), [3, 1, 6, 1, 9, 1, 4, 1, 8, 1])
+    v = Fiber(SparseList(Element(1)), [1, 2, 3, 1, 1, 1, 1, 4, 1, 1])
+    w = Fiber(SparseList(Element(1)))
 
     @finch (w .= 1; for i=_; w[i] = gcd(u[i], v[i]) end)
 

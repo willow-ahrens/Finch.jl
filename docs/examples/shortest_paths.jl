@@ -11,12 +11,12 @@ function bellmanford(edges, source=1)
     (n, m) = size(edges)
     @assert n == m
 
-    dists_prev = Fiber!(Dense(Element((Inf, 0))), n)
+    dists_prev = Fiber(Dense(Element((Inf, 0))), n)
     dists_prev[source] = (0.0, 0)
-    dists = Fiber!(Dense(Element((Inf, 0))), n)
-    active_prev = Fiber!(SparseByteMap(Pattern()), n)
+    dists = Fiber(Dense(Element((Inf, 0))), n)
+    active_prev = Fiber(SparseByteMap(Pattern()), n)
     active_prev[source] = true
-    active = Fiber!(SparseByteMap(Pattern()), n)
+    active = Fiber(SparseByteMap(Pattern()), n)
 
     for iter = 1:n  
         @finch for j=_; if active_prev[j] dists[j] <<minby>>= dists_prev[j] end end

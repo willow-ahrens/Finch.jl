@@ -26,12 +26,12 @@ code for a function body.
 In normal Finch usage, we might call Finch as follows:
 
 ```jldoctest example1; setup = :(using Finch)
-julia> C = Fiber!(SparseList(Element(0)));
+julia> C = Fiber(SparseList(Element(0)));
 
-julia> A = Fiber!(SparseList(Element(0)), [0, 2, 0, 0, 3]);
+julia> A = Fiber(SparseList(Element(0)), [0, 2, 0, 0, 3]);
 
 
-julia> B = Fiber!(Dense(Element(0)), [11, 12, 13, 14, 15]);
+julia> B = Fiber(Dense(Element(0)), [11, 12, 13, 14, 15]);
 
 julia> @finch (C .= 0; for i=_; C[i] = A[i] * B[i] end);
 
@@ -104,7 +104,7 @@ follows:
 
 ```jldoctest example1
 julia> function pointwise_sum(As...)
-           B = Fiber!(Dense(Element(0)))
+           B = Fiber(Dense(Element(0)))
            isempty(As) && return B
            i = Finch.FinchNotation.index_instance(:i)
            A_vars = [Finch.FinchNotation.tag_instance(Finch.FinchNotation.variable_instance(Symbol(:A, n)), As[n]) for n in 1:length(As)]
@@ -153,9 +153,9 @@ representations. For example, the literal `42` is represented as
 The virtualization process is implemented by the `virtualize` function. 
 
 ```jldoctest example2; setup = :(using Finch)
-julia> A = Fiber!(SparseList(Element(0)), [0, 2, 0, 0, 3]);
+julia> A = Fiber(SparseList(Element(0)), [0, 2, 0, 0, 3]);
 
-julia> B = Fiber!(Dense(Element(0)), [11, 12, 13, 14, 15]);
+julia> B = Fiber(Dense(Element(0)), [11, 12, 13, 14, 15]);
 
 julia> s = Scalar(0);
 
