@@ -35,7 +35,7 @@ SparseCOO (0.0) [1:3,1:3]
 ├─├─[3, 3]: 40.0
 ```
 """
-struct SparseCOOLevel{N, TI<:Tuple, Ptr, Tbl, Lvl}
+struct SparseCOOLevel{N, TI<:Tuple, Ptr, Tbl, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::TI
     ptr::Ptr
@@ -79,6 +79,9 @@ end
 
 redefault!(lvl::SparseCOOLevel{N, TI}, init) where {N, TI} = 
     SparseCOOLevel{N, TI}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl)
+
+resize!(lvl::SparseCOOLevel{N, TI}, dims...) where {N, TI} = 
+    SparseCOOLevel{N, TI}(resize!(lvl.lvl, dims[1:end-N]...), (dims[end-N + 1:end]...,), lvl.ptr, lvl.tbl)
 
 function Base.show(io::IO, lvl::SparseCOOLevel{N, TI}) where {N, TI}
     if get(io, :compact, false)

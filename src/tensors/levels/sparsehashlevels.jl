@@ -32,7 +32,7 @@ SparseHash (0.0) [1:3,1:3]
 ├─├─[3, 3]: 40.0
 ```
 """
-struct SparseHashLevel{N, TI<:Tuple, Ptr, Tbl, Srt, Lvl}
+struct SparseHashLevel{N, TI<:Tuple, Ptr, Tbl, Srt, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::TI
     ptr::Ptr
@@ -84,6 +84,9 @@ end
 
 redefault!(lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}, init) where {N, TI, Ptr, Tbl, Srt, Lvl} = 
     SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
+
+resize!(lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}, dims...) where {N, TI, Ptr, Tbl, Srt, Lvl} = 
+    SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}(resize!(lvl.lvl,  dims[1:end-N]...), (dims[end-N + 1:end]...,), lvl.ptr, lvl.tbl, lvl.srt)
 
 function Base.show(io::IO, lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}) where {N, TI, Ptr, Tbl, Srt, Lvl}
     if get(io, :compact, false)

@@ -28,7 +28,7 @@ SparseByteMap (0.0) [:,1:3]
 │ ├─[3]: 40.0
 ```
 """
-struct SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}
+struct SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     ptr::Ptr
@@ -66,6 +66,9 @@ pattern!(lvl::SparseByteMapLevel{Ti}) where {Ti} =
 
 redefault!(lvl::SparseByteMapLevel{Ti}, init) where {Ti} = 
     SparseByteMapLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
+
+resize!(lvl::SparseByteMapLevel{Ti}, dims...) where {Ti} = 
+    SparseByteMapLevel{Ti}(redefault!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.tbl, lvl.srt)
 
 function countstored_level(lvl::SparseByteMapLevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)

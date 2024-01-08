@@ -16,7 +16,7 @@ Dense [1:3]
 ├─[3]: 3.0
 ```
 """
-struct ElementLevel{D, Tv, Tp, Val}
+struct ElementLevel{D, Tv, Tp, Val} <: AbstractLevel
     val::Val
 end
 const Element = ElementLevel
@@ -46,6 +46,7 @@ pattern!(lvl::ElementLevel{D, Tv, Tp}) where  {D, Tv, Tp} =
     Pattern{Tp}()
 redefault!(lvl::ElementLevel{D, Tv, Tp}, init) where {D, Tv, Tp} = 
     ElementLevel{init, Tv, Tp}(lvl.val)
+resize!(lvl::ElementLevel) = lvl
 
 
 function Base.show(io::IO, lvl::ElementLevel{D, Tv, Tp, Val}) where {D, Tv, Tp, Val}

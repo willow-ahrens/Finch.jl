@@ -14,7 +14,7 @@ Dense [1:3]
 ├─[3]: Pointer -> 3.0
 ```
 """
-struct SeparationLevel{Val, Lvl}
+struct SeparationLevel{Val, Lvl} <: AbstractLevel
     val::Val
     lvl::Lvl
 end
@@ -36,6 +36,8 @@ end
 
 pattern!(lvl::SeparationLevel) = SeparationLevel(map(pattern!, lvl.val), pattern!(lvl.lvl))
 redefault!(lvl::SeparationLevel, init) = SeparationLevel(map(lvl_2->redefault!(lvl_2, init), lvl.val), redefault!(lvl.lvl, init))
+resize!(lvl::SeparationLevel, dims...) = SeparationLevel(map(lvl_2->resize!(lvl_2, dims...), lvl.val), resize!(lvl.lvl, dims...))
+
 
 function Base.show(io::IO, lvl::SeparationLevel{Val, Lvl}) where {Val, Lvl}
     print(io, "Separation(")

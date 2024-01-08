@@ -13,7 +13,7 @@ Dense [1:3]
 ├─[3]: true
 ```
 """
-struct PatternLevel{Tp} end
+struct PatternLevel{Tp} <: AbstractLevel end
 const Pattern = PatternLevel
 
 PatternLevel() = PatternLevel{Int}()
@@ -26,6 +26,8 @@ countstored_level(lvl::PatternLevel, pos) = pos
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:PatternLevel}, depth)
     show(io, mime, true)
 end
+
+resize!(lvl::PatternLevel) = lvl
 
 pattern!(::PatternLevel{Tp}) where {Tp} = Pattern{Tp}()
 

@@ -17,8 +17,10 @@ valid.
 struct Fiber{Lvl} <: AbstractFiber{Lvl}
     lvl::Lvl
 end
-
-
+Fiber(lvl::AbstractLevel, dims...) = Fiber(lvl, undef, dims...)
+Fiber(lvl::AbstractLevel, init::UndefInitializer, dims...) = Fiber(assemble!(resize!(lvl, dims...)))
+Fiber(lvl::AbstractLevel, init::UndefInitializer) = Fiber(assemble!(lvl))
+Fiber(lvl::AbstractLevel, arr) = dropdefaults!(Fiber(lvl), arr)
 
 mutable struct VirtualFiber{Lvl} <: AbstractVirtualFiber{Lvl}
     lvl::Lvl
@@ -144,7 +146,14 @@ SparseList (Inf) [1:10]
 ```
 """
 redefault!(fbr::Fiber, init) = Fiber(redefault!(fbr.lvl, init))
-redefault!(fbr::SubFiber, init) = SubFiber(redefault!(fbr.lvl, init), fbr.pos)
+
+"""
+    resize!(fbr, dims...)
+
+Set the shape of `fbr` equal to `dims`. May reuse memory and render the original
+fiber unusable when modified.
+"""
+resize!(fbr::Fiber, dims...) = Fiber(resize!(fbr.lvl, dims...))
 
 data_rep(fbr::Fiber) = data_rep(typeof(fbr))
 data_rep(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = data_rep_level(Lvl)
@@ -249,18 +258,7 @@ allocates. Use `fiber(arg)` for a zero-cost copy, if available.
 """
 function Fiber! end
 
-@staged function Fiber!(lvl)
-    contain(LowerJulia()) do ctx
-        lvl = virtualize(:lvl, lvl, ctx.code)
-        def = literal(virtual_level_default(lvl))
-        lvl = declare_level!(lvl, ctx, literal(0), def)
-        push!(ctx.code.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
-        lvl = freeze_level!(lvl, ctx, literal(1))
-        :(Fiber($(ctx(lvl))))
-    end
-end
-
-function FiberCode!(lvl)
+@staged function assemble!(lvl)
     contain(LowerJulia()) do ctx
         lvl = virtualize(:lvl, lvl, ctx.code)
         def = literal(virtual_level_default(lvl))
@@ -268,11 +266,7 @@ function FiberCode!(lvl)
         push!(ctx.code.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
         lvl = freeze_level!(lvl, ctx, literal(1))
         ctx(lvl)
-    end |> unblock |> pretty |> dataflow |> unquote_literals
-end
-
-function Fiber!(lvl, arg)
-    dropdefaults!(Fiber!(lvl), arg)
+    end
 end
 
 Base.summary(fbr::Fiber) = "$(join(size(fbr), "×")) Fiber!($(summary(fbr.lvl)))"

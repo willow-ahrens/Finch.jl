@@ -32,7 +32,7 @@ SparseList (0.0) [:,1:3]
 
 ```
 """
-struct SparseListLevel{Ti, Ptr, Idx, Lvl}
+struct SparseListLevel{Ti, Ptr, Idx, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     ptr::Ptr
@@ -71,6 +71,9 @@ pattern!(lvl::SparseListLevel{Ti}) where {Ti} =
 
 redefault!(lvl::SparseListLevel{Ti}, init) where {Ti} = 
     SparseListLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx)
+
+resize!(lvl::SparseListLevel{Ti}, dims...) where {Ti} = 
+    SparseListLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.idx)
 
 function Base.show(io::IO, lvl::SparseListLevel{Ti, Ptr, Idx, Lvl}) where {Ti, Lvl, Idx, Ptr}
     if get(io, :compact, false)

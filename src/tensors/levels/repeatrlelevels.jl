@@ -20,7 +20,7 @@ RepeatRLE (0.0) [1:9]
 
 ```
 """
-struct RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}
+struct RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val} <: AbstractLevel
     shape::Ti
     ptr::Ptr
     idx::Idx
@@ -64,7 +64,10 @@ pattern!(lvl::RepeatRLELevel{D, Ti}) where {D, Ti} =
     DenseLevel{Ti}(Pattern(), lvl.shape)
 
 redefault!(lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}, init) where {D, Ti, Tp, Tv, Ptr, Idx, Val} = 
-    RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}(lvl.val)
+    RepeatRLELevel{init, Ti, Tp, Tv, Ptr, Idx, Val}(lvl.shape, lvl.ptr, lvl.idx, lvl.val)
+
+resize!(lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}, dim) where {D, Ti, Tp, Tv, Ptr, Idx, Val} = 
+    RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}(dim, lvl.ptr, lvl.idx, lvl.val)
 
 function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}) where {D, Ti, Tp, Tv, Ptr, Idx, Val}
     print(io, "RepeatRLE{")

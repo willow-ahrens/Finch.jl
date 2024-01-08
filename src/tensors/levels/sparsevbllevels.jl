@@ -23,7 +23,7 @@ SparseList (0.0) [:,1:3]
 │ ├─[1]: 20.0
 │ ├─[3]: 40.0
 """
-struct SparseVBLLevel{Ti, Ptr<:AbstractVector, Idx<:AbstractVector, Ofs<:AbstractVector, Lvl}
+struct SparseVBLLevel{Ti, Ptr<:AbstractVector, Idx<:AbstractVector, Ofs<:AbstractVector, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     ptr::Ptr
@@ -64,6 +64,9 @@ end
 
 redefault!(lvl::SparseVBLLevel{Ti}, init) where {Ti} = 
     SparseVBLLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
+
+resize!(lvl::SparseVBLLevel{Ti}, dims...) where {Ti} = 
+    SparseVBLLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.idx, lvl.ofs)
 
 function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}) where {Ti, Ptr, Idx, Ofs, Lvl}
     if get(io, :compact, false)

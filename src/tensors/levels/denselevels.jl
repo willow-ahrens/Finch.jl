@@ -22,7 +22,7 @@ Dense [:,1:2]
 │ ├─[2]: 4.0
 ```
 """
-struct DenseLevel{Ti, Lvl}
+struct DenseLevel{Ti, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
 end
@@ -50,6 +50,9 @@ pattern!(lvl::DenseLevel{Ti, Lvl}) where {Ti, Lvl} =
 
 redefault!(lvl::DenseLevel{Ti}, init) where {Ti} = 
     DenseLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape)
+
+resize!(lvl::DenseLevel{Ti}, dims...) where {Ti} = 
+    DenseLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]), dims[end])
 
 @inline level_ndims(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::DenseLevel) = (level_size(lvl.lvl)..., lvl.shape)
