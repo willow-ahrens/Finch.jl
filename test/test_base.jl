@@ -63,7 +63,7 @@ using Finch: AsArray
         io = IOBuffer()
         println(io, "setindex! tests")
 
-        @repl io A = Fiber!(Dense(Dense(Element(0.0), 10), 12))
+        @repl io A = Fiber!(Dense(Dense(Element(0.0))), 10, 12)
         @repl io A[1, 4] = 3
         @repl io AsArray(A)
         @repl io A[4:6, 6] = 5:7

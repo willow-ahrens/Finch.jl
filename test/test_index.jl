@@ -50,7 +50,7 @@
     using SparseArrays
 
     A_ref = sprand(10, 0.5); B_ref = sprand(10, 0.5); C_ref = vcat(A_ref, B_ref)
-    A = fiber(SparseVector{Float64, Int64}(A_ref)); B = fiber(SparseVector{Float64, Int64}(B_ref)); C = Fiber!(SparseList{Int64}(Element(0.0), 20))
+    A = fiber(SparseVector{Float64, Int64}(A_ref)); B = fiber(SparseVector{Float64, Int64}(B_ref)); C = Fiber!(SparseList{Int64}(Element(0.0)), 20)
     @test check_output("concat_offset_permit.jl", @finch_code (C .= 0; for i=_; C[i] = coalesce(A[~i], B[~(i - 10)]) end))
     @finch (C .= 0; for i=_; C[i] = coalesce(A[~i], B[~(i - 10)]) end)
     @test reference_isequal(C, C_ref)
@@ -114,7 +114,7 @@
         io = IOBuffer()
         println(io, "chunkmask tests")
 
-        @repl io A = Fiber!(Dense(Dense(Element(0.0), 15), 3))
+        @repl io A = Fiber!(Dense(Dense(Element(0.0))), 15, 3)
         @repl io @finch begin
             let m = Finch.chunkmask(5, 1:15)
                 for i = _
@@ -126,7 +126,7 @@
         end
         @repl io AsArray(A)
 
-        @repl io A = Fiber!(Dense(Dense(Element(0.0), 14), 3))
+        @repl io A = Fiber!(Dense(Dense(Element(0.0))), 14, 3)
         @repl io @finch begin
             let m = Finch.chunkmask(5, 1:14)
                 for i = _

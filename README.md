@@ -33,8 +33,8 @@ Finch supports a wide variety of array structure beyond sparsity. Whether you're
 
 | Feature/Structure | Example Usage |
 |-------------------|---------------|
-| Major Sparse Formats and Structured Arrays |  `A = Fiber!(Dense(SparseList(Element(0.0)))`|
-| Background Values Other Than Zero |  `B = Fiber!(SparseList(Element(1.0)))`|
+| Major Sparse Formats and Structured Arrays |  `A = Fiber!(Dense(SparseList(Element(0.0)), 3, 4)`|
+| Background Values Other Than Zero |  `B = Fiber!(SparseList(Element(1.0)), 9)`|
 | Broadcasts and Reductions |  `sum(A .* B)`|
 | Custom Operators |  `x[] <<min>>= y[i] + z[i]`|
 | Multiple Outputs |  `x[] <<min>>= y[i]; z[] <<max>>= y[i]`|

@@ -6,7 +6,7 @@ false. PatternLevels are used to create tensors that represent which values
 are stored by other fibers. See [`pattern`](@ref) for usage examples.
 
 ```jldoctest
-julia> Fiber!(Dense(Pattern(), 3))
+julia> Fiber!(Dense(Pattern()), 3)
 Dense [1:3]
 ├─[1]: true
 ├─[2]: true

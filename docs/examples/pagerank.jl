@@ -18,9 +18,9 @@ function pagerank(edges; nsteps=20, damp = 0.85)
             end
         end
     end
-    r = Fiber!(Dense(Element(0.0), n))
+    r = Fiber!(Dense(Element(0.0)), n)
     @finch (r .= 0.0; for j=_; r[j] = 1.0/n end)
-    rank = Fiber!(Dense(Element(0.0), n))
+    rank = Fiber!(Dense(Element(0.0)), n)
     beta_score = (1 - damp)/n
 
     for step = 1:nsteps
