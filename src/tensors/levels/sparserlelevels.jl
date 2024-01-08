@@ -69,7 +69,7 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseRLE
     p = fbr.pos
     lvl = fbr.lvl
     if p + 1 > length(lvl.ptr)
-        print(io, "SparseHash(undef...)")
+        print(io, "SparseRLE(undef...)")
         return
     end
     left_endpoints = @view(lvl.left[lvl.ptr[p]:lvl.ptr[p + 1] - 1])
