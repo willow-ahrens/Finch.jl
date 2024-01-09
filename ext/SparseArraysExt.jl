@@ -11,26 +11,22 @@ using Base: @kwdef
 
 isdefined(Base, :get_extension) ? (using SparseArrays) : (using ..SparseArrays)
 
-function Finch.fiber(arr::SparseMatrixCSC{Tv, Ti}; default=zero(Tv)) where {Tv, Ti}
-    @assert iszero(default)
+function Finch.Fiber(arr::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti}
     (m, n) = size(arr)
     return Fiber(Dense(SparseList{Ti}(Element{zero(Tv)}(copy(arr.nzval)), m, copy(arr.colptr), copy(arr.rowval)), n))
 end
 
-function Finch.fiber!(arr::SparseMatrixCSC{Tv, Ti}; default=zero(Tv)) where {Tv, Ti}
-    @assert iszero(default)
+function Finch.Fiber(arr::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti}
     (m, n) = size(arr)
     return Fiber(Dense(SparseList{Ti}(Element{zero(Tv)}(arr.nzval), m, arr.colptr, arr.rowval), n))
 end
 
-function Finch.fiber(arr::SparseVector{Tv, Ti}; default=zero(Tv)) where {Tv, Ti}
-    @assert iszero(default)
+function Finch.Fiber(arr::SparseVector{Tv, Ti}) where {Tv, Ti}
     (n,) = size(arr)
     return Fiber(SparseList{Ti}(Element{zero(Tv)}(arr.nzval), n, [1, length(arr.nzind) + 1], copy(arr.nzind)))
 end
 
-function Finch.fiber!(arr::SparseVector{Tv, Ti}; default=zero(Tv)) where {Tv, Ti}
-    @assert iszero(default)
+function Finch.Fiber(arr::SparseVector{Tv, Ti}) where {Tv, Ti}
     (n,) = size(arr)
     return Fiber(SparseList{Ti}(Element{zero(Tv)}(arr.nzval), n, [1, length(arr.nzind) + 1], arr.nzind))
 end

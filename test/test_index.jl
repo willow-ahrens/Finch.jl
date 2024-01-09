@@ -50,12 +50,12 @@
     using SparseArrays
 
     A_ref = sprand(10, 0.5); B_ref = sprand(10, 0.5); C_ref = vcat(A_ref, B_ref)
-    A = fiber(SparseVector{Float64, Int64}(A_ref)); B = fiber(SparseVector{Float64, Int64}(B_ref)); C = Fiber(SparseList{Int64}(Element(0.0)), 20)
+    A = Fiber(SparseVector{Float64, Int64}(A_ref)); B = Fiber(SparseVector{Float64, Int64}(B_ref)); C = Fiber(SparseList{Int64}(Element(0.0)), 20)
     @test check_output("concat_offset_permit.jl", @finch_code (C .= 0; for i=_; C[i] = coalesce(A[~i], B[~(i - 10)]) end))
     @finch (C .= 0; for i=_; C[i] = coalesce(A[~i], B[~(i - 10)]) end)
     @test reference_isequal(C, C_ref)
 
-    F = fiber(Int64[1,1,1,1,1])
+    F = Fiber(Int64[1,1,1,1,1])
 
     @test check_output("sparse_conv.jl", @finch_code (C .= 0; for i=_, j=_; C[i] += (A[i] != 0) * coalesce(A[j - i + 3], 0) * F[j] end))
     @finch (C .= 0; for i=_, j=_; C[i] += (A[i] != 0) * coalesce(A[j - i + 3], 0) * F[j] end)

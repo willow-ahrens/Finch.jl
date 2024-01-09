@@ -1,7 +1,7 @@
 @testset "print" begin
     @info "Testing Fiber Printing"
 
-    A = fiber([(i + j) % 3 for i = 1:5, j = 1:10])
+    A = Fiber([(i + j) % 3 for i = 1:5, j = 1:10])
 
     formats = [
         "list" => SparseList,
@@ -45,7 +45,7 @@
         end
     end
 
-    A = fiber([fld(i + j, 3) for i = 1:5, j = 1:10])
+    A = Fiber([fld(i + j, 3) for i = 1:5, j = 1:10])
 
     formats = [
         "rle" => RepeatRLE{0.0},

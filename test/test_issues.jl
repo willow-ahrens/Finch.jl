@@ -161,7 +161,7 @@ using CIndices
 
         @finch (B .= 0; for j=_, i=_; B[i, j] = A[i, j] end)
 
-        @test Structure(B) == Structure(fiber(A))
+        @test Structure(B) == Structure(Fiber(A))
 
         v = SparseVector(10, [1, 6, 7, 9], [1.1, 2.2, 3.3, 4.4])
 
@@ -169,7 +169,7 @@ using CIndices
 
         @finch (w .= 0; for i=_; w[i] = v[i] end)
 
-        @test Structure(w) == Structure(fiber(v))
+        @test Structure(w) == Structure(Fiber(v))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/99

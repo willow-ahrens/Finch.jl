@@ -35,15 +35,35 @@ Fiber(lvl::AbstractLevel, dims::Tuple) = Fiber(lvl, undef, dims...)
 Fiber(lvl::AbstractLevel, init::UndefInitializer, dims...) = Fiber(assemble!(resize!(lvl, dims...)))
 Fiber(lvl::AbstractLevel, init::UndefInitializer, dims::Tuple) = Fiber(assemble!(resize!(lvl, dims...)))
 Fiber(lvl::AbstractLevel, init::UndefInitializer) = Fiber(assemble!(lvl))
-
 """
     Fiber(lvl, arr)
 
 Construct a `Fiber` and initialize it to the contents of `arr`.
-May share memory when applicable. To explicitly copy into a fiber,
+To explicitly copy into a fiber,
 use @ref[`copyto!`]
 """
 Fiber(lvl::AbstractLevel, arr) = dropdefaults!(Fiber(lvl), arr)
+
+"""
+    Fiber(arr)
+
+Copy an array-like object `arr` into a corresponding, similar `Fiber`
+datastructure. May reuse memory when possible. To explicitly copy into a fiber,
+use @ref[`copyto!`].
+
+# Examples
+
+```jldoctest
+julia> println(summary(Fiber(sparse([1 0; 0 1]))))
+2×2 Fiber(Dense(SparseList(Element(0))))
+
+julia> println(summary(Fiber(ones(3, 2, 4))))
+3×2×4 Fiber(Dense(Dense(Dense(Element(0.0)))))
+```
+"""
+function Fiber(arr; default=zero(eltype(arr)))
+    Base.copyto!(Fiber((DenseLevel^(ndims(arr)))(Element{default}())), arr)
+end
 
 mutable struct VirtualFiber{Lvl} <: AbstractVirtualFiber{Lvl}
     lvl::Lvl
@@ -272,13 +292,6 @@ countstored(fbr::Fiber) = countstored_level(fbr.lvl, 1)
 countstored(arr::Array) = length(arr)
 
 
-"""
-    Fiber(ctr, [arg])
-
-Construct a fiber from a nest of levels. This function may allocate memory.
-Optionally, an argument may be specified to copy into the fiber. This expression
-allocates. Use `fiber(arg)` for a zero-cost copy, if available.
-"""
 
 @staged function assemble!(lvl)
     contain(LowerJulia()) do ctx

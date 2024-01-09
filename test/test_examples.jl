@@ -15,7 +15,7 @@ include(joinpath(@__DIR__, "../docs/examples/triangle_counting.jl"))
         input = sprand(size, size, sparsity)
 
         graphs_input = Graphs.SimpleDiGraph(transpose(input))
-        finch_input = pattern!(fiber(input))
+        finch_input = pattern!(Fiber(input))
 
         expected = Graphs.pagerank(graphs_input, 0.85, 20)
         output = pagerank(finch_input; nsteps=20, damp = 0.85)
