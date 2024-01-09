@@ -6,14 +6,14 @@ false. PatternLevels are used to create tensors that represent which values
 are stored by other fibers. See [`pattern`](@ref) for usage examples.
 
 ```jldoctest
-julia> Fiber!(Dense(Pattern(), 3))
+julia> Tensor(Dense(Pattern()), 3)
 Dense [1:3]
 ├─[1]: true
 ├─[2]: true
 ├─[3]: true
 ```
 """
-struct PatternLevel{Tp} end
+struct PatternLevel{Tp} <: AbstractLevel end
 const Pattern = PatternLevel
 
 PatternLevel() = PatternLevel{Int}()
@@ -26,6 +26,8 @@ countstored_level(lvl::PatternLevel, pos) = pos
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:PatternLevel}, depth)
     show(io, mime, true)
 end
+
+Base.resize!(lvl::PatternLevel) = lvl
 
 pattern!(::PatternLevel{Tp}) where {Tp} = Pattern{Tp}()
 
@@ -51,12 +53,12 @@ end
 """
     pattern!(fbr)
 
-Return the pattern of `fbr`. That is, return a fiber which is true wherever
+Return the pattern of `fbr`. That is, return a tensor which is true wherever
 `fbr` is structurally unequal to it's default. May reuse memory and render the
-original fiber unusable when modified.
+original tensor unusable when modified.
 
 ```jldoctest
-julia> A = Fiber!(SparseList(Element(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
+julia> A = Tensor(SparseList(Element(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
 SparseList (0.0) [1:10]
 ├─[1]: 2.0
 ├─[3]: 3.0
@@ -73,7 +75,7 @@ SparseList (false) [1:10]
 ├─[9]: true
 ```
 """
-pattern!(fbr::Fiber) = Fiber(pattern!(fbr.lvl))
+pattern!(fbr::Tensor) = Tensor(pattern!(fbr.lvl))
 pattern!(fbr::SubFiber) = SubFiber(pattern!(fbr.lvl), fbr.pos)
 
 struct VirtualPatternLevel <: AbstractVirtualLevel

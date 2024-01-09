@@ -4,8 +4,8 @@
     let
         io = IOBuffer()
 
-        @repl io A = Fiber!(SparseList(Element(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
-        @repl io B = Fiber!(Dense(Element(0.0)), fill(1.1, 10))
+        @repl io A = Tensor(SparseList(Element(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
+        @repl io B = Tensor(Dense(Element(0.0)), fill(1.1, 10))
         @repl io @finch_code for i=_; B[i] += A[i] end
         @repl io @finch for i=_; B[i] += A[i] end
         
@@ -41,9 +41,9 @@
     let
         io = IOBuffer()
 
-        @repl io A = Fiber!(Dense(SparseList(Element(0.0))), [0 0 3.3; 1.1 0 0; 2.2 0 4.4; 0 0 5.5])
-        @repl io y = fiber!([1.0, 2.0, 3.0, 4.0])
-        @repl io x = fiber!([1, 2, 3])
+        @repl io A = Tensor(Dense(SparseList(Element(0.0))), [0 0 3.3; 1.1 0 0; 2.2 0 4.4; 0 0 5.5])
+        @repl io y = Tensor([1.0, 2.0, 3.0, 4.0])
+        @repl io x = Tensor([1, 2, 3])
         @repl io @finch_code begin
             y .= 0
             for j = _
@@ -67,8 +67,8 @@
     let
         io = IOBuffer()
 
-        @repl io A = Fiber!(Dense(SparseList(Element(0.0))), [0 0 3.3; 1.1 0 0; 2.2 0 4.4; 0 0 5.5])
-        @repl io B = Fiber!(SparseHash{2}(Element(0.0)))
+        @repl io A = Tensor(Dense(SparseList(Element(0.0))), [0 0 3.3; 1.1 0 0; 2.2 0 4.4; 0 0 5.5])
+        @repl io B = Tensor(SparseHash{2}(Element(0.0)))
         @repl io @finch_code mode=fastfinch begin
             B .= 0
             for j = _
@@ -90,15 +90,15 @@
     end
 
     let
-        x = Fiber(
+        x = Tensor(
             SparseList(
                 Element{0.0, Float64}([2.0, 3.0, 4.0, 5.0, 6.0]),
                 10, [1, 6], [1, 3, 5, 7, 9]))
-        y = Fiber(
+        y = Tensor(
             SparseList(
                 Element{0.0, Float64}([1.0, 1.0, 1.0]),
                 10, [1, 4], [2, 5, 8]))
-        z = Fiber(SparseList(Element{0.0}(), 10))
+        z = Tensor(SparseList(Element{0.0}(), 10))
     
         io = IOBuffer()
 
@@ -123,7 +123,7 @@
 
         io = IOBuffer()
 
-        @repl io X = Fiber!(SparseList(Element(0.0)), [1.0, 0.0, 0.0, 3.0, 0.0, 2.0, 0.0])
+        @repl io X = Tensor(SparseList(Element(0.0)), [1.0, 0.0, 0.0, 3.0, 0.0, 2.0, 0.0])
         @repl io x_min = Scalar(Inf)
         @repl io x_max = Scalar(-Inf)
         @repl io x_sum = Scalar(0.0)

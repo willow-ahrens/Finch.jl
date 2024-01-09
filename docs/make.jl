@@ -25,7 +25,7 @@ makedocs(;
         "Home" => "index.md",
         "Usage" => "usage.md",
         "Semantics" => "semantics.md",
-        "Array Formats" => "fibers.md",
+        "Array Formats" => "tensors.md",
         "Custom Functions" => "algebra.md",
         "Tensor File I/O" => "fileio.md",
         "C, C++, ..." => "interop.md",

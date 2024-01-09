@@ -1,39 +1,7 @@
 """
-    fiber!(arr, default = zero(eltype(arr)))
-
-Like [`fiber`](@ref), copies an array-like object `arr` into a corresponding,
-similar `Fiber` datastructure. However, `fiber!` reuses memory whenever
-possible, meaning `arr` may be rendered unusable.
-"""
-fiber!(arr; default=zero(eltype(arr))) = fiber(arr, default=default)
-
-"""
-    fiber(arr, default = zero(eltype(arr)))
-
-Copies an array-like object `arr` into a corresponding, similar `Fiber`
-datastructure. `default` is the default value to use for initialization and
-sparse compression.
-
-See also: [`fiber!`](@ref)
-
-# Examples
-
-```jldoctest
-julia> println(summary(fiber(sparse([1 0; 0 1]))))
-2×2 Fiber!(Dense(SparseList(Element(0))))
-
-julia> println(summary(fiber(ones(3, 2, 4))))
-3×2×4 Fiber!(Dense(Dense(Dense(Element(0.0)))))
-```
-"""
-function fiber(arr; default=zero(eltype(arr)))
-    Base.copyto!(Fiber((DenseLevel^(ndims(arr)))(Element{default}())), arr)
-end
-
-"""
     fsparse(I::Tuple, V,[ M::Tuple, combine])
 
-Create a sparse COO fiber `S` such that `size(S) == M` and `S[(i[q] for i =
+Create a sparse COO tensor `S` such that `size(S) == M` and `S[(i[q] for i =
 I)...] = V[q]`. The combine function is used to combine duplicates. If `M` is
 not specified, it is set to `map(maximum, I)`. If the combine function is not
 supplied, combine defaults to `+` unless the elements of V are Booleans in which
@@ -99,7 +67,7 @@ fsparse!_parse(I, i::AbstractVector, args...) = fsparse!_parse((I..., i), args..
 fsparse!_parse(I, V::AbstractVector) = fsparse!_impl(I, V)
 fsparse!_parse(I, V::AbstractVector, M::Tuple) = fsparse!_impl(I, V, M)
 function fsparse!_impl(I::Tuple, V, shape = map(maximum, I))
-    return Fiber(SparseCOO{length(I), Tuple{map(eltype, I)...}}(Element{zero(eltype(V)), eltype(V), Int}(V), shape, [1, length(V) + 1], I))
+    return Tensor(SparseCOO{length(I), Tuple{map(eltype, I)...}}(Element{zero(eltype(V)), eltype(V), Int}(V), shape, [1, length(V) + 1], I))
 end
 
 """
@@ -194,7 +162,7 @@ V)`, where `I` are the coordinate vectors, one for each mode of `arr`, and
 See also: (`findnz`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.findnz)
 """
 function ffindnz(src)
-    tmp = Fiber(
+    tmp = Tensor(
         SparseCOOLevel{ndims(src)}(
             ElementLevel{zero(eltype(src)), eltype(src)}()))
     tmp = copyto!(tmp, src)

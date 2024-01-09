@@ -1,5 +1,5 @@
-Fiber!(Dense(Separation(Dense(Element(0))))):
-initialized fiber: Fiber(Dense{Int64}(Separation([Dense{Int64}(Element{0, Int64, Int64}([0, 1, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([2, 0, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([2, 7, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([0, 1, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([3, 0, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([3, 0, 9]), 3)], Dense{Int64}(Element{0, Int64, Int64}(Int64[]), 3)), 6))
-sized fiber: Fiber(Dense{Int64}(Separation([Dense{Int64}(Element{0, Int64, Int64}([0, 0, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([0, 0, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([0, 0, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([0, 0, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([0, 0, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([0, 0, 0]), 3)], Dense{Int64}(Element{0, Int64, Int64}(Int64[]), 3)), 6))
-empty fiber: Fiber(Dense{Int64}(Separation([Dense{Int64}(Element{0, Int64, Int64}(Int64[]), 0)], Dense{Int64}(Element{0, Int64, Int64}(Int64[]), 0)), 0))
+Tensor(Dense(Separation(Dense(Element(0))))):
+initialized tensor: Tensor(Dense{Int64}(Separation([Dense{Int64}(Element{0, Int64, Int64}([0, 1, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([2, 0, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([2, 7, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([0, 1, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([3, 0, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([3, 0, 9]), 3)], Dense{Int64}(Element{0, Int64, Int64}(Int64[]), 3)), 6))
+sized tensor: Tensor(Dense{Int64}(Separation([Dense{Int64}(Element{0, Int64, Int64}(Int64[]), 3)], Dense{Int64}(Element{0, Int64, Int64}(Int64[]), 3)), 6))
+empty tensor: Tensor(Dense{Int64}(Separation([Dense{Int64}(Element{0, Int64, Int64}(Int64[]), 0)], Dense{Int64}(Element{0, Int64, Int64}(Int64[]), 0)), 0))
 

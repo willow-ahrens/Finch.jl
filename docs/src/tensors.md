@@ -3,13 +3,13 @@ CurrentModule = Finch
 ```
 # Level Formats
 
-Finch implements a flexible array datastructure called a fiber. Fibers represent
+Finch implements a flexible array datastructure called a `Tensor`. Finch tensors represent
 arrays as rooted trees, where the child of each node is selected by an array
 index. Finch is column major, so in an expression `A[i_1, ..., i_N]`, the
 rightmost dimension `i_N` corresponds to the root level of the tree, and the
 leftmost dimension `i_1` corresponds to the leaf level. When the array is dense,
-the leftmost dimension has stop 1. We can convert the matrix `A` to a fiber
-with the `Fiber!` constructor:
+the leftmost dimension has stop 1. We can convert the matrix `A` to finch format
+with the `Tensor` constructor:
 
 ```jldoctest example1; setup=:(using Finch)
 julia> A = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
@@ -18,7 +18,7 @@ julia> A = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
  1.1  0.0  0.0
  2.2  0.0  5.5
  3.3  0.0  0.0
-julia> A_fbr = Fiber!(Dense(Dense(Element(0.0))), A)
+julia> A_fbr = Tensor(Dense(Dense(Element(0.0))), A)
 Dense [:,1:3]
 ├─[:,1]: Dense [1:4]
 │ ├─[1]: 0.0
@@ -39,14 +39,14 @@ Dense [:,1:3]
 
 We refer to a node in the tree as a subfiber. All of the nodes at the same level
 are stored in the same datastructure, and disambiguated by an integer
-`position`.  In the above example, there are three levels: The rootmost level
-contains only one fiber, the root. The middle level has 3 subfibers, one for
+`position`.  in the above example, there are three levels: the rootmost level
+contains only one subfiber, the root. The middle level has 3 subfibers, one for
 each column. The leafmost level has 12 subfibers, one for each element of the
 array.  For example, the first level is `A_fbr.lvl`, and we can represent it's
 third position as `SubFiber(A_fbr.lvl.lvl, 3)`. The second level is `A_fbr.lvl.lvl`,
 and we can access it's 9th position as `SubFiber(A_fbr.lvl.lvl.lvl, 9)`. For
-instructional purposes, you can use parentheses to call a fiber on an index to
-select among children of a fiber.
+instructional purposes, you can use parentheses to call a subfiber on an index to
+select among children of a subfiber.
 
 ```jldoctest example1
 julia> Finch.SubFiber(A_fbr.lvl.lvl, 3)
@@ -90,11 +90,11 @@ left to right:
 Because our array is sparse, (mostly zero, or another fill value), it would be
 more efficient to store only the nonzero values. In Finch, each level is
 represented with a different format. A sparse level only stores non-fill values.
-This time, we'll use a fiber constructor with `sl` (for "`SparseList` of
+This time, we'll use a tensor constructor with `sl` (for "`SparseList` of
 nonzeros") instead of `d` (for "`Dense`"):
 
 ```jldoctest example1
-julia> A_fbr = Fiber!(Dense(SparseList(Element(0.0))), A)
+julia> A_fbr = Tensor(Dense(SparseList(Element(0.0))), A)
 Dense [:,1:3]
 ├─[:,1]: SparseList (0.0) [1:4]
 │ ├─[2]: 1.1
@@ -112,14 +112,14 @@ Our `Dense(SparseList(Element(0.0)))` format is also known as
 ["CSC"](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29)
 and is equivalent to
 [`SparseMatrixCSC`](https://sparsearrays.juliasparse.org/dev/#man-csc). The
-[`fiber!`](@ref) function will perform a zero-cost copy between Finch fibers and
+[`Tensor`](@ref) function will perform a zero-cost copy between Finch fibers and
 sparse matrices, when available.  CSC is an excellent general-purpose
 representation when we expect most of the columns to have a few nonzeros.
 However, when most of the columns are entirely fill (a situation known as
 hypersparsity), it is better to compress the root level as well:
 
 ```jldoctest example1
-julia> A_fbr = Fiber!(SparseList(SparseList(Element(0.0))), A)
+julia> A_fbr = Tensor(SparseList(SparseList(Element(0.0))), A)
 SparseList (0.0) [:,1:3]
 ├─[:,1]: SparseList (0.0) [1:4]
 │ ├─[2]: 1.1
@@ -146,7 +146,7 @@ level, which can handle more than one index at once. We use curly brackets to
 declare the number of indices handled by the level:
 
 ```jldoctest example1
-julia> A_fbr = Fiber!(SparseCOO{2}(Element(0.0)), A)
+julia> A_fbr = Tensor(SparseCOO{2}(Element(0.0)), A)
 SparseCOO (0.0) [1:4,1:3]
 ├─├─[2, 1]: 1.1
 ├─├─[3, 1]: 2.2
@@ -173,17 +173,17 @@ postype
 
 Additionally, many levels have a `Vp` or `Vi` in their constructors; these stand for vector of element type `Tp` or `Ti`. 
 More generally, levels are paramterized by the types that they use for storage. By default, all levels use `Vector`, but a user 
-could could change any or all of the storage types of a fiber so that the fiber would be stored on a GPU or CPU or some combination thereof, 
+could could change any or all of the storage types of a tensor so that the tensor would be stored on a GPU or CPU or some combination thereof, 
 or eveni just via a vector with a different allocation mechanism.  The storage type should behave like `AbstractArray` 
 and needs to implement the usual abstract array functions and `Base.resize!`. See the tests for an example. 
 
 When levels are constructed in short form as in the examples above, the index, position, and storage types are inferred
-from the level below. All the levels at the bottom of a Fiber (`Element, Pattern, Repeater`) specify an index type, position type,
+from the level below. All the levels at the bottom of a Tensor (`Element, Pattern, Repeater`) specify an index type, position type,
 and storage type even if they don't need them. These are used by levels that take these as parameters. 
 
 ### Move to: Copying Fibers to a new storage type.
 
-If one needs to copy a fiber to another fiber with a different storage type, one can use the `moveto` function, described below.
+If one needs to copy a tensor to another tensor with a different storage type, one can use the `moveto` function, described below.
 
 ```@docs
 moveto
@@ -191,12 +191,10 @@ moveto
 
 # Public Functions
 
-### Fiber Constructors
+### Tensor Constructors
 
 ```@docs
-Fiber!
-fiber
-fiber!
+Tensor
 ```
 
 ### Level Constructors

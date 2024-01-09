@@ -21,7 +21,7 @@ export @finch, @finch_program, @finch_code, @finch_kernel, value
 
 export fastfinch, safefinch, debugfinch
 
-export Fiber, Fiber!
+export Tensor
 export SparseRLE, SparseRLELevel 
 export SparseList, SparseListLevel
 export SparseHash, SparseHashLevel
@@ -36,7 +36,7 @@ export Separation, SeparationLevel
 export Pattern, PatternLevel
 export Scalar, SparseScalar, ShortCircuitScalar, SparseShortCircuitScalar
 export walk, gallop, follow, extrude, laminate
-export fiber, fiber!, Fiber!, pattern!, dropdefaults, dropdefaults!, redefault!
+export Tensor, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
 export scale, product, offset, permissive, protocolize, swizzle, toeplitz, window
 
@@ -98,8 +98,8 @@ include("looplets/steppers.jl")
 include("looplets/fills.jl")
 
 include("tensors/scalars.jl")
-include("tensors/fibers.jl")
 include("tensors/levels/abstractlevel.jl")
+include("tensors/fibers.jl")
 include("tensors/levels/sparserlelevels.jl")
 include("tensors/levels/sparselistlevels.jl")
 include("tensors/levels/sparsehashlevels.jl")
@@ -160,9 +160,9 @@ end
     @compile_workload begin
         # all calls in this block will be precompiled, regardless of whether
         # they belong to your package or not (on Julia 1.8 and higher)
-        y = Fiber!(Dense(Element(0.0)))
-        A = Fiber!(Dense(SparseList(Element(0.0))))
-        x = Fiber!(SparseList(Element(0.0)))
+        y = Tensor(Dense(Element(0.0)))
+        A = Tensor(Dense(SparseList(Element(0.0))))
+        x = Tensor(SparseList(Element(0.0)))
         Finch.execute_code(:ex, typeof(Finch.@finch_program_instance begin
                 for j=_, i=_; y[i] += A[i, j] * x[j] end
             end

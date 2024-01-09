@@ -87,7 +87,7 @@ quote
     resize!(z_lvl_left, qos)
     resize!(z_lvl_right, qos)
     resize!(z_lvl_val, qos)
-    (z = Fiber((SparseRLELevel){Limit{Float32}}(z_lvl_2, y_lvl.shape, z_lvl_ptr, z_lvl_left, z_lvl_right)),)
+    (z = Tensor((SparseRLELevel){Limit{Float32}}(z_lvl_2, y_lvl.shape, z_lvl_ptr, z_lvl_left, z_lvl_right)),)
 end
 julia> @finch begin
         z .= 0
@@ -95,5 +95,5 @@ julia> @finch begin
             z[i] += x[i] * y[i]
         end
     end
-(z = Fiber(SparseRLE{Limit{Float32}}(Element{0, Int32, Int32}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]), limit(100.0), [1, 13], Limit{Float32}[limit(2.0), limit(6.0), limit(12.0), limit(26.0), limit(29.0), limit(37.0), limit(42.0), limit(47.0), limit(73.0), limit(87.0), limit(88.0), limit(92.0)], Limit{Float32}[limit(3.0), limit(6.0), limit(16.0), limit(27.0), limit(30.0), limit(40.0), limit(45.0), limit(56.0), limit(78.0), limit(87.0), limit(89.0), limit(96.0)])),)
+(z = Tensor(SparseRLE{Limit{Float32}}(Element{0, Int32, Int32}([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]), limit(100.0), [1, 13], Limit{Float32}[limit(2.0), limit(6.0), limit(12.0), limit(26.0), limit(29.0), limit(37.0), limit(42.0), limit(47.0), limit(73.0), limit(87.0), limit(88.0), limit(92.0)], Limit{Float32}[limit(3.0), limit(6.0), limit(16.0), limit(27.0), limit(30.0), limit(40.0), limit(45.0), limit(56.0), limit(78.0), limit(87.0), limit(89.0), limit(96.0)])),)
 

@@ -3,41 +3,86 @@ abstract type AbstractVirtualTensor end
 abstract type AbstractVirtualFiber{Lvl} <: AbstractVirtualTensor end
 
 """
-    Fiber(lvl)
+    Tensor{Lvl} <: AbstractFiber{Lvl}
 
-`Fiber` represents the root of a level-tree tensor. To easily construct a valid
-fiber, use [`Fiber!`](@ref) or [`fiber`](@ref). Users should avoid calling
-this constructor directly.
-
-In particular, `Fiber` represents the tensor at position 1 of `lvl`. The
-constructor `Fiber(lvl)` wraps a level assuming it is already in a valid state.
-The constructor `Fiber!(lvl)` first initializes `lvl` assuming no positions are
-valid.
+The multidimensional array type used by `Finch`. `Tensor` is a thin wrapper
+around the hierarchical level storage of type `Lvl`.
 """
-struct Fiber{Lvl} <: AbstractFiber{Lvl}
+struct Tensor{Lvl} <: AbstractFiber{Lvl}
     lvl::Lvl
 end
 
+"""
+    Tensor(lvl)
 
+Construct a `Tensor` using the tensor level storage `lvl`. No initialization of
+storage is performed, it is assumed that position 1 of `lvl` corresponds to a
+valid tensor, and `lvl` will be wrapped as-is. Call a different constructor to
+initialize the storage.
+"""
+Tensor(lvl::Lvl) where {Lvl<:AbstractLevel} = Tensor{Lvl}(lvl)
+
+"""
+    Tensor(lvl, [undef], dims...)
+
+Construct a `Tensor` of size `dims`, and initialize to `undef`, potentially
+allocating memory.  Here `undef` is the `UndefInitializer` singleton type.
+`dims...` may be a variable number of dimensions or a tuple of dimensions, but
+it must correspond to the number of dimensions in `lvl`.
+"""
+Tensor(lvl::AbstractLevel, dims::Number...) = Tensor(lvl, undef, dims...)
+Tensor(lvl::AbstractLevel, dims::Tuple) = Tensor(lvl, undef, dims...)
+Tensor(lvl::AbstractLevel, init::UndefInitializer, dims...) = Tensor(assemble!(resize!(lvl, dims...)))
+Tensor(lvl::AbstractLevel, init::UndefInitializer, dims::Tuple) = Tensor(assemble!(resize!(lvl, dims...)))
+Tensor(lvl::AbstractLevel, init::UndefInitializer) = Tensor(assemble!(lvl))
+"""
+    Tensor(lvl, arr)
+
+Construct a `Tensor` and initialize it to the contents of `arr`.
+To explicitly copy into a tensor,
+use @ref[`copyto!`]
+"""
+Tensor(lvl::AbstractLevel, arr) = dropdefaults!(Tensor(lvl), arr)
+
+"""
+    Tensor(arr, [init = zero(eltype(arr))])
+
+Copy an array-like object `arr` into a corresponding, similar `Tensor`
+datastructure. Uses `init` as an initial value. May reuse memory when possible.
+To explicitly copy into a tensor, use @ref[`copyto!`].
+
+# Examples
+
+```jldoctest
+julia> println(summary(Tensor(sparse([1 0; 0 1]))))
+2×2 Tensor(Dense(SparseList(Element(0))))
+
+julia> println(summary(Tensor(ones(3, 2, 4))))
+3×2×4 Tensor(Dense(Dense(Dense(Element(0.0)))))
+```
+"""
+function Tensor(arr::AbstractArray{Tv, N}, default::Tv=zero(eltype(arr))) where {Tv, N}
+    Base.copyto!(Tensor((DenseLevel^(ndims(arr)))(Element{zero(eltype(arr))}())), arr)
+end
 
 mutable struct VirtualFiber{Lvl} <: AbstractVirtualFiber{Lvl}
     lvl::Lvl
 end
 
-is_injective(fiber::VirtualFiber, ctx) = is_level_injective(fiber.lvl, ctx)
-is_atomic(fiber::VirtualFiber, ctx) = is_level_atomic(fiber.lvl, ctx)
+is_injective(tns::VirtualFiber, ctx) = is_level_injective(tns.lvl, ctx)
+is_atomic(tns::VirtualFiber, ctx) = is_level_atomic(tns.lvl, ctx)
 
-function virtualize(ex, ::Type{<:Fiber{Lvl}}, ctx, tag=freshen(ctx, :tns)) where {Lvl}
+function virtualize(ex, ::Type{<:Tensor{Lvl}}, ctx, tag=freshen(ctx, :tns)) where {Lvl}
     lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
     VirtualFiber(lvl)
 end
-lower(fbr::VirtualFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(Fiber($(ctx(fbr.lvl))))
+lower(fbr::VirtualFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(Tensor($(ctx(fbr.lvl))))
 FinchNotation.finch_leaf(x::VirtualFiber) = virtual(x)
 
 """
     SubFiber(lvl, pos)
 
-`SubFiber` represents a fiber at position `pos` within `lvl`.
+`SubFiber` represents a tensor at position `pos` within `lvl`.
 """
 struct SubFiber{Lvl, Pos} <: AbstractFiber{Lvl}
     lvl::Lvl
@@ -121,12 +166,12 @@ end
 """
     redefault!(fbr, init)
 
-Return a fiber which is equal to `fbr`, but with the default (implicit) value
-set to `init`.  May reuse memory and render the original fiber unusable when
+Return a tensor which is equal to `fbr`, but with the default (implicit) value
+set to `init`.  May reuse memory and render the original tensor unusable when
 modified.
 
 ```jldoctest
-julia> A = Fiber!(SparseList(Element(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
+julia> A = Tensor(SparseList(Element(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
 SparseList (0.0) [1:10]
 ├─[1]: 2.0
 ├─[3]: 3.0
@@ -143,10 +188,17 @@ SparseList (Inf) [1:10]
 ├─[9]: 6.0
 ```
 """
-redefault!(fbr::Fiber, init) = Fiber(redefault!(fbr.lvl, init))
-redefault!(fbr::SubFiber, init) = SubFiber(redefault!(fbr.lvl, init), fbr.pos)
+redefault!(fbr::Tensor, init) = Tensor(redefault!(fbr.lvl, init))
 
-data_rep(fbr::Fiber) = data_rep(typeof(fbr))
+"""
+    resize!(fbr, dims...)
+
+Set the shape of `fbr` equal to `dims`. May reuse memory and render the original
+tensor unusable when modified.
+"""
+Base.resize!(fbr::Tensor, dims...) = Tensor(resize!(fbr.lvl, dims...))
+
+data_rep(fbr::Tensor) = data_rep(typeof(fbr))
 data_rep(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = data_rep_level(Lvl)
 
 function freeze!(fbr::VirtualFiber, ctx::AbstractCompiler)
@@ -164,13 +216,13 @@ end
 
 supports_reassembly(lvl) = false
 
-function Base.show(io::IO, fbr::Fiber)
-    print(io, "Fiber(", fbr.lvl, ")")
+function Base.show(io::IO, fbr::Tensor)
+    print(io, "Tensor(", fbr.lvl, ")")
 end
 
-function Base.show(io::IO, mime::MIME"text/plain", fbr::Fiber)
+function Base.show(io::IO, mime::MIME"text/plain", fbr::Tensor)
     if get(io, :compact, false)
-        print(io, "Fiber!($(summary(fbr.lvl)))")
+        print(io, "Tensor($(summary(fbr.lvl)))")
     else
         display_fiber(io, mime, fbr, 0)
     end
@@ -204,9 +256,9 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::VirtualSubFiber)
     end
 end
 
-(fbr::Fiber)(idx...) = SubFiber(fbr.lvl, 1)(idx...)
+(fbr::Tensor)(idx...) = SubFiber(fbr.lvl, 1)(idx...)
 
-display_fiber(io::IO, mime::MIME"text/plain", fbr::Fiber, depth) = display_fiber(io, mime, SubFiber(fbr.lvl, 1), depth)
+display_fiber(io::IO, mime::MIME"text/plain", fbr::Tensor, depth) = display_fiber(io, mime, SubFiber(fbr.lvl, 1), depth)
 function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, depth, N, crds, print_coord, get_fbr)
     function helper(crd)
         println(io)
@@ -235,32 +287,13 @@ default elements, they are counted too.
 
 See also: (`nnz`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.nnz)
 """
-countstored(fbr::Fiber) = countstored_level(fbr.lvl, 1)
+countstored(fbr::Tensor) = countstored_level(fbr.lvl, 1)
 
 countstored(arr::Array) = length(arr)
 
 
-"""
-    Fiber!(ctr, [arg])
 
-Construct a fiber from a nest of levels. This function may allocate memory.
-Optionally, an argument may be specified to copy into the fiber. This expression
-allocates. Use `fiber(arg)` for a zero-cost copy, if available.
-"""
-function Fiber! end
-
-@staged function Fiber!(lvl)
-    contain(LowerJulia()) do ctx
-        lvl = virtualize(:lvl, lvl, ctx.code)
-        def = literal(virtual_level_default(lvl))
-        lvl = declare_level!(lvl, ctx, literal(0), def)
-        push!(ctx.code.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
-        lvl = freeze_level!(lvl, ctx, literal(1))
-        :(Fiber($(ctx(lvl))))
-    end
-end
-
-function FiberCode!(lvl)
+@staged function assemble!(lvl)
     contain(LowerJulia()) do ctx
         lvl = virtualize(:lvl, lvl, ctx.code)
         def = literal(virtual_level_default(lvl))
@@ -268,17 +301,13 @@ function FiberCode!(lvl)
         push!(ctx.code.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
         lvl = freeze_level!(lvl, ctx, literal(1))
         ctx(lvl)
-    end |> unblock |> pretty |> dataflow |> unquote_literals
+    end
 end
 
-function Fiber!(lvl, arg)
-    dropdefaults!(Fiber!(lvl), arg)
-end
-
-Base.summary(fbr::Fiber) = "$(join(size(fbr), "×")) Fiber!($(summary(fbr.lvl)))"
+Base.summary(fbr::Tensor) = "$(join(size(fbr), "×")) Tensor($(summary(fbr.lvl)))"
 Base.summary(fbr::SubFiber) = "$(join(size(fbr), "×")) SubFiber($(summary(fbr.lvl)))"
 
-Base.similar(fbr::AbstractFiber) = Fiber(similar_level(fbr.lvl))
-Base.similar(fbr::AbstractFiber, dims::Tuple) = Fiber(similar_level(fbr.lvl, dims...))
+Base.similar(fbr::AbstractFiber) = Tensor(similar_level(fbr.lvl))
+Base.similar(fbr::AbstractFiber, dims::Tuple) = Tensor(similar_level(fbr.lvl, dims...))
 
-moveto(fiber::Fiber, device) = Fiber(moveto(fiber.lvl, device))
+moveto(tns::Tensor, device) = Tensor(moveto(tns.lvl, device))

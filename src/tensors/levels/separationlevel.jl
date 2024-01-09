@@ -1,20 +1,20 @@
 """
     SeparationLevel{Lvl, [Val]}()
 
-A subfiber of a Separation level is a separate fiber of type `Lvl`, in it's 
+A subfiber of a Separation level is a separate tensor of type `Lvl`, in it's 
 own memory space.
 
 Each sublevel is stored in a vector of type `Val` with `eltype(Val) = Lvl`. 
 
 ```jldoctest
-julia> Fiber!(Dense(Separation(Element(0.0))), [1, 2, 3])
+julia> Tensor(Dense(Separation(Element(0.0))), [1, 2, 3])
 Dense [1:3]
 ├─[1]: Pointer -> 1.0
 ├─[2]: Pointer -> 2.0
 ├─[3]: Pointer -> 3.0
 ```
 """
-struct SeparationLevel{Val, Lvl}
+struct SeparationLevel{Val, Lvl} <: AbstractLevel
     val::Val
     lvl::Lvl
 end
@@ -36,6 +36,8 @@ end
 
 pattern!(lvl::SeparationLevel) = SeparationLevel(map(pattern!, lvl.val), pattern!(lvl.lvl))
 redefault!(lvl::SeparationLevel, init) = SeparationLevel(map(lvl_2->redefault!(lvl_2, init), lvl.val), redefault!(lvl.lvl, init))
+Base.resize!(lvl::SeparationLevel, dims...) = SeparationLevel(map(lvl_2->resize!(lvl_2, dims...), lvl.val), resize!(lvl.lvl, dims...))
+
 
 function Base.show(io::IO, lvl::SeparationLevel{Val, Lvl}) where {Val, Lvl}
     print(io, "Separation(")
@@ -51,6 +53,11 @@ end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SeparationLevel}, depth)
     p = fbr.pos
+    lvl = fbr.lvl
+    if p > length(lvl.val)
+        print(io, "Pointer -> undef")
+        return
+    end
     print(io, "Pointer -> ")
     display_fiber(io, mime, SubFiber(fbr.lvl.val[p], 1), depth)
 end
@@ -61,11 +68,11 @@ end
 @inline level_eltype(::Type{SeparationLevel{Val, Lvl}}) where {Val, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SeparationLevel{Val, Lvl}}) where {Val, Lvl} = level_default(Lvl)
 
-(fbr::Fiber{<:SeparationLevel})() = SubFiber(fbr.lvl, 1)()
+(fbr::Tensor{<:SeparationLevel})() = SubFiber(fbr.lvl, 1)()
 (fbr::SubFiber{<:SeparationLevel})() = fbr #TODO this is not consistent somehow
 function (fbr::SubFiber{<:SeparationLevel})(idxs...)
     q = fbr.pos
-    return Fiber(fbr.lvl.val[q])(idxs...)
+    return Tensor(fbr.lvl.val[q])(idxs...)
 end
 
 countstored_level(lvl::SeparationLevel, pos) = pos
