@@ -3,24 +3,46 @@ abstract type AbstractVirtualTensor end
 abstract type AbstractVirtualFiber{Lvl} <: AbstractVirtualTensor end
 
 """
-    Fiber(lvl)
+    Fiber{Lvl} <: AbstractFiber{Lvl}
 
-`Fiber` represents the root of a level-tree tensor. To easily construct a valid
-fiber, use [`Fiber`](@ref) or [`fiber`](@ref). Users should avoid calling
-this constructor directly.
-
-In particular, `Fiber` represents the tensor at position 1 of `lvl`. The
-constructor `Fiber(lvl)` wraps a level assuming it is already in a valid state.
-The constructor `Fiber(lvl)` first initializes `lvl` assuming no positions are
-valid.
+The multidimensional array type used by `Finch`. `Fiber` is a thin wrapper
+around the hierarchical level storage of type `Lvl`.
 """
 struct Fiber{Lvl} <: AbstractFiber{Lvl}
     lvl::Lvl
 end
+
+"""
+    Fiber(lvl)
+
+Construct a `Fiber` using the fiber level storage `lvl`. No initialization of
+storage is performed, it is assumed that position 1 of `lvl` corresponds to a
+valid tensor, and `lvl` will be wrapped as-is. Call a different constructor to
+initialize the storage.
+"""
 Fiber(lvl::Lvl) where {Lvl<:AbstractLevel} = Fiber{Lvl}(lvl)
-Fiber(lvl::AbstractLevel, dims::Number...) = Fiber(lvl, undef, dims...)
+
+"""
+    Fiber(lvl, [undef], dims...)
+
+Construct a `Fiber` of size `dims`, and initialize to `undef`, potentially
+allocating memory.  Here `undef` is the `UndefInitializer` singleton type.
+`dims...` may be a variable number of dimensions or a tuple of dimensions, but
+it must correspond to the number of dimensions in `lvl`.
+"""
+Fiber(lvl::AbstractLevel, dim::Number...) = Fiber(lvl, undef, dims...)
+Fiber(lvl::AbstractLevel, dims::Tuple) = Fiber(lvl, undef, dims...)
 Fiber(lvl::AbstractLevel, init::UndefInitializer, dims...) = Fiber(assemble!(resize!(lvl, dims...)))
+Fiber(lvl::AbstractLevel, init::UndefInitializer, dims::Tuple) = Fiber(assemble!(resize!(lvl, dims...)))
 Fiber(lvl::AbstractLevel, init::UndefInitializer) = Fiber(assemble!(lvl))
+
+"""
+    Fiber(lvl, arr)
+
+Construct a `Fiber` and initialize it to the contents of `arr`.
+May share memory when applicable. To explicitly copy into a fiber,
+use @ref[`copyto!`]
+"""
 Fiber(lvl::AbstractLevel, arr) = dropdefaults!(Fiber(lvl), arr)
 
 mutable struct VirtualFiber{Lvl} <: AbstractVirtualFiber{Lvl}

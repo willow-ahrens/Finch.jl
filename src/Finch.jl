@@ -21,7 +21,7 @@ export @finch, @finch_program, @finch_code, @finch_kernel, value
 
 export fastfinch, safefinch, debugfinch
 
-export Fiber, Fiber
+export Fiber
 export SparseRLE, SparseRLELevel 
 export SparseList, SparseListLevel
 export SparseHash, SparseHashLevel
