@@ -257,7 +257,6 @@ Construct a fiber from a nest of levels. This function may allocate memory.
 Optionally, an argument may be specified to copy into the fiber. This expression
 allocates. Use `fiber(arg)` for a zero-cost copy, if available.
 """
-function Fiber end
 
 @staged function assemble!(lvl)
     contain(LowerJulia()) do ctx
