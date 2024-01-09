@@ -9,7 +9,7 @@ Dense [:,1:3]
 │ ├─[3]: 4.4
 │ ├─[4]: 5.5
 julia> B = Tensor(SparseHash{2}(Element(0.0)))
-SparseHash (0.0) [1:0,1:0]
+SparseHash(undef...)
 julia> @finch_code mode = fastfinch begin
         B .= 0
         for j = _

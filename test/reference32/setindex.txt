@@ -1,5 +1,5 @@
 setindex! tests
-julia> A = Tensor(Dense(Dense(Element(0.0), 10), 12))
+julia> A = Tensor(Dense(Dense(Element(0.0))), 10, 12)
 Dense [:,1:12]
 ├─[:,1]: Dense [1:10]
 │ ├─[1]: 0.0
