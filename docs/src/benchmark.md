@@ -20,10 +20,10 @@ Finch is even trickier to benchmark, for a few reasons:
    benchmarking by compiling the function ahead of time, so it behaves like a
    normal Julia function. If you must use `@finch`, try to ensure that the code
    is type-stable.
-2. Finch fibers reuse memory from previous calls, so the first time a fiber is
-   used in a finch function, it will allocate memory, but subsequent times not so
+2. Finch tensors reuse memory from previous calls, so the first time a tensor is
+   used in a Finch function, it will allocate memory, but subsequent times not so
    much. If we want to benchmark the memory allocation, we can reconstruct the
-   fiber each time. Otherwise, we can let the repeated executions of the kernel
+   tensor each time. Otherwise, we can let the repeated executions of the kernel
    measure the non-allocating runtime.
 3. Runtime for sparse code often depends on the sparsity pattern, so it's
    important to benchmark with representative data. Using standard matrices or tensors from
