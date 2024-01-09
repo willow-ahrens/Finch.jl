@@ -45,11 +45,11 @@ use @ref[`copyto!`]
 Fiber(lvl::AbstractLevel, arr) = dropdefaults!(Fiber(lvl), arr)
 
 """
-    Fiber(arr)
+    Fiber(arr, [init = zero(eltype(arr))])
 
 Copy an array-like object `arr` into a corresponding, similar `Fiber`
-datastructure. May reuse memory when possible. To explicitly copy into a fiber,
-use @ref[`copyto!`].
+datastructure. Uses `init` as an initial value. May reuse memory when possible.
+To explicitly copy into a fiber, use @ref[`copyto!`].
 
 # Examples
 
@@ -61,8 +61,8 @@ julia> println(summary(Fiber(ones(3, 2, 4))))
 3×2×4 Fiber(Dense(Dense(Dense(Element(0.0)))))
 ```
 """
-function Fiber(arr; default=zero(eltype(arr)))
-    Base.copyto!(Fiber((DenseLevel^(ndims(arr)))(Element{default}())), arr)
+function Fiber(arr::AbstractArray{Tv, N}, default::Tv=zero(eltype(arr))) where {Tv, N}
+    Base.copyto!(Fiber((DenseLevel^(ndims(arr)))(Element{zero(eltype(arr))}())), arr)
 end
 
 mutable struct VirtualFiber{Lvl} <: AbstractVirtualFiber{Lvl}

@@ -112,7 +112,7 @@ Our `Dense(SparseList(Element(0.0)))` format is also known as
 ["CSC"](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29)
 and is equivalent to
 [`SparseMatrixCSC`](https://sparsearrays.juliasparse.org/dev/#man-csc). The
-[`fiber!`](@ref) function will perform a zero-cost copy between Finch fibers and
+[`Fiber`](@ref) function will perform a zero-cost copy between Finch fibers and
 sparse matrices, when available.  CSC is an excellent general-purpose
 representation when we expect most of the columns to have a few nonzeros.
 However, when most of the columns are entirely fill (a situation known as
@@ -195,8 +195,6 @@ moveto
 
 ```@docs
 Fiber
-fiber
-fiber!
 ```
 
 ### Level Constructors

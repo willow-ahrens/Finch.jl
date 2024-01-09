@@ -36,7 +36,7 @@ export Separation, SeparationLevel
 export Pattern, PatternLevel
 export Scalar, SparseScalar, ShortCircuitScalar, SparseShortCircuitScalar
 export walk, gallop, follow, extrude, laminate
-export fiber, fiber!, Fiber, pattern!, dropdefaults, dropdefaults!, redefault!
+export Fiber, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
 export scale, product, offset, permissive, protocolize, swizzle, toeplitz, window
 
