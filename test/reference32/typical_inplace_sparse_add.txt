@@ -1,11 +1,11 @@
-julia> A = Fiber!(SparseList(Element(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
+julia> A = Tensor(SparseList(Element(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
 SparseList (0.0) [1:10]
 ├─[1]: 2.0
 ├─[3]: 3.0
 ├─[5]: 4.0
 ├─[7]: 5.0
 ├─[9]: 6.0
-julia> B = Fiber!(Dense(Element(0.0)), fill(1.1, 10))
+julia> B = Tensor(Dense(Element(0.0)), fill(1.1, 10))
 Dense [1:10]
 ├─[1]: 1.1
 ├─[2]: 1.1
@@ -57,10 +57,10 @@ quote
     end
     qos = 1 * B_lvl.shape
     resize!(B_lvl_val, qos)
-    (B = Fiber((DenseLevel){Int32}(B_lvl_2, B_lvl.shape)),)
+    (B = Tensor((DenseLevel){Int32}(B_lvl_2, B_lvl.shape)),)
 end
 julia> @finch for i = _
         B[i] += A[i]
     end
-(B = Fiber(Dense{Int32}(Element{0.0, Float64, Int32}([3.1, 1.1, 4.1, 1.1, 5.1, 1.1, 6.1, 1.1, 7.1, 1.1]), 10)),)
+(B = Tensor(Dense{Int32}(Element{0.0, Float64, Int32}([3.1, 1.1, 4.1, 1.1, 5.1, 1.1, 6.1, 1.1, 7.1, 1.1]), 10)),)
 

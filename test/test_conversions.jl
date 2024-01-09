@@ -1,5 +1,5 @@
 @testset "conversions" begin
-    @info "Testing Fiber Conversions"
+    @info "Testing Tensor Conversions"
     for base in [
         #Pattern,
         Element{false},
@@ -12,7 +12,7 @@
             ref = Scalar(false)
             res = Scalar(false)
             @finch ref[] = arr[]
-            tmp = Fiber(base())
+            tmp = Tensor(base())
             @finch tmp[] = ref[]
             @finch res[] = tmp[]
             @test ref[] == res[]
@@ -24,6 +24,7 @@
                 () -> Dense(base()),
                 () -> RepeatRLE{false}(),
                 () -> SparseRLE(base()),
+                () -> Dense(Separation(base())),
             ]
                 for (idx, arr) in enumerate([
                     fill(false, 5),
@@ -38,9 +39,9 @@
                         x
                     end,
                    ])
-                    ref = Fiber!(SparseList(Element(false)))
+                    ref = Tensor(SparseList(Element(false)))
                     ref = dropdefaults!(ref, arr)
-                    tmp = Fiber!(inner())
+                    tmp = Tensor(inner())
                     @testset "convert $(summary(tmp)) $(idx)" begin
                         @finch (tmp .= 0; for i=_; tmp[i] = ref[i] end)
                         check = Scalar(true)
@@ -61,10 +62,10 @@
                         true  true  true  true
                         false true  false true ])
                     ]
-                        ref = Fiber!(SparseList(SparseList(Element(false))))
-                        res = Fiber!(SparseList(SparseList(Element(false))))
+                        ref = Tensor(SparseList(SparseList(Element(false))))
+                        res = Tensor(SparseList(SparseList(Element(false))))
                         ref = dropdefaults!(ref, arr)
-                        tmp = Fiber!(outer())
+                        tmp = Tensor(outer())
                         @testset "convert $arr_key $(summary(tmp))"  begin
                             @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
                             check = Scalar(true)
@@ -90,10 +91,10 @@
                 fill(true, 5),
                 [false, true, true, false, false, true]
             ]
-                ref = Fiber!(SparseList(Element(false)))
-                res = Fiber!(SparseList(Element(false)))
+                ref = Tensor(SparseList(Element(false)))
+                res = Tensor(SparseList(Element(false)))
                 ref = dropdefaults!(ref, arr)
-                tmp = Fiber!(inner())
+                tmp = Tensor(inner())
                 @testset "convert $(summary(tmp))" begin
                     if !output
                         check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for i=_; tmp[i] = ref[i] end))
@@ -120,10 +121,10 @@
                     true  true  true  true
                     false true  false true ])
                 ]
-                    ref = Fiber!(SparseList(SparseList(Element(false))))
-                    res = Fiber!(SparseList(SparseList(Element(false))))
+                    ref = Tensor(SparseList(SparseList(Element(false))))
+                    res = Tensor(SparseList(SparseList(Element(false))))
                     ref = dropdefaults!(ref, arr)
-                    tmp = Fiber!(outer())
+                    tmp = Tensor(outer())
                     @testset "convert $arr_key $(summary(tmp))"  begin
                         if !output
                             check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
@@ -148,9 +149,9 @@
                 fill(true, 5),
                 [false, true, true, false, false, true]
             ]
-                ref = Fiber!(SparseList(Element(false)))
-                res = Fiber!(SparseList(Element(false)))
-                tmp = Fiber!(inner())
+                ref = Tensor(SparseList(Element(false)))
+                res = Tensor(SparseList(Element(false)))
+                tmp = Tensor(inner())
                 @testset "convert $(summary(tmp))" begin
                     if !output
                         check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for i=_; tmp[i] = ref[i] end))
@@ -177,9 +178,9 @@
                     true  true  true  true
                     false true  false true ])
                 ]
-                    ref = Fiber!(SparseList(SparseList(Element(false))))
-                    res = Fiber!(SparseList(SparseList(Element(false))))
-                    tmp = Fiber!(outer())
+                    ref = Tensor(SparseList(SparseList(Element(false))))
+                    res = Tensor(SparseList(SparseList(Element(false))))
+                    tmp = Tensor(outer())
                     @testset "convert $arr_key $(summary(tmp))"  begin
                         if !output
                             check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
@@ -210,10 +211,10 @@
                 true  true  true  true
                 false true  false true ])
             ]
-                ref = Fiber!(SparseList(SparseList(Element(false))))
-                res = Fiber!(SparseList(SparseList(Element(false))))
+                ref = Tensor(SparseList(SparseList(Element(false))))
+                res = Tensor(SparseList(SparseList(Element(false))))
                 ref = dropdefaults!(ref, arr)
-                tmp = Fiber!(outer())
+                tmp = Tensor(outer())
                 @testset "convert $arr_key $(summary(tmp))"  begin
                     if !output
                         check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
@@ -240,10 +241,10 @@
                 true  true  true  true
                 false true  false true ])
             ]
-                ref = Fiber!(SparseList(SparseList(Element(false))))
-                res = Fiber!(SparseList(SparseList(Element(false))))
+                ref = Tensor(SparseList(SparseList(Element(false))))
+                res = Tensor(SparseList(SparseList(Element(false))))
                 ref = dropdefaults!(ref, arr)
-                tmp = Fiber!(outer())
+                tmp = Tensor(outer())
                 @testset "convert $arr_key $(summary(tmp))"  begin
                     if !output
                         check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
@@ -261,13 +262,13 @@
     end
 
     for fmt in [
-        Fiber!(SparseHash{2}(Element(0.0)))
-        Fiber!(Dense(SparseHash{1}(Element(0.0))))
-        Fiber!(Dense(SparseByteMap(Element(0.0))))
+        Tensor(SparseHash{2}(Element(0.0)))
+        Tensor(Dense(SparseHash{1}(Element(0.0))))
+        Tensor(Dense(SparseByteMap(Element(0.0))))
     ]
-        arr_1 = fsprand((10, 10), 0.5)
+        arr_1 = fsprand(10, 10, 0.5)
         fmt = copyto!(fmt, arr_1)
-        arr_2 = fsprand((10, 10), 0.5)
+        arr_2 = fsprand(10, 10, 0.5)
         check_output("increment_to_$(summary(fmt)).jl", @finch_code begin
             for j = _
                 for i = _
@@ -283,5 +284,37 @@
             end
         end
         @test fmt == arr_1 .+ arr_2
+    end
+
+    for inner in [
+        () -> Dense(Element{false}()),
+        () -> Dense(Separation(Element{false}())),
+    ]
+        for outer in [
+            () -> Dense(Separation(inner())),
+            () -> SparseList(inner()),
+            () -> SparseList(Separation(inner())),
+        ]
+
+            for (arr_key, arr) in [
+                ("5x5_falses", fill(false, 5, 5)),
+                ("5x5_trues", fill(true, 5, 5)),
+                ("4x4_bool_mix", [false true  false true ;
+                false false false false
+                true  true  true  true
+                false true  false true ])
+            ]
+                ref = Tensor(SparseList(SparseList(Element(false))))
+                res = Tensor(SparseList(SparseList(Element(false))))
+                ref = dropdefaults!(ref, arr)
+                tmp = Tensor(outer())
+                @testset "convert Separation $arr_key $(summary(tmp))"  begin
+                    @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
+                    check = Scalar(true)
+                    @finch for j=_, i=_; check[] &= tmp[i, j] == ref[i, j] end
+                    @test check[]
+                end
+            end
+        end
     end
 end

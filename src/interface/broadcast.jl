@@ -17,8 +17,8 @@ lift_broadcast(x::Number) = Scalar(x)
 
 struct FinchStyle{N} <: BroadcastStyle
 end
-Base.Broadcast.BroadcastStyle(F::Type{<:Fiber}) = FinchStyle{ndims(F)}()
-Base.Broadcast.broadcastable(fbr::Fiber) = fbr
+Base.Broadcast.BroadcastStyle(F::Type{<:Tensor}) = FinchStyle{ndims(F)}()
+Base.Broadcast.broadcastable(fbr::Tensor) = fbr
 Base.Broadcast.BroadcastStyle(a::FinchStyle{N}, b::FinchStyle{M}) where {M, N} = FinchStyle{max(M, N)}()
 Base.Broadcast.BroadcastStyle(a::FinchStyle{N}, b::Broadcast.AbstractArrayStyle{M}) where {M, N} = FinchStyle{max(M, N)}()
 

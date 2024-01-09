@@ -78,9 +78,6 @@ macro staged(def)
                 end
             end
             Core._apply_pure(body_2, ())
-            #=quote
-                println($(QuoteNode(res)))
-            end=#
         end
 
     end
@@ -441,10 +438,12 @@ function (ctx::MarkDead)(ex, res)
         body_2 = body
         while true
             ctx_2 = copy(ctx)
-            body_2 = ctx(body, false)
+            ctx_3 = branch(ctx)
+            body_2 = ctx_3(body, false)
+            meet!(ctx, ctx_3)
+            ext = ctx(ext, iseffectful(body_2))
             ctx == ctx_2 && break
         end
-        ext = ctx(ext, iseffectful(body_2))
         return Expr(:for, Expr(:(=), i, ext), body_2)
     elseif @capture ex :while(~cond, ~body)
         body_2 = body

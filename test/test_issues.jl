@@ -3,9 +3,56 @@ using CIndices
 
 @testset "issues" begin
     @info "Testing Github Issues"
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/358
+    let
+        A = Tensor(Dense(SparseList(Element(0))), [
+          0 0 0 0 0;
+          1 0 0 0 0;
+          0 0 0 0 0
+        ])
+        B = Tensor(Dense(SparseList(Element(0))), [
+          0 0 0 0 0;
+          0 0 1 0 0;
+          1 0 0 0 0
+        ])
+        C = Tensor(Dense(SparseList(Element(0))), [
+          0 0 0 0 0;
+          0 0 0 1 0;
+          0 0 0 0 0
+        ])
+        D_ref = A .+ B
+        E_ref = D_ref .+ C
+        for D in [
+            Tensor(Dense(SparseList(Element(0)))),
+            Tensor(Dense(SparseHash{1}(Element(0)))),
+            Tensor(Dense(Dense(Element(0)))),
+        ]
+            E = deepcopy(D)
+            @finch mode=fastfinch begin
+                D .= 0
+                E .= 0
+                for j = _, i = _
+                    E[i, j] += A[i, j]
+                end
+                for j = _, i = _
+                    E[i, j] += B[i, j]
+                end
+                for j = _, i = _
+                    D[i, j] += E[i, j]
+                end
+                for j = _, i = _
+                    E[i, j] += C[i, j]
+                end
+            end
+            @test D == D_ref
+            @test E == E_ref
+        end
+    end
+
     #https://github.com/willow-ahrens/Finch.jl/issues/51
     let
-        x = Fiber!(Dense(Element(0.0)), [1, 2, 3])
+        x = Tensor(Dense(Element(0.0)), [1, 2, 3])
         y = Scalar{0.0}()
         @finch for i=_, j=_; y[] += min(x[i], x[j]) end
         @test y[] == 14
@@ -13,7 +60,7 @@ using CIndices
 
     #https://github.com/willow-ahrens/Finch.jl/issues/53
     let
-        x = Fiber!(SparseList(Pattern()), fsparse(([1, 3, 7, 8],), [true, true, true, true], (10,)))
+        x = Tensor(SparseList(Pattern()), fsparse([1, 3, 7, 8], [true, true, true, true], (10,)))
         y = Scalar{0.0}()
         @finch for i=_; y[] += ifelse(x[i], 3, -1) end
         @test y[] == 6
@@ -23,14 +70,14 @@ using CIndices
 
     #https://github.com/willow-ahrens/Finch.jl/issues/59
     let
-        B = Fiber!(Dense(Element(0)), [2, 4, 5])
-        A = Fiber!(Dense(Element(0), 6))
+        B = Tensor(Dense(Element(0)), [2, 4, 5])
+        A = Tensor(Dense(Element(0)), 6)
         @finch (A .= 0; for i=_; A[B[i]] = i end)
         @test reference_isequal(A, [0, 1, 0, 2, 3, 0])
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/61
-    I = copyto!(Fiber!(RepeatRLE(0)), [1, 1, 9, 3, 3])
+    I = copyto!(Tensor(RepeatRLE(0)), [1, 1, 9, 3, 3])
     A = [
         11 12 13 14 15;
         21 22 23 24 25;
@@ -41,8 +88,8 @@ using CIndices
         71 72 73 74 75;
         81 82 83 84 85;
         91 92 93 94 95]
-    A = copyto!(Fiber!(Dense(Dense(Element(0)))), A)
-    B = Fiber!(Dense(Element(0)))
+    A = copyto!(Tensor(Dense(Dense(Element(0)))), A)
+    B = Tensor(Dense(Element(0)))
     
     @test check_output("fiber_as_idx.jl", @finch_code (B .= 0; for i=_; B[i] = A[I[i], i] end))
     @finch (B .= 0; for i=_; B[i] = A[I[i], i] end)
@@ -51,11 +98,11 @@ using CIndices
 
     #https://github.com/willow-ahrens/Finch.jl/issues/101
     let
-        t = Fiber!(SparseList(SparseList(Element(0.0))))
-        X = Fiber!(SparseList(SparseList(Element(0.0))))
-        A = Fiber!(SparseList(SparseList(Element(0.0))), SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3]))
+        t = Tensor(SparseList(SparseList(Element(0.0))))
+        X = Tensor(SparseList(SparseList(Element(0.0))))
+        A = Tensor(SparseList(SparseList(Element(0.0))), SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3]))
         @test_throws DimensionMismatch @finch (t .= 0; for j=_, i=_; t[i, j] = min(X[i, j],  A[i, j]) end)
-        X = Fiber!(SparseList(SparseList(Element(0.0), 4), 4))
+        X = Tensor(SparseList(SparseList(Element(0.0))), 4, 4)
         @finch (t .= 0; for j=_, i=_; t[i, j] = min(X[i, j],  A[i, j]) end)
         @test t == A
     end
@@ -68,9 +115,9 @@ using CIndices
         end 
         struct MyAlgebra115 <: Finch.AbstractAlgebra end
         Finch.virtualize(ex, ::Type{MyAlgebra115}, ::Finch.JuliaContext) = MyAlgebra115()
-        t = Fiber!(SparseList(SparseList(Element(0.0))))
+        t = Tensor(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
-        A = dropdefaults(copyto!(Fiber!(SparseList(SparseList(Element(0.0)))), B))
+        A = dropdefaults(copyto!(Tensor(SparseList(SparseList(Element(0.0)))), B))
         @finch algebra=MyAlgebra115() (t .= 0; for j=_, i=_; t[i, j] = f(A[i,j], A[i,j], A[i,j]) end)
         @test t == B .* 3
     end
@@ -78,23 +125,23 @@ using CIndices
     #https://github.com/willow-ahrens/Finch.jl/issues/115
 
     let
-        t = Fiber!(SparseList(SparseList(Element(0.0))))
+        t = Tensor(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
-        A = dropdefaults(copyto!(Fiber!(SparseList(SparseList(Element(0.0)))), B))
+        A = dropdefaults(copyto!(Tensor(SparseList(SparseList(Element(0.0)))), B))
         @test_logs (:warn, "Performance Warning: non-concordant traversal of t[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)") match_mode=:any @test_throws Finch.FinchProtocolError @finch (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
     end
 
     let
-        t = Fiber!(Dense(SparseList(Element(0.0))))
+        t = Tensor(Dense(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
-        A = dropdefaults(copyto!(Fiber!(Dense(SparseList(Element(0.0)))), B))
+        A = dropdefaults(copyto!(Tensor(Dense(SparseList(Element(0.0)))), B))
         @test_logs (:warn, "Performance Warning: non-concordant traversal of t[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)") match_mode=:any @test_throws Finch.FinchProtocolError @finch (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/129
 
     let
-        a = Fiber!(Dense(Element(0)), [1, 3, 7, 2])
+        a = Tensor(Dense(Element(0)), [1, 3, 7, 2])
 
         x = Scalar((0, 0))
         @finch for i=_; x[] <<maxby>>= (a[i], i) end
@@ -110,19 +157,19 @@ using CIndices
     let
         A = sparse([3, 4, 3, 4], [1, 2, 3, 3], [1.1, 2.2, 3.3, 4.4], 4, 3)
 
-        B = Fiber!(Dense(SparseList(Element(0.0))))
+        B = Tensor(Dense(SparseList(Element(0.0))))
 
         @finch (B .= 0; for j=_, i=_; B[i, j] = A[i, j] end)
 
-        @test Structure(B) == Structure(fiber(A))
+        @test Structure(B) == Structure(Tensor(A))
 
         v = SparseVector(10, [1, 6, 7, 9], [1.1, 2.2, 3.3, 4.4])
 
-        w = Fiber!(SparseList(Element(0.0)))
+        w = Tensor(SparseList(Element(0.0)))
 
         @finch (w .= 0; for i=_; w[i] = v[i] end)
 
-        @test Structure(w) == Structure(fiber(v))
+        @test Structure(w) == Structure(Tensor(v))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/99
@@ -131,7 +178,7 @@ using CIndices
 
         ptr_jl = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Int}}, pointer(ptr_c)), length(ptr_c); own = false)
         idx_jl = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Int}}, pointer(idx_c)), length(idx_c); own = false)
-        A = Fiber(Dense(SparseList{CIndex{Int}}(Element{0.0, Float64, CIndex{Int}}(val_c), m, ptr_jl, idx_jl), n))
+        A = Tensor(Dense(SparseList{CIndex{Int}}(Element{0.0, Float64, CIndex{Int}}(val_c), m, ptr_jl, idx_jl), n))
 
         @test A == [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
     end
@@ -140,8 +187,8 @@ using CIndices
     let
         io = IOBuffer()
         y = [2.0, Inf, Inf, 1.0, 3.0, Inf]
-        yf = Fiber!(SparseList(Element(Inf)), y)
-        println(io, "Fiber!(SparseList(Element(Inf)), $y):")
+        yf = Tensor(SparseList(Element(Inf)), y)
+        println(io, "Tensor(SparseList(Element(Inf)), $y):")
         println(io, yf)
 
         x = Scalar(Inf)
@@ -154,8 +201,8 @@ using CIndices
 
         io = IOBuffer()
         y = [2.0, NaN, NaN, 1.0, 3.0, NaN]
-        yf = Fiber!(SparseList(Element(NaN)), y)
-        println(io, "Fiber!(SparseList(Element(NaN)), $y):")
+        yf = Tensor(SparseList(Element(NaN)), y)
+        println(io, "Tensor(SparseList(Element(NaN)), $y):")
         println(io, yf)
 
         x = Scalar(Inf)
@@ -168,8 +215,8 @@ using CIndices
 
         io = IOBuffer()
         y = [2.0, missing, missing, 1.0, 3.0, missing]
-        yf = Fiber!(SparseList(Element{missing, Union{Float64,Missing}}()), y)
-        println(io, "Fiber!(SparseList(Element(missing)), $y):")
+        yf = Tensor(SparseList(Element{missing, Union{Float64,Missing}}()), y)
+        println(io, "Tensor(SparseList(Element(missing)), $y):")
         println(io, yf)
 
         x = Scalar(Inf)
@@ -182,8 +229,8 @@ using CIndices
 
         io = IOBuffer()
         y = [2.0, nothing, nothing, 1.0, 3.0, Some(1.0), nothing]
-        yf = Fiber!(SparseList(Element{nothing, Union{Float64,Nothing,Some{Float64}}}()), y)
-        println(io, "Fiber!(SparseList(Element(nothing)), $y):")
+        yf = Tensor(SparseList(Element{nothing, Union{Float64,Nothing,Some{Float64}}}()), y)
+        println(io, "Tensor(SparseList(Element(nothing)), $y):")
         println(io, yf)
 
         x = Scalar(Inf)
@@ -200,8 +247,8 @@ using CIndices
     let
         io = IOBuffer()
         A = [0.0 1.0 0.0 2.0; 0.0 1.0 0.0 3.0; 0.0 0.0 2.0 0.0]
-        B = Fiber!(Dense(SparseList(Element(0.0))), A)
-        C = Fiber!(Dense(SparseList(Element(Inf))))
+        B = Tensor(Dense(SparseList(Element(0.0))), A)
+        C = Tensor(Dense(SparseList(Element(Inf))))
         @finch (C .= Inf; for j = _, i = _ C[i, j] = ifelse(B[i, j] == 0, Inf, B[i, j]) end)
 
         println(io, "A :", A)
@@ -216,22 +263,22 @@ using CIndices
     #https://github.com/willow-ahrens/Finch.jl/issues/97
 
     let
-        @test_throws DimensionMismatch A = Fiber!(Dense(SparseList(Element(0.0))), [0, 1])
-        A = fsprand((10, 11), 0.5)
-        B = Fiber!(Dense(SparseList(Element(0.0))))
-        C = fsprand((10, 10), 0.5)
+        @test_throws DimensionMismatch A = Tensor(Dense(SparseList(Element(0.0))), [0, 1])
+        A = fsprand(10, 11, 0.5)
+        B = Tensor(Dense(SparseList(Element(0.0))))
+        C = fsprand(10, 10, 0.5)
         @test_throws DimensionMismatch @finch (A .= 0; for j=_, i=_; A[i, j] = B[i] end)
         @test_throws DimensionMismatch @finch (A .= 0; for j=_, i=_; A[i] = B[i, j] end)
         @test_throws DimensionMismatch @finch (A .= 0; for j=_, i=_; A[i, j] = B[i, j] + C[i, j] end)
-        @test_throws DimensionMismatch copyto!(Fiber!(SparseList(Element(0.0))), A)
-        @test_throws DimensionMismatch dropdefaults!(Fiber!(SparseList(Element(0.0))), A)
+        @test_throws DimensionMismatch copyto!(Tensor(SparseList(Element(0.0))), A)
+        @test_throws DimensionMismatch dropdefaults!(Tensor(SparseList(Element(0.0))), A)
 
-        A = fsprand((10, 11), 0.5)
-        B = fsprand((10, 10), 0.5)
+        A = fsprand(10, 11, 0.5)
+        B = fsprand(10, 10, 0.5)
         @test_throws Finch.FinchProtocolError @finch for j=_, i=_; A[i, j] = B[i, follow(j)] end
-        @test_throws ArgumentError Fiber!(SparseCOO(Element(0.0)))
-        @test_throws ArgumentError Fiber!(SparseHash(Element(0.0)))
-        @test_throws ArgumentError Fiber!(SparseList(Element("hello")))
+        @test_throws ArgumentError Tensor(SparseCOO(Element(0.0)))
+        @test_throws ArgumentError Tensor(SparseHash(Element(0.0)))
+        @test_throws ArgumentError Tensor(SparseList(Element("hello")))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/pull/197
@@ -239,7 +286,7 @@ using CIndices
     let
         io = IOBuffer()
 
-        @repl io A = Fiber!(Dense(SparseTriangle{2}(Element(0.0))), collect(reshape(1:27, 3, 3, 3)))
+        @repl io A = Tensor(Dense(SparseTriangle{2}(Element(0.0))), collect(reshape(1:27, 3, 3, 3)))
         @repl io C = Scalar(0)
         @repl io @finch for k=_, j=_, i=_; C[] += A[i, j, k] end
 
@@ -249,16 +296,16 @@ using CIndices
     #https://github.com/willow-ahrens/Finch.jl/issues/70
 
     let
-        A = Fiber!(Dense(SparseList(Element(0.0))))
-        B = typeof(Fiber!(Dense(SparseList(Element(0.0)))))
+        A = Tensor(Dense(SparseList(Element(0.0))))
+        B = typeof(Tensor(Dense(SparseList(Element(0.0)))))
         eval(@finch_kernel function copy_array(A, B)
             A .= 0
             for j = _, i = _
                 A[i, j] = B[i, j]
             end
         end)
-        C = Fiber!(Dense(SparseList(Element(0.0))))
-        D = Fiber!(Dense(SparseList(Element(0.0))), fsprand((5, 5), 0.5))
+        C = Tensor(Dense(SparseList(Element(0.0))))
+        D = Tensor(Dense(SparseList(Element(0.0))), fsprand(5, 5, 0.5))
         C = copy_array(C, D).A
         @test C == D
     end
@@ -309,8 +356,8 @@ using CIndices
 
     #https://github.com/willow-ahrens/Finch.jl/issues/284
     let
-        C = Fiber!(Dense(Dense(Element(0.0))), [1 0; 0 1])
-        w = Fiber!(Dense(Dense(Element(0.0))), [0 0; 0 0])
+        C = Tensor(Dense(Dense(Element(0.0))), [1 0; 0 1])
+        w = Tensor(Dense(Dense(Element(0.0))), [0 0; 0 0])
         @finch mode=fastfinch begin 
             for j = _, i = _
                 C[i, j] += 1
@@ -412,9 +459,9 @@ using CIndices
     end
 
     let
-        A = Fiber!(Dense(Dense(SparseList(Element(0.0)))), fsprand((10, 10, 10), 0.1))
-        C = Fiber!(Dense(Dense(Dense(Element(0.0)))), zeros((10, 10, 10)))
-        X = Fiber!(Dense(Dense(Element(0.0))), rand(10, 10))
+        A = Tensor(Dense(Dense(SparseList(Element(0.0)))), fsprand(10, 10, 10, 0.1))
+        C = Tensor(Dense(Dense(Dense(Element(0.0)))), zeros((10, 10, 10)))
+        X = Tensor(Dense(Dense(Element(0.0))), rand(10, 10))
         temp2 = Scalar(0.0)
         @finch begin
             for l=_, j=_, i=_
@@ -437,8 +484,8 @@ using CIndices
     #https://github.com/willow-ahrens/Finch.jl/issues/52
     let
         s = ShortCircuitScalar(false, true)
-        x = Fiber!(SparseList(Element(false)), [false, true, true, false])
-        y = Fiber!(SparseList(Element(false)), [false, true, false, true])
+        x = Tensor(SparseList(Element(false)), [false, true, true, false])
+        y = Tensor(SparseList(Element(false)), [false, true, false, true])
         check_output("short_circuit.jl", @finch_code begin
             for i = _
                 s[] |= x[i] && y[i]
@@ -455,7 +502,7 @@ using CIndices
             end
         end)
 
-        A = Fiber!(Dense(SparseList(Element(false))), [false true true false; false true false false]')
+        A = Tensor(Dense(SparseList(Element(false))), [false true true false; false true false false]')
 
         t = SparseShortCircuitScalar(false, true)
 
@@ -473,19 +520,19 @@ using CIndices
 
     #https://github.com/willow-ahrens/Finch.jl/issues/313
     let
-        edge_matrix = Fiber!(SparseList(SparseList(Element(0.0), 254), 254))
-        edge_values = fsprand((254, 254), .001)
+        edge_matrix = Tensor(SparseList(SparseList(Element(0.0))), 254, 254)
+        edge_values = fsprand(254, 254, .001)
         @finch (edge_matrix .= 0; for j=_, i=_; edge_matrix[i,j] = edge_values[i,j]; end)
-        output_matrix = Fiber!(SparseHash{1}(SparseHash{1}(Element(0.0), (254,)), (254,)))
+        output_matrix = Tensor(SparseHash{1}(SparseHash{1}(Element(0.0))), 254, 254)
         @finch (for v_4=_, v_3=_, v_2=_, v_5=_; output_matrix[v_2,v_5] += edge_matrix[v_5, v_4]*edge_matrix[v_2, v_3]*edge_matrix[v_3, v_4]; end)
 
         a_matrix = [1 0; 0 1]
-        a_fiber = Fiber!(SparseList(SparseList(Element(0.0), 2), 2))
+        a_fiber = Tensor(SparseList(SparseList(Element(0.0))), 2, 2)
         copyto!(a_fiber, a_matrix)
         b_matrix = [0 1; 1 0]
-        b_fiber = Fiber!(SparseList(SparseList(Element(0.0), 2), 2))
+        b_fiber = Tensor(SparseList(SparseList(Element(0.0))), 2, 2)
         copyto!(b_fiber, b_matrix)
-        output_tensor = Fiber!(SparseHash{1}(SparseHash{1}(Element(0.0), (2,)), (2,)))
+        output_tensor = Tensor(SparseHash{1}(SparseHash{1}(Element(0.0))), 2, 2)
 
         @finch (output_tensor .=0; for j=_,i=_,k=_; output_tensor[i,k] += a_fiber[i,j] * b_fiber[k,j]; end)
     end
@@ -495,25 +542,48 @@ using CIndices
         x = SparseMatrixCSC(spzeros(2,2))
         @test_throws Finch.FinchProtocolError @finch x .= 0
     end
+
     #https://github.com/willow-ahrens/Finch.jl/issues/321
     let
-        A = fsprand((10, 10), 0.1)
+        A = fsprand(10, 10, 0.1)
         B = sparse(A)
         @test B isa SparseMatrixCSC
         @test B == A
         B = SparseMatrixCSC(A)
         @test B isa SparseMatrixCSC
         @test B == A
-        A = fsprand((10,), 0.1)
+        A = fsprand(10, 0.1)
         B = sparse(A)
         @test B isa SparseVector
         @test B == A
         B = SparseVector(A)
         @test B isa SparseVector
         @test B == A
-        A = fsprand((10, 10), 0.1)
+        A = fsprand(10, 10, 0.1)
         B = Array(A)
         @test B isa Array
         @test B == A
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/339
+    let
+        Output = Tensor(SparseList(Dense(Element(0),1),10))
+        Point = Tensor(SparseList(Element{0}([1]), 10, [1,2], [1]))
+        Kernel = Tensor(SparseList(Dense(Element{0}([1]),1), 10, [1,2], [2]))
+
+        eval(@finch_kernel function test(Output, Point, Kernel) 
+            Output .= 0
+            for x = _
+                for xx = _
+                    for m = _
+                        Output[m,x] += Point[x] * Kernel[m,xx]
+                    end
+                end
+            end
+        end)
+
+        test(Output, Point, Kernel)
+        Ans = Tensor(SparseList{Int64}(Dense{Int64}(Element{0, Int64, Int64}([1]), 1), 10, [1, 2], [1]))
+        @test Ans == Output
     end
 end

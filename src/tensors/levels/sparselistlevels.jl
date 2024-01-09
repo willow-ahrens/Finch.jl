@@ -6,12 +6,12 @@ which are entirely [`default`](@ref). Instead, only potentially non-default
 slices are stored as subfibers in `lvl`.  A sorted list is used to record which
 slices are stored. Optionally, `dim` is the size of the last dimension.
 
-`Ti` is the type of the last fiber index, and `Tp` is the type used for
+`Ti` is the type of the last tensor index, and `Tp` is the type used for
 positions in the level. The types `Ptr` and `Idx` are the types of the
 arrays used to store positions and indicies. 
 
 ```jldoctest
-julia> Fiber!(Dense(SparseList(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+julia> Tensor(Dense(SparseList(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
 ├─[:,1]: SparseList (0.0) [1:3]
 │ ├─[1]: 10.0
@@ -21,7 +21,7 @@ Dense [:,1:3]
 │ ├─[1]: 20.0
 │ ├─[3]: 40.0
 
-julia> Fiber!(SparseList(SparseList(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+julia> Tensor(SparseList(SparseList(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 SparseList (0.0) [:,1:3]
 ├─[:,1]: SparseList (0.0) [1:3]
 │ ├─[1]: 10.0
@@ -32,7 +32,7 @@ SparseList (0.0) [:,1:3]
 
 ```
 """
-struct SparseListLevel{Ti, Ptr, Idx, Lvl}
+struct SparseListLevel{Ti, Ptr, Idx, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     ptr::Ptr
@@ -72,6 +72,9 @@ pattern!(lvl::SparseListLevel{Ti}) where {Ti} =
 redefault!(lvl::SparseListLevel{Ti}, init) where {Ti} = 
     SparseListLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx)
 
+Base.resize!(lvl::SparseListLevel{Ti}, dims...) where {Ti} = 
+    SparseListLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.idx)
+
 function Base.show(io::IO, lvl::SparseListLevel{Ti, Ptr, Idx, Lvl}) where {Ti, Lvl, Idx, Ptr}
     if get(io, :compact, false)
         print(io, "SparseList(")
@@ -94,6 +97,12 @@ end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseListLevel}, depth)
     p = fbr.pos
+    lvl = fbr.lvl
+    if p + 1 > length(lvl.ptr)
+        print(io, "SparseHash(undef...)")
+        return
+    end
+
     crds = @view(fbr.lvl.idx[fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1])
 
     print_coord(io, crd) = show(io, crd)
@@ -225,12 +234,33 @@ function freeze_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos_s
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
-        for $p = 2:($pos_stop + 1)
-            $(lvl.ptr)[$p] += $(lvl.ptr)[$p - 1]
+        for $p = 1:$pos_stop
+            $(lvl.ptr)[$p + 1] += $(lvl.ptr)[$p]
         end
         $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
+    return lvl
+end
+
+function thaw_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos_stop)
+    p = freshen(ctx.code, :p)
+    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    qos_stop = freshen(ctx.code, :qos_stop)
+    push!(ctx.code.preamble, quote
+        $(lvl.qos_fill) = $(lvl.ptr)[$pos_stop + 1] - 1
+        $(lvl.qos_stop) = $(lvl.qos_fill)
+        $qos_stop = $(lvl.qos_fill)
+        $(if issafe(ctx.mode)
+            quote
+                $(lvl.prev_pos) = Finch.scansearch($(lvl.ptr), $(lvl.qos_stop) + 1, 1, $pos_stop) - 1
+            end
+        end)
+        for $p = $pos_stop:-1:1
+            $(lvl.ptr)[$p + 1] -= $(lvl.ptr)[$p]
+        end
+    end)
+    lvl.lvl = thaw_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
 end
 
@@ -399,7 +429,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseListLevel}, ctx, mo
                 )
             ),
             epilogue = quote
-                $(lvl.ptr)[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
+                $(lvl.ptr)[$(ctx(pos)) + 1] += $qos - $qos_fill - 1
                 $qos_fill = $qos - 1
             end
         )

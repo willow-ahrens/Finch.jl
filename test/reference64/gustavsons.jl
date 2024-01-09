@@ -235,16 +235,16 @@ begin
                 end
             end
         end
-        B_lvl_ptr[B_lvl_q + 1] = (B_lvl_2_qos - B_lvl_2_qos_fill) - 1
+        B_lvl_ptr[B_lvl_q + 1] += (B_lvl_2_qos - B_lvl_2_qos_fill) - 1
         B_lvl_2_qos_fill = B_lvl_2_qos - 1
     end
-    for p = 2:A_lvl.shape + 1
-        B_lvl_ptr[p] += B_lvl_ptr[p - 1]
+    for p = 1:A_lvl.shape
+        B_lvl_ptr[p + 1] += B_lvl_ptr[p]
     end
     qos = 1 * A_lvl.shape
     resize!(B_lvl_ptr, qos + 1)
     qos_2 = B_lvl_ptr[end] - 1
     resize!(B_lvl_idx, qos_2)
     resize!(B_lvl_2_val, qos_2)
-    (B = Fiber((DenseLevel){Int64}((SparseListLevel){Int64}(B_lvl_3, A_lvl_2.shape, B_lvl_ptr, B_lvl_idx), A_lvl.shape)),)
+    (B = Tensor((DenseLevel){Int64}((SparseListLevel){Int64}(B_lvl_3, A_lvl_2.shape, B_lvl_ptr, B_lvl_idx), A_lvl.shape)),)
 end

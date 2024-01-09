@@ -318,5 +318,5 @@ begin
     qos = 1 * (input_lvl.shape + -0)
     qos_2 = qos * input_lvl_2.shape
     resize!(val_2, qos_2)
-    (output = Fiber((DenseLevel){Int32}((DenseLevel){Int32}(output_lvl_3, input_lvl_2.shape), input_lvl.shape + -0)),)
+    (output = Tensor((DenseLevel){Int32}((DenseLevel){Int32}(output_lvl_3, input_lvl_2.shape), input_lvl.shape + -0)),)
 end

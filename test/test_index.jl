@@ -1,7 +1,7 @@
 @testset "index" begin
     @info "Testing Index Expressions"
 
-    A = Fiber!(SparseList(Element(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
+    A = Tensor(SparseList(Element(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
     B = Scalar{0.0}()
 
     @test check_output("sieve_hl_cond.jl", @finch_code (B .= 0; for j=_; if j == 1 B[] += A[j] end end))
@@ -50,12 +50,12 @@
     using SparseArrays
 
     A_ref = sprand(10, 0.5); B_ref = sprand(10, 0.5); C_ref = vcat(A_ref, B_ref)
-    A = fiber(SparseVector{Float64, Int64}(A_ref)); B = fiber(SparseVector{Float64, Int64}(B_ref)); C = Fiber!(SparseList{Int64}(Element(0.0), 20))
+    A = Tensor(SparseVector{Float64, Int64}(A_ref)); B = Tensor(SparseVector{Float64, Int64}(B_ref)); C = Tensor(SparseList{Int64}(Element(0.0)), 20)
     @test check_output("concat_offset_permit.jl", @finch_code (C .= 0; for i=_; C[i] = coalesce(A[~i], B[~(i - 10)]) end))
     @finch (C .= 0; for i=_; C[i] = coalesce(A[~i], B[~(i - 10)]) end)
     @test reference_isequal(C, C_ref)
 
-    F = fiber(Int64[1,1,1,1,1])
+    F = Tensor(Int64[1,1,1,1,1])
 
     @test check_output("sparse_conv.jl", @finch_code (C .= 0; for i=_, j=_; C[i] += (A[i] != 0) * coalesce(A[j - i + 3], 0) * F[j] end))
     @finch (C .= 0; for i=_, j=_; C[i] += (A[i] != 0) * coalesce(A[j - i + 3], 0) * F[j] end)
@@ -81,7 +81,7 @@
     @test reference_isequal(C, [2, 3, 4])
 
     y = Array{Any}(undef, 4)
-    x = Fiber!(Dense(Element(0.0)), zeros(2))
+    x = Tensor(Dense(Element(0.0)), zeros(2))
     X = Finch.permissive(x, true)
     
     @finch for i = _; y[i] := X[i] end
@@ -114,7 +114,7 @@
         io = IOBuffer()
         println(io, "chunkmask tests")
 
-        @repl io A = Fiber!(Dense(Dense(Element(0.0), 15), 3))
+        @repl io A = Tensor(Dense(Dense(Element(0.0))), 15, 3)
         @repl io @finch begin
             let m = Finch.chunkmask(5, 1:15)
                 for i = _
@@ -126,7 +126,7 @@
         end
         @repl io AsArray(A)
 
-        @repl io A = Fiber!(Dense(Dense(Element(0.0), 14), 3))
+        @repl io A = Tensor(Dense(Dense(Element(0.0))), 14, 3)
         @repl io @finch begin
             let m = Finch.chunkmask(5, 1:14)
                 for i = _
@@ -152,7 +152,7 @@
         =#
 
         x = Scalar(0.0)
-        A = Fiber!(Dense(Dense(Dense(Element(0.0)))), 
+        A = Tensor(Dense(Dense(Dense(Element(0.0)))), 
         reshape([1 3 5 2 4 6 7 9 11 8 10 12 13 15 17 14 16 18 19 21 23 20 22 24], 2, 3, 4))
         @finch begin
             x .= 0
@@ -178,7 +178,7 @@
         end)
 
         x = Scalar(0.0)
-        A = swizzle(Fiber!(Dense(Dense(Dense(Element(0.0)))), 
+        A = swizzle(Tensor(Dense(Dense(Dense(Element(0.0)))), 
         reshape([1 3 5 2 4 6 7 9 11 8 10 12 13 15 17 14 16 18 19 21 23 20 22 24], 2, 3, 4)), 3, 2, 1)
         @finch begin
             x .= 0

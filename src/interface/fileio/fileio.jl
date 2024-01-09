@@ -1,7 +1,7 @@
 """
-    fwrite(filename::AbstractString, tns::Finch.Fiber)
+    fwrite(filename::AbstractString, tns::Finch.Tensor)
 
-Write the Finch fiber to a file using a file format determined by the file extension.
+Write the Finch tensor to a file using a file format determined by the file extension.
 The following file extensions are supported:
 
 - `.bsp.h5`: [Binsparse](https://github.com/GraphBLAS/binsparse-specification) HDF5 file format
@@ -25,7 +25,7 @@ end
 """
     fread(filename::AbstractString)
 
-Read the Finch fiber from a file using a file format determined by the file extension.
+Read the Finch tensor from a file using a file format determined by the file extension.
 The following file extensions are supported:
 
 - `.bsp.h5`: [Binsparse](https://github.com/GraphBLAS/binsparse-specification) HDF5 file format

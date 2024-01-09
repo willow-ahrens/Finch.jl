@@ -30,8 +30,15 @@ begin
         A_mode2_stop = sugar_8[2]
         sugar_9 = size(C)
         C_mode2_stop = sugar_9[2]
+        C_mode3_stop = sugar_9[3]
         for j_5 = 1:C_mode2_stop
+            sugar_12 = size(C)
+            C_mode2_stop = sugar_12[2]
+            C_mode3_stop = sugar_12[3]
             for i_9 = 1:A_mode1_stop
+                sugar_15 = size(C)
+                C_mode2_stop = sugar_15[2]
+                C_mode3_stop = sugar_15[3]
                 val = X[i_9, j_5]
                 for l_6 = 1:A_mode2_stop
                     val_2 = A[i_9, l_6, k_6]
@@ -41,6 +48,9 @@ begin
                             C[i_9, j_5, k_6] = val_2 * val + C[i_9, j_5, k_6]
                         end
                     end
+                    sugar_19 = size(A)
+                    A_mode1_stop = sugar_19[1]
+                    A_mode2_stop = sugar_19[2]
                     val_3 = A[i_9, l_6, k_6]
                     phase_stop_3 = min((l_6 + 0) + -1, i_9)
                     if phase_stop_3 >= i_9

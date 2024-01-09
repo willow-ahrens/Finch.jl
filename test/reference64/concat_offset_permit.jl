@@ -373,13 +373,13 @@ begin
             C_lvl_qos += 1
         end
     end
-    C_lvl_ptr[1 + 1] = (C_lvl_qos - 0) - 1
-    for p = 2:1 + 1
-        C_lvl_ptr[p] += C_lvl_ptr[p - 1]
+    C_lvl_ptr[1 + 1] += (C_lvl_qos - 0) - 1
+    for p = 1:1
+        C_lvl_ptr[p + 1] += C_lvl_ptr[p]
     end
     resize!(C_lvl_ptr, 1 + 1)
     qos = C_lvl_ptr[end] - 1
     resize!(C_lvl_idx, qos)
     resize!(C_lvl_val, qos)
-    (C = Fiber((SparseListLevel){Int64}(C_lvl_2, C_lvl.shape, C_lvl_ptr, C_lvl_idx)),)
+    (C = Tensor((SparseListLevel){Int64}(C_lvl_2, C_lvl.shape, C_lvl_ptr, C_lvl_idx)),)
 end

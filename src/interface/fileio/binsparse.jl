@@ -268,10 +268,10 @@ function bspwrite(fname::AbstractString, arr, attrs = OrderedDict())
 end
 bspwrite(fname, arr, attrs = OrderedDict()) = bspwrite_tensor(fname, arr, attrs)
 
-bspwrite_tensor(io, fbr::Fiber, attrs = OrderedDict()) = 
+bspwrite_tensor(io, fbr::Tensor, attrs = OrderedDict()) = 
     bspwrite_tensor(io, swizzle(fbr, 1:ndims(fbr)...), attrs)
 
-function bspwrite_tensor(io, arr::SwizzleArray{dims, <:Fiber}, attrs = OrderedDict()) where {dims}
+function bspwrite_tensor(io, arr::SwizzleArray{dims, <:Tensor}, attrs = OrderedDict()) where {dims}
     desc = OrderedDict(
         "format" => OrderedDict{Any, Any}(
             "subformat" => OrderedDict(),
@@ -318,7 +318,7 @@ function bspread(f)
         sigma = sortperm(reverse(fmt["swizzle"] .+ 1))
         desc["shape"] = desc["shape"][sigma]
     end
-    fbr = Fiber(bspread_level(f, desc, fmt["subformat"]))
+    fbr = Tensor(bspread_level(f, desc, fmt["subformat"]))
     if !issorted(reverse(fmt["swizzle"]))
         fbr = swizzle(fbr, reverse(fmt["swizzle"] .+ 1)...)
     end
