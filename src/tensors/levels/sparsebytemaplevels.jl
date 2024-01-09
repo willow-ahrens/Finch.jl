@@ -8,7 +8,7 @@ which slices are stored. This allows the ByteMap level to support random access.
 positions in the level. 
 
 ```jldoctest
-julia> Fiber(Dense(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+julia> Tensor(Dense(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
 ├─[:,1]: SparseByteMap (0.0) [1:3]
 │ ├─[1]: 10.0
@@ -18,7 +18,7 @@ Dense [:,1:3]
 │ ├─[1]: 20.0
 │ ├─[3]: 40.0
 
-julia> Fiber(SparseByteMap(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+julia> Tensor(SparseByteMap(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 SparseByteMap (0.0) [:,1:3]
 ├─[:,1]: SparseByteMap (0.0) [1:3]
 │ ├─[1]: 10.0

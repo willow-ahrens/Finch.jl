@@ -35,5 +35,5 @@ begin
     qos = res_lvl_ptr[end] - 1
     resize!(res_lvl_idx, qos)
     resize!(res_lvl_val, qos)
-    (res = Fiber((SparseListLevel){Int64}(res_lvl_2, tmp_lvl.shape, res_lvl_ptr, res_lvl_idx)),)
+    (res = Tensor((SparseListLevel){Int64}(res_lvl_2, tmp_lvl.shape, res_lvl_ptr, res_lvl_idx)),)
 end

@@ -1,7 +1,7 @@
 using Finch
-using Finch: Fiber, SubFiber, ElementLevel, DenseLevel, SparseListLevel, SparseCOOLevel
+using Finch: Tensor, SubFiber, ElementLevel, DenseLevel, SparseListLevel, SparseCOOLevel
 
-tikzshow(io, fbr::Fiber) = tikzshow(io, SubFiber(fbr.lvl, 1), "A", "A", 0, 0)
+tikzshow(io, fbr::Tensor) = tikzshow(io, SubFiber(fbr.lvl, 1), "A", "A", 0, 0)
 tikzshow(io, fbr) = tikzshow(io, fbr, 0)
 tikzwidth(fbr::SubFiber{<:ElementLevel}) = 1
 tikzwidth(fbr::SubFiber{<:DenseLevel}) =
@@ -142,7 +142,7 @@ function tikzdisplay(f, name)
     end
 end
 
-highlight(io, fbr::Fiber) = highlight_level(io, fbr.lvl, "A", -1, tikzwidth(SubFiber(fbr.lvl, 1)), 0)
+highlight(io, fbr::Tensor) = highlight_level(io, fbr.lvl, "A", -1, tikzwidth(SubFiber(fbr.lvl, 1)), 0)
 
 function highlight_level(io, lvl::DenseLevel, tag, x0, x1, y0)
     mtx = "$(tag)d$(Finch.level_ndims(typeof(lvl)))p1"
@@ -196,25 +196,25 @@ A = [0 0 4.4;
 (m, n) = size(A)
 
 tikzdisplay("levels-A-d-d-e.tex") do io
-    fbr = Fiber(Dense(Dense(Element(0.0))), A)
+    fbr = Tensor(Dense(Dense(Element(0.0))), A)
     tikzshow(io, fbr)
     highlight(io, fbr)
 end
 
 tikzdisplay("levels-A-d-sl-e.tex") do io
-    fbr = Fiber(Dense(SparseList(Element(0.0))), A)
+    fbr = Tensor(Dense(SparseList(Element(0.0))), A)
     tikzshow(io, fbr)
     highlight(io, fbr)
 end
 
 tikzdisplay("levels-A-sl-sl-e.tex") do io
-    fbr = Fiber(SparseList(SparseList(Element(0.0))), A)
+    fbr = Tensor(SparseList(SparseList(Element(0.0))), A)
     tikzshow(io, fbr)
     highlight(io, fbr)
 end
 
 tikzdisplay("levels-A-sc2-e.tex") do io
-    fbr = Fiber(SparseCOO{2}(Element(0.0)), A)
+    fbr = Tensor(SparseCOO{2}(Element(0.0)), A)
     tikzshow(io, fbr)
     highlight(io, fbr)
 end

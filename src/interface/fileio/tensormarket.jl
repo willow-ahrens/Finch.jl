@@ -39,7 +39,7 @@ ftnswrite(args...) = throw(FinchExtensionError("TensorMarket.jl must be loaded t
 """
     ftnsread(filename)
 
-Read the contents of the FROSTT `.tns` file 'filename' into a Finch COO Fiber.
+Read the contents of the FROSTT `.tns` file 'filename' into a Finch COO Tensor.
 
 [TensorMarket](https://github.com/willow-ahrens/TensorMarket.jl) must be loaded for this function to be available.
 

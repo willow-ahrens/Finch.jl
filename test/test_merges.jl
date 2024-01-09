@@ -5,18 +5,18 @@
     #and leaf_instance isn't super robust
     using Finch.FinchNotation: literal_instance
     fmts = [
-        (;fmt = (z) -> Fiber(Dense(SparseList(Element(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
-        (;fmt = (z) -> Fiber(Dense(SparseList(Element(z)))), proto = [literal_instance(gallop), literal_instance(follow)]),
-        (;fmt = (z) -> Fiber(Dense(SparseVBL(Element(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
-        (;fmt = (z) -> Fiber(Dense(SparseVBL(Element(z)))), proto = [literal_instance(gallop), literal_instance(follow)]),
-        (;fmt = (z) -> Fiber(Dense(SparseByteMap(Element(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
-        (;fmt = (z) -> Fiber(Dense(SparseByteMap(Element(z)))), proto = [literal_instance(gallop), literal_instance(follow)]),
-        (;fmt = (z) -> Fiber(Dense(SparseCOO{1}(Element(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
-        (;fmt = (z) -> Fiber(SparseCOO{2}(Element(z))), proto = [literal_instance(walk), literal_instance(walk)]),
-        (;fmt = (z) -> Fiber(Dense(SparseHash{1}(Element(z)))), proto = [literal_instance(walk),literal_instance(follow)]),
-        (;fmt = (z) -> Fiber(SparseHash{2}(Element(z))), proto = [literal_instance(walk), literal_instance(walk)]),
-        #(;fmt = (z) -> Fiber(Dense(RepeatRLE(z))), proto = [walk, follow]),
-        (;fmt = (z) -> Fiber(Dense(SparseRLE(Element(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
+        (;fmt = (z) -> Tensor(Dense(SparseList(Element(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
+        (;fmt = (z) -> Tensor(Dense(SparseList(Element(z)))), proto = [literal_instance(gallop), literal_instance(follow)]),
+        (;fmt = (z) -> Tensor(Dense(SparseVBL(Element(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
+        (;fmt = (z) -> Tensor(Dense(SparseVBL(Element(z)))), proto = [literal_instance(gallop), literal_instance(follow)]),
+        (;fmt = (z) -> Tensor(Dense(SparseByteMap(Element(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
+        (;fmt = (z) -> Tensor(Dense(SparseByteMap(Element(z)))), proto = [literal_instance(gallop), literal_instance(follow)]),
+        (;fmt = (z) -> Tensor(Dense(SparseCOO{1}(Element(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
+        (;fmt = (z) -> Tensor(SparseCOO{2}(Element(z))), proto = [literal_instance(walk), literal_instance(walk)]),
+        (;fmt = (z) -> Tensor(Dense(SparseHash{1}(Element(z)))), proto = [literal_instance(walk),literal_instance(follow)]),
+        (;fmt = (z) -> Tensor(SparseHash{2}(Element(z))), proto = [literal_instance(walk), literal_instance(walk)]),
+        #(;fmt = (z) -> Tensor(Dense(RepeatRLE(z))), proto = [walk, follow]),
+        (;fmt = (z) -> Tensor(Dense(SparseRLE(Element(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
     ]
 
     dtss = [
@@ -47,12 +47,12 @@
             @testset "$(summary(fmt.fmt(0.0)))[$(fmt.proto[1]), $(fmt.proto[2])]" begin
                 for dts in dtss
                     a = dropdefaults!(fmt.fmt(dts.default), dts.data)
-                    b = Fiber(SparseCOO{2}(Element(dts.default)))
+                    b = Tensor(SparseCOO{2}(Element(dts.default)))
 
                     @finch (b .= 0; for j=_, i=_; b[i, j] = a[$(fmt.proto[1])(i), $(fmt.proto[2])(j)] * diagmask[i, j] end)
 
                     refdata = [dts.data[i, j] * (j == i) for (i, j) in product(axes(dts.data)...)]
-                    ref = dropdefaults!(Fiber(SparseCOO{2}(Element(dts.default))), refdata)
+                    ref = dropdefaults!(Tensor(SparseCOO{2}(Element(dts.default))), refdata)
                     @test Structure(b) == Structure(ref)
                 end
             end
@@ -64,10 +64,10 @@
             @testset "$(summary(fmt.fmt(0.0)))[$(fmt.proto[1]), $(fmt.proto[2])]" begin
                 for dts in dtss
                     a = dropdefaults!(fmt.fmt(dts.default), dts.data)
-                    b = Fiber(SparseCOO{2}(Element(dts.default)))
+                    b = Tensor(SparseCOO{2}(Element(dts.default)))
                     @finch (b .= 0; for j=_, i=_; b[i, j] = a[$(fmt.proto[1])(i), $(fmt.proto[2])(j)] * lotrimask[i, j] end)
                     refdata = [dts.data[i, j] * (j <= i) for (i, j) in product(axes(dts.data)...)]
-                    ref = dropdefaults!(Fiber(SparseCOO{2}(Element(dts.default))), refdata)
+                    ref = dropdefaults!(Tensor(SparseCOO{2}(Element(dts.default))), refdata)
                     @test Structure(b) == Structure(ref)
                 end
             end
@@ -79,10 +79,10 @@
             @testset "$(summary(fmt.fmt(0.0)))[$(fmt.proto[1]), $(fmt.proto[2])]" begin
                 for dts in dtss
                     a = dropdefaults!(fmt.fmt(dts.default), dts.data)
-                    b = Fiber(SparseCOO{2}(Element(dts.default)))
+                    b = Tensor(SparseCOO{2}(Element(dts.default)))
                     @finch (b .= 0; for j=_, i=_; b[i, j] = a[$(fmt.proto[1])(i), $(fmt.proto[2])(j)] * uptrimask[i, j] end)
                     refdata = [dts.data[i, j] * (j >= i) for (i, j) in product(axes(dts.data)...)]
-                    ref = dropdefaults!(Fiber(SparseCOO{2}(Element(dts.default))), refdata)
+                    ref = dropdefaults!(Tensor(SparseCOO{2}(Element(dts.default))), refdata)
                     @test Structure(b) == Structure(ref)
                 end
             end
@@ -95,10 +95,10 @@
             @testset "$(summary(fmt.fmt(0.0)))[$(fmt.proto[1]), $(fmt.proto[2])]" begin
                 for dts in dtss
                     a = dropdefaults!(fmt.fmt(dts.default), dts.data)
-                    b = Fiber(SparseCOO{2}(Element(dts.default)))
+                    b = Tensor(SparseCOO{2}(Element(dts.default)))
                     @finch (b .= 0; for j=_, i=_; b[i, j] = a[$(fmt.proto[1])(i), $(fmt.proto[2])(j)] * bandmask[i, j - 1, j + 1] end)
                     refdata = [dts.data[i, j] * (j - 1 <= i <= j + 1) for (i, j) in product(axes(dts.data)...)]
-                    ref = dropdefaults!(Fiber(SparseCOO{2}(Element(dts.default))), refdata)
+                    ref = dropdefaults!(Tensor(SparseCOO{2}(Element(dts.default))), refdata)
                     @test Structure(b) == Structure(ref)
                 end
             end
@@ -117,12 +117,12 @@
                         for b_dts in dtss
                             a = dropdefaults!(a_fmt.fmt(a_dts.default), a_dts.data)
                             b = dropdefaults!(b_fmt.fmt(b_dts.default), b_dts.data)
-                            c = Fiber(SparseCOO{2}(Element(a_dts.default)))
-                            d = Fiber(SparseCOO{2}(Element(a_dts.default)))
+                            c = Tensor(SparseCOO{2}(Element(a_dts.default)))
+                            d = Tensor(SparseCOO{2}(Element(a_dts.default)))
                             @finch (c .= 0; for j=_, i=_; c[i, j] = a[$(a_fmt.proto[1])(i), $(a_fmt.proto[2])(j)] + b[$(b_fmt.proto[1])(i), $(b_fmt.proto[2])(j)] end)
                             @finch (d .= 0; for j=_, i=_; d[i, j] = a[$(a_fmt.proto[1])(i), $(a_fmt.proto[2])(j)] * b[$(b_fmt.proto[1])(i), $(b_fmt.proto[2])(j)] end)
-                            c_ref = dropdefaults!(Fiber(SparseCOO{2}(Element(a_dts.default))), a_dts.data .+ b_dts.data)
-                            d_ref = dropdefaults!(Fiber(SparseCOO{2}(Element(a_dts.default))), a_dts.data .* b_dts.data)
+                            c_ref = dropdefaults!(Tensor(SparseCOO{2}(Element(a_dts.default))), a_dts.data .+ b_dts.data)
+                            d_ref = dropdefaults!(Tensor(SparseCOO{2}(Element(a_dts.default))), a_dts.data .* b_dts.data)
                             @test Structure(c) == Structure(c_ref)
                             @test Structure(d) == Structure(d_ref)
                         end

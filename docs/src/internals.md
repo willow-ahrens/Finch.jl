@@ -26,12 +26,12 @@ code for a function body.
 In normal Finch usage, we might call Finch as follows:
 
 ```jldoctest example1; setup = :(using Finch)
-julia> C = Fiber(SparseList(Element(0)));
+julia> C = Tensor(SparseList(Element(0)));
 
-julia> A = Fiber(SparseList(Element(0)), [0, 2, 0, 0, 3]);
+julia> A = Tensor(SparseList(Element(0)), [0, 2, 0, 0, 3]);
 
 
-julia> B = Fiber(Dense(Element(0)), [11, 12, 13, 14, 15]);
+julia> B = Tensor(Dense(Element(0)), [11, 12, 13, 14, 15]);
 
 julia> @finch (C .= 0; for i=_; C[i] = A[i] * B[i] end);
 
@@ -78,7 +78,7 @@ convenient to use the unexported macro `Finch.finch_program_instance`:
 julia> using Finch: @finch_program_instance
 
 julia> prgm = Finch.@finch_program_instance (C .= 0; for i=_; C[i] = A[i] * B[i] end)
-block_instance(declare_instance(tag_instance(:variable_instance(:C), Fiber(SparseList{Int64}(Element{0, Int64, Int64}([24, 45]), 5, [1, 3], [2, 5]))), literal_instance(0)), loop_instance(index_instance(i), Finch.FinchNotation.Dimensionless(), assign_instance(access_instance(tag_instance(:variable_instance(:C), Fiber(SparseList{Int64}(Element{0, Int64, Int64}([24, 45]), 5, [1, 3], [2, 5]))), literal_instance(Finch.FinchNotation.Updater()), tag_instance(:variable_instance(:i), index_instance(i))), literal_instance(initwrite), call_instance(tag_instance(:variable_instance(:*), literal_instance(*)), access_instance(tag_instance(:variable_instance(:A), Fiber(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal_instance(Finch.FinchNotation.Reader()), tag_instance(:variable_instance(:i), index_instance(i))), access_instance(tag_instance(:variable_instance(:B), Fiber(Dense{Int64}(Element{0, Int64, Int64}([11, 12, 13, 14, 15]), 5))), literal_instance(Finch.FinchNotation.Reader()), tag_instance(:variable_instance(:i), index_instance(i)))))))
+block_instance(declare_instance(tag_instance(:variable_instance(:C), Tensor(SparseList{Int64}(Element{0, Int64, Int64}([24, 45]), 5, [1, 3], [2, 5]))), literal_instance(0)), loop_instance(index_instance(i), Finch.FinchNotation.Dimensionless(), assign_instance(access_instance(tag_instance(:variable_instance(:C), Tensor(SparseList{Int64}(Element{0, Int64, Int64}([24, 45]), 5, [1, 3], [2, 5]))), literal_instance(Finch.FinchNotation.Updater()), tag_instance(:variable_instance(:i), index_instance(i))), literal_instance(initwrite), call_instance(tag_instance(:variable_instance(:*), literal_instance(*)), access_instance(tag_instance(:variable_instance(:A), Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal_instance(Finch.FinchNotation.Reader()), tag_instance(:variable_instance(:i), index_instance(i))), access_instance(tag_instance(:variable_instance(:B), Tensor(Dense{Int64}(Element{0, Int64, Int64}([11, 12, 13, 14, 15]), 5))), literal_instance(Finch.FinchNotation.Reader()), tag_instance(:variable_instance(:i), index_instance(i)))))))
 ```
 
 As we can see, our program instance contains not only the AST to be executed,
@@ -89,7 +89,7 @@ different inputs, but the same program type. We can run our program using
 
 ```jldoctest example1
 julia> typeof(prgm)
-Finch.FinchNotation.BlockInstance{Tuple{Finch.FinchNotation.DeclareInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:C}, Fiber{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{0}}, Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.Dimensionless, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:C}, Fiber{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Updater()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.initwrite}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:*}, Finch.FinchNotation.LiteralInstance{*}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:A}, Fiber{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Reader()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:B}, Fiber{DenseLevel{Int64, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Reader()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}}}}}}}
+Finch.FinchNotation.BlockInstance{Tuple{Finch.FinchNotation.DeclareInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:C}, Tensor{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{0}}, Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.Dimensionless, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:C}, Tensor{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Updater()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.initwrite}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:*}, Finch.FinchNotation.LiteralInstance{*}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:A}, Tensor{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Reader()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:B}, Tensor{DenseLevel{Int64, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Reader()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}}}}}}}
 
 julia> C = Finch.execute(prgm).C
 SparseList (0) [1:5]
@@ -104,7 +104,7 @@ follows:
 
 ```jldoctest example1
 julia> function pointwise_sum(As...)
-           B = Fiber(Dense(Element(0)))
+           B = Tensor(Dense(Element(0)))
            isempty(As) && return B
            i = Finch.FinchNotation.index_instance(:i)
            A_vars = [Finch.FinchNotation.tag_instance(Finch.FinchNotation.variable_instance(Symbol(:A, n)), As[n]) for n in 1:length(As)]
@@ -153,27 +153,27 @@ representations. For example, the literal `42` is represented as
 The virtualization process is implemented by the `virtualize` function. 
 
 ```jldoctest example2; setup = :(using Finch)
-julia> A = Fiber(SparseList(Element(0)), [0, 2, 0, 0, 3]);
+julia> A = Tensor(SparseList(Element(0)), [0, 2, 0, 0, 3]);
 
-julia> B = Fiber(Dense(Element(0)), [11, 12, 13, 14, 15]);
+julia> B = Tensor(Dense(Element(0)), [11, 12, 13, 14, 15]);
 
 julia> s = Scalar(0);
 
 julia> typeof(A)
-Fiber{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}
+Tensor{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}
 
 julia> typeof(B)
-Fiber{DenseLevel{Int64, ElementLevel{0, Int64, Int64, Vector{Int64}}}}
+Tensor{DenseLevel{Int64, ElementLevel{0, Int64, Int64, Vector{Int64}}}}
 
 julia> inst = Finch.@finch_program_instance begin
            for i = _
                s[] += A[i]
            end
        end
-loop_instance(index_instance(i), Finch.FinchNotation.Dimensionless(), assign_instance(access_instance(tag_instance(:variable_instance(:s), Scalar{0, Int64}(0)), literal_instance(Finch.FinchNotation.Updater()), ), tag_instance(:variable_instance(:+), literal_instance(+)), access_instance(tag_instance(:variable_instance(:A), Fiber(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal_instance(Finch.FinchNotation.Reader()), tag_instance(:variable_instance(:i), index_instance(i)))))
+loop_instance(index_instance(i), Finch.FinchNotation.Dimensionless(), assign_instance(access_instance(tag_instance(:variable_instance(:s), Scalar{0, Int64}(0)), literal_instance(Finch.FinchNotation.Updater()), ), tag_instance(:variable_instance(:+), literal_instance(+)), access_instance(tag_instance(:variable_instance(:A), Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal_instance(Finch.FinchNotation.Reader()), tag_instance(:variable_instance(:i), index_instance(i)))))
 
 julia> typeof(inst)
-Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.Dimensionless, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:s}, Scalar{0, Int64}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Updater()}, Tuple{}}, Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:+}, Finch.FinchNotation.LiteralInstance{+}}, Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:A}, Fiber{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Reader()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}}}
+Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.Dimensionless, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:s}, Scalar{0, Int64}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Updater()}, Tuple{}}, Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:+}, Finch.FinchNotation.LiteralInstance{+}}, Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:A}, Tensor{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Reader()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}}}
 
 julia> Finch.virtualize(:inst, typeof(inst), Finch.JuliaContext())
 for i = virtual(Finch.FinchNotation.Dimensionless)
@@ -249,9 +249,9 @@ in the scope of the executing context. Any aspect of virtuals visible to Finch s
 considered immutable, but virtuals may reference mutable variables in the scope of the
 executing context.
 
-## Fiber internals
+## Tensor internals
 
-Fiber levels are implemented using the following methods:
+Tensor levels are implemented using the following methods:
 
 ```@docs
 default

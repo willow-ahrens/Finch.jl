@@ -7,9 +7,9 @@ the adjacency matrix `adj`. `damp` is the damping factor.
 function pagerank(edges; nsteps=20, damp = 0.85)
     (n, m) = size(edges)
     @assert n == m
-    out_degree = Fiber(Dense(Element(0)))
+    out_degree = Tensor(Dense(Element(0)))
     @finch (out_degree .= 0; for j=_, i=_; out_degree[j] += edges[i, j] end)
-    scaled_edges = Fiber(Dense(SparseList(Element(0.0))))
+    scaled_edges = Tensor(Dense(SparseList(Element(0.0))))
     @finch begin
         scaled_edges .= 0
         for j = _, i = _
@@ -18,9 +18,9 @@ function pagerank(edges; nsteps=20, damp = 0.85)
             end
         end
     end
-    r = Fiber(Dense(Element(0.0)), n)
+    r = Tensor(Dense(Element(0.0)), n)
     @finch (r .= 0.0; for j=_; r[j] = 1.0/n end)
-    rank = Fiber(Dense(Element(0.0)), n)
+    rank = Tensor(Dense(Element(0.0)), n)
     beta_score = (1 - damp)/n
 
     for step = 1:nsteps

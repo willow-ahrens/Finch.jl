@@ -132,11 +132,11 @@ representation described by `tns`. Assumes representation is collapsed.
 function fiber_ctr end
 fiber_ctr(fbr) = fiber_ctr(fbr, [nothing for _ in 1:ndims(fbr)])
 fiber_ctr(fbr::HollowData, protos) = fiber_ctr_hollow(fbr.lvl, protos)
-fiber_ctr_hollow(fbr::DenseData, protos) = :(Fiber($(level_ctr(SparseData(fbr.lvl), protos...))))
-fiber_ctr_hollow(fbr::ExtrudeData, protos) = :(Fiber($(level_ctr(SparseData(fbr.lvl), protos...))))
-fiber_ctr_hollow(fbr::RepeatData, protos) = :(Fiber($(level_ctr(SparseData(ElementData(fbr.default, fbr.eltype)), protos...)))) #This is the best format we have for this case right now
-fiber_ctr_hollow(fbr::SparseData, protos) = :(Fiber($(level_ctr(fbr, protos...))))
-fiber_ctr(fbr, protos) = :(Fiber($(level_ctr(fbr, protos...))))
+fiber_ctr_hollow(fbr::DenseData, protos) = :(Tensor($(level_ctr(SparseData(fbr.lvl), protos...))))
+fiber_ctr_hollow(fbr::ExtrudeData, protos) = :(Tensor($(level_ctr(SparseData(fbr.lvl), protos...))))
+fiber_ctr_hollow(fbr::RepeatData, protos) = :(Tensor($(level_ctr(SparseData(ElementData(fbr.default, fbr.eltype)), protos...)))) #This is the best format we have for this case right now
+fiber_ctr_hollow(fbr::SparseData, protos) = :(Tensor($(level_ctr(fbr, protos...))))
+fiber_ctr(fbr, protos) = :(Tensor($(level_ctr(fbr, protos...))))
 
 level_ctr(fbr::SparseData, proto::Union{Nothing, typeof(walk), typeof(extrude)}, protos...) = :(SparseList($(level_ctr(fbr.lvl, protos...))))
 level_ctr(fbr::SparseData, proto::Union{typeof(laminate)}, protos...) = :(SparseHash{1}($(level_ctr(fbr.lvl, protos...))))

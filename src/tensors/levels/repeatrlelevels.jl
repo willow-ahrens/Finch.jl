@@ -10,7 +10,7 @@ the first argument.  `Ti` is the type of the last fiber index, and `Tp` is the
 type used for positions in the level.
 
 ```jldoctest
-julia> Fiber(RepeatRLE(0.0), [11, 11, 22, 22, 00, 00, 00, 33, 33])
+julia> Tensor(RepeatRLE(0.0), [11, 11, 22, 22, 00, 00, 00, 33, 33])
 RepeatRLE (0.0) [1:9]
 ├─[1:2]: 11.0
 ├─[3:4]: 22.0
@@ -115,7 +115,7 @@ end
 @inline level_eltype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}}) where {D, Ti, Tp, Tv, Ptr, Idx, Val} = Tv
 @inline level_default(::Type{<:RepeatRLELevel{D}}) where {D} = D
 (fbr::AbstractFiber{<:RepeatRLELevel})() = fbr
-(fbr::Fiber{<:RepeatRLELevel})(idx...) = SubFiber(fbr.lvl, 1)(idx...)
+(fbr::Tensor{<:RepeatRLELevel})(idx...) = SubFiber(fbr.lvl, 1)(idx...)
 function (fbr::SubFiber{<:RepeatRLELevel})(i, tail...)
     lvl = fbr.lvl
     p = fbr.pos

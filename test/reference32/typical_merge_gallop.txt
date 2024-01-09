@@ -465,7 +465,7 @@ quote
     qos = z_lvl_ptr[end] - 1
     resize!(z_lvl_idx, qos)
     resize!(z_lvl_val, qos)
-    (z = Fiber((SparseListLevel){Int32}(z_lvl_2, y_lvl.shape, z_lvl_ptr, z_lvl_idx)),)
+    (z = Tensor((SparseListLevel){Int32}(z_lvl_2, y_lvl.shape, z_lvl_ptr, z_lvl_idx)),)
 end
 julia> @finch begin
         z .= 0
@@ -473,5 +473,5 @@ julia> @finch begin
             z[i] = x[gallop(i)] + y[gallop(i)]
         end
     end
-(z = Fiber(SparseList{Int32}(Element{0.0, Float64, Int32}([2.0, 1.0, 6.0]), 10, [1, 4], [1, 2, 9])),)
+(z = Tensor(SparseList{Int32}(Element{0.0, Float64, Int32}([2.0, 1.0, 6.0]), 10, [1, 4], [1, 2, 9])),)
 

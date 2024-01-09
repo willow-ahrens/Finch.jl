@@ -102,5 +102,5 @@ begin
     end
     qos = 1 * ref_lvl.shape
     resize!(tmp_lvl_2_val, qos * fld(ref_lvl_2.shape, 1))
-    (tmp = Fiber((DenseLevel){Int64}((SparseTriangleLevel){1, Int64}(tmp_lvl_3, ref_lvl_2.shape), ref_lvl.shape)),)
+    (tmp = Tensor((DenseLevel){Int64}((SparseTriangleLevel){1, Int64}(tmp_lvl_3, ref_lvl_2.shape), ref_lvl.shape)),)
 end

@@ -9,14 +9,14 @@ function bfs(edges, source=5)
     edges = pattern!(edges)
 
     @assert n == m
-    F = Fiber(SparseByteMap(Pattern()), n)
-    _F = Fiber(SparseByteMap(Pattern()), n)
+    F = Tensor(SparseByteMap(Pattern()), n)
+    _F = Tensor(SparseByteMap(Pattern()), n)
     @finch F[source] = true
 
-    V = Fiber(Dense(Element(false)), n)
+    V = Tensor(Dense(Element(false)), n)
     @finch V[source] = true
 
-    P = Fiber(Dense(Element(0)), n)
+    P = Tensor(Dense(Element(0)), n)
     @finch P[source] = source
 
     while countstored(F) > 0

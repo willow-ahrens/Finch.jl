@@ -155,5 +155,5 @@ begin
     qos_2 = tmp_lvl_ptr[end] - 1
     resize!(tmp_lvl_idx, qos_2)
     resize!(tmp_lvl_2_val, qos_2)
-    (tmp = Fiber((DenseLevel){Int32}((SparseListLevel){Int32}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr, tmp_lvl_idx), ref_lvl.shape)),)
+    (tmp = Tensor((DenseLevel){Int32}((SparseListLevel){Int32}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr, tmp_lvl_idx), ref_lvl.shape)),)
 end

@@ -47,7 +47,7 @@ julia> idx_jl = reinterpret(CIndex{Int}, idx_c)
  4
  1
  3
-julia> A = Fiber(Dense(SparseList{CIndex{Int}}(Element{0.0, Float64, CIndex{Int}}(val_c), m, ptr_jl, idx_jl), n))
+julia> A = Tensor(Dense(SparseList{CIndex{Int}}(Element{0.0, Float64, CIndex{Int}}(val_c), m, ptr_jl, idx_jl), n))
 Dense [:,1:3]
 ├─[:,1]: SparseList (0.0) [1:CIndex{Int64}(4)]
 │ ├─[CIndex{Int64}(2)]: 1.1

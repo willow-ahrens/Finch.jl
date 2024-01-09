@@ -166,5 +166,5 @@ begin
     qos_2 = fmt_lvl_ptr[end] - 1
     resize!(fmt_lvl_srt, qos_2)
     resize!(fmt_lvl_2_val, qos_2)
-    (fmt = Fiber((DenseLevel){Int64}((SparseHashLevel){1, Tuple{Int64}}(fmt_lvl_3, (fmt_lvl_2.shape[1],), fmt_lvl_ptr, fmt_lvl_tbl, fmt_lvl_srt), fmt_lvl.shape)),)
+    (fmt = Tensor((DenseLevel){Int64}((SparseHashLevel){1, Tuple{Int64}}(fmt_lvl_3, (fmt_lvl_2.shape[1],), fmt_lvl_ptr, fmt_lvl_tbl, fmt_lvl_srt), fmt_lvl.shape)),)
 end

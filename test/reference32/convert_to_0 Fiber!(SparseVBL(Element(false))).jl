@@ -90,5 +90,5 @@ begin
     resize!(tmp_lvl_ofs, ros + 1)
     qos = tmp_lvl_ofs[end] - 1
     resize!(tmp_lvl_val, qos)
-    (tmp = Fiber((SparseVBLLevel){Int32}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx, tmp_lvl_ofs)),)
+    (tmp = Tensor((SparseVBLLevel){Int32}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx, tmp_lvl_ofs)),)
 end

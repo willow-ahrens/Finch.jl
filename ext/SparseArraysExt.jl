@@ -11,37 +11,37 @@ using Base: @kwdef
 
 isdefined(Base, :get_extension) ? (using SparseArrays) : (using ..SparseArrays)
 
-function Finch.Fiber(arr::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti}
+function Finch.Tensor(arr::SparseMatrixCSC{Tv, Ti}) where {Tv, Ti}
     (m, n) = size(arr)
-    return Fiber(Dense(SparseList{Ti}(Element{zero(Tv)}(arr.nzval), m, arr.colptr, arr.rowval), n))
+    return Tensor(Dense(SparseList{Ti}(Element{zero(Tv)}(arr.nzval), m, arr.colptr, arr.rowval), n))
 end
 
-function Finch.Fiber(arr::SparseVector{Tv, Ti}) where {Tv, Ti}
+function Finch.Tensor(arr::SparseVector{Tv, Ti}) where {Tv, Ti}
     (n,) = size(arr)
-    return Fiber(SparseList{Ti}(Element{zero(Tv)}(arr.nzval), n, [1, length(arr.nzind) + 1], arr.nzind))
+    return Tensor(SparseList{Ti}(Element{zero(Tv)}(arr.nzval), n, [1, length(arr.nzind) + 1], arr.nzind))
 end
 
 """
-    SparseMatrixCSC(arr::Union{Fiber, SwizzleArray})
+    SparseMatrixCSC(arr::Union{Tensor, SwizzleArray})
 
 Construct a sparse matrix from a fiber or swizzle. May reuse the underlying storage if possible.
 """
-function SparseArrays.SparseMatrixCSC(arr::Union{Fiber, SwizzleArray})
+function SparseArrays.SparseMatrixCSC(arr::Union{Tensor, SwizzleArray})
     default(arr) === zero(eltype(arr)) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero default values, was given $(default(arr)) as default"))
-    return SparseMatrixCSC(Fiber(Dense(SparseList(Element(0.0))), arr))
+    return SparseMatrixCSC(Tensor(Dense(SparseList(Element(0.0))), arr))
 end
 
-function SparseArrays.SparseMatrixCSC(arr::Fiber{<:Dense{Ti, <:SparseList{Ti, Ptr, Idx, <:Element{D, Tv}}}}) where {D, Ti, Ptr, Idx, Tv}
+function SparseArrays.SparseMatrixCSC(arr::Tensor{<:Dense{Ti, <:SparseList{Ti, Ptr, Idx, <:Element{D, Tv}}}}) where {D, Ti, Ptr, Idx, Tv}
     D === zero(Tv) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero default values, was given $D as default"))
     return SparseMatrixCSC{Tv, Ti}(size(arr)..., arr.lvl.lvl.ptr, arr.lvl.lvl.idx, arr.lvl.lvl.lvl.val)
 end
 
 """
-    sparse(arr::Union{Fiber, SwizzleArray})
+    sparse(arr::Union{Tensor, SwizzleArray})
 
-Construct a SparseArray from a Fiber or Swizzle. May reuse the underlying storage if possible.
+Construct a SparseArray from a Tensor or Swizzle. May reuse the underlying storage if possible.
 """
-function SparseArrays.sparse(fbr::Union{Fiber, SwizzleArray})
+function SparseArrays.sparse(fbr::Union{Tensor, SwizzleArray})
     if ndims(fbr) == 1
         return SparseVector(fbr)
     elseif ndims(fbr) == 2
@@ -149,16 +149,16 @@ Finch.virtual_default(arr::VirtualSparseMatrixCSC, ctx) = zero(arr.Tv)
 Finch.virtual_eltype(tns::VirtualSparseMatrixCSC, ctx) = tns.Tv
 
 """
-    SparseVector(arr::Union{Fiber, SwizzleArray})
+    SparseVector(arr::Union{Tensor, SwizzleArray})
 
 Construct a sparse matrix from a fiber or swizzle. May reuse the underlying storage if possible.
 """
-function SparseArrays.SparseVector(arr::Union{Fiber, SwizzleArray})
+function SparseArrays.SparseVector(arr::Union{Tensor, SwizzleArray})
     default(arr) === zero(eltype(arr)) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero default values, was given $(default(arr)) as default"))
-    return SparseVector(Fiber(SparseList(Element(0.0)), arr))
+    return SparseVector(Tensor(SparseList(Element(0.0)), arr))
 end
 
-function SparseArrays.SparseVector(arr::Fiber{<:SparseList{Ti, Ptr, Idx, <:Element{D, Tv}}}) where {Ti, Ptr, Idx, Tv, D}
+function SparseArrays.SparseVector(arr::Tensor{<:SparseList{Ti, Ptr, Idx, <:Element{D, Tv}}}) where {Ti, Ptr, Idx, Tv, D}
     D === zero(Tv) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero default values, was given $D as default"))
     return SparseVector{Tv, Ti}(size(arr)..., arr.lvl.idx, arr.lvl.lvl.val)
 end
@@ -255,6 +255,6 @@ Finch.FinchNotation.finch_leaf(x::VirtualSparseVector) = virtual(x)
 Finch.virtual_default(arr::VirtualSparseVector, ctx) = zero(arr.Tv)
 Finch.virtual_eltype(tns::VirtualSparseVector, ctx) = tns.Tv
 
-SparseArrays.nnz(fbr::Fiber) = countstored(fbr)
+SparseArrays.nnz(fbr::Tensor) = countstored(fbr)
 
 end

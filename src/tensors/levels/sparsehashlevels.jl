@@ -14,7 +14,7 @@ positions in the level. `Tbl` is the type of the dictionary used to do hashing,
 pairs in the hash table.
 
 ```jldoctest
-julia> Fiber(Dense(SparseHash{1}(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+julia> Tensor(Dense(SparseHash{1}(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
 ├─[:,1]: SparseHash (0.0) [1:3]
 │ ├─[1]: 10.0
@@ -24,7 +24,7 @@ Dense [:,1:3]
 │ ├─[1]: 20.0
 │ ├─[3]: 40.0
 
-julia> Fiber(SparseHash{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
+julia> Tensor(SparseHash{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
 SparseHash (0.0) [1:3,1:3]
 ├─├─[1, 1]: 10.0
 ├─├─[2, 1]: 30.0
@@ -41,7 +41,7 @@ struct SparseHashLevel{N, TI<:Tuple, Ptr, Tbl, Srt, Lvl} <: AbstractLevel
 end
 const SparseHash = SparseHashLevel
 
-SparseHashLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseHashLevel, e.g. Fiber(SparseHash{2}(Element(0.0)))"))
+SparseHashLevel(lvl) = throw(ArgumentError("You must specify the number of dimensions in a SparseHashLevel, e.g. Tensor(SparseHash{2}(Element(0.0)))"))
 SparseHashLevel(lvl, shape, args...) = SparseHashLevel{length(shape)}(lvl, shape, args...)
 SparseHashLevel{N}(lvl::Lvl) where {N, Lvl} = SparseHashLevel{N, NTuple{N, Int}}(lvl)
 SparseHashLevel{N}(lvl, shape::TI, args...) where {N, TI} = SparseHashLevel{N, TI}(lvl, shape, args...)

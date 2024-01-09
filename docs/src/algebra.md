@@ -30,9 +30,9 @@ Finch.isannihilator(::Finch.DefaultAlgebra, ::typeof(gcd), x) = x == 1
 Then, the following code will only call gcd when neither `u[i]` nor `v[i]` are 1
 (just once!).
 ```
-u = Fiber(SparseList(Element(1)), [3, 1, 6, 1, 9, 1, 4, 1, 8, 1])
-v = Fiber(SparseList(Element(1)), [1, 2, 3, 1, 1, 1, 1, 4, 1, 1])
-w = Fiber(SparseList(Element(1)))
+u = Tensor(SparseList(Element(1)), [3, 1, 6, 1, 9, 1, 4, 1, 8, 1])
+v = Tensor(SparseList(Element(1)), [1, 2, 3, 1, 1, 1, 1, 4, 1, 1])
+w = Tensor(SparseList(Element(1)))
 
 @finch MyAlgebra() (w .= 1; for i=_; w[i] = gcd(u[i], v[i]) end)
 ```

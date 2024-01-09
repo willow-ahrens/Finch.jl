@@ -7,7 +7,7 @@ own memory space.
 Each sublevel is stored in a vector of type `Val` with `eltype(Val) = Lvl`. 
 
 ```jldoctest
-julia> Fiber(Dense(Separation(Element(0.0))), [1, 2, 3])
+julia> Tensor(Dense(Separation(Element(0.0))), [1, 2, 3])
 Dense [1:3]
 ├─[1]: Pointer -> 1.0
 ├─[2]: Pointer -> 2.0
@@ -68,11 +68,11 @@ end
 @inline level_eltype(::Type{SeparationLevel{Val, Lvl}}) where {Val, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SeparationLevel{Val, Lvl}}) where {Val, Lvl} = level_default(Lvl)
 
-(fbr::Fiber{<:SeparationLevel})() = SubFiber(fbr.lvl, 1)()
+(fbr::Tensor{<:SeparationLevel})() = SubFiber(fbr.lvl, 1)()
 (fbr::SubFiber{<:SeparationLevel})() = fbr #TODO this is not consistent somehow
 function (fbr::SubFiber{<:SeparationLevel})(idxs...)
     q = fbr.pos
-    return Fiber(fbr.lvl.val[q])(idxs...)
+    return Tensor(fbr.lvl.val[q])(idxs...)
 end
 
 countstored_level(lvl::SeparationLevel, pos) = pos

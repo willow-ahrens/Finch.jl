@@ -176,5 +176,5 @@ begin
     resize!(tmp_lvl_tbl, qos * ref_lvl_2.shape)
     resize!(tmp_lvl_srt, tmp_lvl_2_qos_fill)
     resize!(tmp_lvl_2_val, qos * ref_lvl_2.shape)
-    (tmp = Fiber((DenseLevel){Int64}((SparseByteMapLevel){Int64}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt), ref_lvl.shape)),)
+    (tmp = Tensor((DenseLevel){Int64}((SparseByteMapLevel){Int64}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt), ref_lvl.shape)),)
 end

@@ -80,7 +80,7 @@ initwrite(z) = InitWriter{z}()
 `lhs[] <<overwrite>>= rhs`.
 
 ```jldoctest setup=:(using Finch)
-julia> a = Fiber(SparseList(Element(0.0)), [0, 1.1, 0, 4.4, 0])
+julia> a = Tensor(SparseList(Element(0.0)), [0, 1.1, 0, 4.4, 0])
 SparseList (0.0) [1:5]
 ├─[2]: 1.1
 ├─[4]: 4.4

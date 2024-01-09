@@ -67,7 +67,7 @@ fsparse!_parse(I, i::AbstractVector, args...) = fsparse!_parse((I..., i), args..
 fsparse!_parse(I, V::AbstractVector) = fsparse!_impl(I, V)
 fsparse!_parse(I, V::AbstractVector, M::Tuple) = fsparse!_impl(I, V, M)
 function fsparse!_impl(I::Tuple, V, shape = map(maximum, I))
-    return Fiber(SparseCOO{length(I), Tuple{map(eltype, I)...}}(Element{zero(eltype(V)), eltype(V), Int}(V), shape, [1, length(V) + 1], I))
+    return Tensor(SparseCOO{length(I), Tuple{map(eltype, I)...}}(Element{zero(eltype(V)), eltype(V), Int}(V), shape, [1, length(V) + 1], I))
 end
 
 """
@@ -162,7 +162,7 @@ V)`, where `I` are the coordinate vectors, one for each mode of `arr`, and
 See also: (`findnz`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.findnz)
 """
 function ffindnz(src)
-    tmp = Fiber(
+    tmp = Tensor(
         SparseCOOLevel{ndims(src)}(
             ElementLevel{zero(eltype(src)), eltype(src)}()))
     tmp = copyto!(tmp, src)

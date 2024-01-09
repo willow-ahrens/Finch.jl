@@ -158,5 +158,5 @@ begin
     resize!(tmp_lvl_tbl1, qos)
     resize!(tmp_lvl_tbl2, qos)
     resize!(tmp_lvl_val, qos)
-    (tmp = Fiber((SparseCOOLevel){2, Tuple{Int64, Int64}}(tmp_lvl_2, (ref_lvl_2.shape, ref_lvl.shape), tmp_lvl_ptr, (tmp_lvl_tbl1, tmp_lvl_tbl2))),)
+    (tmp = Tensor((SparseCOOLevel){2, Tuple{Int64, Int64}}(tmp_lvl_2, (ref_lvl_2.shape, ref_lvl.shape), tmp_lvl_ptr, (tmp_lvl_tbl1, tmp_lvl_tbl2))),)
 end

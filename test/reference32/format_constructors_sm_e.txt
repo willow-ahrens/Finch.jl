@@ -1,8 +1,8 @@
-Fiber(SparseByteMap(Element(0))) constructors:
-initialized fiber: Fiber(SparseByteMap{Int32}(Element{0.0, Float64, Int32}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0]), 6, [1, 5], Bool[0, 1, 1, 0, 1, 1], [(1, 2), (1, 3), (1, 5), (1, 6)]))
-initialized fiber: Fiber(SparseByteMap{Int16}(Element{0.0, Float64, Int32}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0]), 6, [1, 5], Bool[0, 1, 1, 0, 1, 1], Tuple{Int32, Int16}[(1, 2), (1, 3), (1, 5), (1, 6)]))
-sized fiber: Fiber(SparseByteMap{Int32}(Element{0.0, Float64, Int32}([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]), 7, [1, 0], Bool[0, 0, 0, 0, 0, 0, 0], Tuple{Int32, Int32}[]))
-sized fiber: Fiber(SparseByteMap{Int16}(Element{0.0, Float64, Int32}([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]), 7, [1, 0], Bool[0, 0, 0, 0, 0, 0, 0], Tuple{Int32, Int16}[]))
-empty fiber: Fiber(SparseByteMap{Int32}(Element{0.0, Float64, Int32}(Float64[]), 0, [1, 0], Bool[], Tuple{Int32, Int32}[]))
-empty fiber: Fiber(SparseByteMap{Int16}(Element{0.0, Float64, Int32}(Float64[]), 0, [1, 0], Bool[], Tuple{Int32, Int16}[]))
+Tensor(SparseByteMap(Element(0))) constructors:
+initialized fiber: Tensor(SparseByteMap{Int32}(Element{0.0, Float64, Int32}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0]), 6, [1, 5], Bool[0, 1, 1, 0, 1, 1], [(1, 2), (1, 3), (1, 5), (1, 6)]))
+initialized fiber: Tensor(SparseByteMap{Int16}(Element{0.0, Float64, Int32}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0]), 6, [1, 5], Bool[0, 1, 1, 0, 1, 1], Tuple{Int32, Int16}[(1, 2), (1, 3), (1, 5), (1, 6)]))
+sized fiber: Tensor(SparseByteMap{Int32}(Element{0.0, Float64, Int32}([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]), 7, [1, 0], Bool[0, 0, 0, 0, 0, 0, 0], Tuple{Int32, Int32}[]))
+sized fiber: Tensor(SparseByteMap{Int16}(Element{0.0, Float64, Int32}([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]), 7, [1, 0], Bool[0, 0, 0, 0, 0, 0, 0], Tuple{Int32, Int16}[]))
+empty fiber: Tensor(SparseByteMap{Int32}(Element{0.0, Float64, Int32}(Float64[]), 0, [1, 0], Bool[], Tuple{Int32, Int32}[]))
+empty fiber: Tensor(SparseByteMap{Int16}(Element{0.0, Float64, Int32}(Float64[]), 0, [1, 0], Bool[], Tuple{Int32, Int16}[]))
 

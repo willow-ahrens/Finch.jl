@@ -33,8 +33,8 @@ Finch supports a wide variety of array structure beyond sparsity. Whether you're
 
 | Feature/Structure | Example Usage |
 |-------------------|---------------|
-| Major Sparse Formats and Structured Arrays |  `A = Fiber(Dense(SparseList(Element(0.0)), 3, 4)`|
-| Background Values Other Than Zero |  `B = Fiber(SparseList(Element(1.0)), 9)`|
+| Major Sparse Formats and Structured Arrays |  `A = Tensorr(Dense(SparseList(Element(0.0)), 3, 4)`|
+| Background Values Other Than Zero |  `B = Tensorr(SparseList(Element(1.0)), 9)`|
 | Broadcasts and Reductions |  `sum(A .* B)`|
 | Custom Operators |  `x[] <<min>>= y[i] + z[i]`|
 | Multiple Outputs |  `x[] <<min>>= y[i]; z[] <<max>>= y[i]`|
@@ -64,7 +64,7 @@ Below is a Julia program using Finch to compute the minimum, maximum, sum, and v
 ```julia
 using Finch
 
-X = Fiber(SparseList(Element(0.0)), fsprand(10, 0.5))
+X = Tensorr(SparseList(Element(0.0)), fsprand(10, 0.5))
 x_min = Scalar(Inf)
 x_max = Scalar(-Inf)
 x_sum = Scalar(0.0)
@@ -87,9 +87,9 @@ end;
 As a more traditional example, what follows is a sparse matrix-vector multiplication using a column-major approach.
 
 ```julia
-x = Fiber(Dense(Element(0.0)), rand(42));
-A = Fiber(Dense(SparseList(Element(0.0))), fsprand(42, 42, 0.1));
-y = Fiber(Dense(Element(0.0)));
+x = Tensorr(Dense(Element(0.0)), rand(42));
+A = Tensorr(Dense(SparseList(Element(0.0))), fsprand(42, 42, 0.1));
+y = Tensorr(Dense(Element(0.0)));
 
 @finch begin
     y .= 0

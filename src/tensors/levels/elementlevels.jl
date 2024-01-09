@@ -9,7 +9,7 @@ of type `Val` with `eltype(Val) = Tv`. The type `Ti` is the index type used to
 access Val.
 
 ```jldoctest
-julia> Fiber(Dense(Element(0.0)), [1, 2, 3])
+julia> Tensor(Dense(Element(0.0)), [1, 2, 3])
 Dense [1:3]
 ├─[1]: 1.0
 ├─[2]: 2.0
@@ -78,7 +78,7 @@ end
 @inline level_default(::Type{<:ElementLevel{D}}) where {D} = D
 data_rep_level(::Type{<:ElementLevel{D, Tv}}) where {D, Tv} = ElementData(D, Tv)
 
-(fbr::Fiber{<:ElementLevel})() = SubFiber(fbr.lvl, 1)()
+(fbr::Tensor{<:ElementLevel})() = SubFiber(fbr.lvl, 1)()
 function (fbr::SubFiber{<:ElementLevel})()
     q = fbr.pos
     return fbr.lvl.val[q]

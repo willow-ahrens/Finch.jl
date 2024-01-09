@@ -199,5 +199,5 @@ begin
     qos_2 = tmp_lvl_ptr_2[end] - 1
     resize!(tmp_lvl_srt, qos_2)
     resize!(tmp_lvl_2_val, qos_2)
-    (tmp = Fiber((SparseListLevel){Int64}((SparseHashLevel){1, Tuple{Int64}}(tmp_lvl_3, (ref_lvl_2.shape,), tmp_lvl_ptr_2, tmp_lvl_tbl, tmp_lvl_srt), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),)
+    (tmp = Tensor((SparseListLevel){Int64}((SparseHashLevel){1, Tuple{Int64}}(tmp_lvl_3, (ref_lvl_2.shape,), tmp_lvl_ptr_2, tmp_lvl_tbl, tmp_lvl_srt), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),)
 end

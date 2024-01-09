@@ -1,4 +1,4 @@
-julia> A = Fiber(Dense(SparseList(Element(0.0))), [0 0 3.3; 1.1 0 0; 2.2 0 4.4; 0 0 5.5])
+julia> A = Tensor(Dense(SparseList(Element(0.0))), [0 0 3.3; 1.1 0 0; 2.2 0 4.4; 0 0 5.5])
 Dense [:,1:3]
 ├─[:,1]: SparseList (0.0) [1:4]
 │ ├─[2]: 1.1
@@ -8,7 +8,7 @@ Dense [:,1:3]
 │ ├─[1]: 3.3
 │ ├─[3]: 4.4
 │ ├─[4]: 5.5
-julia> B = Fiber(SparseHash{2}(Element(0.0)))
+julia> B = Tensor(SparseHash{2}(Element(0.0)))
 SparseHash (0.0) [1:0,1:0]
 julia> @finch_code mode = fastfinch begin
         B .= 0
@@ -102,7 +102,7 @@ quote
     qos = B_lvl_ptr[end] - 1
     resize!(B_lvl_srt, qos)
     resize!(B_lvl_val, qos)
-    (B = Fiber((SparseHashLevel){2, Tuple{Int32, Int32}}(B_lvl_2, (A_lvl.shape, A_lvl_2.shape), B_lvl_ptr, B_lvl_tbl, B_lvl_srt)),)
+    (B = Tensor((SparseHashLevel){2, Tuple{Int32, Int32}}(B_lvl_2, (A_lvl.shape, A_lvl_2.shape), B_lvl_ptr, B_lvl_tbl, B_lvl_srt)),)
 end
 julia> @finch mode = fastfinch begin
         B .= 0
@@ -112,5 +112,5 @@ julia> @finch mode = fastfinch begin
             end
         end
     end
-(B = Fiber(SparseHash{2, Tuple{Int32, Int32}}(Element{0.0, Float64, Int32}([1.1, 2.2, 3.3, 4.4, 5.5]), (3, 4), [1, 6], Dict{Tuple{Int32, Tuple{Int32, Int32}}, Int32}((1, (1, 2)) => 1, (1, (1, 3)) => 2, (1, (3, 1)) => 3, (1, (3, 3)) => 4, (1, (3, 4)) => 5), [(1, (3, 1)) => 3, (1, (1, 2)) => 1, (1, (1, 3)) => 2, (1, (3, 3)) => 4, (1, (3, 4)) => 5])),)
+(B = Tensor(SparseHash{2, Tuple{Int32, Int32}}(Element{0.0, Float64, Int32}([1.1, 2.2, 3.3, 4.4, 5.5]), (3, 4), [1, 6], Dict{Tuple{Int32, Tuple{Int32, Int32}}, Int32}((1, (1, 2)) => 1, (1, (1, 3)) => 2, (1, (3, 1)) => 3, (1, (3, 3)) => 4, (1, (3, 4)) => 5), [(1, (3, 1)) => 3, (1, (1, 2)) => 1, (1, (1, 3)) => 2, (1, (3, 3)) => 4, (1, (3, 4)) => 5])),)
 
