@@ -30,7 +30,7 @@ allocating memory.  Here `undef` is the `UndefInitializer` singleton type.
 `dims...` may be a variable number of dimensions or a tuple of dimensions, but
 it must correspond to the number of dimensions in `lvl`.
 """
-Fiber(lvl::AbstractLevel, dim::Number...) = Fiber(lvl, undef, dims...)
+Fiber(lvl::AbstractLevel, dims::Number...) = Fiber(lvl, undef, dims...)
 Fiber(lvl::AbstractLevel, dims::Tuple) = Fiber(lvl, undef, dims...)
 Fiber(lvl::AbstractLevel, init::UndefInitializer, dims...) = Fiber(assemble!(resize!(lvl, dims...)))
 Fiber(lvl::AbstractLevel, init::UndefInitializer, dims::Tuple) = Fiber(assemble!(resize!(lvl, dims...)))
