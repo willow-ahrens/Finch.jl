@@ -6,7 +6,7 @@ subfiber, so fibers in the sublevel are the slices `A[:, ..., :, i_1, ...,
 i_n]`, where `i_1 <= ... <= i_n`.  A packed representation is used to encode the
 subfiber. Optionally, `dims` are the sizes of the last dimensions.
 
-`Ti` is the type of the last `N` fiber indices.
+`Ti` is the type of the last `N` tensor indices.
 
 ```jldoctest
 julia> Tensor(SparseTriangle{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])

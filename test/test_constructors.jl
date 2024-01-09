@@ -10,18 +10,18 @@
         println(io, "Tensor(SparseList(Element(0))) constructors:")
 
         fbr = dropdefaults!(Tensor(SparseList(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseList(lvl.lvl, lvl.shape, lvl.ptr, lvl.idx)))
         @test Structure(fbr) == Structure(Tensor(SparseList{Int}(lvl.lvl, lvl.shape, lvl.ptr, lvl.idx)))
 
         fbr = dropdefaults!(Tensor(SparseList{Int16}(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseList{Int16}(lvl.lvl, lvl.shape, lvl.ptr, lvl.idx)))
 
         fbr = Tensor(SparseList(Element(0.0), 7))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseList(Element(0.0), 7)))
         @test Structure(fbr) == Structure(Tensor(SparseList{Int}(Element(0.0), 7)))
@@ -29,7 +29,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseList{Int}(Element(0.0), 7)))
 
         fbr = Tensor(SparseList{Int16}(Element(0.0), 7))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseList(Element(0.0), Int16(7))))
         @test Structure(fbr) == Structure(Tensor(SparseList{Int16}(Element(0.0), 7)))
@@ -37,7 +37,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseList{Int16}(Element(0.0), 7)))
 
         fbr = Tensor(SparseList(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseList(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseList{Int}(Element(0.0))))
@@ -49,7 +49,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseList{Int}(Element(0.0), 0)))
 
         fbr = Tensor(SparseList{Int16}(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseList{Int16}(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseList(Element(0.0), Int16(0))))
@@ -68,18 +68,18 @@
         println(io, "Tensor(SparseVBL(Element(0))) constructors:")
 
         fbr = dropdefaults!(Tensor(SparseVBL(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseVBL(lvl.lvl, lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)))
         @test Structure(fbr) == Structure(Tensor(SparseVBL{Int}(lvl.lvl, lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)))
 
         fbr = dropdefaults!(Tensor(SparseVBL{Int16}(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseVBL{Int16}(lvl.lvl, lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)))
 
         fbr = Tensor(SparseVBL(Element(0.0), 7))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseVBL(Element(0.0), 7)))
         @test Structure(fbr) == Structure(Tensor(SparseVBL{Int}(Element(0.0), 7)))
@@ -87,7 +87,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseVBL{Int}(Element(0.0), 7)))
 
         fbr = Tensor(SparseVBL{Int16}(Element(0.0), 7))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseVBL(Element(0.0), Int16(7))))
         @test Structure(fbr) == Structure(Tensor(SparseVBL{Int16}(Element(0.0), 7)))
@@ -95,7 +95,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseVBL{Int16}(Element(0.0), 7)))
 
         fbr = Tensor(SparseVBL(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseVBL(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseVBL{Int}(Element(0.0))))
@@ -107,7 +107,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseVBL{Int}(Element(0.0), 0)))
 
         fbr = Tensor(SparseVBL{Int16}(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseVBL{Int16}(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseVBL(Element(0.0), Int16(0))))
@@ -126,18 +126,18 @@
         println(io, "Tensor(SparseByteMap(Element(0))) constructors:")
 
         fbr = dropdefaults!(Tensor(SparseByteMap(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseByteMap(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
         @test Structure(fbr) == Structure(Tensor(SparseByteMap{Int}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
 
         fbr = dropdefaults!(Tensor(SparseByteMap{Int16}(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseByteMap{Int16}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
 
         fbr = Tensor(SparseByteMap(Element(0.0), 7))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseByteMap(Element(0.0), 7)))
         @test Structure(fbr) == Structure(Tensor(SparseByteMap{Int}(Element(0.0), 7)))
@@ -145,7 +145,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseByteMap{Int}(Element(0.0), 7)))
 
         fbr = Tensor(SparseByteMap{Int16}(Element(0.0), 7))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseByteMap(Element(0.0), Int16(7))))
         @test Structure(fbr) == Structure(Tensor(SparseByteMap{Int16}(Element(0.0), 7)))
@@ -153,7 +153,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseByteMap{Int16}(Element(0.0), 7)))
 
         fbr = Tensor(SparseByteMap(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseByteMap(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseByteMap{Int}(Element(0.0))))
@@ -165,7 +165,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseByteMap{Int}(Element(0.0), 0)))
 
         fbr = Tensor(SparseByteMap{Int16}(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseByteMap{Int16}(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseByteMap(Element(0.0), Int16(0))))
@@ -184,18 +184,18 @@
         println(io, "Tensor(SparseCOO{1}(Element(0))) constructors:")
 
         fbr = dropdefaults!(Tensor(SparseCOO{1}(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseCOO{1}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl)))
         @test Structure(fbr) == Structure(Tensor(SparseCOO{1, Tuple{Int}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl)))
 
         fbr = dropdefaults!(Tensor(SparseCOO{1, Tuple{Int16}}(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseCOO{1, Tuple{Int16}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl)))
 
         fbr = Tensor(SparseCOO{1}(Element(0.0), (7,)))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseCOO{1}(Element(0.0), (7,))))
         @test Structure(fbr) == Structure(Tensor(SparseCOO{1, Tuple{Int}}(Element(0.0), (7,))))
@@ -203,7 +203,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseCOO{1, Tuple{Int}}(Element(0.0), (7,))))
 
         fbr = Tensor(SparseCOO{1, Tuple{Int16}}(Element(0.0), 7))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseCOO{1}(Element(0.0), (Int16(7),))))
         @test Structure(fbr) == Structure(Tensor(SparseCOO{1, Tuple{Int16}}(Element(0.0), (7,))))
@@ -211,7 +211,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseCOO{1, Tuple{Int16}}(Element(0.0), 7)))
 
         fbr = Tensor(SparseCOO{1}(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseCOO{1}(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseCOO{1, Tuple{Int}}(Element(0.0))))
@@ -223,7 +223,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseCOO{1, Tuple{Int}}(Element(0.0), (0,))))
 
         fbr = Tensor(SparseCOO{1, Tuple{Int16}}(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseCOO{1, Tuple{Int16}}(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseCOO{1}(Element(0.0), (Int16(0),))))
@@ -244,18 +244,18 @@
         println(io, "Tensor(SparseCOO{2}(Element(0))) constructors:")
 
         fbr = dropdefaults!(Tensor(SparseCOO{2}(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseCOO{2}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl)))
         @test Structure(fbr) == Structure(Tensor(SparseCOO{2, Tuple{Int, Int}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl)))
 
         fbr = dropdefaults!(Tensor(SparseCOO{2, Tuple{Int16, Int16}}(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseCOO{2, Tuple{Int16, Int16}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl)))
 
         fbr = Tensor(SparseCOO{2}(Element(0.0), (3, 7)))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseCOO{2}(Element(0.0), (3, 7,))))
         @test Structure(fbr) == Structure(Tensor(SparseCOO{2, Tuple{Int, Int}}(Element(0.0), (3, 7,))))
@@ -263,7 +263,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseCOO{2, Tuple{Int, Int}}(Element(0.0), (3, 7,))))
 
         fbr = Tensor(SparseCOO{2, Tuple{Int16, Int16}}(Element(0.0), (3, 7)))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseCOO{2}(Element(0.0), (Int16(3), Int16(7),))))
         @test Structure(fbr) == Structure(Tensor(SparseCOO{2, Tuple{Int16, Int16}}(Element(0.0), (3, 7,))))
@@ -271,7 +271,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseCOO{2, Tuple{Int16, Int16}}(Element(0.0), (3, 7,))))
 
         fbr = Tensor(SparseCOO{2}(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseCOO{2}(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseCOO{2, Tuple{Int, Int}}(Element(0.0))))
@@ -283,7 +283,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseCOO{2, Tuple{Int, Int}}(Element(0.0), (0,0,))))
 
         fbr = Tensor(SparseCOO{2, Tuple{Int16, Int16}}(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseCOO{2, Tuple{Int16, Int16}}(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseCOO{2}(Element(0.0), (Int16(0), Int16(0),))))
@@ -302,18 +302,18 @@
         println(io, "Tensor(SparseHash{1}(Element(0))) constructors:")
 
         fbr = dropdefaults!(Tensor(SparseHash{1}(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseHash{1}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
         @test Structure(fbr) == Structure(Tensor(SparseHash{1, Tuple{Int}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
 
         fbr = dropdefaults!(Tensor(SparseHash{1, Tuple{Int16}}(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseHash{1, Tuple{Int16}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
 
         fbr = Tensor(SparseHash{1}(Element(0.0), (7,)))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseHash{1}(Element(0.0), (7,))))
         @test Structure(fbr) == Structure(Tensor(SparseHash{1, Tuple{Int}}(Element(0.0), (7,))))
@@ -321,7 +321,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseHash{1, Tuple{Int}}(Element(0.0), (7,))))
 
         fbr = Tensor(SparseHash{1, Tuple{Int16}}(Element(0.0), (7,)))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseHash{1}(Element(0.0), (Int16(7),))))
         @test Structure(fbr) == Structure(Tensor(SparseHash{1, Tuple{Int16}}(Element(0.0), (7,))))
@@ -329,7 +329,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseHash{1, Tuple{Int16}}(Element(0.0), (7,))))
 
         fbr = Tensor(SparseHash{1}(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseHash{1}(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseHash{1, Tuple{Int}}(Element(0.0))))
@@ -341,7 +341,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseHash{1, Tuple{Int}}(Element(0.0), (0,))))
 
         fbr = Tensor(SparseHash{1, Tuple{Int16}}(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseHash{1, Tuple{Int16}}(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseHash{1}(Element(0.0), (Int16(0),))))
@@ -362,18 +362,18 @@
         println(io, "Tensor(SparseHash{2}(Element(0))) constructors:")
 
         fbr = dropdefaults!(Tensor(SparseHash{2}(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseHash{2}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
         @test Structure(fbr) == Structure(Tensor(SparseHash{2, Tuple{Int, Int}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
 
         fbr = dropdefaults!(Tensor(SparseHash{2, Tuple{Int16, Int16}}(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseHash{2, Tuple{Int16, Int16}}(lvl.lvl, lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)))
 
         fbr = Tensor(SparseHash{2}(Element(0.0), (3, 7)))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseHash{2}(Element(0.0), (3, 7,))))
         @test Structure(fbr) == Structure(Tensor(SparseHash{2, Tuple{Int, Int}}(Element(0.0), (3, 7,))))
@@ -381,7 +381,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseHash{2, Tuple{Int, Int}}(Element(0.0), (3, 7,))))
 
         fbr = Tensor(SparseHash{2, Tuple{Int16, Int16}}(Element(0.0), (3, 7)))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseHash{2}(Element(0.0), (Int16(3), Int16(7),))))
         @test Structure(fbr) == Structure(Tensor(SparseHash{2, Tuple{Int16, Int16}}(Element(0.0), (3, 7,))))
@@ -389,7 +389,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseHash{2, Tuple{Int16, Int16}}(Element(0.0), (3, 7,))))
 
         fbr = Tensor(SparseHash{2}(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseHash{2}(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseHash{2, Tuple{Int, Int}}(Element(0.0))))
@@ -401,7 +401,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseHash{2, Tuple{Int, Int}}(Element(0.0), (0,0,))))
 
         fbr = Tensor(SparseHash{2, Tuple{Int16, Int16}}(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseHash{2, Tuple{Int16, Int16}}(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseHash{2}(Element(0.0), (Int16(0), Int16(0),))))
@@ -424,18 +424,18 @@
         println(io, "Tensor(SparseTriangle{2}(Element(0))) constructors:")
 
         fbr = dropdefaults!(Tensor(SparseTriangle{2}(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{2}(lvl.lvl, lvl.shape)))
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{2, Int}(lvl.lvl, lvl.shape)))
 
         fbr = dropdefaults!(Tensor(SparseTriangle{2, Int16}(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{2, Int16}(lvl.lvl, lvl.shape)))
 
         fbr = Tensor(SparseTriangle{2}(Element(0.0), 7))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{2}(Element(0.0), 7)))
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{2, Int}(Element(0.0), 7)))
@@ -443,7 +443,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{2, Int}(Element(0.0), 7)))
 
         fbr = Tensor(SparseTriangle{2, Int16}(Element(0.0), 7))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{2}(Element(0.0), Int16(7))))
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{2, Int16}(Element(0.0), 7)))
@@ -451,7 +451,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{2, Int16}(Element(0.0), 7)))
 
         fbr = Tensor(SparseTriangle{2}(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{2}(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{2, Int}(Element(0.0))))
@@ -463,7 +463,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{2, Int}(Element(0.0), 0)))
 
         fbr = Tensor(SparseTriangle{2, Int16}(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{2, Int16}(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{2}(Element(0.0), Int16(0))))
@@ -482,18 +482,18 @@
         println(io, "Tensor(SparseTriangle{3}(Element(0))) constructors:")
 
         fbr = dropdefaults!(Tensor(SparseTriangle{3}(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{3}(lvl.lvl, lvl.shape)))
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{3, Int}(lvl.lvl, lvl.shape)))
 
         fbr = dropdefaults!(Tensor(SparseTriangle{3, Int16}(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{3, Int16}(lvl.lvl, lvl.shape)))
 
         fbr = Tensor(SparseTriangle{3}(Element(0.0), 7))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{3}(Element(0.0), 7)))
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{3, Int}(Element(0.0), 7)))
@@ -501,7 +501,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{3, Int}(Element(0.0), 7)))
 
         fbr = Tensor(SparseTriangle{3, Int16}(Element(0.0), 7))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{3}(Element(0.0), Int16(7))))
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{3, Int16}(Element(0.0), 7)))
@@ -509,7 +509,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{3, Int16}(Element(0.0), 7)))
 
         fbr = Tensor(SparseTriangle{3}(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{3}(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{3, Int}(Element(0.0))))
@@ -521,7 +521,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{3, Int}(Element(0.0), 0)))
 
         fbr = Tensor(SparseTriangle{3, Int16}(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{3, Int16}(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseTriangle{3}(Element(0.0), Int16(0))))
@@ -540,18 +540,18 @@
         println(io, "Tensor(SparseRLE(Element(0))) constructors:")
 
         fbr = dropdefaults!(Tensor(SparseRLE(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseRLE(lvl.lvl, lvl.shape, lvl.ptr, lvl.left, lvl.right)))
         @test Structure(fbr) == Structure(Tensor(SparseRLE{Int}(lvl.lvl, lvl.shape, lvl.ptr, lvl.left, lvl.right)))
 
         fbr = dropdefaults!(Tensor(SparseRLE{Int16}(Element(zero(eltype(arr))))), arr)
-        println(io, "initialized fiber: ", fbr)
+        println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseRLE{Int16}(lvl.lvl, lvl.shape, lvl.ptr, lvl.left, lvl.right)))
 
         fbr = Tensor(SparseRLE(Element(0.0), 7))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseRLE(Element(0.0), 7)))
         @test Structure(fbr) == Structure(Tensor(SparseRLE{Int}(Element(0.0), 7)))
@@ -559,7 +559,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseRLE{Int}(Element(0.0), 7)))
 
         fbr = Tensor(SparseRLE{Int16}(Element(0.0), 7))
-        println(io, "sized fiber: ", fbr)
+        println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseRLE(Element(0.0), Int16(7))))
         @test Structure(fbr) == Structure(Tensor(SparseRLE{Int16}(Element(0.0), 7)))
@@ -567,7 +567,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseRLE{Int16}(Element(0.0), 7)))
 
         fbr = Tensor(SparseRLE(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseRLE(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseRLE{Int}(Element(0.0))))
@@ -579,7 +579,7 @@
         @test Structure(fbr) == Structure(Tensor(SparseRLE{Int}(Element(0.0), 0)))
 
         fbr = Tensor(SparseRLE{Int16}(Element(0.0)))
-        println(io, "empty fiber: ", fbr)
+        println(io, "empty tensor: ", fbr)
         lvl = fbr.lvl
         @test Structure(fbr) == Structure(Tensor(SparseRLE{Int16}(Element(0.0))))
         @test Structure(fbr) == Structure(Tensor(SparseRLE(Element(0.0), Int16(0))))
@@ -611,17 +611,17 @@
           # vals = [col1, col2, col3, col4, col5, col6]
           
           
-          println(io, "initialized fiber: ", fbr)
+          println(io, "initialized tensor: ", fbr)
           @test Structure(fbr) == Structure(Tensor(Dense(Separation(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
           @test Structure(fbr) == Structure(Tensor(Dense(Separation{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
 
           fbr = Tensor(Dense(Separation(Dense(Element(0), 3)), 6))
-          println(io, "sized fiber: ", fbr)
+          println(io, "sized tensor: ", fbr)
           @test Structure(fbr) == Structure(Tensor(Dense(Separation(Dense(Element(0), 3)), 6)))
 
 
           fbr = Tensor(Dense(Separation(Dense(Element(0)))))
-          println(io, "empty fiber: ", fbr)
+          println(io, "empty tensor: ", fbr)
           @test Structure(fbr) == Structure(Tensor(Dense(Separation(Dense(Element(0))))))
 
           @test check_output("format_constructors_d_p_d_e.txt", String(take!(io)))
@@ -647,17 +647,17 @@
           # vals = [col1, col2, col3, col4, col5, col6]
           
           
-          println(io, "initialized fiber: ", fbr)
+          println(io, "initialized tensor: ", fbr)
           @test Structure(fbr) == Structure(Tensor(Dense(Separation(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
           @test Structure(fbr) == Structure(Tensor(Dense(Separation{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
 
           fbr = Tensor(Dense(Separation(SparseList(Element(0), 3)), 6))
-          println(io, "sized fiber: ", fbr)
+          println(io, "sized tensor: ", fbr)
           @test Structure(fbr) == Structure(Tensor(Dense(Separation(SparseList(Element(0), 3)), 6)))
 
 
           fbr = Tensor(Dense(Separation(SparseList(Element(0)))))
-          println(io, "empty fiber: ", fbr)
+          println(io, "empty tensor: ", fbr)
           @test Structure(fbr) == Structure(Tensor(Dense(Separation(SparseList(Element(0))))))
 
           @test check_output("format_constructors_d_p_sl_e.txt", String(take!(io)))
@@ -673,17 +673,17 @@
           
           fbr = dropdefaults!(Tensor(SparseList(Separation(Dense(Element(0))))), arr)
           
-          println(io, "initialized fiber: ", fbr)
+          println(io, "initialized tensor: ", fbr)
           @test Structure(fbr) == Structure(Tensor(SparseList(Separation(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6, fbr.lvl.ptr, fbr.lvl.idx)))
           @test Structure(fbr) == Structure(Tensor(SparseList(Separation{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6, fbr.lvl.ptr, fbr.lvl.idx)))
 
           fbr = Tensor(SparseList(Separation(Dense(Element(0), 3)), 6))
-          println(io, "sized fiber: ", fbr)
+          println(io, "sized tensor: ", fbr)
           @test Structure(fbr) == Structure(Tensor(SparseList(Separation(Dense(Element(0), 3)), 6)))
 
 
           fbr = Tensor(SparseList(Separation(Dense(Element(0)))))
-          println(io, "empty fiber: ", fbr)
+          println(io, "empty tensor: ", fbr)
           @test Structure(fbr) == Structure(Tensor(SparseList(Separation(Dense(Element(0))))))
 
           @test check_output("format_constructors_sl_p_d_e.txt", String(take!(io)))
@@ -699,16 +699,16 @@
           
           fbr = dropdefaults!(Tensor(SparseList(Separation(SparseList(Element(0))))), arr)
           
-          println(io, "initialized fiber: ", fbr)
+          println(io, "initialized tensor: ", fbr)
           @test Structure(fbr) == Structure(Tensor(SparseList(Separation(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6, fbr.lvl.ptr, fbr.lvl.idx)))
           @test Structure(fbr) == Structure(Tensor(SparseList(Separation{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6, fbr.lvl.ptr, fbr.lvl.idx)))
 
           fbr = Tensor(SparseList(Separation(SparseList(Element(0), 3)), 6))
-          println(io, "sized fiber: ", fbr)
+          println(io, "sized tensor: ", fbr)
           @test Structure(fbr) == Structure(Tensor(SparseList(Separation(SparseList(Element(0), 3)), 6)))
 
           fbr = Tensor(SparseList(Separation(SparseList(Element(0)))))
-          println(io, "empty fiber: ", fbr)
+          println(io, "empty tensor: ", fbr)
           @test Structure(fbr) == Structure(Tensor(SparseList(Separation(SparseList(Element(0))))))
 
         @test check_output("format_constructors_sl_p_sl_e.txt", String(take!(io)))

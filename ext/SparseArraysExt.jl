@@ -24,7 +24,7 @@ end
 """
     SparseMatrixCSC(arr::Union{Tensor, SwizzleArray})
 
-Construct a sparse matrix from a fiber or swizzle. May reuse the underlying storage if possible.
+Construct a sparse matrix from a tensor or swizzle. May reuse the underlying storage if possible.
 """
 function SparseArrays.SparseMatrixCSC(arr::Union{Tensor, SwizzleArray})
     default(arr) === zero(eltype(arr)) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero default values, was given $(default(arr)) as default"))
@@ -151,7 +151,7 @@ Finch.virtual_eltype(tns::VirtualSparseMatrixCSC, ctx) = tns.Tv
 """
     SparseVector(arr::Union{Tensor, SwizzleArray})
 
-Construct a sparse matrix from a fiber or swizzle. May reuse the underlying storage if possible.
+Construct a sparse matrix from a tensor or swizzle. May reuse the underlying storage if possible.
 """
 function SparseArrays.SparseVector(arr::Union{Tensor, SwizzleArray})
     default(arr) === zero(eltype(arr)) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero default values, was given $(default(arr)) as default"))

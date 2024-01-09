@@ -1,7 +1,7 @@
 """
     SeparationLevel{Lvl, [Val]}()
 
-A subfiber of a Separation level is a separate fiber of type `Lvl`, in it's 
+A subfiber of a Separation level is a separate tensor of type `Lvl`, in it's 
 own memory space.
 
 Each sublevel is stored in a vector of type `Val` with `eltype(Val) = Lvl`. 

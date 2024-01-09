@@ -4,7 +4,7 @@
 Like the [`SparseListLevel`](@ref), but a dense bitmap is used to encode
 which slices are stored. This allows the ByteMap level to support random access.
 
-`Ti` is the type of the last fiber index, and `Tp` is the type used for
+`Ti` is the type of the last tensor index, and `Tp` is the type used for
 positions in the level. 
 
 ```jldoctest

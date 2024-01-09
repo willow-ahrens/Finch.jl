@@ -15,7 +15,7 @@ the storage order of an array in a Finch expression corresponds to the loop
 order, we call this
 *concordant* iteration. For example, the following expression represents a
 concordant traversal of a sparse matrix, as the outer loops access the higher
-levels of the fiber tree:
+levels of the tensor tree:
 
 ```jldoctest example1; setup=:(using Finch)
 A = Tensor(Dense(SparseList(Element(0.0))), fsparse([2, 3, 4, 1, 3], [1, 1, 1, 3, 3], [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))

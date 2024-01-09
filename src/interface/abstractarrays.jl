@@ -82,7 +82,7 @@ default(T::Type{<:AbstractArray}) = zero(eltype(T))
 """
     Array(arr::Union{Tensor, SwizzleArray})
 
-Construct an array from a fiber or swizzle. May reuse memory, will usually densify the fiber.
+Construct an array from a tensor or swizzle. May reuse memory, will usually densify the tensor.
 """
 function Base.Array(fbr::Union{Tensor, SwizzleArray})
     arr = Array{eltype(fbr)}(undef, size(fbr)...)

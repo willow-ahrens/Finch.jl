@@ -38,7 +38,7 @@ using SparseArrays
 using MatrixDepot
 ````
 
-Load a sparse matrix from MatrixDepot.jl and convert it to a Finch fiber
+Load a sparse matrix from MatrixDepot.jl and convert it to a Finch tensor
 
 ````julia
 A = Tensor(Dense(SparseList(Element(0.0))), matrixdepot("HB/west0067"))

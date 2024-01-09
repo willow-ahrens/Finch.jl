@@ -13,7 +13,7 @@ using Base.Meta
                 fbr = f(arr)
                 @test Structure(fbr) == Structure(eval(Meta.parse(repr(fbr))))
                 @test reference_isequal(fbr, arr)
-                println(io, "fiber: ", repr(fbr))
+                println(io, "tensor: ", repr(fbr))
             end
 
             @test check_output("format_representation_$key.txt", String(take!(io)))

@@ -100,7 +100,7 @@ data_rep(T::Type{<:Number}) = ElementData(zero(T), T)
 """
     data_rep(tns)
 
-Normalize a trait object to collapse subfiber information into the parent fiber.
+Normalize a trait object to collapse subfiber information into the parent tensor.
 """
 collapse_rep(fbr) = fbr
 
@@ -126,7 +126,7 @@ collapse_rep(::RepeatData, lvl) = DenseData(collapse_rep(lvl))
 """
     fiber_ctr(tns, protos...)
 
-Return an expression that would construct a fiber suitable to hold data with a
+Return an expression that would construct a tensor suitable to hold data with a
 representation described by `tns`. Assumes representation is collapsed.
 """
 function fiber_ctr end

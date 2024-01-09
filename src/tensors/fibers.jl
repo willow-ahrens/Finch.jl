@@ -15,7 +15,7 @@ end
 """
     Tensor(lvl)
 
-Construct a `Tensor` using the fiber level storage `lvl`. No initialization of
+Construct a `Tensor` using the tensor level storage `lvl`. No initialization of
 storage is performed, it is assumed that position 1 of `lvl` corresponds to a
 valid tensor, and `lvl` will be wrapped as-is. Call a different constructor to
 initialize the storage.
@@ -39,7 +39,7 @@ Tensor(lvl::AbstractLevel, init::UndefInitializer) = Tensor(assemble!(lvl))
     Tensor(lvl, arr)
 
 Construct a `Tensor` and initialize it to the contents of `arr`.
-To explicitly copy into a fiber,
+To explicitly copy into a tensor,
 use @ref[`copyto!`]
 """
 Tensor(lvl::AbstractLevel, arr) = dropdefaults!(Tensor(lvl), arr)
@@ -49,7 +49,7 @@ Tensor(lvl::AbstractLevel, arr) = dropdefaults!(Tensor(lvl), arr)
 
 Copy an array-like object `arr` into a corresponding, similar `Tensor`
 datastructure. Uses `init` as an initial value. May reuse memory when possible.
-To explicitly copy into a fiber, use @ref[`copyto!`].
+To explicitly copy into a tensor, use @ref[`copyto!`].
 
 # Examples
 
@@ -69,8 +69,8 @@ mutable struct VirtualFiber{Lvl} <: AbstractVirtualFiber{Lvl}
     lvl::Lvl
 end
 
-is_injective(fiber::VirtualFiber, ctx) = is_level_injective(fiber.lvl, ctx)
-is_atomic(fiber::VirtualFiber, ctx) = is_level_atomic(fiber.lvl, ctx)
+is_injective(tns::VirtualFiber, ctx) = is_level_injective(tns.lvl, ctx)
+is_atomic(tns::VirtualFiber, ctx) = is_level_atomic(tns.lvl, ctx)
 
 function virtualize(ex, ::Type{<:Tensor{Lvl}}, ctx, tag=freshen(ctx, :tns)) where {Lvl}
     lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
@@ -82,7 +82,7 @@ FinchNotation.finch_leaf(x::VirtualFiber) = virtual(x)
 """
     SubFiber(lvl, pos)
 
-`SubFiber` represents a fiber at position `pos` within `lvl`.
+`SubFiber` represents a tensor at position `pos` within `lvl`.
 """
 struct SubFiber{Lvl, Pos} <: AbstractFiber{Lvl}
     lvl::Lvl
@@ -166,8 +166,8 @@ end
 """
     redefault!(fbr, init)
 
-Return a fiber which is equal to `fbr`, but with the default (implicit) value
-set to `init`.  May reuse memory and render the original fiber unusable when
+Return a tensor which is equal to `fbr`, but with the default (implicit) value
+set to `init`.  May reuse memory and render the original tensor unusable when
 modified.
 
 ```jldoctest
@@ -194,7 +194,7 @@ redefault!(fbr::Tensor, init) = Tensor(redefault!(fbr.lvl, init))
     resize!(fbr, dims...)
 
 Set the shape of `fbr` equal to `dims`. May reuse memory and render the original
-fiber unusable when modified.
+tensor unusable when modified.
 """
 Base.resize!(fbr::Tensor, dims...) = Tensor(resize!(fbr.lvl, dims...))
 
@@ -310,4 +310,4 @@ Base.summary(fbr::SubFiber) = "$(join(size(fbr), "×")) SubFiber($(summary(fbr.l
 Base.similar(fbr::AbstractFiber) = Tensor(similar_level(fbr.lvl))
 Base.similar(fbr::AbstractFiber, dims::Tuple) = Tensor(similar_level(fbr.lvl, dims...))
 
-moveto(fiber::Tensor, device) = Tensor(moveto(fiber.lvl, device))
+moveto(tns::Tensor, device) = Tensor(moveto(tns.lvl, device))

@@ -1,7 +1,7 @@
 """
     fsparse(I::Tuple, V,[ M::Tuple, combine])
 
-Create a sparse COO fiber `S` such that `size(S) == M` and `S[(i[q] for i =
+Create a sparse COO tensor `S` such that `size(S) == M` and `S[(i[q] for i =
 I)...] = V[q]`. The combine function is used to combine duplicates. If `M` is
 not specified, it is set to `map(maximum, I)`. If the combine function is not
 supplied, combine defaults to `+` unless the elements of V are Booleans in which

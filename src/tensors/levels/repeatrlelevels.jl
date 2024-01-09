@@ -6,7 +6,7 @@ values once. The RepeatRLELevel records locations of repeats using a sorted
 list. Optionally, `dim` is the size of the vectors.
 
 The fibers have type `Tv`, initialized to `D`. `D` may optionally be given as
-the first argument.  `Ti` is the type of the last fiber index, and `Tp` is the
+the first argument.  `Ti` is the type of the last tensor index, and `Tp` is the
 type used for positions in the level.
 
 ```jldoctest

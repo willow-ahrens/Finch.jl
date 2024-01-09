@@ -53,9 +53,9 @@ end
 """
     pattern!(fbr)
 
-Return the pattern of `fbr`. That is, return a fiber which is true wherever
+Return the pattern of `fbr`. That is, return a tensor which is true wherever
 `fbr` is structurally unequal to it's default. May reuse memory and render the
-original fiber unusable when modified.
+original tensor unusable when modified.
 
 ```jldoctest
 julia> A = Tensor(SparseList(Element(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])

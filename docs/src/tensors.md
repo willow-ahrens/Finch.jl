@@ -39,14 +39,14 @@ Dense [:,1:3]
 
 We refer to a node in the tree as a subfiber. All of the nodes at the same level
 are stored in the same datastructure, and disambiguated by an integer
-`position`.  In the above example, there are three levels: The rootmost level
-contains only one fiber, the root. The middle level has 3 subfibers, one for
+`position`.  in the above example, there are three levels: the rootmost level
+contains only one subfiber, the root. The middle level has 3 subfibers, one for
 each column. The leafmost level has 12 subfibers, one for each element of the
 array.  For example, the first level is `A_fbr.lvl`, and we can represent it's
 third position as `SubFiber(A_fbr.lvl.lvl, 3)`. The second level is `A_fbr.lvl.lvl`,
 and we can access it's 9th position as `SubFiber(A_fbr.lvl.lvl.lvl, 9)`. For
-instructional purposes, you can use parentheses to call a fiber on an index to
-select among children of a fiber.
+instructional purposes, you can use parentheses to call a subfiber on an index to
+select among children of a subfiber.
 
 ```jldoctest example1
 julia> Finch.SubFiber(A_fbr.lvl.lvl, 3)
@@ -90,7 +90,7 @@ left to right:
 Because our array is sparse, (mostly zero, or another fill value), it would be
 more efficient to store only the nonzero values. In Finch, each level is
 represented with a different format. A sparse level only stores non-fill values.
-This time, we'll use a fiber constructor with `sl` (for "`SparseList` of
+This time, we'll use a tensor constructor with `sl` (for "`SparseList` of
 nonzeros") instead of `d` (for "`Dense`"):
 
 ```jldoctest example1
@@ -173,7 +173,7 @@ postype
 
 Additionally, many levels have a `Vp` or `Vi` in their constructors; these stand for vector of element type `Tp` or `Ti`. 
 More generally, levels are paramterized by the types that they use for storage. By default, all levels use `Vector`, but a user 
-could could change any or all of the storage types of a fiber so that the fiber would be stored on a GPU or CPU or some combination thereof, 
+could could change any or all of the storage types of a tensor so that the tensor would be stored on a GPU or CPU or some combination thereof, 
 or eveni just via a vector with a different allocation mechanism.  The storage type should behave like `AbstractArray` 
 and needs to implement the usual abstract array functions and `Base.resize!`. See the tests for an example. 
 
@@ -183,7 +183,7 @@ and storage type even if they don't need them. These are used by levels that tak
 
 ### Move to: Copying Fibers to a new storage type.
 
-If one needs to copy a fiber to another fiber with a different storage type, one can use the `moveto` function, described below.
+If one needs to copy a tensor to another tensor with a different storage type, one can use the `moveto` function, described below.
 
 ```@docs
 moveto

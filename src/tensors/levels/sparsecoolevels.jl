@@ -9,7 +9,7 @@ i_n]`.  A set of `N` lists (one for each index) are used to record which slices
 are stored. The coordinates (sets of `N` indices) are sorted in column major
 order.  Optionally, `dims` are the sizes of the last dimensions.
 
-`TI` is the type of the last `N` fiber indices, and `Tp` is the type used for
+`TI` is the type of the last `N` tensor indices, and `Tp` is the type used for
 positions in the level.
 
 The type `Tbl` is an NTuple type where each entry k is a subtype `AbstractVector{TI[k]}`.

@@ -8,7 +8,7 @@ in the subfiber, so fibers in the sublevel are the slices `A[:, ..., :, i_1,
 ..., i_n]`.  A hash table is used to record which slices are stored. Optionally,
 `dims` are the sizes of the last dimensions.
 
-`TI` is the type of the last `N` fiber indices, and `Tp` is the type used for
+`TI` is the type of the last `N` tensor indices, and `Tp` is the type used for
 positions in the level. `Tbl` is the type of the dictionary used to do hashing,
 `Ptr` stores the positions of subfibers, and `Srt` stores the sorted key/value
 pairs in the hash table.

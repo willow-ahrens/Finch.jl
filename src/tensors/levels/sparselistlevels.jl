@@ -6,7 +6,7 @@ which are entirely [`default`](@ref). Instead, only potentially non-default
 slices are stored as subfibers in `lvl`.  A sorted list is used to record which
 slices are stored. Optionally, `dim` is the size of the last dimension.
 
-`Ti` is the type of the last fiber index, and `Tp` is the type used for
+`Ti` is the type of the last tensor index, and `Tp` is the type used for
 positions in the level. The types `Ptr` and `Idx` are the types of the
 arrays used to store positions and indicies. 
 
