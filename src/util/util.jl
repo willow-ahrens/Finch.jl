@@ -37,6 +37,7 @@ ensures the first Finch invocation runs in the latest world, and leaves hooks so
 that subsequent calls to [`Finch.refresh`](@ref) can update the world and
 invalidate old versions. If the body contains closures, this macro uses an
 eval and invokelatest strategy. Otherwise, it uses a generated function.
+This macro does not support type parameters, varargs, or keyword arguments.
 """
 macro staged(def)
     (@capture def :function(:call(~name, ~args...), ~body)) || throw(ArgumentError("unrecognized function definition in @staged"))
@@ -72,7 +73,7 @@ macro staged(def)
             # Taken from https://github.com/NHDaly/StagedFunctions.jl/blob/6fafbc560421f70b05e3df330b872877db0bf3ff/src/StagedFunctions.jl#L116
             body_2 = () -> begin
                 code = $name_generator($(args...))
-                if true #has_function_def(macroexpand($@__MODULE__, code))
+                if has_function_def(macroexpand($@__MODULE__, code))
                     :($($(name_invokelatest))($($(map(QuoteNode, args)...))))
                 else 
                     quote

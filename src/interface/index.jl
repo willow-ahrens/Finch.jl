@@ -26,7 +26,7 @@ getindex_rep_def(lvl::RepeatData, idx) = SolidData(ElementData(lvl.default, lvl.
 getindex_rep_def(lvl::RepeatData, idx::Type{<:AbstractUnitRange}) = SolidData(ElementData(lvl.default, lvl.eltype))
 
 Base.getindex(arr::Tensor, inds...) = getindex_helper(arr, to_indices(arr, inds))
-@staged function getindex_helper(arr, inds::Tuple)
+@staged function getindex_helper(arr, inds)
     inds <: Type{<:Tuple}
     inds = inds.parameters
     @assert ndims(arr) == length(inds)
