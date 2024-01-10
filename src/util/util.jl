@@ -37,40 +37,44 @@ ensures the first Finch invocation runs in the latest world, and leaves hooks so
 that subsequent calls to [`Finch.refresh`](@ref) can update the world and
 invalidate old versions. If the body contains closures, this macro uses an
 eval and invokelatest strategy. Otherwise, it uses a generated function.
+This macro does not support type parameters, varargs, or keyword arguments.
 """
 macro staged(def)
     (@capture def :function(:call(~name, ~args...), ~body)) || throw(ArgumentError("unrecognized function definition in @staged"))
 
-    called = gensym(Symbol(name, :_called))
-    name_2 = gensym(Symbol(name, :_eval_invokelatest))
-    name_3 = gensym(Symbol(name, :_evaled))
+    name_generator = gensym(Symbol(name, :_generator))
+    name_invokelatest = gensym(Symbol(name, :_invokelatest))
+    name_eval_invokelatest = gensym(Symbol(name, :_eval_invokelatest))
 
     def = quote
-        $called = false
+        function $name_generator($(args...))
+            $body
+        end
 
-        function $name_2($(args...))
-            global $called
-            if !$called
-                code = let ($(args...),) = ($(map((arg)->:(typeof($arg)), args)...),)
-                    $body
+        function $name_invokelatest($(args...))
+            $(Base.invokelatest)($name_eval_invokelatest, $(args...))
+        end
+
+        function $name_eval_invokelatest($(args...))
+            code = $name_generator($(map((arg)->:(typeof($arg)), args)...),)
+            def = quote
+                function $($(QuoteNode(name_invokelatest)))($($(map(arg -> :(:($($(QuoteNode(arg)))::$(typeof($arg)))), args)...)))
+                    $($(QuoteNode(name_eval_invokelatest)))($($(map(QuoteNode, args)...)))
                 end
-                def = quote
-                    function $($(QuoteNode(name_3)))($($(map(QuoteNode, args)...)))
-                        $code
-                    end
+                function $($(QuoteNode(name_eval_invokelatest)))($($(map(arg -> :(:($($(QuoteNode(arg)))::$(typeof($arg)))), args)...)))
+                    $code
                 end
-                ($@__MODULE__).eval(def)
-                $called = true
             end
-            Base.invokelatest(($@__MODULE__).$name_3, $(args...))
+            ($@__MODULE__).eval(def)
+            $(Base.invokelatest)(($@__MODULE__).$name_eval_invokelatest, $(args...))
         end
 
         @generated function $name($(args...))
             # Taken from https://github.com/NHDaly/StagedFunctions.jl/blob/6fafbc560421f70b05e3df330b872877db0bf3ff/src/StagedFunctions.jl#L116
             body_2 = () -> begin
-                code = $(body)
+                code = $name_generator($(args...))
                 if has_function_def(macroexpand($@__MODULE__, code))
-                    :($($(name_2))($($args...)))
+                    :($($(name_invokelatest))($($(map(QuoteNode, args)...))))
                 else 
                     quote
                         $code
