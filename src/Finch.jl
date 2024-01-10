@@ -125,7 +125,6 @@ include("tensors/combinators/swizzle.jl")
 include("tensors/combinators/scale.jl")
 include("tensors/combinators/product.jl")
 
-
 include("traits.jl")
 
 export fsparse, fsparse!, fsprand, fspzeros, ffindnz, fread, fwrite, countstored
