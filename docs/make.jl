@@ -58,7 +58,7 @@ makedocs(;
                 "Looplet Interface" => "technical_reference/advanced_implementation/looplet_interface.md",
             ],
         ],
-        "Community and Contributions" => "CONTRIBUTING.md",
+        "Community and Contributions" => "../CONTRIBUTING.md",
         "Appendices and Additional Resources" => [
             "Glossary" => "appendices/glossary.md",
             "FAQs" => "appendices/faqs.md",
