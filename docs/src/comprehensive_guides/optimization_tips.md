@@ -1,7 +1,7 @@
 ```@meta
 CurrentModule = Finch
 ```
-# Optimization Techniques for Finch
+# Optimization Tips for Finch
 
 It's easy to ask Finch to run the same operation in different ways. However,
 different approaches have different performance. The right approach really

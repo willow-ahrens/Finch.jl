@@ -41,8 +41,9 @@ makedocs(;
             "Parallelization and Architectures" => "comprehensive_guides/parallelization.md",
             "FileIO" => "comprehensive_guides/FileIO.md",
             "Interoperability" => "comprehensive_guides/interoperability.md",
-            "Optimization Techniques" => "comprehensive_guides/optimization_techniques.md",
-            "Debugging Techniques" => "comprehensive_guides/debugging_techniques.md",
+            "Optimization Tips" => "comprehensive_guides/optimization_tips.md",
+            "Benchmarking Tips" => "comprehensive_guides/benchmarking_tips.md",
+            #"Debugging Tips" => "comprehensive_guides/debugging_tips.md",
         ],
         "Technical Reference" => [
             "Finch Core API" => "technical_reference/core_api.md",
