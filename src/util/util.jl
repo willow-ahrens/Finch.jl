@@ -52,7 +52,7 @@ macro staged(def)
         end
 
         function $name_invokelatest($(args...))
-            $invokelatest($name_eval_invokelatest, $(args...))
+            $(Base.invokelatest)($name_eval_invokelatest, $(args...))
         end
 
         function $name_eval_invokelatest($(args...))
@@ -66,7 +66,7 @@ macro staged(def)
                 end
             end
             ($@__MODULE__).eval(def)
-            Base.invokelatest(($@__MODULE__).$name_eval_invokelatest, $(args...))
+            $(Base.invokelatest)(($@__MODULE__).$name_eval_invokelatest, $(args...))
         end
 
         @generated function $name($(args...))
