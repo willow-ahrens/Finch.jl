@@ -36,7 +36,7 @@ function ensure_concurrent(root, ctx)
     end))
 
     #get nonlocal assignments and group by root
-    nonlocal_assigns = Dict()
+    nonlocal_assigns = OrderedDict()
     for node in PostOrderDFS(body)
         if @capture(node, assign(~lhs, ~op, ~rhs)) && !(getroot(lhs.tns) in locals) && getroot(lhs.tns) !== nothing #TODO remove the nothing check
             push!(get!(nonlocal_assigns, getroot(lhs.tns), []), node)

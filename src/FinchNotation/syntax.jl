@@ -230,8 +230,8 @@ function (ctx::FinchParserVisitor)(ex::Expr)
     end
 end
 
-finch_parse_program(ex, results=Set()) = FinchParserVisitor(program_nodes, results)(ex)
-finch_parse_instance(ex, results=Set()) = FinchParserVisitor(instance_nodes, results)(ex)
+finch_parse_program(ex, results=OrderedSet()) = FinchParserVisitor(program_nodes, results)(ex)
+finch_parse_instance(ex, results=OrderedSet()) = FinchParserVisitor(instance_nodes, results)(ex)
 
 macro finch_program(ex)
     return finch_parse_program(ex)

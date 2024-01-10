@@ -166,7 +166,7 @@ See also: [`@finch_code`](@ref)
 macro finch(opts_ex...)
     length(opts_ex) >= 1 || throw(ArgumentError("Expected at least one argument to @finch(opts..., ex)"))
     (opts, ex) = (opts_ex[1:end-1], opts_ex[end])
-    results = Set()
+    results = OrderedSet()
     prgm = FinchNotation.finch_parse_instance(ex, results)
     res = esc(:res)
     thunk = quote
