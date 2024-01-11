@@ -192,6 +192,8 @@ PatternLevel
 SparseListLevel
 SparseByteMapLevel
 RepeatRLELevel
+SparseRLELevel
+SparseVBLLevel
 ```
 
 ## Legacy Levels
