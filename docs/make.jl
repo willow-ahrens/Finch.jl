@@ -27,8 +27,8 @@ makedocs(;
         #"Practical Tutorials and Use Cases" => "tutorials_use_cases/tutorials_use_cases.md",
         "Comprehensive Guides" => [
             "Calling Finch" => "guides/calling_finch.md",
+            "Tensor Formats" => "guides/tensor_formats.md",
             "The Finch Language" => "guides/finch_language.md",
-            "Exploration of Tensor Formats" => "guides/tensor_formats.md",
             #"Dimensionalization" => "guides/dimensionalization.md",
             #"Tensor Lifecycles" => "guides/tensor_lifecycles.md",
             #"Special Tensors" => [
@@ -54,7 +54,7 @@ makedocs(;
         #        "Looplets and Coiteration" => "reference/advanced_implementation/looplets_coiteration.md",
         #        "Concordization" => "reference/advanced_implementation/concordization.md",
         #        "Local Variables and Constant Propagation" => "reference/advanced_implementation/local_variables.md",
-        #        "Tensor Interface" => "reference/advanced_implementation/tensor_interface.md",
+                "Tensor Interface" => "reference/advanced_implementation/tensor_interface.md",
         #        "Looplet Interface" => "reference/advanced_implementation/looplet_interface.md",
             ],
         ],
