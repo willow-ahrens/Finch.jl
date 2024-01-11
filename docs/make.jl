@@ -40,7 +40,7 @@ makedocs(;
             #"Index Sugar" => "guides/index_sugar.md",
             "Simplification and Custom Operators" => "guides/algebra.md",
             #"Parallelization and Architectures" => "guides/parallelization.md",
-            "FileIO" => "guides/FileIO.md",
+            "FileIO" => "guides/fileio.md",
             "Interoperability" => "guides/interoperability.md",
             "Optimization Tips" => "guides/optimization_tips.md",
             "Benchmarking Tips" => "guides/benchmarking_tips.md",
