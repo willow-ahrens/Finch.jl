@@ -23,6 +23,7 @@ export fastfinch, safefinch, debugfinch
 
 export Tensor
 export SparseRLE, SparseRLELevel 
+export SingleRLE, SingleRLELevel
 export SparseList, SparseListLevel
 export SparseHash, SparseHashLevel
 export SparseCOO, SparseCOOLevel
@@ -101,6 +102,7 @@ include("tensors/scalars.jl")
 include("tensors/levels/abstractlevel.jl")
 include("tensors/fibers.jl")
 include("tensors/levels/sparserlelevels.jl")
+include("tensors/levels/singlerlelevels.jl")
 include("tensors/levels/sparselistlevels.jl")
 include("tensors/levels/sparsehashlevels.jl")
 include("tensors/levels/sparsecoolevels.jl")
