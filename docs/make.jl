@@ -17,7 +17,6 @@ makedocs(;
     repo="https://github.com/willow-ahrens/Finch.jl/blob/{commit}{path}#{line}",
     sitename="Finch.jl",
     format=Documenter.HTML(;
-        repolink="https://github.com/willow-ahrens/Finch.jl/blob/{commit}{path}#{line}",
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://willow-ahrens.github.io/Finch.jl",
         assets=["assets/favicon.ico"],
