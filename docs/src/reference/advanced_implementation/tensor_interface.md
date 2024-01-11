@@ -74,7 +74,7 @@ When we print the tree in text, positions are numbered from top to bottom.
 However, if we visualize our tree with the root at the top, positions range from
 left to right:
 
-![Dense Format Index Tree](../assets/levels-A-d-d-e.png)
+![Dense Format Index Tree](../../assets/levels-A-d-d-e.png)
 
 Because our array is sparse, (mostly zero, or another fill value), it would be
 more efficient to store only the nonzero values. In Finch, each level is
@@ -95,7 +95,7 @@ Dense [:,1:3]
 │ ├─[3]: 5.5
 ```
 
-![CSC Format Index Tree](../assets/levels-A-d-sl-e.png)
+![CSC Format Index Tree](../../assets/levels-A-d-sl-e.png)
 
 Our `Dense(SparseList(Element(0.0)))` format is also known as
 ["CSC"](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29)
@@ -119,7 +119,7 @@ SparseList (0.0) [:,1:3]
 │ ├─[3]: 5.5
 ```
 
-![DCSC Format Index Tree](../assets/levels-A-sl-sl-e.png)
+![DCSC Format Index Tree](../../assets/levels-A-sl-sl-e.png)
 
 Here we see that the entirely zero column has also been compressed. The
 `SparseList(SparseList(Element(0.0)))` format is also known as
@@ -144,7 +144,7 @@ SparseCOO (0.0) [1:4,1:3]
 ├─├─[3, 3]: 5.5
 ```
 
-![COO Format Index Tree](../assets/levels-A-sc2-e.png)
+![COO Format Index Tree](../../assets/levels-A-sc2-e.png)
 
 The COO format is compact and straightforward, but doesn't support random
 access. For random access, one should use the `SparseHash` format. A full listing

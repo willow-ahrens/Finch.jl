@@ -48,7 +48,7 @@ makedocs(;
         ],
         "Technical Reference" => [
         #    "Finch Core API" => "reference/core_api.md",
-        #    "Function and Method Reference" => "reference/function_method_ref.md",
+            "Documentation Listing" => "reference/listing.md",
             "Advanced Implementation Details" => [
                 "Internals" => "reference/advanced_implementation/internals.md",
         #        "Looplets and Coiteration" => "reference/advanced_implementation/looplets_coiteration.md",
