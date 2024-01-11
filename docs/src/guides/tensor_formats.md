@@ -66,62 +66,95 @@ Our example could be visualized as follows:
 # Types of Level Storage
 
 Finch supports a variety of storage formats for each level of the tensor tree,
-each with advantages and disadvantages. Some storage formats support in-order access, while others support random access. Some storage formats must be written to in column-major order, while others support out-of-order writes.
+each with advantages and disadvantages. Some storage formats support in-order
+access, while others support random access. Some storage formats must be written
+to in column-major order, while others support out-of-order writes. The
+capabilities of each level are summarized in the following tables along with
+some general descriptions.
 
-| Level Format Name    | Group    | Data Characteristic   | Column-Major Reads | Random Reads | Column-Major Bulk Update | Random Bulk Update | Random Updates | Status | Usage Description |
-|----------------------|----------|-----------------------|:------------------:|:------------:|:------------------------:|:------------------:|:--------------:|:-----:|-------------------|
-| Dense                | Core     | Dense                 | ✅                | ✅          | ✅                      | ✅                | ✅            | ✅    | Stores every subtensor. |
-| SparseTree           | Core     | Sparse                | ✅                | ✅          | ✅                      | ✅                | ✅            | ⚙️    | Suitable for levels with few nonzeros. |
-| SparseRunTree        | Core     | Sparse Run-Length     | ✅                | ✅          | ✅                      | ✅                | ✅            | ⚙️    | Suitable for levels with runs of repeated values. |
-| Element              | Core     | Leaf                  | ✅                | ✅          | ✅                      | ✅                | ✅            | ✅    | Leaf level for storing tensor elements. |
-| Pattern              | Core     | Leaf                  | ✅                | ✅          | ✅                      | ✅                | ✅            | ✅    | Leaf level true if stored, false otherwise. |
-| SparseList           | Advanced | Sparse                | ✅                | ❌          | ✅                      | ❌                | ❌            | ✅    | Efficient for sparse data. |
-| SparseRunList        | Advanced | Sparse Run-Length     | ✅                | ❌          | ✅                      | ❌                | ❌            | ✅    | Efficient for runs with zero annihilation.|
-| SparseVBL            | Advanced | Sparse Blocks         | ✅                | ❌          | ✅                      | ❌                | ❌            | ✅    | Efficient for sparse data with blocks of nonzeros. |
-| RepeatedList         | Advanced | Run-Length            | ✅                | ❌          | ✅                      | ❌                | ❌            | ✅    | Efficient for runs, but no zero annihilation. |
-| SingleSparsePinpoint | Advanced | Sparse                | ✅                | ✅          | ✅                      | ❌                | ❌            | ✅    | Stores a single nonzero; useful with a parent level to represent IDs. |
-| SingleSparseRun      | Advanced | Sparse Run-Length     | ✅                | ✅          | ✅                      | ❌                | ❌            | ✅    | Stores a single run of a repeated nonzero value; useful with a parent level to represent IDs. |
-| SingleBlock          | Advanced | Dense                 | ✅                | ✅          | ✅                      | ❌                | ❌            | ✅    | Stores a run of contiguous nonzeros; Suitable for representing ragged, banded, or triangular patterns. |
-| SparseBytemap        | Advanced | Sparse                | ✅                | ✅          | ✅                      | ✅                | ❌            | ✅    | Efficient for sparse temporary data in a loop. Stores as much as dense does. |
-| SparseCOO            | Legacy   | Sparse                | ✅                | ✅          | ✅                      | ❌                | ✅            | ✅️    | Legacy format; not recommended except for COO format interfacing. |
-| SparseHash           | Legacy   | Sparse                | ✅                | ✅          | ✅                      | ✅                | ✅            | 🕸️    | Legacy format; not recommended except for Hash format interfacing. |
+| Level Format Name    | Status | Usage Description |
+|----------------------|:-----:|-------------------|
+| Dense                | ✅    | Stores every subtensor. |
+| SparseTree           | ⚙️   | Suitable for levels with few nonzeros. |
+| SparseRunTree        | ⚙️   | Suitable for levels with runs of repeated values. |
+| Element              | ✅    | Leaf level for storing tensor elements. |
+| Pattern              | ✅    | Leaf level true if stored, false otherwise. |
+| SparseList           | ✅    | Efficient for sparse data. |
+| SparseRunList        | ✅    | Efficient for runs with zero annihilation.|
+| SparseVBL            | ✅    | Efficient for sparse data with blocks of nonzeros. |
+| RepeatedList         | ✅    | Efficient for runs, but no zero annihilation. |
+| SingleSparsePinpoint | ✅    | Stores a single nonzero; useful with a parent level to represent IDs. |
+| SingleSparseRun      | ✅    | Stores a single run of a repeated nonzero value; useful with a parent level to represent IDs. |
+| SingleBlock          | ✅    | Stores a run of contiguous nonzeros; Suitable for representing ragged, banded, or triangular patterns. |
+| SparseBytemap        | ✅    | Efficient for sparse temporary data in a loop. Stores as much as dense does. |
+| SparseCOO            | ✅️   | Legacy format; not recommended except for COO format interfacing. |
+| SparseHash           | 🕸️  | Legacy format; not recommended except for Hash format interfacing. |
+
+| Level Format Name    | Group    | Data Characteristic   | Column-Major Reads | Random Reads | Column-Major Bulk Update | Random Bulk Update | Random Updates |
+|----------------------|----------|-----------------------|:------------------:|:------------:|:------------------------:|:------------------:|:--------------:|
+| Dense                | Core     | Dense                 | ✅                  | ✅            | ✅                        | ✅                  | ✅              |
+| SparseTree           | Core     | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ✅              |
+| SparseRunTree        | Core     | Sparse Run-Length     | ✅                  | ✅            | ✅                        | ✅                  | ✅              |
+| Element              | Core     | Leaf                  | ✅                  | ✅            | ✅                        | ✅                  | ✅              |
+| Pattern              | Core     | Leaf                  | ✅                  | ✅            | ✅                        | ✅                  | ✅              |
+| SparseList           | Advanced | Sparse                | ✅                  | ❌            | ✅                        | ❌                  | ❌              |
+| SparseRunList        | Advanced | Sparse Run-Length     | ✅                  | ❌            | ✅                        | ❌                  | ❌              |
+| SparseVBL            | Advanced | Sparse Blocks         | ✅                  | ❌            | ✅                        | ❌                  | ❌              |
+| RepeatedList         | Advanced | Run-Length            | ✅                  | ❌            | ✅                        | ❌                  | ❌              |
+| SingleSparsePinpoint | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ❌              |
+| SingleSparseRun      | Advanced | Sparse Run-Length     | ✅                  | ✅            | ✅                        | ❌                  | ❌              |
+| SingleBlock          | Advanced | Dense                 | ✅                  | ✅            | ✅                        | ❌                  | ❌              |
+| SparseBytemap        | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ❌              |
+| SparseCOO            | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ✅              |
+| SparseHash           | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ✅              |
 
 The "Level Format Name" is the name of the level datatype. Other columns have descriptions below.
 
+### Status
+
+| Symbol | Meaning |
+|--------|---------|
+| ✅     | Indicates the level is ready for serious use. |
+| ⚙️     | Indicates the level is experimental and under development. |
+| 🕸️     | Indicates the level is deprecated, and may be removed in a future release. |
+
 ### Groups 
-The **Core** group contains the
-basic, minimal set of levels one should use to build and manipulate tensors.
-These levels can be efficiently read and written to in any order.
-The **Advanced** group contains levels which are more specialized, and geared
+#### Core Group
+Contains the basic, minimal set of levels one should use to build and
+manipulate tensors.  These levels can be efficiently read and written to in any
+order.
+#### Advanced Group
+Contains levels which are more specialized, and geared
 towards bulk updates. THese levels may be more efficient in certain cases, but are
 also more restrictive about access orders and intended for more advanced usage.
-The **Legacy** group contains levels which are not recommended for new code, but
+#### Legacy Group
+Contains levels which are not recommended for new code, but
 are included for compatibility with older code.
 
 ### Data Characteristics
 
-The **Dense** group contains levels which store every subtensor
-The **Leaf** group contains levels which store only scalars, used for the leaf level of the tree.
-The **Sparse** group contains levels which store only non-fill values, used for levels with few nonzeros.
-The **Sparse Run-Length** group contains levels which store runs of repeated non-fill values.
-The **Sparse Blocks** group contains levels which store Blocks of repeated non-fill values.
-The **Run-Length** group contains levels which store runs of repeated values, and will not trigger compile-time annihilators.
+| Level Type         | Description |
+|--------------------|-------------|
+| **Dense**          | Levels which store every subtensor. |
+| **Leaf**           | Levels which store only scalars, used for the leaf level of the tree. |
+| **Sparse**         | Levels which store only non-fill values, used for levels with few nonzeros. |
+| **Sparse Run-Length** | Levels which store runs of repeated non-fill values. |
+| **Sparse Blocks**  | Levels which store Blocks of repeated non-fill values. |
+| **Run-Length**     | Levels which store runs of repeated values, and will not trigger compile-time annihilators. |
 
 ### Access Characteristics
 
-**Column-Major Reads** indicates efficient reading of data in column-major order
-**Random Reads** indicates efficient reading of data in random-access order
-**Column-Major Bulk Update** indicates efficient writing of data in column-major order, the total time roughly linear to the size of the tensor.
-**Column-Major Random Update** indicates efficient writing of data in random-access order, the total time roughly linear to the size of the tensor.
-**Random Update** indicates efficient writing of data in random-access order, the total time roughly linear to the number of updates.
-
-### Status
-
-✅ indicates the level is ready for serious use.
-⚙️ indicates the level is experimental and under development.
-🕸️ indicates the level is deprecated, and may be removed in a future release.
+| Operation Type                | Description |
+|-------------------------------|-------------|
+| **Column-Major Reads**        | Indicates efficient reading of data in column-major order. |
+| **Random Reads**              | Indicates efficient reading of data in random-access order. |
+| **Column-Major Bulk Update**  | Indicates efficient writing of data in column-major order, the total time roughly linear to the size of the tensor. |
+| **Column-Major Random Update**| Indicates efficient writing of data in random-access order, the total time roughly linear to the size of the tensor. |
+| **Random Update**             | Indicates efficient writing of data in random-access order, the total time roughly linear to the number of updates. |
 
 # Examples of Popular Formats in Finch
+
+Finch levels can be used to construct a variety of popular sparse formats. A few examples follow:
 
 | Format Type                  | Syntax                                                         |
 |------------------------------|----------------------------------------------------------------|
