@@ -12,13 +12,13 @@ arrays used to store positions and endpoints.
 ```jldoctest
 julia> Tensor(Dense(SparseRLELevel(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─[:,1]: SparseList (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,2]: SparseList (0.0) [1:3]
-├─[:,3]: SparseList (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+├─[:,1]: SparseRLE (0.0) [1:3]
+│ ├─[1:1]: 10.0
+│ ├─[2:2]: 30.0
+├─[:,2]: SparseRLE (0.0) [1:3]
+├─[:,3]: SparseRLE (0.0) [1:3]
+│ ├─[1:1]: 20.0
+│ ├─[3:3]: 40.0
 ```
 """
 struct SparseRLELevel{Ti, Ptr<:AbstractVector, Left<:AbstractVector, Right<:AbstractVector, Lvl} <: AbstractLevel
