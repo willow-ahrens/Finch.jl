@@ -38,7 +38,7 @@ makedocs(;
             #    "Early Break Strategies" => "guides/special_tensors/early_break.md",
             #],
             #"Index Sugar" => "guides/index_sugar.md",
-            "Simplification and Custom Operators" => "guides/algebra.md",
+            "Custom Operators" => "guides/custom_operators.md",
             #"Parallelization and Architectures" => "guides/parallelization.md",
             "FileIO" => "guides/fileio.md",
             "Interoperability" => "guides/interoperability.md",
@@ -58,7 +58,7 @@ makedocs(;
         #        "Looplet Interface" => "reference/advanced_implementation/looplet_interface.md",
             ],
         ],
-        "Community and Contributions" => "../CONTRIBUTING.md",
+        "Community and Contributions" => "CONTRIBUTING.md",
         "Appendices and Additional Resources" => [
             #"Glossary" => "appendices/glossary.md",
             #"FAQs" => "appendices/faqs.md",
