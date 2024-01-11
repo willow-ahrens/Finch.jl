@@ -69,20 +69,18 @@ each with advantages and disadvantages. Some storage formats support in-order ac
 | Level Format Name    | Group    | Data Characteristic   | Column-Major Reads | Random Reads | Column-Major Bulk Update | Random Bulk Update | Random Updates | Status | Usage Description |
 |----------------------|----------|-----------------------|:------------------:|:------------:|:------------------------:|:------------------:|:--------------:|:-----:|-------------------|
 | Dense                | Core     | Dense                 | ✅                | ✅          | ✅                      | ✅                | ✅            | ✅    | Stores every subtensor. |
-| SparseTree           | Core     | Sparse                | ✅                | ✅          | ✅                      | ❌                | ✅            | ⚙️    | Suitable for levels with few nonzeros. |
-| SparseRunTree        | Core     | Sparse Run-Length     | ✅                | ✅          | ✅                      | ❌                | ✅            | ⚙️    | Suitable for levels with runs of repeated values. |
+| SparseTree           | Core     | Sparse                | ✅                | ✅          | ✅                      | ✅                | ✅            | ⚙️    | Suitable for levels with few nonzeros. |
+| SparseRunTree        | Core     | Sparse Run-Length     | ✅                | ✅          | ✅                      | ✅                | ✅            | ⚙️    | Suitable for levels with runs of repeated values. |
 | Element              | Core     | Leaf                  | ✅                | ✅          | ✅                      | ✅                | ✅            | ✅    | Leaf level for storing tensor elements. |
 | Pattern              | Core     | Leaf                  | ✅                | ✅          | ✅                      | ✅                | ✅            | ✅    | Leaf level true if stored, false otherwise. |
 | SparseList           | Advanced | Sparse                | ✅                | ❌          | ✅                      | ❌                | ❌            | ✅    | Efficient for sparse data. |
-| SparseBytemap        | Advanced | Sparse                | ✅                | ✅          | ✅                      | ❌                | ❌            | ✅    | Efficient for sparse temporary data in a loop. Stores as much as dense does. |
 | SparseRunList        | Advanced | Sparse Run-Length     | ✅                | ❌          | ✅                      | ❌                | ❌            | ✅    | Efficient for runs with zero annihilation.|
-| RepeatedList         | Advanced | Run-Length            | ✅                | ❌          | ✅                      | ❌                | ❌            | ✅    | Efficient for runs, but no zero annihilation. |
-| SparseRunTree        | Advanced | Sparse Run-Length     | ✅                | ✅          | ✅                      | ❌                | ✅            | ⚙️    | Suitable for levels with runs of repeated values. |
-| Element              | Advanced | Dense                 | ✅                | ✅          | ✅                      | ✅                | ✅            | ✅    | Leaf level for storing tensor elements. |
 | SparseVBL            | Advanced | Sparse Blocks         | ✅                | ❌          | ✅                      | ❌                | ❌            | ✅    | Efficient for sparse data with blocks of nonzeros. |
+| RepeatedList         | Advanced | Run-Length            | ✅                | ❌          | ✅                      | ❌                | ❌            | ✅    | Efficient for runs, but no zero annihilation. |
 | SingleSparsePinpoint | Advanced | Sparse                | ✅                | ✅          | ✅                      | ❌                | ❌            | ✅    | Stores a single nonzero; useful with a parent level to represent IDs. |
 | SingleSparseRun      | Advanced | Sparse Run-Length     | ✅                | ✅          | ✅                      | ❌                | ❌            | ✅    | Stores a single run of a repeated nonzero value; useful with a parent level to represent IDs. |
 | SingleBlock          | Advanced | Dense                 | ✅                | ✅          | ✅                      | ❌                | ❌            | ✅    | Stores a run of contiguous nonzeros; Suitable for representing ragged, banded, or triangular patterns. |
+| SparseBytemap        | Advanced | Sparse                | ✅                | ✅          | ✅                      | ✅                | ❌            | ✅    | Efficient for sparse temporary data in a loop. Stores as much as dense does. |
 | SparseCOO            | Legacy   | Sparse                | ✅                | ✅          | ✅                      | ❌                | ✅            | ✅️    | Legacy format; not recommended except for COO format interfacing. |
 | SparseHash           | Legacy   | Sparse                | ✅                | ✅          | ✅                      | ✅                | ✅            | 🕸️    | Legacy format; not recommended except for Hash format interfacing. |
 
@@ -120,6 +118,19 @@ The **Run-Length** group contains levels which store runs of repeated values, an
 ✅ indicates the level is ready for serious use.
 ⚙️ indicates the level is experimental and under development.
 🕸️ indicates the level is deprecated, and may be removed in a future release.
+
+# Examples of Popular Formats in Finch
+
+| Format Type                  | Syntax                                                         |
+|------------------------------|----------------------------------------------------------------|
+| Sparse Vector                | `Tensor(SparseList(Element(0.0)), args...)`                    |
+| CSC Matrix                   | `Tensor(Dense(SparseList(Element(0.0))), args...)`             |
+| CSF 3-Tensor                 | `Tensor(Dense(SparseList(SparseList(Element(0.0)))), args...)` |
+| DCSC (Hypersparse) Matrix    | `Tensor(SparseList(SparseList(Element(0.0))), args...)`        |
+| COO Matrix                   | `Tensor(SparseCOO{2}(Element(0.0)), args...)`                  |
+| COO 3-Tensor                 | `Tensor(SparseCOO{3}(Element(0.0)), args...)`                  |
+| Dictionary-Of-Keys           | `Tensor(SparseHash{2}(Element(0.0)), args...)`                 |
+| Run-Length-Encoded Image     | `Tensor(Dense(RepeatedRLE(Element(0.0))), args...)`            |
 
 # Tensor Constructors
 
