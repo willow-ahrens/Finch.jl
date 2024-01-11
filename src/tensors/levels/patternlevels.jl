@@ -1,5 +1,5 @@
 """
-    PatternLevel{[Tp]}()
+    PatternLevel{[Tp=Int]}()
 
 A subfiber of a pattern level is the Boolean value true, but it's `default` is
 false. PatternLevels are used to create tensors that represent which values
