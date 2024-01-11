@@ -33,9 +33,9 @@ function moveto(lvl::AtomicLevel, device)
     return AtomicLevel(lvl_2, atomicsArray_2)
 end
 
-pattern!(lvl::AtomicLevel) = SeparationLevel(map(pattern!, lvl.val), pattern!(lvl.lvl))
-redefault!(lvl::AtomicLevel, init) = SeparationLevel(map(lvl_2->redefault!(lvl_2, init), lvl.val), redefault!(lvl.lvl, init))
-Base.resize!(lvl::AtomicLevel, dims...) = SeparationLevel(map(lvl_2->resize!(lvl_2, dims...), lvl.val), resize!(lvl.lvl, dims...))
+pattern!(lvl::AtomicLevel) = AtomicLevel(pattern!(lvl.lvl), lvl.atomicsArray)
+redefault!(lvl::AtomicLevel, init) = AtomicLevel(redefault!(lvl.lvl, init), lvl.atomicsArray)
+Base.resize!(lvl::AtomicLevel, dims...) = AtomicLevel(resize!(lvl.lvl, dims...), resize!(lvl.atomicsArray, dims[end]))
 
 
 function Base.show(io::IO, lvl::SeparationLevel{Val, Lvl}) where {Val, Lvl}
