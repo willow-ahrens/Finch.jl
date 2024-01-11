@@ -43,7 +43,9 @@ Dense [:,1:3]
 
 # Storage Tree Level Formats
 
-This section describes the formatted storage for finch tensors, the first argument to the [`Tensor`](@ref) constructor. The finch storage types hold all of the tensor data, and can be nested hierarchichally. 
+This section describes the formatted storage for Finch tensors, the first
+argument to the [`Tensor`](@ref) constructor. Level storage types holds all of
+the tensor data, and can be nested hierarchichally. 
 
 Finch represents tensors hierarchically in a tree, where each node in the tree
 is a vector of subtensors and the leaves are the elements.  Thus, a matrix is
