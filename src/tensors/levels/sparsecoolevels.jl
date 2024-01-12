@@ -1,5 +1,5 @@
 """
-    SparseCOOLevel{[N], [TI=Tuple{Int...}], [Ptr], [Tbl]}(lvl, [dims])
+    SparseCOOLevel{[N], [TI=Tuple{Int...}], [Ptr, Tbl]}(lvl, [dims])
 
 A subfiber of a sparse level does not need to represent slices which are
 entirely [`default`](@ref). Instead, only potentially non-default slices are
