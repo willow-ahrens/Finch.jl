@@ -72,41 +72,23 @@ to in column-major order, while others support out-of-order writes. The
 capabilities of each level are summarized in the following tables along with
 some general descriptions.
 
-| Level Format Name    | Group    | Status | Usage Description |
-|----------------------|----------|:-----:|-------------------|
-| Dense                | Core     | ✅    | Stores every subtensor. |
-| SparseTree           | Core     | ⚙️   | Suitable for levels with few nonzeros. |
-| SparseRunTree        | Core     | ⚙️   | Suitable for levels with runs of repeated values. |
-| Element              | Core     | ✅    | Leaf level for storing tensor elements. |
-| Pattern              | Core     | ✅    | Leaf level true if stored, false otherwise. |
-| SparseList           | Advanced | ✅    | Efficient for sparse data. |
-| SparseRunList        | Advanced | ✅    | Efficient for runs with zero annihilation.|
-| SparseVBL            | Advanced | ✅    | Efficient for sparse data with blocks of nonzeros. |
-| RepeatedList         | Advanced | ✅    | Efficient for runs, but no zero annihilation. |
-| SingleSparsePinpoint | Advanced | ✅    | Stores a single nonzero; useful with a parent level to represent IDs. |
-| SingleSparseRun      | Advanced | ✅    | Stores a single run of a repeated nonzero value; useful with a parent level to represent IDs. |
-| SingleBlock          | Advanced | ✅    | Stores a run of contiguous nonzeros; Suitable for representing ragged, banded, or triangular patterns. |
-| SparseBytemap        | Advanced | ✅    | Efficient for sparse temporary data in a loop. Stores as much as dense does. |
-| SparseCOO            | Legacy   | ✅️   | Legacy format; not recommended except for COO format interfacing. |
-| SparseHash           | Legacy   | 🕸️  | Legacy format; not recommended except for Hash format interfacing. |
-
-| Level Format Name    | Group    | Data Characteristic   | Column-Major Reads | Random Reads | Column-Major Bulk Update | Random Bulk Update | Random Updates |
-|----------------------|----------|-----------------------|:------------------:|:------------:|:------------------------:|:------------------:|:--------------:|
-| Dense                | Core     | Dense                 | ✅                  | ✅            | ✅                        | ✅                  | ✅              |
-| SparseTree           | Core     | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ✅              |
-| SparseRunTree        | Core     | Sparse Run-Length     | ✅                  | ✅            | ✅                        | ✅                  | ✅              |
-| Element              | Core     | Leaf                  | ✅                  | ✅            | ✅                        | ✅                  | ✅              |
-| Pattern              | Core     | Leaf                  | ✅                  | ✅            | ✅                        | ✅                  | ✅              |
-| SparseList           | Advanced | Sparse                | ✅                  | ❌            | ✅                        | ❌                  | ❌              |
-| SparseRunList        | Advanced | Sparse Run-Length     | ✅                  | ❌            | ✅                        | ❌                  | ❌              |
-| SparseVBL            | Advanced | Sparse Blocks         | ✅                  | ❌            | ✅                        | ❌                  | ❌              |
-| RepeatedList         | Advanced | Run-Length            | ✅                  | ❌            | ✅                        | ❌                  | ❌              |
-| SingleSparsePinpoint | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ❌              |
-| SingleSparseRun      | Advanced | Sparse Run-Length     | ✅                  | ✅            | ✅                        | ❌                  | ❌              |
-| SingleBlock          | Advanced | Dense                 | ✅                  | ✅            | ✅                        | ❌                  | ❌              |
-| SparseBytemap        | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ❌              |
-| SparseCOO            | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ✅              |
-| SparseHash           | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ✅              |
+| Level Format Name    | Group    | Data Characteristic   | Column-Major Reads | Random Reads | Column-Major Bulk Update | Random Bulk Update | Random Updates | Status |
+|----------------------|----------|-----------------------|:------------------:|:------------:|:------------------------:|:------------------:|:--------------:|:------:|
+| Dense                | Core     | Dense                 | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ✅     |
+| SparseTree           | Core     | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️    |
+| SparseRunTree        | Core     | Sparse Run-Length     | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️    |
+| Element              | Core     | Leaf                  | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ✅     |
+| Pattern              | Core     | Leaf                  | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ✅     |
+| SparseList           | Advanced | Sparse                | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
+| SparseRunList        | Advanced | Sparse Run-Length     | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
+| SparseVBL            | Advanced | Sparse Blocks         | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
+| RepeatedList         | Advanced | Run-Length            | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
+| SingleSparse         | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
+| SingleSparseRun      | Advanced | Sparse Run-Length     | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
+| SingleBlock          | Advanced | Sparse Blocks         | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
+| SparseBytemap        | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ❌              | ✅     |
+| SparseCOO            | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ✅              | ✅️    |
+| SparseHash           | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ✅              | 🕸️   |
 
 The "Level Format Name" is the name of the level datatype. Other columns have descriptions below.
 
@@ -140,7 +122,9 @@ are included for compatibility with older code.
 | **Sparse**         | Levels which store only non-fill values, used for levels with few nonzeros. |
 | **Sparse Run-Length** | Levels which store runs of repeated non-fill values. |
 | **Sparse Blocks**  | Levels which store Blocks of repeated non-fill values. |
-| **Run-Length**     | Levels which store runs of repeated values, and will not trigger compile-time annihilators. |
+| **Run-Length**     | Levels which store runs of repeated values, and no compile-time zero annihilation. |
+
+Note that the `Single` sparse levels store a single instance of each nonzero, run, or block. These are useful with a parent level to represent IDs.
 
 ### Access Characteristics
 
