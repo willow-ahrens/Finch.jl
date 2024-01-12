@@ -157,3 +157,54 @@ Base.show(io::IO, node::TagInstance) = print(io, "tag_instance(:", node.var, ", 
 @inline finch_leaf_instance(arg::Reader) = literal_instance(arg)
 @inline finch_leaf_instance(arg::Updater) = literal_instance(arg)
 @inline finch_leaf_instance(arg) = arg
+
+SyntaxInterface.istree(node::FinchNodeInstance) = Int(operation(node)) & IS_TREE != 0
+AbstractTrees.children(node::FinchNodeInstance) = istree(node) ? arguments(node) : []
+
+instance_ctrs = Dict(
+	literal => literal_instance,
+	index => index_instance,
+	define => define_instance,
+	declare => declare_instance,
+	freeze => freeze_instance,
+	thaw => thaw_instance,
+	block => block_instance,
+	loop => loop_instance,
+	sieve => sieve_instance,
+	assign => assign_instance,
+	call => call_instance,
+	access => access_instance,
+	variable => variable_instance,
+	tag => tag_instance,
+)
+
+function SyntaxInterface.similarterm(::Type{FinchNodeInstance}, op::FinchNodeKind, args)
+	instance_ctrs[op](args...)
+end
+
+SyntaxInterface.operation(::LiteralInstance) = literal
+SyntaxInterface.operation(::IndexInstance) = index
+SyntaxInterface.operation(::DefineInstance) = define
+SyntaxInterface.operation(::DeclareInstance) = declare
+SyntaxInterface.operation(::FreezeInstance) = freeze
+SyntaxInterface.operation(::ThawInstance) = thaw
+SyntaxInterface.operation(::BlockInstance) = block
+SyntaxInterface.operation(::LoopInstance) = loop
+SyntaxInterface.operation(::SieveInstance) = sieve
+SyntaxInterface.operation(::AssignInstance) = assign
+SyntaxInterface.operation(::CallInstance) = call
+SyntaxInterface.operation(::AccessInstance) = access
+SyntaxInterface.operation(::VariableInstance) = variable
+SyntaxInterface.operation(::TagInstance) = tag
+
+SyntaxInterface.arguments(node::DefineInstance) = [node.lhs, node.rhs, node.body]
+SyntaxInterface.arguments(node::DeclareInstance) = [node.tns, node.init]
+SyntaxInterface.arguments(node::FreezeInstance) = [node.tns]
+SyntaxInterface.arguments(node::ThawInstance) = [node.tns]
+SyntaxInterface.arguments(node::BlockInstance) = node.bodies
+SyntaxInterface.arguments(node::LoopInstance) = [node.idx, node.ext, node.body]
+SyntaxInterface.arguments(node::SieveInstance) = [node.cond, node.body]
+SyntaxInterface.arguments(node::AssignInstance) = [node.lhs, node.op, node.rhs]
+SyntaxInterface.arguments(node::CallInstance) = [node.op, node.args...]
+SyntaxInterface.arguments(node::AccessInstance) = [node.tns, node.mode, node.idxs...]
+SyntaxInterface.arguments(node::TagInstance) = [node.var, node.bind]
