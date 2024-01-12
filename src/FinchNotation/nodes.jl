@@ -491,9 +491,7 @@ function Base.show(io::IO, mime::MIME"text/plain", node::FinchNode)
 end
 
 function display_expression(io, mime, node::FinchNode)
-    if get(io, :compact, false)
-        print(io, "@finch(…)")
-    elseif node.kind === value
+    if node.kind === value
         print(io, node.val)
         if node.type !== Any
             print(io, "::")
