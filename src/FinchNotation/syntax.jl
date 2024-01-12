@@ -248,3 +248,151 @@ macro finch_program_instance(ex)
         end
     )
 end
+
+function display_expression(io, mime, node::FinchNode)
+    if node.kind === value
+        print(io, node.val)
+        if node.type !== Any
+            print(io, "::")
+            print(io, node.type)
+        end
+    elseif node.kind === literal
+        print(io, node.val)
+    elseif node.kind === index
+        print(io, node.name)
+    elseif node.kind === variable
+        print(io, node.name)
+    elseif node.kind === cached
+        print(io, "cached(")
+        display_expression(io, mime, node.arg)
+        print(io, ", ")
+        display_expression(io, mime, node.ref.val)
+        print(io, ")")
+    elseif node.kind === tag
+        print(io, "tag(")
+        display_expression(io, mime, node.var)
+        print(io, ", ")
+        display_expression(io, mime, node.bind)
+        print(io, ")")
+    elseif node.kind === virtual
+        print(io, "virtual(")
+        #print(io, node.val)
+        summary(io, node.val)
+        print(io, ")")
+    elseif node.kind === access
+        display_expression(io, mime, node.tns)
+        print(io, "[")
+        if length(node.idxs) >= 1
+            for idx in node.idxs[1:end-1]
+                display_expression(io, mime, idx)
+                print(io, ", ")
+            end
+            display_expression(io, mime, node.idxs[end])
+        end
+        print(io, "]")
+    elseif node.kind === call
+        display_expression(io, mime, node.op)
+        print(io, "(")
+        for arg in node.args[1:end-1]
+            display_expression(io, mime, arg)
+            print(io, ", ")
+        end
+        if !isempty(node.args)
+            display_expression(io, mime, node.args[end])
+        end
+        print(io, ")")
+    elseif istree(node)
+        print(io, operation(node))
+        print(io, "(")
+        for arg in arguments(node)[1:end-1]
+            print(io, arg)
+            print(io, ",")
+        end
+        if !isempty(arguments(node))
+            print(arguments(node)[end])
+        end
+    else
+        error("unimplemented")
+    end
+end
+
+function display_statement(io, mime, node::FinchNode, indent)
+    if node.kind === loop
+        print(io, " "^indent * "for ")
+        display_expression(io, mime, node.idx)
+        print(io, " = ")
+        display_expression(io, mime, node.ext)
+        body = node.body
+        while body.kind === loop
+            print(io, ", ")
+            display_expression(io, mime, body.idx)
+            print(io, " = ")
+            display_expression(io, mime, body.ext)
+            body = body.body
+        end
+        println(io)
+        display_statement(io, mime, body, indent + 2)
+        println(io)
+        print(io, " "^indent * "end")
+    elseif node.kind === define
+        print(io, " "^indent * "let ")
+        display_expression(io, mime, node.lhs)
+        print(io, " = ")
+        display_expression(io, mime, node.rhs)
+        body = node.body
+        while body.kind === define
+            print(io, ", ")
+            display_expression(io, mime, body.lhs)
+            print(io, " = ")
+            display_expression(io, mime, body.rhs)
+            body = body.body
+        end
+        println(io)
+        display_statement(io, mime, body, indent + 2)
+        println(io)
+        print(io, " "^indent * "end")
+    elseif node.kind === sieve
+        print(io, " "^indent * "if ")
+        while node.body.kind === sieve
+            display_expression(io, mime, node.cond)
+            print(io," && ")
+            node = node.body
+        end
+        display_expression(io, mime, node.cond)
+        println(io)
+        node = node.body
+        display_statement(io, mime, node, indent + 2)
+        println(io)
+        print(io, " "^indent * "end")
+    elseif node.kind === assign
+        print(io, " "^indent)
+        display_expression(io, mime, node.lhs)
+        print(io, " <<")
+        display_expression(io, mime, node.op)
+        print(io, ">>= ")
+        display_expression(io, mime, node.rhs)
+    elseif node.kind === declare
+        print(io, " "^indent)
+        display_expression(io, mime, node.tns)
+        print(io, " .= ")
+        display_expression(io, mime, node.init)
+    elseif node.kind === freeze
+        print(io, " "^indent * "@freeze(")
+        display_expression(io, mime, node.tns)
+        print(io, ")")
+    elseif node.kind === thaw
+        print(io, " "^indent * "@thaw(")
+        display_expression(io, mime, node.tns)
+        print(io, ")")
+    elseif node.kind === block
+        print(io, " "^indent * "begin\n")
+        for body in node.bodies
+            display_statement(io, mime, body, indent + 2)
+            println(io)
+        end
+        print(io, " "^indent * "end")
+    else
+        println(node)
+        error("unimplemented")
+    end
+end
