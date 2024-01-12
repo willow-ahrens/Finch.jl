@@ -72,23 +72,23 @@ to in column-major order, while others support out-of-order writes. The
 capabilities of each level are summarized in the following tables along with
 some general descriptions.
 
-| Level Format Name    | Status | Usage Description |
-|----------------------|:-----:|-------------------|
-| Dense                | ✅    | Stores every subtensor. |
-| SparseTree           | ⚙️   | Suitable for levels with few nonzeros. |
-| SparseRunTree        | ⚙️   | Suitable for levels with runs of repeated values. |
-| Element              | ✅    | Leaf level for storing tensor elements. |
-| Pattern              | ✅    | Leaf level true if stored, false otherwise. |
-| SparseList           | ✅    | Efficient for sparse data. |
-| SparseRunList        | ✅    | Efficient for runs with zero annihilation.|
-| SparseVBL            | ✅    | Efficient for sparse data with blocks of nonzeros. |
-| RepeatedList         | ✅    | Efficient for runs, but no zero annihilation. |
-| SingleSparsePinpoint | ✅    | Stores a single nonzero; useful with a parent level to represent IDs. |
-| SingleSparseRun      | ✅    | Stores a single run of a repeated nonzero value; useful with a parent level to represent IDs. |
-| SingleBlock          | ✅    | Stores a run of contiguous nonzeros; Suitable for representing ragged, banded, or triangular patterns. |
-| SparseBytemap        | ✅    | Efficient for sparse temporary data in a loop. Stores as much as dense does. |
-| SparseCOO            | ✅️   | Legacy format; not recommended except for COO format interfacing. |
-| SparseHash           | 🕸️  | Legacy format; not recommended except for Hash format interfacing. |
+| Level Format Name    | Group    | Status | Usage Description |
+|----------------------|----------|:-----:|-------------------|
+| Dense                | Core     | ✅    | Stores every subtensor. |
+| SparseTree           | Core     | ⚙️   | Suitable for levels with few nonzeros. |
+| SparseRunTree        | Core     | ⚙️   | Suitable for levels with runs of repeated values. |
+| Element              | Core     | ✅    | Leaf level for storing tensor elements. |
+| Pattern              | Core     | ✅    | Leaf level true if stored, false otherwise. |
+| SparseList           | Advanced | ✅    | Efficient for sparse data. |
+| SparseRunList        | Advanced | ✅    | Efficient for runs with zero annihilation.|
+| SparseVBL            | Advanced | ✅    | Efficient for sparse data with blocks of nonzeros. |
+| RepeatedList         | Advanced | ✅    | Efficient for runs, but no zero annihilation. |
+| SingleSparsePinpoint | Advanced | ✅    | Stores a single nonzero; useful with a parent level to represent IDs. |
+| SingleSparseRun      | Advanced | ✅    | Stores a single run of a repeated nonzero value; useful with a parent level to represent IDs. |
+| SingleBlock          | Advanced | ✅    | Stores a run of contiguous nonzeros; Suitable for representing ragged, banded, or triangular patterns. |
+| SparseBytemap        | Advanced | ✅    | Efficient for sparse temporary data in a loop. Stores as much as dense does. |
+| SparseCOO            | Legacy   | ✅️   | Legacy format; not recommended except for COO format interfacing. |
+| SparseHash           | Legacy   | 🕸️  | Legacy format; not recommended except for Hash format interfacing. |
 
 | Level Format Name    | Group    | Data Characteristic   | Column-Major Reads | Random Reads | Column-Major Bulk Update | Random Bulk Update | Random Updates |
 |----------------------|----------|-----------------------|:------------------:|:------------:|:------------------------:|:------------------:|:--------------:|
@@ -125,7 +125,7 @@ manipulate tensors.  These levels can be efficiently read and written to in any
 order.
 #### Advanced Group
 Contains levels which are more specialized, and geared
-towards bulk updates. THese levels may be more efficient in certain cases, but are
+towards bulk updates. These levels may be more efficient in certain cases, but are
 also more restrictive about access orders and intended for more advanced usage.
 #### Legacy Group
 Contains levels which are not recommended for new code, but
