@@ -288,26 +288,28 @@ representations, so you can use the standard `operation`, `arguments`, `istree`,
 
 ```jldoctest example2; setup = :(using Finch, AbstractTrees, SyntaxInterface, RewriteTools)
 
+julia> using Finch.FinchNotation
+
 julia> collect(PostOrderDFS(prgm))
-12-element Vector{Finch.FinchNotation.FinchNode}:
+12-element Vector{FinchNode}:
  @finch_program i
- @finch_program virtual(Finch.FinchNotation.Dimensionless)
+ @finch_program virtual(Dimensionless)
  @finch_program Scalar{0, Int64}(0)
- @finch_program Finch.FinchNotation.Updater()
+ @finch_program Updater()
  @finch_program Scalar{0, Int64}(0)[]
  @finch_program +
  @finch_program Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))
- @finch_program Finch.FinchNotation.Reader()
+ @finch_program Reader()
  @finch_program i
  @finch_program Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))[i]
  @finch_program Scalar{0, Int64}(0)[] <<+>>= Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))[i]
- loop(index(i), virtual(Finch.FinchNotation.Dimensionless()), assign(access(literal(Scalar{0, Int64}(0)), literal(Finch.FinchNotation.Updater())), literal(+), access(literal(Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal(Finch.FinchNotation.Reader()), index(i))))
+ loop(index(i), virtual(Dimensionless()), assign(access(literal(Scalar{0, Int64}(0)), literal(Updater())), literal(+), access(literal(Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal(Reader()), index(i))))
 
-julia> @capture prgm loop(~idx, ~ext, ~val)
+julia> @capture prgm FinchNotation.loop(~idx, ~ext, ~val)
 true
 
 julia> idx
-i
+@finch_program i
 
 ```
 
