@@ -73,6 +73,10 @@ virtual
     tag(var, bind)
 
 Finch AST expression for a global variable `var` with the value `bind`.
+Because the finch compiler cannot pass variable state from the program domain to
+the type domain directly, the `tag` type represents a value `bind`
+referred to by a variable named `bind`. All `tag` in the same program
+must agree on the value of variables, and only one value will be virtualized.
 """
 tag
 
