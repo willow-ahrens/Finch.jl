@@ -100,7 +100,7 @@ Base.show(io::IO, node::LiteralInstance{val}) where {val} = print(io, "literal_i
 Base.show(io::IO, node::IndexInstance{name}) where {name} = print(io, "index_instance(", name, ")")
 Base.show(io::IO, node::VariableInstance{name}) where {name} = print(io, "variable_instance(:", name, ")")
 function Base.show(io::IO, node::FinchNodeInstance)
-	print(io, instance_ctrs(operation(node)), "(")
+	print(io, instance_ctrs[operation(node)], "(")
 	join(io, arguments(node), ", ")
 	print(io, ")")
 end

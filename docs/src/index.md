@@ -67,7 +67,7 @@ quote
     sugar_1 = size(A)
     A_mode1_stop = sugar_1[1]
     A_mode2_stop = sugar_1[2]
-    @warn "Performance Warning: non-concordant traversal of @finch_program A[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)"
+    @warn "Performance Warning: non-concordant traversal of A[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)"
     for i_3 = 1:A_mode1_stop
         for j_3 = 1:A_mode2_stop
             sugar_3 = size(A)

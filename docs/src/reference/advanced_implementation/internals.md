@@ -252,33 +252,33 @@ Calling print on a finch program or program instance will print the
 structure of the program as one would call constructors to build it. For
 example, 
 
-```jldoctest example3; setup = :(using Finch)
+```jldoctest example2; setup = :(using Finch)
 julia> prgm_inst = Finch.@finch_program_instance for i = _
-               s[] += A[i]
-           end;
+            s[] += A[i]
+        end;
+
+
 julia> println(prgm_inst)
-@finch_program_instance for i = Dimensionless()
-    tag(s, Scalar{0, Int64}(0))[] <<tag(+, +)>>= tag(A, Tensor(SparseList(Element(0))))[tag(i, i)]
-    end
+loop_instance(index_instance(i), Finch.FinchNotation.Dimensionless(), assign_instance(access_instance(tag_instance(variable_instance(:s), Scalar{0, Int64}(0)), literal_instance(Finch.FinchNotation.Updater())), tag_instance(variable_instance(:+), literal_instance(+)), access_instance(tag_instance(variable_instance(:A), Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal_instance(Finch.FinchNotation.Reader()), tag_instance(variable_instance(:i), index_instance(i)))))
 
 julia> prgm_inst
+@finch_program_instance for i = Dimensionless()
+  tag(s, Scalar{0, Int64}(0))[] <<tag(+, +)>>= tag(A, Tensor(SparseList(Element(0))))[tag(i, i)]
+end
 
-@finch_program for i = Dimensionless()
-    tag(s, Scalar{0, Int64}(0))[] <<tag(+, +)>>= tag(A, Tensor(SparseList(Element(0))))[tag(i, i)]
-    end
 julia> prgm = Finch.@finch_program for i = _
                s[] += A[i]
-           end:
+           end;
+
+
 julia> println(prgm)
-@finch_program for i = Dimensionless()
-    tag(s, Scalar{0, Int64}(0))[] <<tag(+, +)>>= tag(A, Tensor(SparseList(Element(0))))[tag(i, i)]
-    end
+loop(index(i), virtual(Finch.FinchNotation.Dimensionless()), assign(access(literal(Scalar{0, Int64}(0)), literal(Finch.FinchNotation.Updater())), literal(+), access(literal(Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal(Finch.FinchNotation.Reader()), index(i))))
 
 julia> prgm
+@finch_program for i = virtual(Finch.FinchNotation.Dimensionless)
+  Scalar{0, Int64}(0)[] <<+>>= Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))[i]
+end
 
-@finch_program for i = Dimensionless()
-    tag(s, Scalar{0, Int64}(0))[] <<tag(+, +)>>= tag(A, Tensor(SparseList(Element(0))))[tag(i, i)]
-    end
 ```
     
 Both the virtual and instance representations of Finch IR define
@@ -286,16 +286,29 @@ Both the virtual and instance representations of Finch IR define
 [AbstractTrees.jl](https://github.com/JuliaCollections/AbstractTrees.jl)
 representations, so you can use the standard `operation`, `arguments`, `istree`, and `children` functions to inspect the structure of the program, as well as the rewriters defined by [RewriteTools.jl](https://github.com/willow-ahrens/RewriteTools.jl)
 
-```jldoctest example3; setup = :(using Finch, AbstractTrees, SyntaxInterface, RewriteTools)
+```jldoctest example2; setup = :(using Finch, AbstractTrees, SyntaxInterface, RewriteTools)
 
 julia> collect(PostOrderDFS(prgm))
+12-element Vector{Finch.FinchNotation.FinchNode}:
+ @finch_program i
+ @finch_program virtual(Finch.FinchNotation.Dimensionless)
+ @finch_program Scalar{0, Int64}(0)
+ @finch_program Finch.FinchNotation.Updater()
+ @finch_program Scalar{0, Int64}(0)[]
+ @finch_program +
+ @finch_program Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))
+ @finch_program Finch.FinchNotation.Reader()
+ @finch_program i
+ @finch_program Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))[i]
+ @finch_program Scalar{0, Int64}(0)[] <<+>>= Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))[i]
+ loop(index(i), virtual(Finch.FinchNotation.Dimensionless()), assign(access(literal(Scalar{0, Int64}(0)), literal(Finch.FinchNotation.Updater())), literal(+), access(literal(Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal(Finch.FinchNotation.Reader()), index(i))))
 
-foo
 julia> @capture prgm loop(~idx, ~ext, ~val)
+true
 
 julia> idx
-
 i
+
 ```
 
 ## Tensor internals
