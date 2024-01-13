@@ -61,7 +61,6 @@ struct InitWriter{D} end
     end
     y
 end
-    
 
 """
     initwrite(z)(a, b)
@@ -249,37 +248,38 @@ macro finch_program_instance(ex)
     )
 end
 
-function display_expression(io, mime, node::FinchNode)
-    if node.kind === value
+display_expression(io, mime, node) = print(io, node) # TODO fix values
+function display_expression(io, mime, node::Union{FinchNode, FinchNodeInstance})
+    if operation(node) === value
         print(io, node.val)
         if node.type !== Any
             print(io, "::")
             print(io, node.type)
         end
-    elseif node.kind === literal
+    elseif operation(node) === literal
         print(io, node.val)
-    elseif node.kind === index
+    elseif operation(node) === index
         print(io, node.name)
-    elseif node.kind === variable
+    elseif operation(node) === variable
         print(io, node.name)
-    elseif node.kind === cached
+    elseif operation(node) === cached
         print(io, "cached(")
         display_expression(io, mime, node.arg)
         print(io, ", ")
         display_expression(io, mime, node.ref.val)
         print(io, ")")
-    elseif node.kind === tag
+    elseif operation(node) === tag
         print(io, "tag(")
         display_expression(io, mime, node.var)
         print(io, ", ")
         display_expression(io, mime, node.bind)
         print(io, ")")
-    elseif node.kind === virtual
+    elseif operation(node) === virtual
         print(io, "virtual(")
         #print(io, node.val)
         summary(io, node.val)
         print(io, ")")
-    elseif node.kind === access
+    elseif operation(node) === access
         display_expression(io, mime, node.tns)
         print(io, "[")
         if length(node.idxs) >= 1
@@ -290,7 +290,7 @@ function display_expression(io, mime, node::FinchNode)
             display_expression(io, mime, node.idxs[end])
         end
         print(io, "]")
-    elseif node.kind === call
+    elseif operation(node) === call
         display_expression(io, mime, node.op)
         print(io, "(")
         for arg in node.args[1:end-1]
@@ -316,14 +316,14 @@ function display_expression(io, mime, node::FinchNode)
     end
 end
 
-function display_statement(io, mime, node::FinchNode, indent)
-    if node.kind === loop
+function display_statement(io, mime, node, indent)
+    if operation(node) === loop
         print(io, " "^indent * "for ")
         display_expression(io, mime, node.idx)
         print(io, " = ")
         display_expression(io, mime, node.ext)
         body = node.body
-        while body.kind === loop
+        while operation(body) === loop
             print(io, ", ")
             display_expression(io, mime, body.idx)
             print(io, " = ")
@@ -334,13 +334,13 @@ function display_statement(io, mime, node::FinchNode, indent)
         display_statement(io, mime, body, indent + 2)
         println(io)
         print(io, " "^indent * "end")
-    elseif node.kind === define
+    elseif operation(node) === define
         print(io, " "^indent * "let ")
         display_expression(io, mime, node.lhs)
         print(io, " = ")
         display_expression(io, mime, node.rhs)
         body = node.body
-        while body.kind === define
+        while operation(body) === define
             print(io, ", ")
             display_expression(io, mime, body.lhs)
             print(io, " = ")
@@ -351,9 +351,9 @@ function display_statement(io, mime, node::FinchNode, indent)
         display_statement(io, mime, body, indent + 2)
         println(io)
         print(io, " "^indent * "end")
-    elseif node.kind === sieve
+    elseif operation(node) === sieve
         print(io, " "^indent * "if ")
-        while node.body.kind === sieve
+        while operation(node.body) === sieve
             display_expression(io, mime, node.cond)
             print(io," && ")
             node = node.body
@@ -364,27 +364,27 @@ function display_statement(io, mime, node::FinchNode, indent)
         display_statement(io, mime, node, indent + 2)
         println(io)
         print(io, " "^indent * "end")
-    elseif node.kind === assign
+    elseif operation(node) === assign
         print(io, " "^indent)
         display_expression(io, mime, node.lhs)
         print(io, " <<")
         display_expression(io, mime, node.op)
         print(io, ">>= ")
         display_expression(io, mime, node.rhs)
-    elseif node.kind === declare
+    elseif operation(node) === declare
         print(io, " "^indent)
         display_expression(io, mime, node.tns)
         print(io, " .= ")
         display_expression(io, mime, node.init)
-    elseif node.kind === freeze
+    elseif operation(node) === freeze
         print(io, " "^indent * "@freeze(")
         display_expression(io, mime, node.tns)
         print(io, ")")
-    elseif node.kind === thaw
+    elseif operation(node) === thaw
         print(io, " "^indent * "@thaw(")
         display_expression(io, mime, node.tns)
         print(io, ")")
-    elseif node.kind === block
+    elseif operation(node) === block
         print(io, " "^indent * "begin\n")
         for body in node.bodies
             display_statement(io, mime, body, indent + 2)

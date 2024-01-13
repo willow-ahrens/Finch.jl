@@ -319,6 +319,7 @@ function Base.show(io::IO, node::FinchNode)
 end
 
 function Base.show(io::IO, mime::MIME"text/plain", node::FinchNode) 
+    print(io, "@finch_program ")
     if isstateful(node)
         display_statement(io, mime, node, 0)
     else
