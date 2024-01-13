@@ -2,116 +2,32 @@
 CurrentModule = Finch
 ```
 
-<!--
-# Tensor Formats
+# Constructing Tensors
 
-Finch stores tensors in a variety of formats, each with its own advantages and
-disadvantages. The following table summarizes the formats supported by Finch,
-and some of their key properties.
+You can build a finch tensor with the `Tensor` constructor. In general, the
+`Tensor` constructor mirrors Julia's [`Array`](https://docs.julialang.org/en/v1/base/arrays/#Core.Array) constructor, but with an additional
+prefixed argument which specifies the formatted storage for the tensor.
 
-# Custom Formats
-
-Finch also supports custom tensor formats. Finch represents tensors
-hierarchically in a tree, where each node in the tree is a vector of subtensors
-and the leaves are the elements.  Thus, a matrix is analogous to a vector of
-vectors, and a 3-tensor is analogous to a vector of vectors of vectors.  The
-vectors at each level of the tensor all have the same structure, which can be
-selected by the user. If the user wishes to 
--->
-
-# Level Formats
-
-Finch implements a flexible array datastructure called a `Tensor`. Finch tensors represent
-arrays as rooted trees, where the child of each node is selected by an array
-index. Finch is column major, so in an expression `A[i_1, ..., i_N]`, the
-rightmost dimension `i_N` corresponds to the root level of the tree, and the
-leftmost dimension `i_1` corresponds to the leaf level. When the array is dense,
-the leftmost dimension has stop 1. We can convert the matrix `A` to finch format
-with the `Tensor` constructor:
+For example, to construct an empty sparse matrix:
 
 ```jldoctest example1; setup=:(using Finch)
+julia> A_fbr = Tensor(Dense(SparseList(Element(0.0))), 4, 3)
+Dense [:,1:3]
+├─[:,1]: SparseList (0.0) [1:4]
+├─[:,2]: SparseList (0.0) [1:4]
+├─[:,3]: SparseList (0.0) [1:4]
+```
+
+To initialize a sparse matrix with some values:
+
+```jldoctest example1
 julia> A = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
 4×3 Matrix{Float64}:
  0.0  0.0  4.4
  1.1  0.0  0.0
  2.2  0.0  5.5
  3.3  0.0  0.0
-julia> A_fbr = Tensor(Dense(Dense(Element(0.0))), A)
-Dense [:,1:3]
-├─[:,1]: Dense [1:4]
-│ ├─[1]: 0.0
-│ ├─[2]: 1.1
-│ ├─[3]: 2.2
-│ ├─[4]: 3.3
-├─[:,2]: Dense [1:4]
-│ ├─[1]: 0.0
-│ ├─[2]: 0.0
-│ ├─[3]: 0.0
-│ ├─[4]: 0.0
-├─[:,3]: Dense [1:4]
-│ ├─[1]: 4.4
-│ ├─[2]: 0.0
-│ ├─[3]: 5.5
-│ ├─[4]: 0.0
-```
 
-We refer to a node in the tree as a subfiber. All of the nodes at the same level
-are stored in the same datastructure, and disambiguated by an integer
-`position`.  in the above example, there are three levels: the rootmost level
-contains only one subfiber, the root. The middle level has 3 subfibers, one for
-each column. The leafmost level has 12 subfibers, one for each element of the
-array.  For example, the first level is `A_fbr.lvl`, and we can represent it's
-third position as `SubFiber(A_fbr.lvl.lvl, 3)`. The second level is `A_fbr.lvl.lvl`,
-and we can access it's 9th position as `SubFiber(A_fbr.lvl.lvl.lvl, 9)`. For
-instructional purposes, you can use parentheses to call a subfiber on an index to
-select among children of a subfiber.
-
-```jldoctest example1
-julia> Finch.SubFiber(A_fbr.lvl.lvl, 3)
-Dense [1:4]
-├─[1]: 4.4
-├─[2]: 0.0
-├─[3]: 5.5
-├─[4]: 0.0
-
-julia> A_fbr[:, 3]
-Dense [1:4]
-├─[1]: 4.4
-├─[2]: 0.0
-├─[3]: 5.5
-├─[4]: 0.0
-
-julia> A_fbr(3)
-Dense [1:4]
-├─[1]: 4.4
-├─[2]: 0.0
-├─[3]: 5.5
-├─[4]: 0.0
-
-julia> Finch.SubFiber(A_fbr.lvl.lvl.lvl, 9)
-4.4
-
-julia> A_fbr[1, 3]
-4.4
-
-julia> A_fbr(3)(1)
-4.4
-
-```
-
-When we print the tree in text, positions are numbered from top to bottom.
-However, if we visualize our tree with the root at the top, positions range from
-left to right:
-
-![Dense Format Index Tree](../assets/levels-A-d-d-e.png)
-
-Because our array is sparse, (mostly zero, or another fill value), it would be
-more efficient to store only the nonzero values. In Finch, each level is
-represented with a different format. A sparse level only stores non-fill values.
-This time, we'll use a tensor constructor with `sl` (for "`SparseList` of
-nonzeros") instead of `d` (for "`Dense`"):
-
-```jldoctest example1
 julia> A_fbr = Tensor(Dense(SparseList(Element(0.0))), A)
 Dense [:,1:3]
 ├─[:,1]: SparseList (0.0) [1:4]
@@ -124,105 +40,148 @@ Dense [:,1:3]
 │ ├─[3]: 5.5
 ```
 
+
+# Storage Tree Level Formats
+
+This section describes the formatted storage for Finch tensors, the first
+argument to the [`Tensor`](@ref) constructor. Level storage types holds all of
+the tensor data, and can be nested hierarchichally. 
+
+Finch represents tensors hierarchically in a tree, where each node in the tree
+is a vector of subtensors and the leaves are the elements.  Thus, a matrix is
+analogous to a vector of vectors, and a 3-tensor is analogous to a vector of
+vectors of vectors.  The vectors at each level of the tensor all have the same
+structure, which can be selected by the user.
+
+In a Finch tensor tree, the child of each node is selected by an array index.
+All of the children at the same level will use the same format and share the
+same storage. Finch is column major, so in an expression `A[i_1, ..., i_N]`, the
+rightmost dimension `i_N` corresponds to the root level of the tree, and the
+leftmost dimension `i_1` corresponds to the leaf level.
+
+Our example could be visualized as follows:
+
 ![CSC Format Index Tree](../assets/levels-A-d-sl-e.png)
 
-Our `Dense(SparseList(Element(0.0)))` format is also known as
-["CSC"](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29)
-and is equivalent to
-[`SparseMatrixCSC`](https://sparsearrays.juliasparse.org/dev/#man-csc). The
-[`Tensor`](@ref) function will perform a zero-cost copy between Finch fibers and
-sparse matrices, when available.  CSC is an excellent general-purpose
-representation when we expect most of the columns to have a few nonzeros.
-However, when most of the columns are entirely fill (a situation known as
-hypersparsity), it is better to compress the root level as well:
+# Types of Level Storage
 
-```jldoctest example1
-julia> A_fbr = Tensor(SparseList(SparseList(Element(0.0))), A)
-SparseList (0.0) [:,1:3]
-├─[:,1]: SparseList (0.0) [1:4]
-│ ├─[2]: 1.1
-│ ├─[3]: 2.2
-│ ├─[4]: 3.3
-├─[:,3]: SparseList (0.0) [1:4]
-│ ├─[1]: 4.4
-│ ├─[3]: 5.5
-```
+Finch supports a variety of storage formats for each level of the tensor tree,
+each with advantages and disadvantages. Some storage formats support in-order
+access, while others support random access. Some storage formats must be written
+to in column-major order, while others support out-of-order writes. The
+capabilities of each level are summarized in the following tables along with
+some general descriptions.
 
-![DCSC Format Index Tree](../assets/levels-A-sl-sl-e.png)
+| Level Format Name    | Group    | Data Characteristic   | Column-Major Reads | Random Reads | Column-Major Bulk Update | Random Bulk Update | Random Updates | Status |
+|----------------------|----------|-----------------------|:------------------:|:------------:|:------------------------:|:------------------:|:--------------:|:------:|
+| Dense                | Core     | Dense                 | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ✅     |
+| SparseTree           | Core     | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️    |
+| SparseRunTree        | Core     | Sparse Run-Length     | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️    |
+| Element              | Core     | Leaf                  | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ✅     |
+| Pattern              | Core     | Leaf                  | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ✅     |
+| SparseList           | Advanced | Sparse                | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
+| SparseRunList        | Advanced | Sparse Run-Length     | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
+| SparseVBL            | Advanced | Sparse Blocks         | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
+| RepeatedList         | Advanced | Run-Length            | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
+| SingleSparse         | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
+| SingleSparseRun      | Advanced | Sparse Run-Length     | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
+| SingleBlock          | Advanced | Sparse Blocks         | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
+| SparseBytemap        | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ❌              | ✅     |
+| SparseCOO            | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ✅              | ✅️    |
+| SparseHash           | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ✅              | 🕸️   |
 
-Here we see that the entirely zero column has also been compressed. The
-`SparseList(SparseList(Element(0.0)))` format is also known as
-["DCSC"](https://ieeexplore.ieee.org/document/4536313).
+The "Level Format Name" is the name of the level datatype. Other columns have descriptions below.
 
-The
-["COO"](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.coo_matrix.html)
-(or "Coordinate") format is often used in practice for ease of interchange
-between libraries. In an `N`-dimensional array `A`, COO stores `N` lists of
-indices `I_1, ..., I_N` where `A[I_1[p], ..., I_N[p]]` is the `p`^th stored
-value in column-major numbering. In Finch, `COO` is represented as a multi-index
-level, which can handle more than one index at once. We use curly brackets to
-declare the number of indices handled by the level:
+### Status
 
-```jldoctest example1
-julia> A_fbr = Tensor(SparseCOO{2}(Element(0.0)), A)
-SparseCOO (0.0) [1:4,1:3]
-├─├─[2, 1]: 1.1
-├─├─[3, 1]: 2.2
-├─├─[4, 1]: 3.3
-├─├─[1, 3]: 4.4
-├─├─[3, 3]: 5.5
-```
+| Symbol | Meaning |
+|--------|---------|
+| ✅     | Indicates the level is ready for serious use. |
+| ⚙️     | Indicates the level is experimental and under development. |
+| 🕸️     | Indicates the level is deprecated, and may be removed in a future release. |
 
-![COO Format Index Tree](../assets/levels-A-sc2-e.png)
+### Groups 
+#### Core Group
+Contains the basic, minimal set of levels one should use to build and
+manipulate tensors.  These levels can be efficiently read and written to in any
+order.
+#### Advanced Group
+Contains levels which are more specialized, and geared
+towards bulk updates. These levels may be more efficient in certain cases, but are
+also more restrictive about access orders and intended for more advanced usage.
+#### Legacy Group
+Contains levels which are not recommended for new code, but
+are included for compatibility with older code.
 
-The COO format is compact and straightforward, but doesn't support random
-access. For random access, one should use the `SparseHash` format. A full listing
-of supported formats is described after a rough description of shared common internals of level,
-relating to types and storage.
+### Data Characteristics
 
-## Types and Storage of Level
+| Level Type         | Description |
+|--------------------|-------------|
+| **Dense**          | Levels which store every subtensor. |
+| **Leaf**           | Levels which store only scalars, used for the leaf level of the tree. |
+| **Sparse**         | Levels which store only non-fill values, used for levels with few nonzeros. |
+| **Sparse Run-Length** | Levels which store runs of repeated non-fill values. |
+| **Sparse Blocks**  | Levels which store Blocks of repeated non-fill values. |
+| **Run-Length**     | Levels which store runs of repeated values, and no compile-time zero annihilation. |
 
-All levels have a `postype`, typically denoted as `Tp` in the constructors, used for internal pointer types but accessible by the
-function:
+Note that the `Single` sparse levels store a single instance of each nonzero, run, or block. These are useful with a parent level to represent IDs.
 
-```@docs
-postype
-```
+### Access Characteristics
 
-Additionally, many levels have a `Vp` or `Vi` in their constructors; these stand for vector of element type `Tp` or `Ti`. 
-More generally, levels are paramterized by the types that they use for storage. By default, all levels use `Vector`, but a user 
-could could change any or all of the storage types of a tensor so that the tensor would be stored on a GPU or CPU or some combination thereof, 
-or eveni just via a vector with a different allocation mechanism.  The storage type should behave like `AbstractArray` 
-and needs to implement the usual abstract array functions and `Base.resize!`. See the tests for an example. 
+| Operation Type                | Description |
+|-------------------------------|-------------|
+| **Column-Major Reads**        | Indicates efficient reading of data in column-major order. |
+| **Random Reads**              | Indicates efficient reading of data in random-access order. |
+| **Column-Major Bulk Update**  | Indicates efficient writing of data in column-major order, the total time roughly linear to the size of the tensor. |
+| **Column-Major Random Update**| Indicates efficient writing of data in random-access order, the total time roughly linear to the size of the tensor. |
+| **Random Update**             | Indicates efficient writing of data in random-access order, the total time roughly linear to the number of updates. |
 
-When levels are constructed in short form as in the examples above, the index, position, and storage types are inferred
-from the level below. All the levels at the bottom of a Tensor (`Element, Pattern, Repeater`) specify an index type, position type,
-and storage type even if they don't need them. These are used by levels that take these as parameters. 
+# Examples of Popular Formats in Finch
 
-### Move to: Copying Fibers to a new storage type.
+Finch levels can be used to construct a variety of popular sparse formats. A few examples follow:
 
-If one needs to copy a tensor to another tensor with a different storage type, one can use the `moveto` function, described below.
+| Format Type                  | Syntax                                                         |
+|------------------------------|----------------------------------------------------------------|
+| Sparse Vector                | `Tensor(SparseList(Element(0.0)), args...)`                    |
+| CSC Matrix                   | `Tensor(Dense(SparseList(Element(0.0))), args...)`             |
+| CSF 3-Tensor                 | `Tensor(Dense(SparseList(SparseList(Element(0.0)))), args...)` |
+| DCSC (Hypersparse) Matrix    | `Tensor(SparseList(SparseList(Element(0.0))), args...)`        |
+| COO Matrix                   | `Tensor(SparseCOO{2}(Element(0.0)), args...)`                  |
+| COO 3-Tensor                 | `Tensor(SparseCOO{3}(Element(0.0)), args...)`                  |
+| Dictionary-Of-Keys           | `Tensor(SparseHash{2}(Element(0.0)), args...)`                 |
+| Run-Length-Encoded Image     | `Tensor(Dense(RepeatedRLE(Element(0.0))), args...)`            |
 
-```@docs
-moveto
-```
-
-# Public Functions
-
-### Tensor Constructors
+# Tensor Constructors
 
 ```@docs
 Tensor
+Tensor(lvl::AbstractLevel)
+Tensor(lvl::AbstractLevel, init::UndefInitializer)
+Tensor(lvl::AbstractLevel, arr)
+Tensor(arr)
 ```
 
-### Level Constructors
+# Level Constructors
+
+## Core Levels
 
 ```@docs
 DenseLevel
 ElementLevel
+PatternLevel
+```
+
+## Advanced Levels
+```@docs
 SparseListLevel
+SparseByteMapLevel
+RepeatRLELevel
+SparseRLELevel
+SparseVBLLevel
+```
+
+## Legacy Levels
+```@docs
 SparseCOOLevel
 SparseHashLevel
-SparseTriangleLevel
-SparseByteMapLevel
 ```

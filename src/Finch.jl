@@ -134,7 +134,7 @@ export fsparse, fsparse!, fsprand, fspzeros, ffindnz, fread, fwrite, countstored
 export bspread, bspwrite
 export ftnsread, ftnswrite, fttread, fttwrite
 
-export moveto
+export moveto, postype
 
 include("interface/abstractarrays.jl")
 include("interface/abstractunitranges.jl")
