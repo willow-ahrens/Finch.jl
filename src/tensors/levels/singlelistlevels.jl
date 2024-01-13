@@ -1,3 +1,40 @@
+"""
+    SingleListLevel{[Ti=Int], [Ptr, Idx]}(lvl, [dim])
+
+A subfiber of a SingleList level does not need to represent slices `A[:, ..., :, i]`
+which are entirely [`default`](@ref). Instead, only potentially non-default
+slices are stored as subfibers in `lvl`. A main difference compared to SparseList 
+level is that SingleList level only stores a 'single' non-default slice. It emits
+an error if the program tries to write multiple (>=2) coordinates into SingleList.
+
+`Ti` is the type of the last tensor index. The types `Ptr` and `Idx` are the 
+types of the arrays used to store positions and indicies. 
+
+```jldoctest
+julia> Tensor(Dense(SingleList(Element(0.0))), [10 0 0; 0 20 0; 0 0 30]) 
+Dense [:,1:3]
+├─[:,1]: SingleList (0.0) [1:3]
+│ ├─[1]: 10.0
+├─[:,2]: SingleList (0.0) [1:3]
+│ ├─[2]: 20.0
+├─[:,3]: SingleList (0.0) [1:3]
+│ ├─[3]: 30.0
+
+julia> Tensor(Dense(SingleList(Element(0.0))), [10 0 0; 0 20 0; 0 40 30])
+ERROR: Finch.FinchProtocolError("SingleListLevels can only be updated once")
+
+julia> Tensor(SingleList(Dense(Element(0.0))), [0 0 0; 0 0 30; 0 0 30]) 
+SingleList (0.0) [:,1:3]
+├─[:,3]: Dense [1:3]
+│ ├─[1]: 0.0
+│ ├─[2]: 30.0
+│ ├─[3]: 30.0
+
+julia> Tensor(SingleList(SingleList(Element(0.0))), [0 0 0; 0 0 30; 0 0 30]) 
+ERROR: Finch.FinchProtocolError("SingleListLevels can only be updated once")
+
+```
+"""
 struct SingleListLevel{Ti, Ptr, Idx, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
@@ -321,6 +358,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSingleListLevel}, ctx, mo
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true
+                            $qos == $qos_fill + 1 || throw(FinchProtocolError("SingleListLevels can only be updated once"))
                             $(lvl.idx)[$qos] = $(ctx(idx))
                             $qos += $(Tp(1))
                             $(if issafe(ctx.mode)
