@@ -82,10 +82,10 @@ some general descriptions.
 | SparseList           | Advanced | Sparse                | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
 | SparseRunList        | Advanced | Sparse Run-Length     | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
 | SparseVBL            | Advanced | Sparse Blocks         | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
-| RepeatedList         | Advanced | Run-Length            | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
+| RepeatedList         | Advanced | Run-Length            | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ⚙     |
 | SingleSparse         | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
 | SingleSparseRun      | Advanced | Sparse Run-Length     | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
-| SingleBlock          | Advanced | Sparse Blocks         | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
+| SingleBlock          | Advanced | Sparse Blocks         | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ⚙️     |
 | SparseBytemap        | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ❌              | ✅     |
 | SparseCOO            | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ✅              | ✅️    |
 | SparseHash           | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ✅              | 🕸️   |
