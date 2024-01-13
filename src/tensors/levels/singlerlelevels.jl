@@ -1,9 +1,37 @@
-struct SingleRLELevel{Ti, Ptr, Idx, Lvl} <: AbstractLevel
+"""
+    SingleRLELevel{[Ti=Int], [Ptr, Left, Right]}(lvl, [dim])
+
+The single RLE level represent runs of equivalent slices `A[:, ..., :, i]`
+which are not entirely [`default`](@ref). A main difference compared to SparseRLE 
+level is that SingleRLE level only stores a 'single' non-default run. It emits
+an error if the program tries to write multiple (>=2) runs into SingleRLE. 
+
+`Ti` is the type of the last tensor index. The types `Ptr`, `Left`, and 'Right' 
+are the types of the arrays used to store positions and endpoints. 
+
+```jldoctest
+julia> Tensor(SingleRLE(Element(0)), [0, 10, 0]) 
+SingleRLE (0) [1:3]
+├─[2:2]: 10
+
+julia> Tensor(SingleRLE(Element(0)), [0, 10, 10])
+ERROR: Finch.FinchProtocolError("SingleRLELevels can only be updated once")
+
+julia> begin
+         x = Tensor(SingleRLE(Element(0)), 10);
+         @finch begin for i = extent(3,6); x[~i] = 1 end end
+         x
+       end
+SingleRLE (0) [1:10]
+├─[3:6]: 1
+```
+"""
+struct SingleRLELevel{Ti, Ptr, Left, Right, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     ptr::Ptr
-    left::Idx
-    right::Idx
+    left::Left
+    right::Right
 end
 
 const SingleRLE = SingleRLELevel
@@ -12,22 +40,22 @@ SingleRLELevel(lvl, shape::Ti) where {Ti} = SingleRLELevel{Ti}(lvl, shape)
 SingleRLELevel{Ti}(lvl) where {Ti} = SingleRLELevel{Ti}(lvl, zero(Ti))
 SingleRLELevel{Ti}(lvl, shape) where {Ti} = SingleRLELevel{Ti}(lvl, shape, postype(lvl)[1], Ti[], Ti[])
 
-SingleRLELevel{Ti}(lvl::Lvl, shape, ptr::Ptr, left::Idx, right::Idx) where {Ti, Lvl, Ptr, Idx} =
-    SingleRLELevel{Ti, Ptr, Idx, Lvl}(lvl, shape, ptr, left, right)
+SingleRLELevel{Ti}(lvl::Lvl, shape, ptr::Ptr, left::Left, right::Right) where {Ti, Lvl, Ptr, Left, Right} =
+    SingleRLELevel{Ti, Ptr, Left, Right, Lvl}(lvl, shape, ptr, left, right)
  
 Base.summary(lvl::SingleRLELevel) = "SingleRLE($(summary(lvl.lvl)))"
 similar_level(lvl::SingleRLELevel) = SingleRLE(similar_level(lvl.lvl))
 similar_level(lvl::SingleRLELevel, dim, tail...) = SingleRLE(similar_level(lvl.lvl, tail...), dim)
 
-function memtype(::Type{SingleRLELevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl}
+function memtype(::Type{SingleRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl}
     return Ti 
 end
 
-function postype(::Type{SingleRLELevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl}
+function postype(::Type{SingleRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl}
     return Ptr 
 end
 
-function moveto(lvl::SingleRLELevel{Ti, Ptr, Idx, Lvl}, Tm) where {Ti, Ptr, Idx, Lvl}
+function moveto(lvl::SingleRLELevel{Ti, Ptr, Left, Right, Lvl}, Tm) where {Ti, Ptr, Left, Right, Lvl}
     lvl_2 = moveto(lvl.lvl, Tm)
     ptr_2 = moveto(lvl.ptr, Tm)
     left_2 = moveto(lvl.left, Tm)
@@ -48,7 +76,7 @@ redefault!(lvl::SingleRLELevel{Ti}, init) where {Ti} =
 Base.resize!(lvl::SingleRLELevel{Ti}, dims...) where {Ti} = 
     SingleRLELevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.left, lvl.right)
 
-function Base.show(io::IO, lvl::SingleRLELevel{Ti, Ptr, Idx, Lvl}) where {Ti, Lvl, Idx, Ptr}
+function Base.show(io::IO, lvl::SingleRLELevel{Ti, Ptr, Left, Right, Lvl}) where {Ti, Lvl, Left, Right, Ptr}
     if get(io, :compact, false)
         print(io, "SingleRLE(")
     else
@@ -87,12 +115,12 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SingleRLE
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
-@inline level_ndims(::Type{<:SingleRLELevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = 1 + level_ndims(Lvl)
+@inline level_ndims(::Type{<:SingleRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::SingleRLELevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::SingleRLELevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
-@inline level_eltype(::Type{<:SingleRLELevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SingleRLELevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl}= level_default(Lvl)
-data_rep_level(::Type{<:SingleRLELevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = SparseData(data_rep_level(Lvl))
+@inline level_eltype(::Type{<:SingleRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SingleRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl}= level_default(Lvl)
+data_rep_level(::Type{<:SingleRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SingleRLELevel})() = fbr
 function (fbr::SubFiber{<:SingleRLELevel})(idxs...)
@@ -125,7 +153,7 @@ is_level_concurrent(lvl::VirtualSingleRLELevel, ctx) = [false, is_level_concurre
 is_level_atomic(lvl::VirtualSingleRLELevel, ctx) = false
   
 
-function virtualize(ex, ::Type{SingleRLELevel{Ti, Ptr, Idx, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Idx, Lvl}
+function virtualize(ex, ::Type{SingleRLELevel{Ti, Ptr, Left, Right, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Left, Right, Lvl}
     sym = freshen(ctx, tag)
     ptr = freshen(ctx, tag, :_ptr)
     left = freshen(ctx, tag, :_left)
@@ -326,6 +354,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSingleRLELevel}, ctx, mod
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true
+                            $qos == $qos_fill + 1 || throw(FinchProtocolError("SingleRLELevels can only be updated once"))
                             $(lvl.left)[$qos] = $(ctx(getstart(ext)))
                             $(lvl.right)[$qos] = $(ctx(getstop(ext)))
                             $(qos) += $(Tp(1))
