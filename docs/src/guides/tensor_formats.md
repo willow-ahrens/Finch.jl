@@ -82,7 +82,7 @@ some general descriptions.
 | SparseList           | Advanced | Sparse                | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
 | SparseRunList        | Advanced | Sparse Runs           | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
 | SparseVBL            | Advanced | Sparse Blocks         | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
-| RepeatedList         | Advanced | Run-Length            | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ⚙     |
+| RepeatedList         | Advanced | Dense Runs            | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ⚙     |
 | SingleSparse         | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
 | SingleSparseRun      | Advanced | Sparse Runs           | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
 | SingleBlock          | Advanced | Sparse Blocks         | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ⚙️     |
@@ -122,7 +122,7 @@ are included for compatibility with older code.
 | **Sparse**         | Levels which store only non-fill values, used for levels with few nonzeros. |
 | **Sparse Runs**    | Levels which store runs of repeated non-fill values. |
 | **Sparse Blocks**  | Levels which store Blocks of repeated non-fill values. |
-| **Run-Length**     | Levels which store runs of repeated values, and no compile-time zero annihilation. |
+| **Dense Runs**     | Levels which store runs of repeated values, and no compile-time zero annihilation. |
 
 Note that the `Single` sparse levels store a single instance of each nonzero, run, or block. These are useful with a parent level to represent IDs.
 
