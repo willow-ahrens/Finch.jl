@@ -1,5 +1,5 @@
 """
-    SparseHashLevel{[N], [TI=Tuple{Int...}], [Ptr], [Tbl], [Srt]}(lvl, [dims])
+    SparseHashLevel{[N], [TI=Tuple{Int...}], [Ptr, Tbl, Srt]}(lvl, [dims])
 
 A subfiber of a sparse level does not need to represent slices which are
 entirely [`default`](@ref). Instead, only potentially non-default slices are

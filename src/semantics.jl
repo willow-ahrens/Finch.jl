@@ -135,6 +135,14 @@ function similar in spirit to `Base.axes`.
 function virtual_size end
 
 """
+    virtual_resize!(tns, ctx, dims...)
+
+Resize `tns` in the context `ctx`. This is a
+function similar in spirit to `Base.resize!`.
+"""
+function virtual_resize! end
+
+"""
     moveto(arr, device)
 
 If the array is not on the given device, it creates a new version of this array on that device
