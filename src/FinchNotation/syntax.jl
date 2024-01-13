@@ -248,7 +248,7 @@ macro finch_program_instance(ex)
     )
 end
 
-display_expression(io, mime, node) = print(io, node) # TODO fix values
+display_expression(io, mime, node) = print(io, node) # TODO virtual or value is currently determined in virtualize.
 function display_expression(io, mime, node::Union{FinchNode, FinchNodeInstance})
     if operation(node) === value
         print(io, node.val)
@@ -316,7 +316,7 @@ function display_expression(io, mime, node::Union{FinchNode, FinchNodeInstance})
     end
 end
 
-function display_statement(io, mime, node, indent)
+function display_statement(io, mime, node::Union{FinchNode, FinchNodeInstance}, indent)
     if operation(node) === loop
         print(io, " "^indent * "for ")
         display_expression(io, mime, node.idx)
