@@ -140,4 +140,16 @@ using Base.Meta
     test_format(mats, name = "Tensor(SparseRLE(Dense(Element(zero))))", key = "srl_d_e") do arr
         dropdefaults!(Tensor(SparseRLE(Dense(Element(zero(eltype(arr)))))), arr)
     end
+
+    # Test SingleList
+    @testset "SingleRLE level" begin
+        # 1D
+        @test Tensor(SingleRLE(Element(0)), [0, 10, 0]) == [0, 10, 0]
+        @test_throws Finch.FinchProtocolError Tensor(SingleRLE(Element(0)), [0, 10, 10]) 
+
+
+        x = Tensor(SingleRLE(Element(0)), 10);
+        @finch begin for i = extent(3,6); x[~i] = 1 end end
+        @test x == [0,0,1,1,1,1,0,0,0,0]
+    end
 end

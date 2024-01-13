@@ -292,8 +292,8 @@ function instantiate(fbr::VirtualSubFiber{VirtualSingleRLELevel}, ctx, mode::Rea
                 $my_q = $(lvl.ptr)[$(ctx(pos))]
                 $my_q_stop = $(lvl.ptr)[$(ctx(pos)) + $(Tp(1))]
                 if $my_q < $my_q_stop
-                    $my_i_start = $(lvl.ptr)[$my_q_stop - $(Tp(1))]
-                    $my_i_stop = $(lvl.ptr)[$my_q_stop - $(Tp(1))]
+                    $my_i_start = $(lvl.left)[$my_q]
+                    $my_i_stop = $(lvl.right)[$my_q]
                 else
                     $my_i_start= $(Ti(1))
                     $my_i_stop= $(Ti(0))
