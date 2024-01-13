@@ -130,16 +130,6 @@ Dense [1:2]
 
 ```
 
-## Virtual Tensor Methods
-
-```@docs
-declare!
-instantiate
-freeze!
-trim!
-thaw!
-unfurl
-```
 ## Virtualization
 
 Finch generates different code depending on the types of the arguments to the
@@ -256,6 +246,58 @@ in the scope of the executing context. Any aspect of virtuals visible to Finch s
 considered immutable, but virtuals may reference mutable variables in the scope of the
 executing context.
 
+## Working with Finch IR
+
+Calling print on a finch program or program instance will print the
+structure of the program as one would call constructors to build it. For
+example, 
+
+```jldoctest example3; setup = :(using Finch)
+julia> prgm_inst = Finch.@finch_program_instance for i = _
+               s[] += A[i]
+           end;
+julia> println(prgm_inst)
+@finch_program_instance for i = Dimensionless()
+    tag(s, Scalar{0, Int64}(0))[] <<tag(+, +)>>= tag(A, Tensor(SparseList(Element(0))))[tag(i, i)]
+    end
+
+julia> prgm_inst
+
+@finch_program for i = Dimensionless()
+    tag(s, Scalar{0, Int64}(0))[] <<tag(+, +)>>= tag(A, Tensor(SparseList(Element(0))))[tag(i, i)]
+    end
+julia> prgm = Finch.@finch_program for i = _
+               s[] += A[i]
+           end:
+julia> println(prgm)
+@finch_program for i = Dimensionless()
+    tag(s, Scalar{0, Int64}(0))[] <<tag(+, +)>>= tag(A, Tensor(SparseList(Element(0))))[tag(i, i)]
+    end
+
+julia> prgm
+
+@finch_program for i = Dimensionless()
+    tag(s, Scalar{0, Int64}(0))[] <<tag(+, +)>>= tag(A, Tensor(SparseList(Element(0))))[tag(i, i)]
+    end
+```
+    
+Both the virtual and instance representations of Finch IR define
+[SyntaxInterface.jl](https://github.com/willow-ahrens/SyntaxInterface.jl) and
+[AbstractTrees.jl](https://github.com/JuliaCollections/AbstractTrees.jl)
+representations, so you can use the standard `operation`, `arguments`, `istree`, and `children` functions to inspect the structure of the program, as well as the rewriters defined by [RewriteTools.jl](https://github.com/willow-ahrens/RewriteTools.jl)
+
+```jldoctest example3; setup = :(using Finch, AbstractTrees, SyntaxInterface, RewriteTools)
+
+julia> collect(PostOrderDFS(prgm))
+
+foo
+julia> @capture prgm loop(~idx, ~ext, ~val)
+
+julia> idx
+
+i
+```
+
 ## Tensor internals
 
 Tensor levels are implemented using the following methods:
@@ -273,3 +315,13 @@ level_eltype
 level_default
 ```
 
+## Virtual Tensor Methods
+
+```@docs
+declare!
+instantiate
+freeze!
+trim!
+thaw!
+unfurl
+```
