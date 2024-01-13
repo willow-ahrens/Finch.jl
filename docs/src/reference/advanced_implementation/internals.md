@@ -78,7 +78,12 @@ convenient to use the unexported macro `Finch.finch_program_instance`:
 julia> using Finch: @finch_program_instance
 
 julia> prgm = Finch.@finch_program_instance (C .= 0; for i=_; C[i] = A[i] * B[i] end)
-block_instance(declare_instance(tag_instance(:variable_instance(:C), Tensor(SparseList{Int64}(Element{0, Int64, Int64}([24, 45]), 5, [1, 3], [2, 5]))), literal_instance(0)), loop_instance(index_instance(i), Finch.FinchNotation.Dimensionless(), assign_instance(access_instance(tag_instance(:variable_instance(:C), Tensor(SparseList{Int64}(Element{0, Int64, Int64}([24, 45]), 5, [1, 3], [2, 5]))), literal_instance(Finch.FinchNotation.Updater()), tag_instance(:variable_instance(:i), index_instance(i))), literal_instance(initwrite), call_instance(tag_instance(:variable_instance(:*), literal_instance(*)), access_instance(tag_instance(:variable_instance(:A), Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal_instance(Finch.FinchNotation.Reader()), tag_instance(:variable_instance(:i), index_instance(i))), access_instance(tag_instance(:variable_instance(:B), Tensor(Dense{Int64}(Element{0, Int64, Int64}([11, 12, 13, 14, 15]), 5))), literal_instance(Finch.FinchNotation.Reader()), tag_instance(:variable_instance(:i), index_instance(i)))))))
+@finch_program_instance begin
+  tag(C, Tensor(SparseList(Element(0)))) .= 0
+  for i = Dimensionless()
+    tag(C, Tensor(SparseList(Element(0))))[tag(i, i)] <<initwrite>>= tag(*, *)(tag(A, Tensor(SparseList(Element(0))))[tag(i, i)], tag(B, Tensor(Dense(Element(0))))[tag(i, i)])
+  end
+end
 ```
 
 As we can see, our program instance contains not only the AST to be executed,
@@ -170,13 +175,15 @@ julia> inst = Finch.@finch_program_instance begin
                s[] += A[i]
            end
        end
-loop_instance(index_instance(i), Finch.FinchNotation.Dimensionless(), assign_instance(access_instance(tag_instance(:variable_instance(:s), Scalar{0, Int64}(0)), literal_instance(Finch.FinchNotation.Updater()), ), tag_instance(:variable_instance(:+), literal_instance(+)), access_instance(tag_instance(:variable_instance(:A), Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal_instance(Finch.FinchNotation.Reader()), tag_instance(:variable_instance(:i), index_instance(i)))))
+@finch_program_instance for i = Dimensionless()
+  tag(s, Scalar{0, Int64}(0))[] <<tag(+, +)>>= tag(A, Tensor(SparseList(Element(0))))[tag(i, i)]
+end
 
 julia> typeof(inst)
 Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.Dimensionless, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:s}, Scalar{0, Int64}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Updater()}, Tuple{}}, Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:+}, Finch.FinchNotation.LiteralInstance{+}}, Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:A}, Tensor{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Reader()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}}}
 
 julia> Finch.virtualize(:inst, typeof(inst), Finch.JuliaContext())
-for i = virtual(Finch.FinchNotation.Dimensionless)
+@finch_program for i = virtual(Finch.FinchNotation.Dimensionless)
   tag(s, virtual(Finch.VirtualScalar))[] <<tag(+, +)>>= tag(A, virtual(Finch.VirtualFiber{Finch.VirtualSparseListLevel}))[tag(i, i)]
 end
 

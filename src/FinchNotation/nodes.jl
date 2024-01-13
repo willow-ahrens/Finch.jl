@@ -373,8 +373,6 @@ function getname(x::FinchNode)
     end
 end
 
-display_expression(io, mime, ex) = show(IOContext(io, :compact=>true), mime, ex)
-
 """
     finch_leaf(x)
 

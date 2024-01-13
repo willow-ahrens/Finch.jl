@@ -248,7 +248,7 @@ macro finch_program_instance(ex)
     )
 end
 
-display_expression(io, mime, node) = print(io, node) # TODO virtual or value is currently determined in virtualize.
+display_expression(io, mime, ex) = show(IOContext(io, :compact=>true), mime, ex) # TODO virtual or value is currently determined in virtualize.
 function display_expression(io, mime, node::Union{FinchNode, FinchNodeInstance})
     if operation(node) === value
         print(io, node.val)
