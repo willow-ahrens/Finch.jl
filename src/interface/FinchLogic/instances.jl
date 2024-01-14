@@ -3,66 +3,58 @@ abstract type LogicNodeInstance end
 struct LiteralInstance{val} <: LogicNodeInstance end
 struct IndexInstance{name} <: LogicNodeInstance end
 struct VariableInstance{name} <: LogicNodeInstance end
+struct AccessInstance{Tns, Idxs <: Tuple} <: LogicNodeInstance tns::Tns; idxs::Idxs end
 struct DefineInstance{Lhs, Rhs, Body} <: LogicNodeInstance lhs::Lhs; rhs::Rhs; body::Body end
-struct DeclareInstance{Tns, Init} <: LogicNodeInstance tns::Tns; init::Init end
-struct FreezeInstance{Tns} <: LogicNodeInstance tns::Tns end
-struct ThawInstance{Tns} <: LogicNodeInstance tns::Tns end
-struct BlockInstance{Bodies} <: LogicNodeInstance bodies::Bodies end
-struct LoopInstance{Idx, Ext, Body} <: LogicNodeInstance idx::Idx; ext::Ext; body::Body end
-struct SieveInstance{Cond, Body} <: LogicNodeInstance cond::Cond; body::Body end
-struct AssignInstance{Lhs, Op, Rhs} <: LogicNodeInstance lhs::Lhs; op::Op; rhs::Rhs end
-struct CallInstance{Op, Args<:Tuple} <: LogicNodeInstance op::Op; args::Args end
-struct AccessInstance{Tns, Mode, Idxs} <: LogicNodeInstance tns::Tns; mode::Mode; idxs::Idxs end
-struct TagInstance{Var, Bind} <: LogicNodeInstance var::Var; bind::Bind end
+struct MappedInstance{Op, Args<:Tuple} <: LogicNodeInstance op::Op; args::Args end
+struct ReducedInstance{Op, Init, Arg, Idxs <: Tuple} <: LogicNodeInstance op::Op; init::Init; arg::Arg; idxs::Idxs end
+struct ReorderInstance{Arg, Idxs <: Tuple} <: LogicNodeInstance arg::Arg; idxs::Idxs end
+struct RenameInstance{Arg, Idxs <: Tuple} <: LogicNodeInstance arg::Arg; idxs::Idxs end
+struct ReformatInstance{Tns, Arg} <: LogicNodeInstance tns::Tns; arg::Arg end
+struct ResultInstance{Args<:Tuple} <: LogicNodeInstance args::Args end
+struct EvaluateInstance{Arg} <: LogicNodeInstance arg::Arg end
 
+# Property getters
 Base.getproperty(::LiteralInstance{val}, name::Symbol) where {val} = name == :val ? val : error("type LiteralInstance has no field $name")
 Base.getproperty(::IndexInstance{val}, name::Symbol) where {val} = name == :name ? val : error("type IndexInstance has no field $name")
 Base.getproperty(::VariableInstance{val}, name::Symbol) where {val} = name == :name ? val : error("type VariableInstance has no field $name")
 
+# Instance constructors
 @inline literal_instance(val) = LiteralInstance{val}()
 @inline index_instance(name) = IndexInstance{name}()
 @inline variable_instance(name) = VariableInstance{name}()
+@inline access_instance(tns, idxs...) = AccessInstance(tns, idxs)
 @inline define_instance(lhs, rhs, body) = DefineInstance(lhs, rhs, body)
-@inline declare_instance(tns, init) = DeclareInstance(tns, init)
-@inline freeze_instance(tns) = FreezeInstance(tns)
-@inline thaw_instance(tns) = ThawInstance(tns)
-@inline block_instance(bodies...) = BlockInstance(bodies)
-@inline loop_instance(idx, ext, body) = LoopInstance(idx, ext, body)
-@inline loop_instance(body) = body
-@inline sieve_instance(cond, body) = SieveInstance(cond, body)
-@inline sieve_instance(body) = body
-@inline sieve_instance(cond, args...) = SieveInstance(cond, sieve_instance(args...))
-@inline assign_instance(lhs, op, rhs) = AssignInstance(lhs, op, rhs)
-@inline call_instance(op, args...) = CallInstance(op, args)
-@inline access_instance(tns, mode, idxs...) = AccessInstance(tns, mode, idxs)
-@inline tag_instance(var, bind) = TagInstance(var, bind)
+@inline mapped_instance(op, args...) = MappedInstance(op, args)
+@inline reduced_instance(op, init, arg, idxs...) = ReducedInstance(op, init, arg, idxs)
+@inline reorder_instance(arg, idxs...) = ReorderInstance(arg, idxs)
+@inline rename_instance(arg, idxs...) = RenameInstance(arg, idxs)
+@inline reformat_instance(tns, arg) = ReformatInstance(tns, arg)
+@inline result_instance(args...) = ResultInstance(args)
+@inline evaluate_instance(arg) = EvaluateInstance(arg)
 
+# Leaf node logic
 @inline logic_leaf_instance(arg::Type) = literal_instance(arg)
 @inline logic_leaf_instance(arg::Function) = literal_instance(arg)
 @inline logic_leaf_instance(arg::LogicNodeInstance) = arg
-@inline logic_leaf_instance(arg::Reader) = literal_instance(arg)
-@inline logic_leaf_instance(arg::Updater) = literal_instance(arg)
 @inline logic_leaf_instance(arg) = arg
 
 SyntaxInterface.istree(node::LogicNodeInstance) = Int(operation(node)) & IS_TREE != 0
 AbstractTrees.children(node::LogicNodeInstance) = istree(node) ? arguments(node) : []
-isstateful(node::LogicNodeInstance) = Int(operation(node)) & IS_STATEFUL != 0
+isstateful(node::LogicNodeInstance) = false  # Assuming none of the LogicNode instances are stateful
 
 instance_ctrs = Dict(
 	literal => literal_instance,
 	index => index_instance,
-	define => define_instance,
-	declare => declare_instance,
-	freeze => freeze_instance,
-	thaw => thaw_instance,
-	block => block_instance,
-	loop => loop_instance,
-	sieve => sieve_instance,
-	assign => assign_instance,
-	call => call_instance,
-	access => access_instance,
 	variable => variable_instance,
-	tag => tag_instance,
+	access => access_instance,
+	define => define_instance,
+	mapped => mapped_instance,
+	reduced => reduced_instance,
+	reorder => reorder_instance,
+	rename => rename_instance,
+	reformat => reformat_instance,
+	result => result_instance,
+	evaluate => evaluate_instance
 )
 
 function SyntaxInterface.similarterm(::Type{LogicNodeInstance}, op::LogicNodeKind, args)
@@ -71,51 +63,36 @@ end
 
 SyntaxInterface.operation(::LiteralInstance) = literal
 SyntaxInterface.operation(::IndexInstance) = index
-SyntaxInterface.operation(::DefineInstance) = define
-SyntaxInterface.operation(::DeclareInstance) = declare
-SyntaxInterface.operation(::FreezeInstance) = freeze
-SyntaxInterface.operation(::ThawInstance) = thaw
-SyntaxInterface.operation(::BlockInstance) = block
-SyntaxInterface.operation(::LoopInstance) = loop
-SyntaxInterface.operation(::SieveInstance) = sieve
-SyntaxInterface.operation(::AssignInstance) = assign
-SyntaxInterface.operation(::CallInstance) = call
-SyntaxInterface.operation(::AccessInstance) = access
 SyntaxInterface.operation(::VariableInstance) = variable
-SyntaxInterface.operation(::TagInstance) = tag
+SyntaxInterface.operation(::AccessInstance) = access
+SyntaxInterface.operation(::DefineInstance) = define
+SyntaxInterface.operation(::MappedInstance) = mapped
+SyntaxInterface.operation(::ReducedInstance) = reduced
+SyntaxInterface.operation(::ReorderInstance) = reorder
+SyntaxInterface.operation(::RenameInstance) = rename
+SyntaxInterface.operation(::ReformatInstance) = reformat
+SyntaxInterface.operation(::ResultInstance) = result
+SyntaxInterface.operation(::EvaluateInstance) = evaluate
 
+# Define the arguments function for each instance type
 SyntaxInterface.arguments(node::DefineInstance) = [node.lhs, node.rhs, node.body]
-SyntaxInterface.arguments(node::DeclareInstance) = [node.tns, node.init]
-SyntaxInterface.arguments(node::FreezeInstance) = [node.tns]
-SyntaxInterface.arguments(node::ThawInstance) = [node.tns]
-SyntaxInterface.arguments(node::BlockInstance) = node.bodies
-SyntaxInterface.arguments(node::LoopInstance) = [node.idx, node.ext, node.body]
-SyntaxInterface.arguments(node::SieveInstance) = [node.cond, node.body]
-SyntaxInterface.arguments(node::AssignInstance) = [node.lhs, node.op, node.rhs]
-SyntaxInterface.arguments(node::CallInstance) = [node.op, node.args...]
-SyntaxInterface.arguments(node::AccessInstance) = [node.tns, node.mode, node.idxs...]
-SyntaxInterface.arguments(node::TagInstance) = [node.var, node.bind]
+SyntaxInterface.arguments(node::AccessInstance) = [node.tns, node.idxs...]
+SyntaxInterface.arguments(node::MappedInstance) = [node.op, node.args...]
+SyntaxInterface.arguments(node::ReducedInstance) = [node.op, node.init, node.arg, node.idxs...]
+SyntaxInterface.arguments(node::ReorderInstance) = [node.arg, node.idxs...]
+SyntaxInterface.arguments(node::RenameInstance) = [node.arg, node.idxs...]
+SyntaxInterface.arguments(node::ReformatInstance) = [node.tns, node.arg]
+SyntaxInterface.arguments(node::ResultInstance) = node.args
+SyntaxInterface.arguments(node::EvaluateInstance) = [node.arg]
 
-Base.show(io::IO, node::LiteralInstance{val}) where {val} = print(io, "literal_instance(", val, ")")
-Base.show(io::IO, node::IndexInstance{name}) where {name} = print(io, "index_instance(", name, ")")
-Base.show(io::IO, node::VariableInstance{name}) where {name} = print(io, "variable_instance(:", name, ")")
+# Display functions
 function Base.show(io::IO, node::LogicNodeInstance)
 	print(io, instance_ctrs[operation(node)], "(")
 	join(io, arguments(node), ", ")
 	print(io, ")")
 end
 
-function Base.show(io::IO, mime::MIME"text/plain", node::LogicNodeInstance) 
-    print(io, "Finch program instance: ")
-    if isstateful(node)
-        display_statement(io, mime, node, 0)
-    else
-        display_expression(io, mime, node)
-    end
-end
-
-Base.:(==)(a::VariableInstance, b::VariableInstance) = false
-Base.:(==)(a::VariableInstance{tag}, b::VariableInstance{tag}) where {tag} = true
-function Base.:(==)(a::LogicNodeInstance, b::LogicNodeInstance)
-	return operation(a) == operation(b) && arguments(a) == arguments(b)
+function Base.show(io::IO, mime::MIME"text/plain", node::LogicNodeInstance)
+	print(io, "Finch Logic Instance: ")
+	display_expression(io, mime, node, 0)
 end
