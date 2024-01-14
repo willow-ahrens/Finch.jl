@@ -6,19 +6,15 @@ module FinchLogic
     export literal
     export index
     export variable
-    export virtual
     export value
-    export loop
+    export access
     export define
-    export assign
-    export tag
-    export call
-    export cached
-    export reader, Reader, updater, Updater, access
-    export define, declare, thaw, freeze
-    export block
-    export protocol
-    export sieve
+    export mapped
+    export reduced
+    export reorder
+    export reformat
+    export result
+    export evaluate
     export LogicNode
 
     export follow
@@ -38,5 +34,5 @@ module FinchLogic
     include("nodes.jl")
     #include("instances.jl")
     #include("virtualize.jl")
-    include("syntax.jl")
+    #include("syntax.jl")
 end

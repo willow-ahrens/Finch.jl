@@ -220,11 +220,11 @@ function Base.show(io::IO, mime::MIME"text/plain", node::LogicNode)
     display_expression(io, mime, node, 0)
 end
 
-function display_expression(io, mime, node::Union{LogicNode, LogicNodeInstance}, indent)
+function display_expression(io, mime, node, indent)
     if operation(node) === literal
         print(io, node.val)
     elseif operation(node) === value
-        print(io, node.val)
+        print(io, summary(node.val))
         if node.type !== Any
             print(io, "::")
             print(io, node.type)
@@ -234,12 +234,13 @@ function display_expression(io, mime, node::Union{LogicNode, LogicNodeInstance},
     elseif operation(node) === variable
         print(io, node.name)
     elseif istree(node)
-        print(io, " " * indent, operation(node), "(")
+        println(io, operation(node), "(")
         for child in node.children
-            print(" " * indent)
+            print(io, " " ^ (indent + 2))
             display_expression(io, mime, child, indent + 2)
-            print(io, ", ")
+            println(io, ", ")
         end
+        print(io, " " ^ indent, ")")
     else
         error("unimplemented")
     end
