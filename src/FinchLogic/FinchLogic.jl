@@ -31,19 +31,12 @@ module FinchLogic
 
     export @f, @finch_program, @finch_program_instance
 
-    export isliteral, isvalue, isconstant, isvirtual, isvariable, isindex
+    export isliteral, isvalue, isvariable, isindex
 
     export isprotocol
 
-    export getval, getname
-
-    export overwrite, initwrite, Dimensionless, dimless, extent, realextent
-
-    export d
-
     include("nodes.jl")
-    include("instances.jl")
-    include("virtualize.jl")
-    include("protocols.jl")
+    #include("instances.jl")
+    #include("virtualize.jl")
     include("syntax.jl")
 end
