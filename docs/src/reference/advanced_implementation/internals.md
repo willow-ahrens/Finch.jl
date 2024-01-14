@@ -291,18 +291,17 @@ Both the virtual and instance representations of Finch IR define
 representations, so you can use the standard `operation`, `arguments`, `istree`, and `children` functions to inspect the structure of the program, as well as the rewriters defined by [RewriteTools.jl](https://github.com/willow-ahrens/RewriteTools.jl)
 
 ```jldoctest example2; setup = :(using Finch, AbstractTrees, SyntaxInterface, RewriteTools)
+julia> using Finch.FinchNotation;
 
-julia> using Finch.FinchNotation
-foo
 
 julia> PostOrderDFS(prgm)
 PostOrderDFS{FinchNode}(loop(index(i), virtual(Dimensionless()), assign(access(literal(Scalar{0, Int64}(0)), literal(Updater())), literal(+), access(literal(Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal(Reader()), index(i)))))
 
-julia> @capture prgm FinchNotation.loop(~idx, ~ext, ~val)
-Finch program: i
+julia> (@capture prgm loop(~idx, ~ext, ~val))
+true
 
 julia> idx
-@finch_program i
+Finch program: i 
 
 ```
 
