@@ -2,19 +2,19 @@ const IS_TREE = 1
 const ID = 2
 
 @enum LogicNodeKind begin
-    literal  =  0ID
-    value    =  1ID
-    index    =  2ID
-    variable =  3ID
-    access   =  4ID | IS_TREE
-    define   =  5ID | IS_TREE
-    mapped   =  6ID | IS_TREE
-    reduced  =  7ID | IS_TREE
-    reorder  =  8ID | IS_TREE
-    rename   =  9ID | IS_TREE
-    reformat = 10ID | IS_TREE
-    result   = 11ID | IS_TREE
-    evaluate = 12ID | IS_TREE
+    literal   =  0ID
+    value     =  1ID
+    field     =  2ID
+    alias     =  3ID
+    table     =  4ID | IS_TREE
+    subquery  =  5ID | IS_TREE
+    mapjoin   =  6ID | IS_TREE
+    aggregate =  7ID | IS_TREE
+    reorder   =  8ID | IS_TREE
+    rename    =  9ID | IS_TREE
+    reformat  = 10ID | IS_TREE
+    result    = 11ID | IS_TREE
+    evaluate  = 12ID | IS_TREE
 end
 
 """
@@ -33,47 +33,47 @@ Logical AST expression for host code `val` expected to evaluate to a value of ty
 value
 
 """
-    index(name)
+    field(name)
 
-Logical AST expression for an index named `name`.
+Logical AST expression for an field named `name`.
 """
-index
-
-"""
-    variable(name)
-
-Logical AST expression for a variable named `name`.
-"""
-variable
+field
 
 """
-    access(tns, idxs...)
+    alias(name)
 
-Logical AST expression for a tensor object `val`, indexed by indices `idxs...`.
+Logical AST expression for a alias named `name`.
 """
-access
-
-"""
-    define(lhs, rhs, body)
-
-Logical AST statement that defines `lhs` as having the value `rhs` in `body`. 
-"""
-define
+alias
 
 """
-    mapped(op, args...)
+    table(tns, idxs...)
+
+Logical AST expression for a tensor object `val`, fielded by indices `idxs...`.
+"""
+table
+
+"""
+    subquery(lhs, rhs, body)
+
+Logical AST statement that subquerys `lhs` as having the value `rhs` in `body`. 
+"""
+subquery
+
+"""
+    mapjoin(op, args...)
 
 Logical AST expression for mapping the function `op` across `args...`. Indices of the arguments must form a total order.
 """
-mapped
+mapjoin
 
 """
-    reduced(op, init, arg, idxs...)
+    aggregate(op, init, arg, idxs...)
 
 Logical AST statement that reduces `arg` using `op`, starting with `init`.
 `inds` are the dimensions to reduce.
 """
-reduced
+aggregate
 
 """
     reorder(arg, idxs...)
@@ -113,7 +113,7 @@ evaluate
 """
     LogicNode
 
-A Finch Logic IR node. Finch uses a variant of Concrete Index Notation as an
+A Finch Logic IR node. Finch uses a variant of Concrete Field Notation as an
 intermediate representation. 
 
 The LogicNode struct represents many different Finch IR nodes. The nodes are
@@ -141,18 +141,18 @@ Returns true if the node is a finch value
 isvalue(ex::LogicNode) = ex.kind === value
 
 """
-    isvariable(node)
+    isalias(node)
 
-Returns true if the node is a finch variable
+Returns true if the node is a finch alias
 """
-isvariable(ex::LogicNode) = ex.kind === variable
+isalias(ex::LogicNode) = ex.kind === alias
 
 """
-    isindex(node)
+    isfield(node)
 
-Returns true if the node is a finch index
+Returns true if the node is a finch field
 """
-isindex(ex::LogicNode) = ex.kind === index
+isfield(ex::LogicNode) = ex.kind === field
 
 SyntaxInterface.istree(node::LogicNode) = Int(node.kind) & IS_TREE != 0
 AbstractTrees.children(node::LogicNode) = node.children
@@ -165,14 +165,14 @@ function SyntaxInterface.similarterm(::Type{LogicNode}, op::LogicNodeKind, args)
 end
 
 function LogicNode(kind::LogicNodeKind, args::Vector)
-    if (kind === value || kind === literal || kind === index || kind === variable) && length(args) == 1
+    if (kind === value || kind === literal || kind === field || kind === alias) && length(args) == 1
         return LogicNode(kind, args[1], Any, LogicNode[])
     elseif kind === value && length(args) == 2
         return LogicNode(kind, args[1], args[2], LogicNode[])
-    elseif (kind === access && length(args) >= 1) ||
-        (kind === define && length(args) == 3) ||
-        (kind === mapped && length(args) >= 1) ||
-        (kind === reduced && length(args) >= 3) ||
+    elseif (kind === table && length(args) >= 1) ||
+        (kind === subquery && length(args) == 3) ||
+        (kind === mapjoin && length(args) >= 1) ||
+        (kind === aggregate && length(args) >= 3) ||
         (kind === reorder && length(args) >= 1) ||
         (kind === rename && length(args) >= 1) ||
         (kind === reformat && length(args) == 2) ||
@@ -191,19 +191,19 @@ end
 function Base.getproperty(node::LogicNode, sym::Symbol)
     if sym === :kind || sym === :val || sym === :type || sym === :children
         return Base.getfield(node, sym)
-    elseif node.kind === index && sym === :name node.val::Symbol
-    elseif node.kind === variable && sym === :name node.val::Symbol
-    elseif node.kind === access && sym === :tns node.children[1]
-    elseif node.kind === access && sym === :idxs @view node.children[2:end]
-    elseif node.kind === define && sym === :lhs node.children[1]
-    elseif node.kind === define && sym === :rhs node.children[2]
-    elseif node.kind === define && sym === :body node.children[3]
-    elseif node.kind === mapped && sym === :op node.children[1]
-    elseif node.kind === mapped && sym === :args @view node.children[2:end]
-    elseif node.kind === reduced && sym === :op node.children[1]
-    elseif node.kind === reduced && sym === :init node.children[2]
-    elseif node.kind === reduced && sym === :arg node.children[3]
-    elseif node.kind === reduced && sym === :idxs @view node.children[4:end]
+    elseif node.kind === field && sym === :name node.val::Symbol
+    elseif node.kind === alias && sym === :name node.val::Symbol
+    elseif node.kind === table && sym === :tns node.children[1]
+    elseif node.kind === table && sym === :idxs @view node.children[2:end]
+    elseif node.kind === subquery && sym === :lhs node.children[1]
+    elseif node.kind === subquery && sym === :rhs node.children[2]
+    elseif node.kind === subquery && sym === :body node.children[3]
+    elseif node.kind === mapjoin && sym === :op node.children[1]
+    elseif node.kind === mapjoin && sym === :args @view node.children[2:end]
+    elseif node.kind === aggregate && sym === :op node.children[1]
+    elseif node.kind === aggregate && sym === :init node.children[2]
+    elseif node.kind === aggregate && sym === :arg node.children[3]
+    elseif node.kind === aggregate && sym === :idxs @view node.children[4:end]
     elseif node.kind === reorder && sym === :arg node.children[1]
     elseif node.kind === reorder && sym === :idxs @view node.children[2:end]
     elseif node.kind === rename && sym === :arg node.children[1]
@@ -218,7 +218,7 @@ function Base.getproperty(node::LogicNode, sym::Symbol)
 end
 
 function Base.show(io::IO, node::LogicNode) 
-    if node.kind === literal || node.kind === index || node.kind === variable
+    if node.kind === literal || node.kind === field || node.kind === alias
         print(io, node.kind, "(", node.val, ")")
     elseif node.kind === value
         print(io, node.kind, "(", node.val, ", ", node.type, ")")
@@ -241,9 +241,9 @@ function display_expression(io, mime, node, indent)
             print(io, "::")
             print(io, node.type)
         end
-    elseif operation(node) === index
+    elseif operation(node) === field
         print(io, node.name)
-    elseif operation(node) === variable
+    elseif operation(node) === alias
         print(io, node.name)
     elseif istree(node)
         println(io, operation(node), "(")
@@ -263,10 +263,10 @@ function Base.:(==)(a::LogicNode, b::LogicNode)
         return b.kind === value && a.val == b.val && a.type === b.type
     elseif a.kind === literal
         return b.kind === literal && isequal(a.val, b.val)
-    elseif a.kind === index
-        return b.kind === index && a.name == b.name
-    elseif a.kind === variable
-        return b.kind === variable && a.name == b.name
+    elseif a.kind === field
+        return b.kind === field && a.name == b.name
+    elseif a.kind === alias
+        return b.kind === alias && a.name == b.name
     elseif istree(a)
         return a.kind === b.kind && a.children == b.children
     else
@@ -277,7 +277,7 @@ end
 function Base.hash(a::LogicNode, h::UInt)
     if a.kind === value
         return hash(value, hash(a.val, hash(a.type, h)))
-    elseif a.kind === literal || a.kind === index || a.kind === variable
+    elseif a.kind === literal || a.kind === field || a.kind === alias
         return hash(a.kind, hash(a.val, h))
     elseif istree(a)
         return hash(a.kind, hash(a.children, h))

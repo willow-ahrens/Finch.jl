@@ -4,20 +4,20 @@ module FinchLogic
 
     export logic_leaf
     export literal
-    export index
-    export variable
+    export field
+    export alias
     export value
-    export access
-    export define
-    export mapped
-    export reduced
+    export table
+    export subquery
+    export mapjoin
+    export aggregate
     export reorder
     export reformat
     export result
     export evaluate
     export LogicNode
 
-    export isliteral, isvalue, isvariable, isindex
+    export isliteral, isvalue, isalias, isfield
 
     export isprotocol
 

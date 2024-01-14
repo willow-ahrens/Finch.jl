@@ -7,26 +7,26 @@ Finch.virtualize(ex, (@nospecialize T), ctx) = value(ex, T)
 # Virtualization for specific node instances
 Finch.virtualize(ex, ::Type{LogicNodeInstance.LiteralInstance{val}}, ctx) where {val} = literal(val)
 Finch.virtualize(ex, ::Type{LogicNodeInstance.ValueInstance{Val, Type}}, ctx) where {Val, Type} = value(Val, Type)
-Finch.virtualize(ex, ::Type{LogicNodeInstance.IndexInstance{name}}, ctx) where {name} = index(freshen(ctx, name))
-Finch.virtualize(ex, ::Type{LogicNodeInstance.VariableInstance{name}}, ctx) where {name} = variable(name)
+Finch.virtualize(ex, ::Type{LogicNodeInstance.FieldInstance{name}}, ctx) where {name} = field(freshen(ctx, name))
+Finch.virtualize(ex, ::Type{LogicNodeInstance.AliasInstance{name}}, ctx) where {name} = alias(name)
 
-function Finch.virtualize(ex, ::Type{LogicNodeInstance.AccessInstance{Tns, Idxs}}, ctx) where {Tns, Idxs}
+function Finch.virtualize(ex, ::Type{LogicNodeInstance.TableInstance{Tns, Idxs}}, ctx) where {Tns, Idxs}
     tns = virtualize(:($ex.tns), Tns, ctx)
     idxs = [virtualize(:($ex.idxs[$n]), Idx, ctx) for (n, Idx) in enumerate(Idxs.parameters)]
-    access(tns, idxs...)
+    table(tns, idxs...)
 end
 
-function Finch.virtualize(ex, ::Type{LogicNodeInstance.DefineInstance{Lhs, Rhs, Body}}, ctx) where {Lhs, Rhs, Body}
+function Finch.virtualize(ex, ::Type{LogicNodeInstance.SubQueryInstance{Lhs, Rhs, Body}}, ctx) where {Lhs, Rhs, Body}
     lhs = virtualize(:($ex.lhs), Lhs, ctx)
     rhs = virtualize(:($ex.rhs), Rhs, ctx)
     body = virtualize(:($ex.body), Body, ctx)
-    define(lhs, rhs, body)
+    subquery(lhs, rhs, body)
 end
 
-function Finch.virtualize(ex, ::Type{LogicNodeInstance.MappedInstance{Op, Args}}, ctx) where {Op, Args}
+function Finch.virtualize(ex, ::Type{LogicNodeInstance.MapJoinInstance{Op, Args}}, ctx) where {Op, Args}
     op = virtualize(:($ex.op), Op, ctx)
     args = [virtualize(:($ex.args[$n]), Arg, ctx) for (n, Arg) in enumerate(Args.parameters)]
-    mapped(op, args...)
+    mapjoin(op, args...)
 end
 
 function Finch.virtualize(ex, ::Type{LogicNodeInstance.ReducedInstance{Op, Init, Arg, Idxs}}, ctx) where {Op, Init, Arg, Idxs}
@@ -34,7 +34,7 @@ function Finch.virtualize(ex, ::Type{LogicNodeInstance.ReducedInstance{Op, Init,
     init = virtualize(:($ex.init), Init, ctx)
     arg = virtualize(:($ex.arg), Arg, ctx)
     idxs = [virtualize(:($ex.idxs[$n]), Idx, ctx) for (n, Idx) in enumerate(Idxs.parameters)]
-    reduced(op, init, arg, idxs...)
+    aggregate(op, init, arg, idxs...)
 end
 
 function Finch.virtualize(ex, ::Type{LogicNodeInstance.ReorderInstance{Arg, Idxs}}, ctx) where {Arg, Idxs}
