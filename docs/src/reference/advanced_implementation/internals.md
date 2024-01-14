@@ -246,6 +246,10 @@ in the scope of the executing context. Any aspect of virtuals visible to Finch s
 considered immutable, but virtuals may reference mutable variables in the scope of the
 executing context.
 
+```@docs
+virtualize
+```
+
 ## Working with Finch IR
 
 Calling print on a finch program or program instance will print the

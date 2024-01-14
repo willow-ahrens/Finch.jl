@@ -30,6 +30,13 @@ end
     task = VirtualSerial()
 end
 
+"""
+    virtualize(ex, T, ctx, [tag])
+
+Return the virtual program corresponding to the Julia expression `ex` of type
+`T` in the `JuliaContext` `ctx`. Implementaters may support the optional `tag`
+argument is used to name the resulting virtual variable.
+"""
 virtualize(ex, T, ctx, tag) = virtualize(ex, T, ctx)
 function virtualize(ex, T::Type{NamedTuple{names, args}}, ctx) where {names, args}
     Dict(map(zip(names, args.parameters)) do (name, arg)
