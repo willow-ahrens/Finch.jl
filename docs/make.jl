@@ -6,6 +6,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
 end
 
 using Documenter
+using Documenter.Remotes
 using Literate
 using Finch
 
@@ -14,7 +15,7 @@ DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch; using SparseArrays); re
 makedocs(;
     modules=[Finch],
     authors="Willow Ahrens",
-    repo="https://github.com/willow-ahrens/Finch.jl/blob/{commit}{path}#{line}",
+    repo=Remotes.GitHub("willow-ahrens", "Finch.jl"),
     sitename="Finch.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
