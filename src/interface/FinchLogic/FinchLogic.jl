@@ -17,16 +17,6 @@ module FinchLogic
     export evaluate
     export LogicNode
 
-    export follow
-    export walk
-    export gallop
-    export extrude
-    export laminate
-    export defaultread
-    export defaultupdate
-
-    export @f, @finch_program, @finch_program_instance
-
     export isliteral, isvalue, isvariable, isindex
 
     export isprotocol
