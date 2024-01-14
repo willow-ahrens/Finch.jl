@@ -11,9 +11,10 @@ const ID = 2
     mapped   =  6ID | IS_TREE
     reduced  =  7ID | IS_TREE
     reorder  =  8ID | IS_TREE
-    reformat =  9ID | IS_TREE
-    result   = 10ID | IS_TREE
-    evaluate = 11ID | IS_TREE
+    rename   =  9ID | IS_TREE
+    reformat = 10ID | IS_TREE
+    result   = 11ID | IS_TREE
+    evaluate = 12ID | IS_TREE
 end
 
 """
@@ -62,14 +63,15 @@ define
 """
     mapped(op, args...)
 
-Logical AST expression for mapping the function `op` across `args...`.
+Logical AST expression for mapping the function `op` across `args...`. Indices of the arguments must form a total order.
 """
 mapped
 
 """
     reduced(op, init, arg, idxs...)
 
-Logical AST statement that reduces dimensions `idxs...` of `arg` using `op`, starting with `init`.
+Logical AST statement that reduces `arg` using `op`, starting with `init`.
+`inds` are the dimensions to reduce.
 """
 reduced
 
@@ -81,9 +83,16 @@ Logical AST statement that reorders the dimensions of `arg` to be `idxs...`
 reorder
 
 """
+    rename(arg, idxs...)
+
+Logical AST statement that renames the dimensions of `arg` to be `idxs...`
+"""
+reorder
+
+"""
     reformat(tns, arg)
 
-Logical AST statement that reformats `arg` into the tensor `val`.
+Logical AST statement that reformats `arg` into the tensor `tns`.
 """
 reformat
 
@@ -165,6 +174,7 @@ function LogicNode(kind::LogicNodeKind, args::Vector)
         (kind === mapped && length(args) >= 1) ||
         (kind === reduced && length(args) >= 3) ||
         (kind === reorder && length(args) >= 1) ||
+        (kind === rename && length(args) >= 1) ||
         (kind === reformat && length(args) == 2) ||
         (kind === result) ||
         (kind === evaluate && length(args) == 1)
@@ -196,6 +206,8 @@ function Base.getproperty(node::LogicNode, sym::Symbol)
     elseif node.kind === reduced && sym === :idxs @view node.children[4:end]
     elseif node.kind === reorder && sym === :arg node.children[1]
     elseif node.kind === reorder && sym === :idxs @view node.children[2:end]
+    elseif node.kind === rename && sym === :arg node.children[1]
+    elseif node.kind === rename && sym === :idxs @view node.children[2:end]
     elseif node.kind === reformat && sym === :tns node.children[1]
     elseif node.kind === reformat && sym === :arg node.children[2]
     elseif node.kind === result && sym === :args node.children
@@ -278,8 +290,7 @@ end
     logic_leaf(x)
 
 Return a terminal finch node wrapper around `x`. A convenience function to
-determine whether `x` should be understood by default as a literal, value, or
-virtual.
+determine whether `x` should be understood by default as a literal or value.
 """
 logic_leaf(arg) = literal(arg)
 logic_leaf(arg::Type) = literal(arg)
