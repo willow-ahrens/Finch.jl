@@ -76,16 +76,16 @@ some general descriptions.
 |----------------------|----------|-----------------------|:------------------:|:------------:|:------------------------:|:------------------:|:--------------:|:------:|
 | Dense                | Core     | Dense                 | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ✅     |
 | SparseTree           | Core     | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️    |
-| SparseRunTree        | Core     | Sparse Run-Length     | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️    |
+| SparseRunTree        | Core     | Sparse Runs           | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️    |
 | Element              | Core     | Leaf                  | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ✅     |
 | Pattern              | Core     | Leaf                  | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ✅     |
 | SparseList           | Advanced | Sparse                | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
-| SparseRunList        | Advanced | Sparse Run-Length     | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
+| SparseRunList        | Advanced | Sparse Runs           | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
 | SparseVBL            | Advanced | Sparse Blocks         | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
-| RepeatedList         | Advanced | Run-Length            | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
+| RepeatedList         | Advanced | Dense Runs            | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ⚙     |
 | SingleSparse         | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
-| SingleSparseRun      | Advanced | Sparse Run-Length     | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
-| SingleBlock          | Advanced | Sparse Blocks         | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
+| SingleSparseRun      | Advanced | Sparse Runs           | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
+| SingleBlock          | Advanced | Sparse Blocks         | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ⚙️     |
 | SparseBytemap        | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ❌              | ✅     |
 | SparseCOO            | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ✅              | ✅️    |
 | SparseHash           | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ✅              | 🕸️   |
@@ -120,9 +120,9 @@ are included for compatibility with older code.
 | **Dense**          | Levels which store every subtensor. |
 | **Leaf**           | Levels which store only scalars, used for the leaf level of the tree. |
 | **Sparse**         | Levels which store only non-fill values, used for levels with few nonzeros. |
-| **Sparse Run-Length** | Levels which store runs of repeated non-fill values. |
+| **Sparse Runs**    | Levels which store runs of repeated non-fill values. |
 | **Sparse Blocks**  | Levels which store Blocks of repeated non-fill values. |
-| **Run-Length**     | Levels which store runs of repeated values, and no compile-time zero annihilation. |
+| **Dense Runs**     | Levels which store runs of repeated values, and no compile-time zero annihilation. |
 
 Note that the `Single` sparse levels store a single instance of each nonzero, run, or block. These are useful with a parent level to represent IDs.
 
