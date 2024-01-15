@@ -13,19 +13,20 @@ Dense [1:3]
 ├─[3]: Pointer -> 3.0
 ```
 """
-struct AtomicLevel{Lvl1, Lvl2} <: AbstractLevel
-    lvl::Lvl1
-    atomicsArray:: Lvl2
+struct AtomicLevel{AVal, Lvl} <: AbstractLevel
+    lvl::Lvl
+    atomicsArray::AVal
 end
 const Atomic = AtomicLevel
 
-AtomicLevel(lvl::Lvl1) where {Lvl1} = AtomicLevel{Lvl1}(lvl, Dense(Element(Bool), Base.level_size(lvl)[end]))
-AtomicLevel{Lvl1, Lvl2}(lvl::Lvl1. atomics::Lvl2) where {Lvl1, Lvl2} =  SeparationLevel{Lvl1, Lvl2}(lvl, atomics)
-Base.summary(::AtomicLevel{Lvl1, Lvl2}) where {Lvl1, Lvl2} = "AtomicLevel($(Lvl1), $(Lvl2))"
+# FIXME: Need to allocate the correct number of poses.
+AtomicLevel(lvl::Lvl) where {Lvl} = AtomicLevel{Vector{Bool}, Lvl}(lvl, Vector{Bool}([]))
+AtomicLevel{AVal, Lvl}(lvl::Lvl, atomics::AVal) where {Lvl, AVal} =  SeparationLevel{AVal, Lvl}(lvl, atomics)
+Base.summary(::AtomicLevel{AVal, Lvl}) where {Lvl, AVal} = "AtomicLevel($(AVal), $(Lvl))"
 
-similar_level(lvl::Atomic{Lvl1, Lvl2}) where c{Lvl1, Lvl2} = AtomicLevel{Lvl1, Lvl2}(similar_level(lvl.lvl), similar_level(lvl.atomicsArray))
+similar_level(lvl::Atomic{AVal, Lvl}) where {Lvl, AVal} = AtomicLevel{AVal, Lvl}(similar_level(lvl.lvl))
 
-postype(::Type{<:AtomicLevel{Lvl1, Lvl2}}) where {Lvl1, Lvl2} = postype(Lvl1)
+postype(::Type{<:AtomicLevel{AVal, Lvl}}) where {Lvl, AVal} = postype(Lvl)
 
 function moveto(lvl::AtomicLevel, device)
     lvl_2 = moveto(lvl.lvl, device)
@@ -35,85 +36,88 @@ end
 
 pattern!(lvl::AtomicLevel) = AtomicLevel(pattern!(lvl.lvl), lvl.atomicsArray)
 redefault!(lvl::AtomicLevel, init) = AtomicLevel(redefault!(lvl.lvl, init), lvl.atomicsArray)
+# TODO: FIXME: Need toa dopt the number of dims
 Base.resize!(lvl::AtomicLevel, dims...) = AtomicLevel(resize!(lvl.lvl, dims...), resize!(lvl.atomicsArray, dims[end]))
 
 
-function Base.show(io::IO, lvl::SeparationLevel{Val, Lvl}) where {Val, Lvl}
-    print(io, "Separation(")
+function Base.show(io::IO, lvl::AtomicLevel{AVal, Lvl}) where {AVal, Lvl}
+    print(io, "Atomic(")
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Val), lvl.val)
+        show(IOContext(io, :typeinfo=>AVal), lvl.atomicsArray)
         print(io, ", ")
         show(IOContext(io, :typeinfo=>Val), lvl.lvl)
     end
     print(io, ")")
 end 
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SeparationLevel}, depth)
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:AtomicLevel}, depth)
     p = fbr.pos
     lvl = fbr.lvl
     if p > length(lvl.val)
-        print(io, "Pointer -> undef")
+        print(io, "Atomic -> undef")
         return
     end
-    print(io, "Pointer -> ")
+    print(io, "Atomic -> ")
     display_fiber(io, mime, SubFiber(fbr.lvl.val[p], 1), depth)
 end
 
-@inline level_ndims(::Type{<:SeparationLevel{Val, Lvl}}) where {Val, Lvl} = level_ndims(Lvl)
-@inline level_size(lvl::SeparationLevel{Val, Lvl}) where {Val, Lvl} = level_size(lvl.lvl)
-@inline level_axes(lvl::SeparationLevel{Val, Lvl}) where {Val, Lvl} = level_axes(lvl.lvl)
-@inline level_eltype(::Type{SeparationLevel{Val, Lvl}}) where {Val, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SeparationLevel{Val, Lvl}}) where {Val, Lvl} = level_default(Lvl)
+@inline level_ndims(::Type{<:AtomicLevel{AVal, Lvl}}) where {AVal, Lvl} = level_ndims(Lvl)
+@inline level_size(lvl::AtomicLevel{AVal, Lvl}) where {AVal, Lvl} = level_size(lvl.lvl)
+@inline level_axes(lvl::AtomicLevel{AVal, Lvl}) where {AVal, Lvl} = level_axes(lvl.lvl)
+@inline level_eltype(::Type{AtomicLevel{AVal, Lvl}}) where {AVal, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:AtomicLevel{AVal, Lvl}}) where {AVal, Lvl} = level_default(Lvl)
 
-(fbr::Tensor{<:SeparationLevel})() = SubFiber(fbr.lvl, 1)()
-(fbr::SubFiber{<:SeparationLevel})() = fbr #TODO this is not consistent somehow
-function (fbr::SubFiber{<:SeparationLevel})(idxs...)
+(fbr::Tensor{<:AtomicLevel})() = SubFiber(fbr.lvl, 1)()
+(fbr::SubFiber{<:AtomicLevel})() = fbr #TODO this is not consistent somehow
+function (fbr::SubFiber{<:AtomicLevel})(idxs...)
     q = fbr.pos
     return Tensor(fbr.lvl.val[q])(idxs...)
 end
 
-countstored_level(lvl::SeparationLevel, pos) = pos
+countstored_level(lvl::AtomicLevel, pos) = pos
 
-mutable struct VirtualSeparationLevel <: AbstractVirtualLevel
-    lvl  # stand in for the sublevel for virutal resize, etc.
+mutable struct VirtualAtomicLevel <: AbstractVirtualLevel
+    lvl
     ex
     Tv
     Val
     Lvl
 end
 
-postype(lvl:: VirtualSeparationLevel) = postype(lvl.lvl)
+postype(lvl:: AtomicLevel) = postype(lvl.lvl)
 
-is_level_injective(::VirtualSeparationLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
-is_level_concurrent(::VirtualSeparationLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
-is_level_atomic(lvl::VirtualSeparationLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
+is_level_injective(::AtomicLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
+is_level_concurrent(::AtomicLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
+is_level_atomic(lvl::AtomicLevel, ctx) = true
 
-function lower(lvl::VirtualSeparationLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(lvl::AtomicLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
-        $SeparationLevel{$(lvl.Val), $(lvl.Lvl)}($(lvl.ex).val, $(ctx(lvl.lvl)))
+        $AtomicLevel{$(lvl.Lvl)}($(lvl.ex).atomicsArray, $(ctx(lvl.lvl)))
     end
 end
 
-function virtualize(ex, ::Type{SeparationLevel{Val, Lvl}}, ctx, tag=:lvl) where {Val, Lvl}
+function virtualize(ex, ::Type{AtomicLevel{AVal, Lvl}}, ctx, tag=:lvl) where {AVal, Lvl}
     sym = freshen(ctx, tag)
     push!(ctx.preamble, quote
         $sym = $ex
-    end)
+          end)
+    #FIXME ME We probalby don't need this.
     lvl_2 = virtualize(:($ex.lvl), Lvl, ctx, sym)
-    VirtualSeparationLevel(lvl_2, sym, typeof(level_default(Lvl)), Val, Lvl)
+    VirtualAtomicLevel(lvl_2, sym, typeof(level_default(Lvl)), Val, Lvl)
 end
 
-Base.summary(lvl::VirtualSeparationLevel) = "Separation($(lvl.Lvl))"
+Base.summary(lvl::VirtualAtomicLevel) = "Separation($(lvl.Lvl))"
 
-virtual_level_resize!(lvl::VirtualSeparationLevel, ctx, dims...) = (lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims...); lvl)
-virtual_level_size(lvl::VirtualSeparationLevel, ctx) = virtual_level_size(lvl.lvl, ctx)
-virtual_level_eltype(lvl::VirtualSeparationLevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualSeparationLevel) = virtual_level_default(lvl.lvl)
+virtual_level_resize!(lvl::VirtualAtomicLevel, ctx, dims...) = (lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims...); lvl)
+virtual_level_size(lvl::VirtualAtomicLevel, ctx) = virtual_level_size(lvl.lvl, ctx)
+virtual_level_eltype(lvl::VirtualAtomicLevel) = virtual_level_eltype(lvl.lvl)
+virtual_level_default(lvl::VirtualAtomicLevel) = virtual_level_default(lvl.lvl)
 
-function declare_level!(lvl::VirtualSeparationLevel, ctx, pos, init)
+function declare_level!(lvl::VirtualAtomicLevel, ctx, pos, init)
     #declare_level!(lvl.lvl, ctx_2, literal(1), init)
+    # FIXME: We need to adjust the size of the atomics here; we should ensure we have up to pos many.
     return lvl
 end
 

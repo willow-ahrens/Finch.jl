@@ -33,6 +33,8 @@ lower(task::VirtualSerial, ctx::AbstractCompiler, ::DefaultStyle) = :(Serial())
 FinchNotation.finch_leaf(device::VirtualSerial) = virtual(device)
 virtual_get_device(::VirtualSerial) = VirtualCPU(1)
 virtual_get_task(::VirtualSerial) = nothing
+get_atomic(dev::AbstractTask, val) = nothing
+release_atomic(dev::AbstractTask, val) = nothing
 
 struct CPUThread{Parent} <: AbstractTask
     tid::Int
@@ -41,6 +43,22 @@ struct CPUThread{Parent} <: AbstractTask
 end
 get_device(task::CPUThread) = task.device
 get_task(task::CPUThread) = task.parent
+
+@inline function get_atomic(dev:: CPUThread, val:: Threads.Atomic{T}) where {T}
+    # Keep trying to catch x === false so we can set it to true.
+    while (Threads.atomic_cas!(x, zero(T), one(T)) === one(T))
+        
+    end
+    # when it is true because we did it, we leave, but let's make sure it is true in debug mode.
+    @assert x === one(T)
+end
+
+@inline function release_atomic(dev:: CPUThread, val:: Threads.Atomic{T}) where {T}
+    # set the atomic to false so someone else can grab it.
+    Threads.atomic_cas!(x, one(T), zero(T)) 
+end
+
+
 struct VirtualCPUThread <: AbstractVirtualTask
     tid
     dev::VirtualCPU
