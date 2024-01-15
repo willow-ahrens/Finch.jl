@@ -4,7 +4,7 @@ struct LiteralInstance{val} <: LogicNodeInstance end
 struct FieldInstance{name} <: LogicNodeInstance end
 struct AliasInstance{name} <: LogicNodeInstance end
 struct TableInstance{Tns, Idxs <: Tuple} <: LogicNodeInstance tns::Tns; idxs::Idxs end
-struct SubQueryInstance{Lhs, Rhs, Body} <: LogicNodeInstance lhs::Lhs; rhs::Rhs; body::Body end
+struct QueryInstance{Lhs, Rhs} <: LogicNodeInstance lhs::Lhs; rhs::Rhs end
 struct MapJoinInstance{Op, Args<:Tuple} <: LogicNodeInstance op::Op; args::Args end
 struct ReducedInstance{Op, Init, Arg, Idxs <: Tuple} <: LogicNodeInstance op::Op; init::Init; arg::Arg; idxs::Idxs end
 struct ReorderInstance{Arg, Idxs <: Tuple} <: LogicNodeInstance arg::Arg; idxs::Idxs end
@@ -23,7 +23,7 @@ Base.getproperty(::AliasInstance{val}, name::Symbol) where {val} = name == :name
 @inline field_instance(name) = FieldInstance{name}()
 @inline alias_instance(name) = AliasInstance{name}()
 @inline table_instance(tns, idxs...) = TableInstance(tns, idxs)
-@inline subquery_instance(lhs, rhs, body) = SubQueryInstance(lhs, rhs, body)
+@inline query_instance(lhs, rhs, body) = SubQueryInstance(lhs, rhs, body)
 @inline mapjoin_instance(op, args...) = MapJoinInstance(op, args)
 @inline aggregate_instance(op, init, arg, idxs...) = ReducedInstance(op, init, arg, idxs)
 @inline reorder_instance(arg, idxs...) = ReorderInstance(arg, idxs)
@@ -47,7 +47,7 @@ instance_ctrs = Dict(
 	field => field_instance,
 	alias => alias_instance,
 	table => table_instance,
-	subquery => subquery_instance,
+	query => query_instance,
 	mapjoin => mapjoin_instance,
 	aggregate => aggregate_instance,
 	reorder => reorder_instance,
@@ -65,7 +65,7 @@ SyntaxInterface.operation(::LiteralInstance) = literal
 SyntaxInterface.operation(::FieldInstance) = field
 SyntaxInterface.operation(::AliasInstance) = alias
 SyntaxInterface.operation(::TableInstance) = table
-SyntaxInterface.operation(::SubQueryInstance) = subquery
+SyntaxInterface.operation(::SubQueryInstance) = query
 SyntaxInterface.operation(::MapJoinInstance) = mapjoin
 SyntaxInterface.operation(::ReducedInstance) = aggregate
 SyntaxInterface.operation(::ReorderInstance) = reorder

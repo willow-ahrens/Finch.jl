@@ -20,7 +20,7 @@ function Finch.virtualize(ex, ::Type{LogicNodeInstance.SubQueryInstance{Lhs, Rhs
     lhs = virtualize(:($ex.lhs), Lhs, ctx)
     rhs = virtualize(:($ex.rhs), Rhs, ctx)
     body = virtualize(:($ex.body), Body, ctx)
-    subquery(lhs, rhs, body)
+    query(lhs, rhs, body)
 end
 
 function Finch.virtualize(ex, ::Type{LogicNodeInstance.MapJoinInstance{Op, Args}}, ctx) where {Op, Args}
@@ -60,7 +60,7 @@ function Finch.virtualize(ex, ::Type{LogicNodeInstance.ResultInstance{Args}}, ct
     result(args...)
 end
 
-function Finch.virtualize(ex, ::Type{LogicNodeInstance.EvaluateInstance{Arg}}, ctx) where {Arg}
+function Finch.virtualize(ex, ::Type{LogicNodeInstance.PlanInstance{Arg}}, ctx) where {Arg}
     arg = virtualize(:($ex.arg), Arg, ctx)
-    evaluate(arg)
+    plan(arg)
 end

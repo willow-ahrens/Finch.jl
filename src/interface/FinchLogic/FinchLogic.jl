@@ -8,13 +8,13 @@ module FinchLogic
     export alias
     export value
     export table
-    export subquery
+    export query
     export mapjoin
     export aggregate
     export reorder
     export reformat
     export result
-    export evaluate
+    export plan
     export LogicNode
 
     export isliteral, isvalue, isalias, isfield
