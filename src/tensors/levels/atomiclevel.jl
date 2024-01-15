@@ -116,74 +116,48 @@ virtual_level_eltype(lvl::VirtualAtomicLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualAtomicLevel) = virtual_level_default(lvl.lvl)
 
 function declare_level!(lvl::VirtualAtomicLevel, ctx, pos, init)
-    #declare_level!(lvl.lvl, ctx_2, literal(1), init)
+    Tp = postype(lvl)
+    eltype = ???
+    posV = ctx(pos)
+    push!(ctx.code.preamble, quote 
+              Finch.resize_if_smaller!($(lvl.ex).atomicsArray, ctx, $posV)
+              @inbounds for i = 1:$posV
+                  $(lvl.ex).atomicsArray[i] = zero(eltype())
+              end
+          end)
+    lvl.lvl = declare_level!(lvl.lvl, ctx, pos, init)
     # FIXME: We need to adjust the size of the atomics here; we should ensure we have up to pos many.
     return lvl
 end
 
-function assemble_level!(lvl::VirtualSeparationLevel, ctx, pos_start, pos_stop)
-    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
-    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
-    idx = freshen(ctx.code, :idx)
-    sym = freshen(ctx.code, :pointer_to_lvl)
-    push!(ctx.code.preamble, quote
-        Finch.resize_if_smaller!($(lvl.ex).val, $(ctx(pos_stop)))
-        for $idx in $(ctx(pos_start)):$(ctx(pos_stop))
-            $sym = similar_level($(lvl.ex).lvl)
-            $(contain(ctx) do ctx_2
-                lvl_2 = virtualize(sym, lvl.Lvl, ctx_2.code, sym)
-                lvl_2 = declare_level!(lvl_2, ctx_2, literal(0), literal(virtual_level_default(lvl_2)))
-                lvl_2 = virtual_level_resize!(lvl_2, ctx_2, virtual_level_size(lvl.lvl, ctx_2)...)
-                push!(ctx_2.code.preamble, assemble_level!(lvl_2, ctx_2, literal(1), literal(1)))
-                lvl_2 = freeze_level!(lvl_2, ctx_2, literal(1))
-                :($(lvl.ex).val[$idx] = $(ctx_2(lvl_2)))
-            end)
-        end
-    end)
+function assemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
+    lvl.lvl = assemble_level!(lvl.lvl, ctx, pos_start, pos_stop)
     lvl
 end
 
-supports_reassembly(::VirtualSeparationLevel) = true
-function reassemble_level!(lvl::VirtualSeparationLevel, ctx, pos_start, pos_stop)
-    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
-    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
-    idx = freshen(ctx.code, :idx)
-    push!(ctx.code.preamble, quote
-        for $idx in $(ctx(pos_start)):$(ctx(pos_stop))
-            $(contain(ctx) do ctx_2
-                lvl_2 = virtualize(:($(lvl.ex).val[$idx]), lvl.Lvl, ctx_2.code, sym)
-                declare_level!(lvl_2, ctx_2, literal(1), init)
-                push!(ctx_2.code.preamble, assemble_level!(lvl_2, ctx, literal(1), literal(1)))
-                lvl_2 = freeze_level!(lvl_2, ctx, literal(1))
-                :($(lvl.ex).val[$idx] = $(ctx_2(lvl_2)))
-            end)
-        end
-    end)
+supports_reassembly(lvl::VirtualAtomicLevel) = supports_reassembly(lvl.lvl)
+function reassemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
+    lvl.lvl = reassemble_level!(lvl.lvl, ctx, pos_start, pos_stop)
     lvl
 end
 
 function freeze_level!(lvl::VirtualSeparationLevel, ctx, pos)
+    lvl.lvl = freeze_level!(lvl.lvl, ctx, pos)
     return lvl
 end
 
 function thaw_level!(lvl::VirtualSeparationLevel, ctx::AbstractCompiler, pos)
+    lvl.lvl = thaw_level!(lvl.lvl, ctx, pos)
     return lvl
 end
 
 function trim_level!(lvl::VirtualSeparationLevel, ctx::AbstractCompiler, pos)
-    idx = freshen(ctx.code, :idx)
-    sym = freshen(ctx.code, :pointer_to_lvl)
-    
-    push!(ctx.code.preamble, quote
-        for $idx in 1:$(ctx(pos))
-            $(contain(ctx) do ctx_2
-                lvl_2 = virtualize(:($(lvl.ex).val[$idx]), lvl.Lvl, ctx_2.code, sym)
-                trim_level!(lvl_2, ctx_2, literal(1))
-            end)
-        end
-    end)
-    lvl
+    # FIXME: Deallocate atomics
+    lvl.lvl = trim_level!(lvl.lvl, ctx, pos)
 end
+
+# PLaceholder - things I had not figured out yet
+# THough they are pretty obvious
 
 function instantiate(fbr::VirtualSubFiber{VirtualSeparationLevel}, ctx, mode::Reader, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
