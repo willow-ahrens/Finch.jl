@@ -3,7 +3,7 @@ module FinchLogic
     using Finch: virtualize, freshen
 
     export logic_leaf
-    export literal
+    export immediate
     export field
     export alias
     export value
@@ -14,11 +14,11 @@ module FinchLogic
     export aggregate
     export reorder
     export reformat
-    export result
+    export produce
     export plan
     export LogicNode
 
-    export isliteral, isvalue, isalias, isfield
+    export isimmediate, isvalue, isalias, isfield
 
     export isprotocol
 

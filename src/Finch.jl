@@ -138,7 +138,8 @@ export ftnsread, ftnswrite, fttread, fttwrite
 
 export moveto, postype
 
-include("interface/FinchLogic/FinchLogic.jl")
+include("FinchLogic/FinchLogic.jl")
+using .FinchLogic
 include("interface/abstractarrays.jl")
 include("interface/abstractunitranges.jl")
 include("interface/broadcast.jl")

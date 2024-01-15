@@ -3,36 +3,27 @@ const IS_STATEFUL = 2
 const ID = 2
 
 @enum LogicNodeKind begin
-    literal   =  0ID
-    value     =  1ID
-    field     =  2ID
-    alias     =  3ID
-    table     =  4ID | IS_TREE
-    mapjoin   =  5ID | IS_TREE
-    aggregate =  6ID | IS_TREE
-    reorder   =  7ID | IS_TREE
-    rename    =  8ID | IS_TREE
-    reformat  =  9ID | IS_TREE
-    subquery  = 10ID | IS_TREE
-    query     = 11ID | IS_TREE | IS_STATEFUL
-    result    = 12ID | IS_TREE | IS_STATEFUL
-    plan      = 13ID | IS_TREE | IS_STATEFUL
+    immediate =  0ID
+    field     =  1ID
+    alias     =  2ID
+    table     =  3ID | IS_TREE
+    mapjoin   =  4ID | IS_TREE
+    aggregate =  5ID | IS_TREE
+    reorder   =  6ID | IS_TREE
+    rename    =  7ID | IS_TREE
+    reformat  =  8ID | IS_TREE
+    subquery  =  9ID | IS_TREE
+    query     = 10ID | IS_TREE | IS_STATEFUL
+    produce   = 11ID | IS_TREE | IS_STATEFUL
+    plan      = 12ID | IS_TREE | IS_STATEFUL
 end
 
 """
-    literal(val)
+    immediate(val)
 
 Logical AST expression for the literal value `val`.
 """
-literal
-
-"""
-    value(val, type)
-
-Logical AST expression for host code `val` expected to plan to a value of type
-`type`.
-"""
-value
+immediate
 
 """
     field(name)
@@ -107,15 +98,15 @@ Logical AST statement that evaluates `rhs`, binding the result to `lhs`.
 query
 
 """
-    result(args...)
+    produce(args...)
 
 Logical AST statement that returns `args...` from the current plan. Halts
 execution of the plan.
 """
-result
+produce
 
 """
-    plan(bodies..., result(args...))
+    plan(bodies..., produce(args...))
 
 Logical AST statement that executes a sequence of plans `bodies...`.
 """
@@ -133,16 +124,15 @@ differentiated by a `FinchLogic.LogicNodeKind` enum.
 mutable struct LogicNode
     kind::LogicNodeKind
     val::Any
-    type::Any
     children::Vector{LogicNode}
 end
 
 """
-    isliteral(node)
+    isimmediate(node)
 
-Returns true if the node is a finch literal
+Returns true if the node is a finch immediate
 """
-isliteral(ex::LogicNode) = ex.kind === literal
+isimmediate(ex::LogicNode) = ex.kind === immediate
 
 """
     isvalue(node)
@@ -177,10 +167,8 @@ function SyntaxInterface.similarterm(::Type{LogicNode}, op::LogicNodeKind, args)
 end
 
 function LogicNode(kind::LogicNodeKind, args::Vector)
-    if (kind === value || kind === literal || kind === field || kind === alias) && length(args) == 1
-        return LogicNode(kind, args[1], Any, LogicNode[])
-    elseif kind === value && length(args) == 2
-        return LogicNode(kind, args[1], args[2], LogicNode[])
+    if (kind === immediate || kind === field || kind === alias) && length(args) == 1
+        return LogicNode(kind, args[1], LogicNode[])
     elseif (kind === table && length(args) >= 1) ||
         (kind === mapjoin && length(args) >= 1) ||
         (kind === aggregate && length(args) >= 3) ||
@@ -189,9 +177,9 @@ function LogicNode(kind::LogicNodeKind, args::Vector)
         (kind === reformat && length(args) == 2) ||
         (kind === subquery && length(args) == 2) ||
         (kind === query && length(args) == 2) ||
-        (kind === result) ||
+        (kind === produce) ||
         (kind === plan)
-        return LogicNode(kind, nothing, nothing, args)
+        return LogicNode(kind, nothing, args)
     else
         error("wrong number of arguments to $kind(...)")
     end
@@ -224,7 +212,7 @@ function Base.getproperty(node::LogicNode, sym::Symbol)
     elseif node.kind === subquery && sym === :rhs node.children[2]
     elseif node.kind === query && sym === :lhs node.children[1]
     elseif node.kind === query && sym === :rhs node.children[2]
-    elseif node.kind === result && sym === :args node.children
+    elseif node.kind === produce && sym === :args node.children
     elseif node.kind === plan && sym === :bodies node.children
     else
         error("type LogicNode($(node.kind), ...) has no property $sym")
@@ -232,7 +220,7 @@ function Base.getproperty(node::LogicNode, sym::Symbol)
 end
 
 function Base.show(io::IO, node::LogicNode) 
-    if node.kind === literal || node.kind === field || node.kind === alias
+    if node.kind === immediate || node.kind === field || node.kind === alias
         print(io, node.kind, "(", node.val, ")")
     elseif node.kind === value
         print(io, node.kind, "(", node.val, ", ", node.type, ")")
@@ -263,7 +251,7 @@ function display_statement(io, mime, node, indent)
             println()
         end
         print(io, " " ^ indent, "end")
-    elseif operation(node) == result
+    elseif operation(node) == produce
         print(io, "return (")
         for arg in node.args[1:end - 1]
             print(io, " " ^ (indent + 2))
@@ -279,14 +267,8 @@ function display_statement(io, mime, node, indent)
 end
 
 function display_expression(io, mime, node)
-    if operation(node) === literal
+    if operation(node) === immediate
         print(io, node.val)
-    elseif operation(node) === value
-        print(io, summary(node.val))
-        if node.type !== Any
-            print(io, "::")
-            print(io, node.type)
-        end
     elseif operation(node) === field
         print(io, node.name)
     elseif operation(node) === alias
@@ -316,8 +298,8 @@ end
 function Base.:(==)(a::LogicNode, b::LogicNode)
     if a.kind === value
         return b.kind === value && a.val == b.val && a.type === b.type
-    elseif a.kind === literal
-        return b.kind === literal && isequal(a.val, b.val)
+    elseif a.kind === immediate
+        return b.kind === immediate && isequal(a.val, b.val)
     elseif a.kind === field
         return b.kind === field && a.name == b.name
     elseif a.kind === alias
@@ -330,9 +312,7 @@ function Base.:(==)(a::LogicNode, b::LogicNode)
 end
 
 function Base.hash(a::LogicNode, h::UInt)
-    if a.kind === value
-        return hash(value, hash(a.val, hash(a.type, h)))
-    elseif a.kind === literal || a.kind === field || a.kind === alias
+    if a.kind === immediate || a.kind === field || a.kind === alias
         return hash(a.kind, hash(a.val, h))
     elseif istree(a)
         return hash(a.kind, hash(a.children, h))
@@ -345,11 +325,11 @@ end
     logic_leaf(x)
 
 Return a terminal finch node wrapper around `x`. A convenience function to
-determine whether `x` should be understood by default as a literal or value.
+determine whether `x` should be understood by default as a immediate or value.
 """
-logic_leaf(arg) = literal(arg)
-logic_leaf(arg::Type) = literal(arg)
-logic_leaf(arg::Function) = literal(arg)
+logic_leaf(arg) = immediate(arg)
+logic_leaf(arg::Type) = immediate(arg)
+logic_leaf(arg::Function) = immediate(arg)
 logic_leaf(arg::LogicNode) = arg
 
 Base.convert(::Type{LogicNode}, x) = logic_leaf(x)
