@@ -13,9 +13,10 @@ const ID = 2
     reorder   =  7ID | IS_TREE
     rename    =  8ID | IS_TREE
     reformat  =  9ID | IS_TREE
-    query     = 10ID | IS_TREE | IS_STATEFUL
-    result    = 11ID | IS_TREE | IS_STATEFUL
-    plan      = 12ID | IS_TREE | IS_STATEFUL
+    subquery  = 10ID | IS_TREE
+    query     = 11ID | IS_TREE | IS_STATEFUL
+    result    = 12ID | IS_TREE | IS_STATEFUL
+    plan      = 13ID | IS_TREE | IS_STATEFUL
 end
 
 """
@@ -89,6 +90,14 @@ reorder
 Logical AST statement that reformats `arg` into the tensor `tns`.
 """
 reformat
+
+"""
+    subquery(lhs, rhs)
+
+Logical AST statement that evaluates `rhs`, binding the result to `lhs`. `rhs`
+will only be evaluated once.
+"""
+subquery
 
 """
     query(lhs, rhs)
@@ -178,6 +187,7 @@ function LogicNode(kind::LogicNodeKind, args::Vector)
         (kind === reorder && length(args) >= 1) ||
         (kind === rename && length(args) >= 1) ||
         (kind === reformat && length(args) == 2) ||
+        (kind === subquery && length(args) == 2) ||
         (kind === query && length(args) == 2) ||
         (kind === result) ||
         (kind === plan)
@@ -210,6 +220,8 @@ function Base.getproperty(node::LogicNode, sym::Symbol)
     elseif node.kind === rename && sym === :idxs @view node.children[2:end]
     elseif node.kind === reformat && sym === :tns node.children[1]
     elseif node.kind === reformat && sym === :arg node.children[2]
+    elseif node.kind === subquery && sym === :lhs node.children[1]
+    elseif node.kind === subquery && sym === :rhs node.children[2]
     elseif node.kind === query && sym === :lhs node.children[1]
     elseif node.kind === query && sym === :rhs node.children[2]
     elseif node.kind === result && sym === :args node.children
@@ -279,6 +291,12 @@ function display_expression(io, mime, node)
         print(io, node.name)
     elseif operation(node) === alias
         print(io, node.name)
+    elseif operation(node) == subquery
+        print(io, "(")
+        display_expression(io, mime, node.lhs)
+        print(io, " = ")
+        display_expression(io, mime, node.rhs)
+        print(io, ")")
     elseif istree(node)
         print(io, operation(node), "(")
         for child in node.children[1:end-1]

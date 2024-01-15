@@ -8,6 +8,7 @@ module FinchLogic
     export alias
     export value
     export table
+    export subquery
     export query
     export mapjoin
     export aggregate
