@@ -35,6 +35,7 @@ virtual_get_device(::VirtualSerial) = VirtualCPU(1)
 virtual_get_task(::VirtualSerial) = nothing
 get_atomic(dev::AbstractTask, val) = nothing
 release_atomic(dev::AbstractTask, val) = nothing
+promote_atomic_val((dev::AbstractTask, val) = nothing
 
 struct CPUThread{Parent} <: AbstractTask
     tid::Int
@@ -58,6 +59,9 @@ end
     Threads.atomic_cas!(x, one(T), zero(T)) 
 end
 
+function promote_atomic_val(dev:: CPUThread, val :: T) where {T}
+    Threads.Atomic{T}(val)
+end
 
 struct VirtualCPUThread <: AbstractVirtualTask
     tid
