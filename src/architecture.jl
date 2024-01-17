@@ -3,6 +3,13 @@ abstract type AbstractVirtualDevice end
 abstract type AbstractTask end
 abstract type AbstractVirtualTask end
 
+
+
+get_lock(dev::AbstractDevice, val) = nothing
+release_lock(dev::AbstractDevice, val) = nothing
+promote_val_to_lock(dev::AbstractDevice, arr, idx, ty) = nothing
+make_lock(ty) = nothing
+
 struct CPU <: AbstractDevice
     n::Int
 end
@@ -33,9 +40,8 @@ lower(task::VirtualSerial, ctx::AbstractCompiler, ::DefaultStyle) = :(Serial())
 FinchNotation.finch_leaf(device::VirtualSerial) = virtual(device)
 virtual_get_device(::VirtualSerial) = VirtualCPU(1)
 virtual_get_task(::VirtualSerial) = nothing
-get_atomic(dev::AbstractTask, val) = nothing
-release_atomic(dev::AbstractTask, val) = nothing
-promote_atomic_val((dev::AbstractTask, val) = nothing
+
+
 
 struct CPUThread{Parent} <: AbstractTask
     tid::Int
@@ -45,7 +51,15 @@ end
 get_device(task::CPUThread) = task.device
 get_task(task::CPUThread) = task.parent
 
-@inline function get_atomic(dev:: CPUThread, val:: Threads.Atomic{T}) where {T}
+@inline function make_lock(::Threads.Atomic{T}) where {T}
+    return Threads.Atomic{T}(zero(T))
+end
+
+@inline function make_lock(::Threads.SpinLock)
+    return Threads.SpinLock()
+end
+
+@inline function get_lock(dev:: CPU, val::Threads.Atomic{T}) where {T}
     # Keep trying to catch x === false so we can set it to true.
     while (Threads.atomic_cas!(x, zero(T), one(T)) === one(T))
         
@@ -54,13 +68,28 @@ get_task(task::CPUThread) = task.parent
     @assert x === one(T)
 end
 
-@inline function release_atomic(dev:: CPUThread, val:: Threads.Atomic{T}) where {T}
+@inline function get_lock(dev:: CPU, val::Threads.SpinLock)
+    while !trylock(val)
+    end
+    @assert islocked(val)
+end
+
+@inline function release_lock(dev:: CPU, val::Threads.Atomic{T}) where {T}
     # set the atomic to false so someone else can grab it.
     Threads.atomic_cas!(x, one(T), zero(T)) 
 end
 
-function promote_atomic_val(dev:: CPUThread, val :: T) where {T}
-    Threads.Atomic{T}(val)
+@inline function release_lock(dev:: CPU, val::Threads.SpinLock)
+    @assert islocked(val)
+    unlock(val)
+end
+
+function promote_val_to_lock(dev::CPU, arr, idx, ::Threads.Atomic{T}) where {T}
+    return arr[idx]
+end
+
+function promote_val_to_lock(dev::CPU, arr, idx, ::Threads.SpinLock)
+    return arr[idx]
 end
 
 struct VirtualCPUThread <: AbstractVirtualTask
