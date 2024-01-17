@@ -633,9 +633,9 @@
               1.0 0.0 7.0 1.0 0.0 0.0;
               0.0 0.0 0.0 0.0 0.0 9.0]
           
-          println(io, "Tensor(Dense(Separation(Dense(Element(0))))):")
+          println(io, "Tensor(Dense(Atomic(Dense(Element(0))))):")
           
-          fbr = dropdefaults!(Tensor(Dense(Separation(Dense(Element(0))))), arr)
+          fbr = dropdefaults!(Tensor(Dense(Atomic(Dense(Element(0))))), arr)
 
           # sublvl = Tensor(Dense(Element(0)), [])
           # col1 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 1])
@@ -648,19 +648,19 @@
           
           
           println(io, "initialized tensor: ", fbr)
-          @test Structure(fbr) == Structure(Tensor(Dense(Separation(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
-          @test Structure(fbr) == Structure(Tensor(Dense(Separation{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
+          @test Structure(fbr) == Structure(Tensor(Dense(Atomic(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
+          @test Structure(fbr) == Structure(Tensor(Dense(Atomic{Vector{Base.Threads.SpinLock}, typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
 
-          fbr = Tensor(Dense(Separation(Dense(Element(0), 3)), 6))
+          fbr = Tensor(Dense(Atomic(Dense(Element(0), 3)), 6))
           println(io, "sized tensor: ", fbr)
-          @test Structure(fbr) == Structure(Tensor(Dense(Separation(Dense(Element(0), 3)), 6)))
+          @test Structure(fbr) == Structure(Tensor(Dense(Atomic(Dense(Element(0), 3)), 6)))
 
 
-          fbr = Tensor(Dense(Separation(Dense(Element(0)))))
+          fbr = Tensor(Dense(Atomic(Dense(Element(0)))))
           println(io, "empty tensor: ", fbr)
-          @test Structure(fbr) == Structure(Tensor(Dense(Separation(Dense(Element(0))))))
+          @test Structure(fbr) == Structure(Tensor(Dense(Atomic(Dense(Element(0))))))
 
-          @test check_output("format_constructors_d_p_d_e.txt", String(take!(io)))
+          @test check_output("format_constructors_d_a_d_e.txt", String(take!(io)))
       end
 
     @testset "Tensor(Dense(Separation(SparseList(Element(0)))))" begin
