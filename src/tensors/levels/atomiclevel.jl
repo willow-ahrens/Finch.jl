@@ -19,7 +19,7 @@ end
 const Atomic = AtomicLevel
 
 
-AtomicLevel(lvl::Lvl) where {Lvl} = AtomicLevel{Vector{Int}, Lvl}(lvl, Vector{Base.Threads.SpinLock}([]))
+AtomicLevel(lvl::Lvl) where {Lvl} = AtomicLevel{Vector{Base.Threads.SpinLock}, Lvl}(lvl, Vector{Base.Threads.SpinLock}([]))
 AtomicLevel{AVal, Lvl}(lvl::Lvl, atomics::AVal) where {Lvl, AVal} =  AtomicLevel{AVal, Lvl}(lvl, atomics)
 Base.summary(::AtomicLevel{AVal, Lvl}) where {Lvl, AVal} = "AtomicLevel($(AVal), $(Lvl))"
 
