@@ -1,3 +1,113 @@
+
+"""
+    AtomicLevel{Lvl, Val}()
+
+Atomic Level Protects the level directly below it with atomics
+
+Each sublevel is stored in a vector of type Val with eltype(Val) = Lvl.
+julia> Tensor(Dense(Atomic(Element(0.0))), [1, 2, 3])
+Dense [1:3] -> Atomic
+├─[1]: 1.0
+├─[2]: 2.0
+├─[3]: 3.0
+"""
+
+struct AtomicLevel{AVal <: AbstractVector, Lvl} <: AbstractLevel
+    lvl::Lvl
+    atomicsArray::AVal
+end
+const Atomic = AtomicLevel
+
+
+AtomicLevel(lvl::Lvl) where {Lvl} = AtomicLevel{Vector{Int}, Lvl}(lvl, Vector{Int}([]))
+AtomicLevel{AVal, Lvl}(lvl::Lvl, atomics::AVal) where {Lvl, AVal} =  AtomicLevel{AVal, Lvl}(lvl, atomics)
+Base.summary(::AtomicLevel{AVal, Lvl}) where {Lvl, AVal} = "AtomicLevel($(AVal), $(Lvl))"
+
+similar_level(lvl::Atomic{AVal, Lvl}) where {Lvl, AVal} = AtomicLevel{AVal, Lvl}(similar_level(lvl.lvl))
+
+postype(::Type{<:AtomicLevel{AVal, Lvl}}) where {Lvl, AVal} = postype(Lvl)
+
+function moveto(lvl::AtomicLevel, device)
+    lvl_2 = moveto(lvl.lvl, device)
+    atomicsArray_2 = moveto(lvl.atomicsArray, device)
+    return AtomicLevel(lvl_2, atomicsArray_2)
+end
+
+pattern!(lvl::AtomicLevel) = AtomicLevel(pattern!(lvl.lvl), lvl.atomicsArray)
+redefault!(lvl::AtomicLevel, init) = AtomicLevel(redefault!(lvl.lvl, init), lvl.atomicsArray)
+# TODO: FIXME: Need toa dopt the number of dims
+Base.resize!(lvl::AtomicLevel, dims...) = AtomicLevel(resize!(lvl.lvl, dims...), lvl.atomicsArray)
+
+
+function Base.show(io::IO, lvl::AtomicLevel{AVal, Lvl}) where {AVal, Lvl}
+    print(io, "Atomic(")
+    if get(io, :compact, false)
+        print(io, "…")
+    else
+        show(IOContext(io, :typeinfo=>AVal), lvl.atomicsArray)
+        print(io, ", ")
+        show(IOContext(io, :typeinfo=>Val), lvl.lvl)
+    end
+    print(io, ")")
+end 
+
+function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:AtomicLevel}, depth)
+    p = fbr.pos
+    lvl = fbr.lvl
+    if p > length(lvl.val)
+        print(io, "Atomic -> undef")
+        return
+    end
+    print(io, "Atomic -> ")
+    display_fiber(io, mime, SubFiber(fbr.lvl, 1), depth)
+end
+
+@inline level_ndims(::Type{<:AtomicLevel{AVal, Lvl}}) where {AVal, Lvl} = level_ndims(Lvl)
+@inline level_size(lvl::AtomicLevel{AVal, Lvl}) where {AVal, Lvl} = level_size(lvl.lvl)
+@inline level_axes(lvl::AtomicLevel{AVal, Lvl}) where {AVal, Lvl} = level_axes(lvl.lvl)
+@inline level_eltype(::Type{AtomicLevel{AVal, Lvl}}) where {AVal, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:AtomicLevel{AVal, Lvl}}) where {AVal, Lvl} = level_default(Lvl)
+
+# FIXME: These.
+(fbr::Tensor{<:AtomicLevel})() = SubFiber(fbr.lvl, 1)()
+(fbr::SubFiber{<:AtomicLevel})() = fbr #TODO this is not consistent somehow
+function (fbr::SubFiber{<:AtomicLevel})(idxs...)
+    return Tensor(fbr.lvl)(idxs...)
+end
+
+countstored_level(lvl::AtomicLevel, pos) = countstored_level(lvl.lvl, pos)
+
+mutable struct VirtualAtomicLevel <: AbstractVirtualLevel
+    lvl # the level below us.
+    ex
+    Tv
+    Val
+    AVal
+    Lvl
+end
+
+postype(lvl:: AtomicLevel) = postype(lvl.lvl)
+
+is_level_injective(::AtomicLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
+is_level_concurrent(::AtomicLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
+is_level_atomic(lvl::AtomicLevel, ctx) = true
+
+function lower(lvl::AtomicLevel, ctx::AbstractCompiler, ::DefaultStyle)
+    quote
+        $AtomicLevel{$(lvl.Lvl)}($(lvl.ex).atomicsArray, $(ctx(lvl.lvl)))
+    end
+end
+
+function virtualize(ex, ::Type{AtomicLevel{AVal, Lvl}}, ctx, tag=:lvl) where {AVal, Lvl}
+    sym = freshen(ctx, tag)
+    push!(ctx.preamble, quote
+        $sym = $ex
+          end)
+    lvl_2 = virtualize(:($ex.lvl), Lvl, ctx, sym)
+    VirtualAtomicLevel(lvl_2, sym, typeof(level_default(Lvl)), Val, AVal, Lvl)
+end
+
+Base.summary(lvl::VirtualAtomicLevel) = "Atomic($(lvl.Lvl))"
 virtual_level_resize!(lvl::VirtualAtomicLevel, ctx, dims...) = (lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims...); lvl)
 virtual_level_size(lvl::VirtualAtomicLevel, ctx) = virtual_level_size(lvl.lvl, ctx)
 virtual_level_eltype(lvl::VirtualAtomicLevel) = virtual_level_eltype(lvl.lvl)
@@ -48,9 +158,6 @@ function trim_level!(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, pos)
     lvl
 end
 
-# PLaceholder - things I had not figured out yet
-# THough they are pretty obvious
-
 function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Reader, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     lvl = freshen(ctx.code, lvl.ex, :_lvl)
@@ -58,7 +165,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Reader
     return body = Thunk(
         body = (ctx) -> begin
             lvl_2 = virtualize(:($(lvl.ex).lvl), lvl.Lvl, ctx.code, sym)
-            instantiate(VirtualSubFiber(lvl_2, $(ctx(pos))), ctx, mode, protos)
+            instantiate(VirtualSubFiber(lvl_2, pos), ctx, mode, protos)
         end,
     )
 end
@@ -69,12 +176,12 @@ function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Update
     sym = freshen(ctx.code, lvl.ex, :after_atomic_lvl)
     atomicData = freshen(ctx.code, lvl.ex, :atomicArrays)
     lockVal = freshen(ctx.code, lvl.ex, :lockVal)
-    dev = $(ctx.task.device)
+    dev = (ctx.task.device)
 
     return body = Thunk(
         body = (ctx) -> begin
             lvl_2 = virtualize(:($(lvl.ex).lvl), lvl.Lvl, ctx.code, sym)
-            update = instantiate(VirtualSubFiber(lvl_2, $(ctx(pos))), ctx, mode, protos)
+            update = instantiate(VirtualSubFiber(lvl_2, pos), ctx, mode, protos)
             return quote
                 $atomicData = promote_val_to_lock($dev, $(lvl.ex).atomicsArray, $(ctx(pos)), eltype($(lvl.AVal)))
                 $lock = get_lock($dev, $atomicData)
@@ -90,12 +197,12 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, ctx, mode::
     sym = freshen(ctx.code, lvl.ex, :after_atomic_lvl)
     atomicData = freshen(ctx.code, lvl.ex, :atomicArrays)
     lockVal = freshen(ctx.code, lvl.ex, :lockVal)
-    dev = $(ctx.task.device)
+    dev = (ctx.task.device)
 
     return body = Thunk(
         body = (ctx) -> begin
             lvl_2 = virtualize(:($(lvl.ex).lvl), lvl.Lvl, ctx.code, sym)
-            update = instantiate(VirtualSubFiber(lvl_2, $(ctx(pos))), ctx, mode, protos)
+            update = instantiate(VirtualSubFiber(lvl_2, pos), ctx, mode, protos)
             return quote
                 $atomicData = promote_val_to_lock($dev, $(lvl.ex).atomicsArray, $(ctx(pos)), eltype($(lvl.AVal)))
                 $lock = get_lock($dev, $atomicData)

@@ -33,6 +33,7 @@ export Dense, DenseLevel
 export RepeatRLE, RepeatRLELevel
 export Element, ElementLevel
 export Separation, SeparationLevel
+export Atomic, AtomicLevel
 export Pattern, PatternLevel
 export Scalar, SparseScalar, ShortCircuitScalar, SparseShortCircuitScalar
 export walk, gallop, follow, extrude, laminate
@@ -110,6 +111,7 @@ include("tensors/levels/denselevels.jl")
 include("tensors/levels/repeatrlelevels.jl")
 include("tensors/levels/elementlevels.jl")
 include("tensors/levels/separationlevel.jl")
+include("tensors/levels/atomiclevel.jl")
 include("tensors/levels/patternlevels.jl")
 include("tensors/levels/sparsetrianglelevels.jl")
 include("tensors/masks.jl")
