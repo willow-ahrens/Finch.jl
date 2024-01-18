@@ -105,9 +105,6 @@ function virtualize(ex, ::Type{AtomicLevel{AVal, Lvl}}, ctx, tag=:lvl) where {AV
           end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     temp = VirtualAtomicLevel(lvl_2, sym, typeof(level_default(Lvl)), Val, AVal, Lvl)
-    print(temp, "\n")
-    print(virtual_level_size(lvl_2, ctx), "\n")
-
     temp
 end
 
@@ -128,32 +125,38 @@ function declare_level!(lvl::VirtualAtomicLevel, ctx, pos, init)
               end
           end)
     lvl.lvl = declare_level!(lvl.lvl, ctx, pos, init)
+    # println(lvl.lvl)
+    # println(virtual_level_size(lvl.lvl, ctx))
     return lvl
 end
 
 function assemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
-    lvl.lvl = assemble_level!(lvl.lvl, ctx, pos_start, pos_stop)
-    lvl
+    # error("the assemble")
+    assemble_level!(lvl.lvl, ctx, pos_start, pos_stop)
 end
 
 supports_reassembly(lvl::VirtualAtomicLevel) = supports_reassembly(lvl.lvl)
 function reassemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
-    lvl.lvl = reassemble_level!(lvl.lvl, ctx, pos_start, pos_stop)
+    error("the reassemble")
+    reassemble_level!(lvl.lvl, ctx, pos_start, pos_stop)
     lvl
 end
 
 function freeze_level!(lvl::VirtualAtomicLevel, ctx, pos)
+    error("the freez")
     lvl.lvl = freeze_level!(lvl.lvl, ctx, pos)
     return lvl
 end
 
 function thaw_level!(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, pos)
+    error("the thaw")
     lvl.lvl = thaw_level!(lvl.lvl, ctx, pos)
     return lvl
 end
 
 function trim_level!(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, pos)
     # FIXME: Deallocate atomics?
+    error("the trim")
     posV = ctx(pos)
     idx = freshen(ctx.code, :idx)
     push!(ctx.code.preamble, quote
@@ -167,6 +170,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Reader
     (lvl, pos) = (fbr.lvl, fbr.pos)
     lvl = freshen(ctx.code, lvl.ex, :_lvl)
     sym = freshen(ctx.code, lvl.ex, :after_atomic_lvl)
+    error("the read")
     return body = Thunk(
         body = (ctx) -> begin
             instantiate(VirtualSubFiber(lvl.lvl, pos), ctx, mode, protos)
@@ -181,7 +185,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Update
     atomicData = freshen(ctx.code, lvl.ex, :atomicArrays)
     lockVal = freshen(ctx.code, lvl.ex, :lockVal)
     dev = (ctx.task.device)
-
+    error("the write")
     return body = Thunk(
         body = (ctx) -> begin
             lvl_2 = lvl.lvl
@@ -206,7 +210,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, ctx, mode::
     atomicData = freshen(ctx.code, lvl.ex, :atomicArrays)
     lockVal = freshen(ctx.code, lvl.ex, :lockVal)
     dev = (ctx.task.device)
-
+    error("fasfafa")
 
 
     return body = Thunk(
