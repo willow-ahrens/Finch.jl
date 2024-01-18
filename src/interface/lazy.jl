@@ -7,9 +7,15 @@ mutable struct LogicTensor{T, N}
     data
     extrude::NTuple{N, Bool}
 end
+LogicTensor{T}(data, extrude::NTuple{N, Bool}) where {T, N} = LogicTensor{T, N}(data, extrude)
 
 Base.ndims(::Type{LogicTensor{T, N}}) where {T, N} = N
 Base.eltype(::Type{<:LogicTensor{T}}) where {T} = T
+
+function identify(data)
+    lhs = alias(gensym())
+    subquery(query(lhs, data), lhs)
+end
 
 LogicTensor(data::Number) = LogicTensor{typeof(data), 0}(immediate(data), ())
 LogicTensor{T}(data::Number) where {T} = LogicTensor{T, 0}(immediate(data), ())
@@ -37,12 +43,12 @@ function Base.map(f, src::LogicTensor, args...)
     end
     T = combine_eltypes(f, args)
     data = mapjoin(immediate(f), ldatas...)
-    return LogicTensor{T}(subquery(alias(gensym()), data), src.extrude)
+    return LogicTensor{T}(identify(data), src.extrude)
 end
 
 function Base.map!(dst, f, src::LogicTensor, args...)
     res = map(f, src, args...)
-    return LogicTensor(subquery(alias(gensym()), reformat(dst, res.data)), res.extrude)
+    return LogicTensor(identify(reformat(dst, res.data)), res.extrude)
 end
 
 function initial_value(op, T)
@@ -63,13 +69,13 @@ function fixpoint_type(op, z, tns)
     T
 end
 
-function Base.reduce(op, arg::LogicTensor{N}; dims=:, init = initial_value(op, Float64)) where {N} #TODO fix eltype
+function Base.reduce(op, arg::LogicTensor{T, N}; dims=:, init = initial_value(op, Float64)) where {T, N}
     dims = dims == Colon() ? (1:N) : dims
     extrude = ((arg.extrude[n] for n in 1:N if !(n in dims))...,)
     fields = [field(gensym()) for _ in 1:N]
-    T = fixpoint_type(op, init, arg)
+    S = fixpoint_type(op, init, arg)
     data = aggregate(immediate(op), immediate(init), relabel(arg.data, fields), fields[dims]...)
-    LogicTensor{T}(subquery(alias(gensym()), data), extrude)
+    LogicTensor{S}(identify(data), extrude)
 end
 
 struct LogicStyle{N} <: BroadcastStyle end
@@ -95,7 +101,7 @@ function broadcast_to_query(bc::Broadcast.Broadcasted, idxs)
     mapjoin(immediate(bc.f), map(arg -> broadcast_to_query(arg, idxs), bc.args)...)
 end
 
-function broadcast_to_query(tns::LogicTensor{N}, idxs) where {N}
+function broadcast_to_query(tns::LogicTensor{T, N}, idxs) where {T, N}
     data_2 = relabel(tns.data, idxs[1:N]...)
     aggregate(immediate(overwrite), data_2, idxs[findall(!, tns.extrude)]...)
 end
@@ -120,26 +126,28 @@ function Base.copyto!(out, bc::Broadcasted{LogicStyle{N}}) where {N}
     bc_lgc = broadcast_to_logic(bc)
     data = broadcast_to_query(bc_lgc, [field(gensym()) for _ in 1:N])
     extrude = ntuple(n -> broadcast_to_extrude(bc_lgc, n), N)
-    return LogicTensor{eltype(bc)}(subquery(alias(gensym()), reformat(out, data)), extrude)
+    return LogicTensor{eltype(bc)}(identify(reformat(out, data)), extrude)
 end
 
 function Base.copy(bc::Broadcasted{LogicStyle{N}}) where {N}
     bc_lgc = broadcast_to_logic(bc)
     data = broadcast_to_query(bc_lgc, [field(gensym()) for _ in 1:N])
     extrude = ntuple(n -> broadcast_to_extrude(bc_lgc, n), N)
-    return LogicTensor{eltype(bc)}(subquery(alias(gensym()), data), extrude)
+    return LogicTensor{eltype(bc)}(identify(data), extrude)
 end
 
-lift_subqueries = Rewrite(PostWalk(Chain([
-    (@rule subquery(~lhs, ~rhs) => with(query(lhs, rhs), lhs)),
-    (@rule (~op::!isstateful)(~a1..., with(~p..., ~b), ~a2...) => with(p, op(a1, b, a2))),
-    Fixpoint(@rule query(~a, with(~p..., ~b)) => plan(p..., query(a, b))),
+lift_subqueries = Rewrite(Postwalk(Chain([
+    (@rule (~op::!isstateful)(~a1..., subquery(~p, ~b), ~a2...) => subquery(p, op(a1, b, a2))),
+    Fixpoint(@rule query(~a, subquery(~p, ~b)) => subquery(p, query(a, b))),
     (@rule plan(~args...) => plan(unique(args))),
 ])))
 
-compute(arg) = compute((arg,))[1]
-function compute(args::Tuple) =
-    prgm = plan(produce(map(arg -> arg.data, args)...))
+compute(arg) = compute((arg,))
+#compute(arg) = compute((arg,))[1]
+function compute(args::Tuple)
+    vars = map(arg -> field(alias(arg)), args)
+    bodies = map((arg, var) -> query(var, arg), args, vars)
+    prgm = plan(bodies, produces(vars))
     display(prgm)
     prgm = lift_subqueries(prgm)
     display(prgm)

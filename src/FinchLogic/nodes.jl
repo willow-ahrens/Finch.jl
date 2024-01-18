@@ -14,7 +14,7 @@ const ID = 4
     reformat  =  8ID | IS_TREE
     subquery  =  9ID | IS_TREE
     query     = 10ID | IS_TREE | IS_STATEFUL
-    produce   = 11ID | IS_TREE | IS_STATEFUL
+    produces   = 11ID | IS_TREE | IS_STATEFUL
     plan      = 12ID | IS_TREE | IS_STATEFUL
 end
 
@@ -83,10 +83,9 @@ Logical AST statement that reformats `arg` into the tensor `tns`.
 reformat
 
 """
-    subquery(lhs, rhs)
+    subquery(body, arg)
 
-Logical AST statement that evaluates `rhs`, binding the result to `lhs`. `rhs`
-will only be evaluated once.
+Logical AST statement that executes `body`, then evaluates `arg` in the resulting scope.
 """
 subquery
 
@@ -98,15 +97,15 @@ Logical AST statement that evaluates `rhs`, binding the result to `lhs`.
 query
 
 """
-    produce(args...)
+    produces(args...)
 
 Logical AST statement that returns `args...` from the current plan. Halts
 execution of the plan.
 """
-produce
+produces
 
 """
-    plan(bodies..., produce(args...))
+    plan(bodies..., produces(args...))
 
 Logical AST statement that executes a sequence of plans `bodies...`.
 """
@@ -160,6 +159,7 @@ function SyntaxInterface.similarterm(::Type{LogicNode}, op::LogicNodeKind, args)
 end
 
 function LogicNode(kind::LogicNodeKind, args::Vector)
+    args = vcat(args...)
     if (kind === immediate || kind === field || kind === alias) && length(args) == 1
         return LogicNode(kind, args[1], LogicNode[])
     elseif (kind === table && length(args) >= 1) ||
@@ -170,7 +170,7 @@ function LogicNode(kind::LogicNodeKind, args::Vector)
         (kind === reformat && length(args) == 2) ||
         (kind === subquery && length(args) == 2) ||
         (kind === query && length(args) == 2) ||
-        (kind === produce) ||
+        (kind === produces) ||
         (kind === plan)
         return LogicNode(kind, nothing, args)
     else
@@ -201,11 +201,11 @@ function Base.getproperty(node::LogicNode, sym::Symbol)
     elseif node.kind === relabel && sym === :idxs @view node.children[2:end]
     elseif node.kind === reformat && sym === :tns node.children[1]
     elseif node.kind === reformat && sym === :arg node.children[2]
-    elseif node.kind === subquery && sym === :lhs node.children[1]
-    elseif node.kind === subquery && sym === :rhs node.children[2]
+    elseif node.kind === subquery && sym === :body node.children[1]
+    elseif node.kind === subquery && sym === :arg node.children[2]
     elseif node.kind === query && sym === :lhs node.children[1]
     elseif node.kind === query && sym === :rhs node.children[2]
-    elseif node.kind === produce && sym === :args node.children
+    elseif node.kind === produces && sym === :args node.children
     elseif node.kind === plan && sym === :bodies node.children
     else
         error("type LogicNode($(node.kind), ...) has no property $sym")
@@ -224,10 +224,15 @@ end
 
 function Base.show(io::IO, mime::MIME"text/plain", node::LogicNode) 
     print(io, "Finch Logic: ")
-    if isstateful(node)
-        display_statement(io, mime, node, 0)
-    else
-        display_expression(io, mime, node)
+    try
+        if isstateful(node)
+            display_statement(io, mime, node, 0)
+        else
+            display_expression(io, mime, node)
+        end
+    catch
+        println(io, "error showing: ", node)
+        rethrow()
     end
 end
 
@@ -237,14 +242,14 @@ function display_statement(io, mime, node, indent)
         print(io, " = ")
         display_expression(io, mime, node.rhs)
     elseif operation(node) == plan
-        print(io, "plan")
+        println(io, "plan")
         for body in node.bodies
             print(io, " " ^ (indent + 2))
             display_statement(io, mime, body, indent + 2)
             println()
         end
         print(io, " " ^ indent, "end")
-    elseif operation(node) == produce
+    elseif operation(node) == produces
         print(io, "return (")
         for arg in node.args[1:end - 1]
             print(io, " " ^ (indent + 2))
@@ -268,9 +273,9 @@ function display_expression(io, mime, node)
         print(io, node.name)
     elseif operation(node) == subquery
         print(io, "(")
-        display_expression(io, mime, node.lhs)
-        print(io, " = ")
-        display_expression(io, mime, node.rhs)
+        display_expression(io, mime, node.body)
+        print(io, " ; ")
+        display_expression(io, mime, node.arg)
         print(io, ")")
     elseif istree(node)
         print(io, operation(node), "(")
@@ -282,7 +287,6 @@ function display_expression(io, mime, node)
             display_expression(io, mime, node.children[end])
         end
         print(io, ")")
-
     else
         throw(ArgumentError("Expected expression but got $(operation(node))"))
     end

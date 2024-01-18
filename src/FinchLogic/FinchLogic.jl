@@ -15,11 +15,11 @@ module FinchLogic
     export reorder
     export relabel
     export reformat
-    export produce
+    export produces
     export plan
     export LogicNode
 
-    export isimmediate, isalias, isfield
+    export isimmediate, isalias, isfield, isstateful
 
     export isprotocol
 
