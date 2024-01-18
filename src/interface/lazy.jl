@@ -3,15 +3,18 @@ using Base.Broadcast: Broadcasted, BroadcastStyle, AbstractArrayStyle
 using Base: broadcasted
 const AbstractArrayOrBroadcasted = Union{AbstractArray,Broadcasted}
 
-struct LogicTensor{N}
+mutable struct LogicTensor{T, N}
     data
     extrude::NTuple{N, Bool}
 end
 
-Base.ndims(::Type{LogicTensor{N}}) where {N} = N
+Base.ndims(::Type{LogicTensor{T, N}}) where {T, N} = N
+Base.eltype(::Type{<:LogicTensor{T}}) where {T} = T
 
-LogicTensor(data::Number) = LogicTensor{0}(immediate(data), ())
-LogicTensor(data::Base.AbstractArrayOrBroadcasted) = LogicTensor{ndims(data)}(immediate(data), ntuple(n -> size(data, n) == 1, ndims(data)))
+LogicTensor(data::Number) = LogicTensor{typeof(data), 0}(immediate(data), ())
+LogicTensor{T}(data::Number) where {T} = LogicTensor{T, 0}(immediate(data), ())
+LogicTensor(data::Base.AbstractArrayOrBroadcasted) = LogicTensor{eltype(data)}(data)
+LogicTensor{T}(data::Base.AbstractArrayOrBroadcasted) where {T} = LogicTensor{eltype(data), ndims(data)}(immediate(data), ntuple(n -> size(data, n) == 1, ndims(data)))
 LogicTensor(data::LogicTensor) = data
 
 Base.sum(arr::LogicTensor; kwargs...) = reduce(+, arr; kwargs...)
@@ -32,23 +35,45 @@ function Base.map(f, src::LogicTensor, args...)
         @assert larg.extrude == src.extrude "Logic only supports matching size and number of dimensions"
         return relabel(larg.data, idxs...)
     end
-    return LogicTensor(mapjoin(immediate(f), ldatas...), src.extrude)
+    T = combine_eltypes(f, args)
+    data = mapjoin(immediate(f), ldatas...)
+    return LogicTensor{T}(subquery(alias(gensym()), data), src.extrude)
 end
 
 function Base.map!(dst, f, src::LogicTensor, args...)
     res = map(f, src, args...)
-    return LogicTensor(reformat(dst, res.extrude))
+    return LogicTensor(subquery(alias(gensym()), reformat(dst, res.data)), res.extrude)
+end
+
+function initial_value(op, T)
+    try
+        reduce(op, Vector{T}())
+    catch
+        throw(ArgumentError("Please supply initial value for reduction of $T with $op."))
+    end
+end
+
+function fixpoint_type(op, z, tns)
+    S = Union{}
+    T = typeof(z)
+    while T != S
+        S = T
+        T = Union{T, combine_eltypes(op, (T, eltype(tns)))}
+    end
+    T
 end
 
 function Base.reduce(op, arg::LogicTensor{N}; dims=:, init = initial_value(op, Float64)) where {N} #TODO fix eltype
     dims = dims == Colon() ? (1:N) : dims
     extrude = ((arg.extrude[n] for n in 1:N if !(n in dims))...,)
     fields = [field(gensym()) for _ in 1:N]
-    LogicTensor(aggregate(immediate(op), immediate(init), relabel(arg.data, fields), fields[dims]...), extrude)
+    T = fixpoint_type(op, init, arg)
+    data = aggregate(immediate(op), immediate(init), relabel(arg.data, fields), fields[dims]...)
+    LogicTensor{T}(subquery(alias(gensym()), data), extrude)
 end
 
 struct LogicStyle{N} <: BroadcastStyle end
-Base.Broadcast.BroadcastStyle(F::Type{<:LogicTensor{N}}) where {N} = LogicStyle{N}()
+Base.Broadcast.BroadcastStyle(F::Type{<:LogicTensor{T, N}}) where {T, N} = LogicStyle{N}()
 Base.Broadcast.broadcastable(tns::LogicTensor) = tns
 Base.Broadcast.BroadcastStyle(a::LogicStyle{M}, b::LogicStyle{N}) where {M, N} = LogicStyle(max(M, N))
 Base.Broadcast.BroadcastStyle(a::LogicStyle{M}, b::FinchStyle{N}) where {M, N} = LogicStyle(max(M, N))
@@ -95,12 +120,27 @@ function Base.copyto!(out, bc::Broadcasted{LogicStyle{N}}) where {N}
     bc_lgc = broadcast_to_logic(bc)
     data = broadcast_to_query(bc_lgc, [field(gensym()) for _ in 1:N])
     extrude = ntuple(n -> broadcast_to_extrude(bc_lgc, n), N)
-    return LogicTensor(reformat(out, data), extrude)
+    return LogicTensor{eltype(bc)}(subquery(alias(gensym()), reformat(out, data)), extrude)
 end
 
 function Base.copy(bc::Broadcasted{LogicStyle{N}}) where {N}
     bc_lgc = broadcast_to_logic(bc)
     data = broadcast_to_query(bc_lgc, [field(gensym()) for _ in 1:N])
     extrude = ntuple(n -> broadcast_to_extrude(bc_lgc, n), N)
-    return LogicTensor(data, extrude)
+    return LogicTensor{eltype(bc)}(subquery(alias(gensym()), data), extrude)
+end
+
+lift_subqueries = Rewrite(PostWalk(Chain([
+    (@rule subquery(~lhs, ~rhs) => with(query(lhs, rhs), lhs)),
+    (@rule (~op::!isstateful)(~a1..., with(~p..., ~b), ~a2...) => with(p, op(a1, b, a2))),
+    Fixpoint(@rule query(~a, with(~p..., ~b)) => plan(p..., query(a, b))),
+    (@rule plan(~args...) => plan(unique(args))),
+])))
+
+compute(arg) = compute((arg,))[1]
+function compute(args::Tuple) =
+    prgm = plan(produce(map(arg -> arg.data, args)...))
+    display(prgm)
+    prgm = lift_subqueries(prgm)
+    display(prgm)
 end
