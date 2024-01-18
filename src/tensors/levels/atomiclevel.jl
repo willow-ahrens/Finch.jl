@@ -20,7 +20,7 @@ const Atomic = AtomicLevel
 
 
 AtomicLevel(lvl::Lvl) where {Lvl} = AtomicLevel{Vector{Base.Threads.SpinLock}, Lvl}(lvl, Vector{Base.Threads.SpinLock}([]))
-AtomicLevel{AVal, Lvl}(lvl::Lvl, atomics::AVal) where {Lvl, AVal} =  AtomicLevel{AVal, Lvl}(lvl, atomics)
+AtomicLevel{AVal, Lvl}(atomics::AVal, lvl::Lvl,) where {Lvl, AVal} =  AtomicLevel{AVal, Lvl}(lvl, atomics)
 Base.summary(::AtomicLevel{AVal, Lvl}) where {Lvl, AVal} = "AtomicLevel($(AVal), $(Lvl))"
 
 similar_level(lvl::Atomic{AVal, Lvl}) where {Lvl, AVal} = AtomicLevel{AVal, Lvl}(similar_level(lvl.lvl))
@@ -103,13 +103,18 @@ function virtualize(ex, ::Type{AtomicLevel{AVal, Lvl}}, ctx, tag=:lvl) where {AV
     push!(ctx.preamble, quote
         $sym = $ex
           end)
-    lvl_2 = virtualize(:($ex.lvl), Lvl, ctx, sym)
-    VirtualAtomicLevel(lvl_2, sym, typeof(level_default(Lvl)), Val, AVal, Lvl)
+    lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
+    temp = VirtualAtomicLevel(lvl_2, sym, typeof(level_default(Lvl)), Val, AVal, Lvl)
+    print(temp, "\n")
+    print(virtual_level_size(lvl_2, ctx), "\n")
+
+    temp
 end
 
 Base.summary(lvl::VirtualAtomicLevel) = "Atomic($(lvl.Lvl))"
 virtual_level_resize!(lvl::VirtualAtomicLevel, ctx, dims...) = (lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims...); lvl)
 virtual_level_size(lvl::VirtualAtomicLevel, ctx) = virtual_level_size(lvl.lvl, ctx)
+virtual_level_size(x, ctx) = error(string("Not defined for", x))
 virtual_level_eltype(lvl::VirtualAtomicLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualAtomicLevel) = virtual_level_default(lvl.lvl)
 
@@ -164,8 +169,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Reader
     sym = freshen(ctx.code, lvl.ex, :after_atomic_lvl)
     return body = Thunk(
         body = (ctx) -> begin
-            lvl_2 = virtualize(:($(lvl.ex).lvl), lvl.Lvl, ctx.code, sym)
-            instantiate(VirtualSubFiber(lvl_2, pos), ctx, mode, protos)
+            instantiate(VirtualSubFiber(lvl.lvl, pos), ctx, mode, protos)
         end,
     )
 end
@@ -180,14 +184,18 @@ function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Update
 
     return body = Thunk(
         body = (ctx) -> begin
-            lvl_2 = virtualize(:($(lvl.ex).lvl), lvl.Lvl, ctx.code, sym)
-            update = instantiate(VirtualSubFiber(lvl_2, pos), ctx, mode, protos)
-            return quote
-                $atomicData = promote_val_to_lock($dev, $(lvl.ex).atomicsArray, $(ctx(pos)), eltype($(lvl.AVal)))
-                $lock = get_lock($dev, $atomicData)
-                $update
+            lvl_2 = lvl.lvl
+            push!(ctx.code.preamble, 
+            quote
+                $atomicData =  promote_val_to_lock($dev, $(lvl.ex).atomicsArray, $(ctx(pos)), eltype($(lvl.AVal)))
+                $lock = get_lock($dev, $atomicData) 
+            end)
+            push!(ctx.code.epilogue,
+            quote 
                 release_lock($dev, $lock)
-            end
+            end )
+            update = instantiate(VirtualSubFiber(lvl_2, pos), ctx, mode, protos)
+            return update
         end
     )
 end
@@ -199,16 +207,22 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, ctx, mode::
     lockVal = freshen(ctx.code, lvl.ex, :lockVal)
     dev = (ctx.task.device)
 
+
+
     return body = Thunk(
         body = (ctx) -> begin
-            lvl_2 = virtualize(:($(lvl.ex).lvl), lvl.Lvl, ctx.code, sym)
-            update = instantiate(VirtualSubFiber(lvl_2, pos), ctx, mode, protos)
-            return quote
-                $atomicData = promote_val_to_lock($dev, $(lvl.ex).atomicsArray, $(ctx(pos)), eltype($(lvl.AVal)))
-                $lock = get_lock($dev, $atomicData)
-                $update
+            lvl_2 = lvl.lvl
+            push!(ctx.code.preamble, 
+            quote
+                $atomicData =  promote_val_to_lock($dev, $(lvl.ex).atomicsArray, $(ctx(pos)), eltype($(lvl.AVal)))
+                $lock = get_lock($dev, $atomicData) 
+            end)
+            push!(ctx.code.epilogue,
+            quote 
                 release_lock($dev, $lock)
-            end
+            end )
+            update = instantiate(VirtualHollowSubFiber(lvl_2, pos, fbr.dirty), ctx, mode, protos)
+            return update
         end
     )
 end
