@@ -82,7 +82,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
         end
 
 
-        if query(call(>=, measure(ext_4), 0), ctx)  
+        if prove(call(>=, measure(ext_4), 0), ctx)  
             return body
         else
             return quote

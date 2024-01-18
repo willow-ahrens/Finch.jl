@@ -40,7 +40,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::LookupStyle)
         @assert isvirtual(root.ext)
 
         target = is_continuous_extent(root.ext) ? 0 : 1
-        if query(call(==, measure(root.ext.val), target), ctx)
+        if prove(call(==, measure(root.ext.val), target), ctx)
             return quote
                 $idx_sym = $(ctx(getstart(root.ext)))
                 $body

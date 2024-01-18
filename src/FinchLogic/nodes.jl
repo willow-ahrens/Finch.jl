@@ -1,6 +1,6 @@
 const IS_TREE = 1
 const IS_STATEFUL = 2
-const ID = 2
+const ID = 4
 
 @enum LogicNodeKind begin
     immediate =  0ID
@@ -10,7 +10,7 @@ const ID = 2
     mapjoin   =  4ID | IS_TREE
     aggregate =  5ID | IS_TREE
     reorder   =  6ID | IS_TREE
-    rename    =  7ID | IS_TREE
+    relabel   =  7ID | IS_TREE
     reformat  =  8ID | IS_TREE
     subquery  =  9ID | IS_TREE
     query     = 10ID | IS_TREE | IS_STATEFUL
@@ -69,11 +69,11 @@ Logical AST statement that reorders the dimensions of `arg` to be `idxs...`
 reorder
 
 """
-    rename(arg, idxs...)
+    relabel(arg, idxs...)
 
-Logical AST statement that renames the dimensions of `arg` to be `idxs...`
+Logical AST statement that relabels the dimensions of `arg` to be `idxs...`
 """
-reorder
+relabel
 
 """
     reformat(tns, arg)
@@ -135,13 +135,6 @@ Returns true if the node is a finch immediate
 isimmediate(ex::LogicNode) = ex.kind === immediate
 
 """
-    isvalue(node)
-
-Returns true if the node is a finch value
-"""
-isvalue(ex::LogicNode) = ex.kind === value
-
-"""
     isalias(node)
 
 Returns true if the node is a finch alias
@@ -173,7 +166,7 @@ function LogicNode(kind::LogicNodeKind, args::Vector)
         (kind === mapjoin && length(args) >= 1) ||
         (kind === aggregate && length(args) >= 3) ||
         (kind === reorder && length(args) >= 1) ||
-        (kind === rename && length(args) >= 1) ||
+        (kind === relabel && length(args) >= 1) ||
         (kind === reformat && length(args) == 2) ||
         (kind === subquery && length(args) == 2) ||
         (kind === query && length(args) == 2) ||
@@ -204,8 +197,8 @@ function Base.getproperty(node::LogicNode, sym::Symbol)
     elseif node.kind === aggregate && sym === :idxs @view node.children[4:end]
     elseif node.kind === reorder && sym === :arg node.children[1]
     elseif node.kind === reorder && sym === :idxs @view node.children[2:end]
-    elseif node.kind === rename && sym === :arg node.children[1]
-    elseif node.kind === rename && sym === :idxs @view node.children[2:end]
+    elseif node.kind === relabel && sym === :arg node.children[1]
+    elseif node.kind === relabel && sym === :idxs @view node.children[2:end]
     elseif node.kind === reformat && sym === :tns node.children[1]
     elseif node.kind === reformat && sym === :arg node.children[2]
     elseif node.kind === subquery && sym === :lhs node.children[1]

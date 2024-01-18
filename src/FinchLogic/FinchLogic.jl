@@ -13,12 +13,13 @@ module FinchLogic
     export mapjoin
     export aggregate
     export reorder
+    export relabel
     export reformat
     export produce
     export plan
     export LogicNode
 
-    export isimmediate, isvalue, isalias, isfield
+    export isimmediate, isalias, isfield
 
     export isprotocol
 

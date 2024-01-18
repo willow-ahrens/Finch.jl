@@ -244,13 +244,13 @@ collapsed(alg, idx, ext, lhs, f::typeof(*), rhs) = assign(lhs, f, call(^, rhs, m
 collapsed(alg, idx, ext::Extent, lhs, f::typeof(+), rhs) = assign(lhs, f, call(*, measure(ext), rhs))
 collapsed(alg, idx, ext::ContinuousExtent, lhs, f::typeof(+), rhs) = begin 
     if (@capture rhs call(*, ~a1..., call(d, ~i1..., idx, ~i2...), ~a2...)) # Lebesgue
-        if query(call(==, measure(ext), 0), LowerJulia())
+        if prove(call(==, measure(ext), 0), LowerJulia())
             assign(lhs, f, literal(0))
         else
             assign(lhs, f, call(*, call(drop_eps, measure(ext)), a1..., a2..., call(d, i1..., i2...)))
         end
     else # Counting
-        if query(call(==, measure(ext), 0), LowerJulia())
+        if prove(call(==, measure(ext), 0), LowerJulia())
             assign(lhs, f, rhs)
         else
             sieve(call(==, measure(ext), 0), assign(lhs, f, rhs)) # Undefined if measure != 0 

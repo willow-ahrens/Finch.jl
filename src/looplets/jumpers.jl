@@ -119,7 +119,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
             $i = $(ctx_2(getstop(ext_4))) + $(ctx_2(getunit(ext_4)))
         end
 
-        if query(call(>=, measure(ext_4), 0), ctx_2)  
+        if prove(call(>=, measure(ext_4), 0), ctx_2)  
             body
         else
             quote
@@ -133,7 +133,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
 
     @assert isvirtual(root.ext)
 
-    if query(call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)), ctx)
+    if prove(call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)), ctx)
         body_2
     else
         return quote

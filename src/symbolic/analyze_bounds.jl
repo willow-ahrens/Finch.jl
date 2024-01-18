@@ -106,9 +106,9 @@ function get_bounds_rules(alg, shash)
         #=        
         # this rule is great but too expensive
         (@rule call(max, ~a, call(min, ~b, ~c)) => begin
-            if query(call(<=, a, b), LowerJulia()) # a = low, b = high
+            if prove(call(<=, a, b), LowerJulia()) # a = low, b = high
               call(min, b, call(max, a, c))
-            elseif query(call(<=, a, c), LowerJulia()) # a = low, c = high
+            elseif prove(call(<=, a, c), LowerJulia()) # a = low, c = high
               call(min, c, call(max, b, a))
             end
           end), 
@@ -120,7 +120,7 @@ function get_bounds_rules(alg, shash)
     ]
 end
 
-function query(root::FinchNode, ctx; verbose = false)
+function prove(root::FinchNode, ctx; verbose = false)
     root = Rewrite(Prewalk(Fixpoint(Chain([
         @rule(cached(~a, ~b::isliteral) => b.val),
     ]))))(root)
