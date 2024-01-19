@@ -38,7 +38,7 @@ struct VirtualSerial <: AbstractVirtualTask end
 virtualize(ex, ::Type{Serial}, ctx) = VirtualSerial()
 lower(task::VirtualSerial, ctx::AbstractCompiler, ::DefaultStyle) = :(Serial())
 FinchNotation.finch_leaf(device::VirtualSerial) = virtual(device)
-virtual_get_device(::VirtualSerial) = VirtualCPU(1)
+virtual_get_device(::VirtualSerial) = VirtualCPU(nothing, 1)
 virtual_get_task(::VirtualSerial) = nothing
 
 
