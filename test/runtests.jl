@@ -21,7 +21,7 @@ run this with a $(Sys.WORD_SIZE==32 ? 64 : 32)-bit julia executable.")
     "suites"
         nargs = '*'
         default = ["all"]
-        help = "names of test suites to run, from: print, representation, constructors, conversions, merges, index, typical, kernels, issues, base, continuous, apps, fileio, docs, debug, continuous, algebra, moveto."
+        help = "names of test suites to run, from: print, representation, constructors, conversions, merges, index, typical, kernels, issues, base, interface, continuous, apps, fileio, docs, debug, continuous, algebra, moveto."
 end
 parsed_args = parse_args(ARGS, s)
 
@@ -92,6 +92,7 @@ include("utils.jl")
     if should_run("kernels") include("test_kernels.jl") end
     if should_run("issues") include("test_issues.jl") end
     if should_run("base") include("test_base.jl") end
+    if should_run("interface") include("test_interface.jl") end
     if should_run("continuous") include("test_continuous.jl") end
     if should_run("examples") include("test_examples.jl") end
     if should_run("fileio") include("test_fileio.jl") end

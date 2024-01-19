@@ -155,26 +155,28 @@ SyntaxInterface.operation(node::LogicNode) = node.kind
 
 function SyntaxInterface.similarterm(::Type{LogicNode}, op::LogicNodeKind, args)
     @assert Int(op) & IS_TREE != 0
-    LogicNode(op, nothing, nothing, args)
+    LogicNode(op, nothing, args)
 end
 
 function LogicNode(kind::LogicNodeKind, args::Vector)
-    args = vcat(args...)
     if (kind === immediate || kind === field || kind === alias) && length(args) == 1
         return LogicNode(kind, args[1], LogicNode[])
-    elseif (kind === table && length(args) >= 1) ||
-        (kind === mapjoin && length(args) >= 1) ||
-        (kind === aggregate && length(args) >= 3) ||
-        (kind === reorder && length(args) >= 1) ||
-        (kind === relabel && length(args) >= 1) ||
-        (kind === reformat && length(args) == 2) ||
-        (kind === subquery && length(args) == 2) ||
-        (kind === query && length(args) == 2) ||
-        (kind === produces) ||
-        (kind === plan)
-        return LogicNode(kind, nothing, args)
     else
-        error("wrong number of arguments to $kind(...)")
+        args = vcat(args...)
+        if (kind === table && length(args) >= 1) ||
+            (kind === mapjoin && length(args) >= 1) ||
+            (kind === aggregate && length(args) >= 3) ||
+            (kind === reorder && length(args) >= 1) ||
+            (kind === relabel && length(args) >= 1) ||
+            (kind === reformat && length(args) == 2) ||
+            (kind === subquery && length(args) == 2) ||
+            (kind === query && length(args) == 2) ||
+            (kind === produces) ||
+            (kind === plan)
+            return LogicNode(kind, nothing, args)
+        else
+            error("wrong number of arguments to $kind(...)")
+        end
     end
 end
 
@@ -259,6 +261,7 @@ function display_statement(io, mime, node, indent)
         if length(node.args) > 0
             display_expression(io, mime, node.args[end])
         end
+        print(")")
     else
         throw(ArgumentError("Expected statement but got $(operation(node))"))
     end

@@ -35,6 +35,7 @@ function Base.mapreduce(f, op, src::LogicTensor, args...; kw...)
 end
 
 function Base.map(f, src::LogicTensor, args...)
+    args = (src, args...)
     idxs = [field(gensym()) for _ in src.extrude]
     ldatas = map(args) do arg
         larg = LogicTensor(arg)
@@ -70,7 +71,7 @@ function fixpoint_type(op, z, tns)
 end
 
 function Base.reduce(op, arg::LogicTensor{T, N}; dims=:, init = initial_value(op, Float64)) where {T, N}
-    dims = dims == Colon() ? (1:N) : dims
+    dims = dims == Colon() ? (1:N) : collect(dims)
     extrude = ((arg.extrude[n] for n in 1:N if !(n in dims))...,)
     fields = [field(gensym()) for _ in 1:N]
     S = fixpoint_type(op, init, arg)
@@ -81,9 +82,9 @@ end
 struct LogicStyle{N} <: BroadcastStyle end
 Base.Broadcast.BroadcastStyle(F::Type{<:LogicTensor{T, N}}) where {T, N} = LogicStyle{N}()
 Base.Broadcast.broadcastable(tns::LogicTensor) = tns
-Base.Broadcast.BroadcastStyle(a::LogicStyle{M}, b::LogicStyle{N}) where {M, N} = LogicStyle(max(M, N))
-Base.Broadcast.BroadcastStyle(a::LogicStyle{M}, b::FinchStyle{N}) where {M, N} = LogicStyle(max(M, N))
-Base.Broadcast.BroadcastStyle(a::LogicStyle{M}, b::Broadcast.AbstractArrayStyle{N}) where {M, N} = LogicStyle(max(M, N))
+Base.Broadcast.BroadcastStyle(a::LogicStyle{M}, b::LogicStyle{N}) where {M, N} = LogicStyle{max(M, N)}()
+Base.Broadcast.BroadcastStyle(a::LogicStyle{M}, b::FinchStyle{N}) where {M, N} = LogicStyle{max(M, N)}()
+Base.Broadcast.BroadcastStyle(a::LogicStyle{M}, b::Broadcast.AbstractArrayStyle{N}) where {M, N} = LogicStyle{max(M, N)}()
 
 function broadcast_to_logic(bc::Broadcast.Broadcasted)
     broadcasted(bc.f, map(broadcast_to_logic, bc.args)...)
@@ -103,7 +104,7 @@ end
 
 function broadcast_to_query(tns::LogicTensor{T, N}, idxs) where {T, N}
     data_2 = relabel(tns.data, idxs[1:N]...)
-    aggregate(immediate(overwrite), data_2, idxs[findall(!, tns.extrude)]...)
+    aggregate(immediate(overwrite), nothing, data_2, idxs[findall(tns.extrude)]...)
 end
 
 function broadcast_to_extrude(bc::Broadcast.Broadcasted, n)
@@ -137,16 +138,20 @@ function Base.copy(bc::Broadcasted{LogicStyle{N}}) where {N}
 end
 
 lift_subqueries = Rewrite(Postwalk(Chain([
-    (@rule (~op::!isstateful)(~a1..., subquery(~p, ~b), ~a2...) => subquery(p, op(a1, b, a2))),
-    Fixpoint(@rule query(~a, subquery(~p, ~b)) => subquery(p, query(a, b))),
+    (@rule (~op)(~a1..., subquery(~p, ~b), ~a2...) => if op !== subquery && op !== query
+        subquery(p, op(a1, b, a2))
+    end),
+    Fixpoint(@rule query(~a, subquery(~p, ~b)) => plan(p, query(a, b), produces(a))),
+    Fixpoint(@rule plan(~a1..., plan(~b..., produces(~c...)), ~a2...) => plan(a1, b, a2)),
     (@rule plan(~args...) => plan(unique(args))),
 ])))
 
 compute(arg) = compute((arg,))
 #compute(arg) = compute((arg,))[1]
-function compute(args::Tuple)
-    vars = map(arg -> field(alias(arg)), args)
-    bodies = map((arg, var) -> query(var, arg), args, vars)
+function compute(args::NTuple)
+    args = collect(args)
+    vars = map(arg -> alias(gensym()), args)
+    bodies = map((arg, var) -> query(var, arg.data), args, vars)
     prgm = plan(bodies, produces(vars))
     display(prgm)
     prgm = lift_subqueries(prgm)
