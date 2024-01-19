@@ -64,7 +64,9 @@ aggregate
 """
     reorder(arg, idxs...)
 
-Logical AST statement that reorders the dimensions of `arg` to be `idxs...`
+Logical AST statement that reorders the dimensions of `arg` to be `idxs...`.
+Dimensions known to be length 1 may be dropped. Dimensions that do not exist in
+`arg` may be added.
 """
 reorder
 

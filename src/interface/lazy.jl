@@ -19,8 +19,14 @@ end
 
 LogicTensor(data::Number) = LogicTensor{typeof(data), 0}(immediate(data), ())
 LogicTensor{T}(data::Number) where {T} = LogicTensor{T, 0}(immediate(data), ())
-LogicTensor(data::Base.AbstractArrayOrBroadcasted) = LogicTensor{eltype(data)}(data)
-LogicTensor{T}(data::Base.AbstractArrayOrBroadcasted) where {T} = LogicTensor{eltype(data), ndims(data)}(immediate(data), ntuple(n -> size(data, n) == 1, ndims(data)))
+LogicTensor(arr::Base.AbstractArrayOrBroadcasted) = LogicTensor{eltype(arr)}(arr)
+function LogicTensor{T}(arr::Base.AbstractArrayOrBroadcasted) where {T}
+    name = alias(gensym(:A))
+    idxs = [field(gensym(:i)) for _ in 1:ndims(arr)]
+    extrude = ntuple(n -> size(arr, n) == 1, ndims(arr))
+    tns = subquery(query(name, table(immediate(arr), idxs...)), name)
+    LogicTensor{eltype(arr), ndims(arr)}(tns, extrude)
+end
 LogicTensor(data::LogicTensor) = data
 
 Base.sum(arr::LogicTensor; kwargs...) = reduce(+, arr; kwargs...)
@@ -137,14 +143,33 @@ function Base.copy(bc::Broadcasted{LogicStyle{N}}) where {N}
     return LogicTensor{eltype(bc)}(identify(data), extrude)
 end
 
-lift_subqueries = Rewrite(Postwalk(Chain([
+isolate_aggregates = Rewrite(Postwalk(
+    @rule aggregate(~op, ~init, ~arg, ~idxs...) => begin
+        name = alias(gensym())
+        subquery(query(name, aggregate(~op, ~init, ~arg, ~idxs...)), name)
+    end
+))
+
+lift_subqueries = Rewrite(Fixpoint(Postwalk(Chain([
     (@rule (~op)(~a1..., subquery(~p, ~b), ~a2...) => if op !== subquery && op !== query
         subquery(p, op(a1, b, a2))
     end),
     Fixpoint(@rule query(~a, subquery(~p, ~b)) => plan(p, query(a, b), produces(a))),
     Fixpoint(@rule plan(~a1..., plan(~b..., produces(~c...)), ~a2...) => plan(a1, b, a2)),
     (@rule plan(~args...) => plan(unique(args))),
-])))
+]))))
+
+simplify_queries = Rewrite(Fixpoint(Postwalk(Chain([
+    (@rule aggregate(~op, ~init, ~arg) => mapjoin(op, init, arg)),
+    (@rule mapjoin(overwrite, ~lhs, ~rhs) => rhs),
+]))))
+
+propagate_copy_queries = Rewrite(Fixpoint(Postwalk(Chain([
+    (@rule plan(~a1..., query(~b, ~c), ~a2..., produces(~d...)) => if c.kind === alias && !(b in d)
+        rw = Postwalk(@rule b => c)
+        plan(a1..., map(rw, a2)..., produces(d...))
+    end),
+]))))
 
 compute(arg) = compute((arg,))
 #compute(arg) = compute((arg,))[1]
@@ -154,6 +179,9 @@ function compute(args::NTuple)
     bodies = map((arg, var) -> query(var, arg.data), args, vars)
     prgm = plan(bodies, produces(vars))
     display(prgm)
+    prgm = isolate_aggregates(prgm)
     prgm = lift_subqueries(prgm)
+    prgm = propagate_copy_queries(prgm)
+    prgm = simplify_queries(prgm)
     display(prgm)
 end
