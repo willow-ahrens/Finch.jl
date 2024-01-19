@@ -6,7 +6,6 @@ module FinchLogic
     export immediate
     export field
     export alias
-    export value
     export table
     export subquery
     export query

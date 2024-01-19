@@ -159,10 +159,13 @@ lift_subqueries = Rewrite(Fixpoint(Postwalk(Chain([
     (@rule plan(~args...) => plan(unique(args))),
 ]))))
 
-simplify_queries = Rewrite(Fixpoint(Postwalk(Chain([
-    (@rule aggregate(~op, ~init, ~arg) => mapjoin(op, init, arg)),
-    (@rule mapjoin(overwrite, ~lhs, ~rhs) => rhs),
-]))))
+simplify_queries(bindings)
+    Rewrite(Fixpoint(Postwalk(Chain([
+        (@rule aggregate(~op, ~init, ~arg) => mapjoin(op, init, arg)),
+        (@rule mapjoin(overwrite, ~lhs, ~rhs) =>
+            reorder(rhs, getfields(mapjoin(overwrite, ~lhs, ~rhs), bindings)...)),
+    ]))))
+end
 
 propagate_copy_queries = Rewrite(Fixpoint(Postwalk(Chain([
     (@rule plan(~a1..., query(~b, ~c), ~a2..., produces(~d...)) => if c.kind === alias && !(b in d)
@@ -181,7 +184,8 @@ function compute(args::NTuple)
     display(prgm)
     prgm = isolate_aggregates(prgm)
     prgm = lift_subqueries(prgm)
+    bindings = get_bindings(prgm)
+    prgm = simplify_queries(prgm, bindings)
     prgm = propagate_copy_queries(prgm)
-    prgm = simplify_queries(prgm)
     display(prgm)
 end

@@ -346,3 +346,47 @@ finch_pattern(arg::RewriteTools.Term) = arg
 function RewriteTools.term(f::LogicNodeKind, args...; type = nothing)
     RewriteTools.Term(f, [finch_pattern.(args)...])
 end
+
+function getbindings(root::LogicNode)
+    bindings = Dict{LogicNode, LogicNode}()
+    for node in PostOrderDFS(node)
+        if @capture node query(~lhs, ~rhs)
+            bindings[lhs] = rhs
+        end
+    end
+    bindings
+end
+
+function getfields(node::LogicNode, bindings)
+    if node.kind == field || node.kind == immediate
+        return ArgumentError("getfields($(node.kind)) is undefined")
+    elseif node.kind == alias
+        return getfields(bindings[node], bindings)
+    elseif node.kind == table
+        return node.idxs
+    elseif node.kind == subquery
+        getfields(node.arg, bindings)
+    elseif node.kind == mapjoin
+        return unique(vcat(map(arg -> getfields(arg, bindings), node.args)...))
+    elseif node.kind == aggregate
+        return setdiff(getfields(node.arg, bindings), node.idxs)
+    elseif node.kind == reorder
+        idxs = getfields(node.arg, bindings)
+        return intersect(node.idxs, idxs)
+    elseif node.kind == relabel
+        idxs = getfields(node.arg, bindings)
+        @assert length(idxs) == length(node.idxs)
+        return node.idxs
+    elseif node.kind == reformat
+        return getfields(node.arg, bindings)
+    else
+        return ArgumentError("getfields($(node.kind)) is undefined")
+    end
+end
+    
+
+        
+
+    
+
+    
