@@ -118,10 +118,14 @@ virtual_level_default(lvl::VirtualAtomicLevel) = virtual_level_default(lvl.lvl)
 function declare_level!(lvl::VirtualAtomicLevel, ctx, pos, init)
     posV = ctx(pos)
     idx = freshen(ctx.code, :idx)
+    lockVal = freshen(ctx.code, :lock)
     push!(ctx.code.preamble, quote 
-              Finch.resize_if_smaller!($(lvl.ex).atomicsArray, ctx, $posV)
+              Finch.resize_if_smaller!($(lvl.ex).atomicsArray, $posV) 
               @inbounds for $idx = 1:$posV
-                  $(lvl.ex).atomicsArray[i] = make_lock(eltype($(lvl.AVal)))
+                lockVal = make_lock(eltype($(lvl.AVal)))
+                if !isnothing(lockVal)
+                    $(lvl.ex).atomicsArray[$idx] = lockVal
+                end
               end
           end)
     lvl.lvl = declare_level!(lvl.lvl, ctx, pos, init)
@@ -175,7 +179,7 @@ end
 function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     sym = freshen(ctx.code, lvl.ex, :after_atomic_lvl)
-    atomicData = freshen(ctx.code, lvl.ex, :atomicArrays)
+    atomicData = freshen(ctx.code, lvl.ex, :atomicArraysAcc)
     lockVal = freshen(ctx.code, lvl.ex, :lockVal)
     
     return body = Thunk(
@@ -184,12 +188,12 @@ function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Update
             lvl_2 = lvl.lvl
             push!(ctx.code.preamble, 
             quote
-                $atomicData =  promote_val_to_lock($dev, $(lvl.ex).atomicsArray, $(ctx(pos)), eltype($(lvl.AVal)))
-                $lock = get_lock($dev, $atomicData) 
+                $atomicData =  promote_val_to_lock($dev, ($(lvl.ex)).atomicsArray, $(ctx(pos)), eltype($(lvl.AVal)))
+                $lockVal = get_lock($dev, $atomicData) 
             end)
             push!(ctx.code.epilogue,
             quote 
-                release_lock($dev, $lock)
+                release_lock($dev, $lockVal)
             end )
             update = instantiate(VirtualSubFiber(lvl_2, pos), ctx, mode, protos)
             return update
@@ -208,8 +212,8 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, ctx, mode::
             lvl_2 = lvl.lvl
             push!(ctx.code.preamble, 
             quote
-                $atomicData =  promote_val_to_lock($dev, $(lvl.ex).atomicsArray, $(ctx(pos)), eltype($(lvl.AVal)))
-                $lock = get_lock($dev, $atomicData) 
+                $atomicData =  promote_val_to_lock($dev, ($(lvl.ex)).atomicsArray, $(ctx(pos)), eltype($(lvl.AVal)))
+                $lockVal = get_lock($dev, $atomicData) 
             end)
             push!(ctx.code.epilogue,
             quote 
