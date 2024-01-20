@@ -16,16 +16,6 @@ function reduce_rep end
 reduce_rep(op, z, tns, dims) =
     reduce_rep_def(op, z, tns, reverse(map(n -> n in dims ? Drop(n) : n, 1:ndims(tns)))...)
 
-function fixpoint_type(op, z, tns)
-    S = Union{}
-    T = typeof(z)
-    while T != S
-        S = T
-        T = Union{T, combine_eltypes(op, (T, eltype(tns)))}
-    end
-    T
-end
-
 reduce_rep_def(op, z, fbr::HollowData, idxs...) = HollowData(reduce_rep_def(op, z, fbr.lvl, idxs...))
 function reduce_rep_def(op, z, lvl::HollowData, idx, idxs...)
     if op(z, default(lvl)) == z
@@ -100,14 +90,6 @@ Base.:-(x::Tensor, y::Tensor) = map(-, x, y)
 
 Base.:/(x::Tensor, y::Number) = map(/, x, y)
 Base.:/(x::Number, y::Tensor) = map(\, y, x)
-
-function initial_value(op, T)
-    try
-        reduce(op, Vector{T}())
-    catch
-        throw(ArgumentError("Please supply initial value for reduction of $T with $op."))
-    end
-end
 
 function Base.reduce(op::Function, bc::Broadcasted{FinchStyle{N}}; dims=:, init = initial_value(op, combine_eltypes(bc.f, bc.args))) where {N}
     reduce_helper(Callable{op}(), lift_broadcast(bc), Val(dims), Val(init))

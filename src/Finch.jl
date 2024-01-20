@@ -150,6 +150,7 @@ include("interface/copy.jl")
 include("interface/fsparse.jl")
 include("interface/fileio/fileio.jl")
 include("interface/lazy.jl")
+include("interface/compute.jl")
 
 @static if !isdefined(Base, :get_extension)
     function __init__()

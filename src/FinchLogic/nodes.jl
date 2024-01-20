@@ -256,7 +256,6 @@ function display_statement(io, mime, node, indent)
     elseif operation(node) == produces
         print(io, "return (")
         for arg in node.args[1:end - 1]
-            print(io, " " ^ (indent + 2))
             display_expression(io, mime, arg)
             print(io, ", ")
         end
