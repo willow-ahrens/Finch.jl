@@ -1,7 +1,7 @@
-flatten_plans = Rewrite(Postwalk(Chain([
+flatten_plans = Rewrite(Postwalk(Fixpoint(Chain([
     (@rule plan(~a1..., plan(~b..., produces(~c...)), ~a2...) => plan(a1..., b..., a2...)),
     (@rule plan(~a1..., plan(~b...), ~a2...) => plan(a1..., b..., a2...)),
-])))
+]))))
 
 isolate_aggregates = Rewrite(Postwalk(
     @rule aggregate(~op, ~init, ~arg, ~idxs...) => begin
@@ -118,23 +118,34 @@ pad_with_aggregate = Rewrite(Postwalk(Chain([
     end),
 ])))
 
+function issubsequence(a, b)
+    a = collect(a)
+    b = collect(b)
+    return issubset(a, b) && intersect(b, a) == a
+end
+
+function withsubsequence(a, b)
+    a = collect(a)
+    b = collect(b)
+    view(b, findall(idx -> idx in a, b)) .= a
+end
+
 function concordize(root, bindings)
     needed_swizzles = Dict()
-    root = Rewrite(Postwalk(Chain([
-        (@rule reorder(~a::isalias, ~idxs...) => begin
-            idxs_2 = intersect(idxs, getfields(a, bindings))
-            if !issorted(idxs_2, by = idx -> findfirst(isequal(idx), idxs))
-                b = get!(get!(needed_swizzles, a, Dict()), idxs_2, alias(gensym(:A)))
-                reorder(b, idxs...)
-            end
-        end),
-        (@rule reorder(relabel(~a::isalias, ~idxs_2...), ~idxs...) => begin
+    root = Rewrite(Postwalk(
+        @rule reorder(relabel(~a::isalias, ~idxs_2...), ~idxs...) => begin
             idxs_3 = getfields(a, bindings)
             reidx = Dict(map(Pair, idxs_2, idxs_3)...)
-            idxs_4 = map(idx -> reidx[idx], intersect(idxs, idxs_2))
-            if !issorted(idxs_4, by = idx -> findfirst(isequal(idx), idxs_3))
-                b = get!(get!(needed_swizzles, a, Dict()), idxs_4, alias(gensym(:A)))
-                reorder(relabel(b, idxs_2...), idxs...)
+            idxs_4 = map(idx -> get(reidx, idx, idx), idxs)
+            relabel(reorder(a, idxs_4...), idxs...)
+        end
+    ))(root)
+    root = Rewrite(Postwalk(Chain([
+        (@rule reorder(~a::isalias, ~idxs...) => begin
+            idxs_2 = getfields(a, bindings)
+            idxs_3 = intersect(idxs, idxs_2)
+            if !issubsequence(idxs_3, idxs_2)
+                reorder(get!(get!(needed_swizzles, a, Dict()), idxs_3, alias(gensym(:A))), idxs...)
             end
         end),
     ])))(root)
@@ -143,8 +154,7 @@ function concordize(root, bindings)
             if haskey(needed_swizzles, a)
                 idxs = getfields(a, bindings)
                 swizzle_queries = map(collect(needed_swizzles[a])) do (idxs_2, c)
-                    idxs_3 = copy(idxs)
-                    view(idxs_3, findall(idx -> idx in idxs_2, idxs)) .= idxs_2
+                    idxs_3 = withsubsequence(idxs_2, idxs)
                     bindings[c] = reorder(a, idxs_3...)
                     query(c, reorder(a, idxs_3...))
                 end
@@ -167,9 +177,12 @@ function compute(args::Tuple)
     bodies = map((arg, var) -> query(var, arg.data), args, vars)
     prgm = plan(bodies, produces(vars))
     display(prgm)
-    prgm = isolate_tables(prgm)
+    prgm = lift_subqueries(prgm)
+    #At this point in the program, all statements should be unique, so the
+    #isolate calls that name things to lift them should be okay.
     prgm = isolate_reformats(prgm)
     prgm = isolate_aggregates(prgm)
+    prgm = isolate_tables(prgm)
     prgm = lift_subqueries(prgm)
     bindings = getbindings(prgm)
     prgm = simplify_queries(bindings)(prgm)
@@ -185,5 +198,4 @@ function compute(args::Tuple)
     prgm = pad_labels(prgm)
     prgm = push_labels(prgm, bindings)
     display(pretty_labels(prgm))
-    display(drop_noisy_reorders(pretty_labels(prgm)))
 end
