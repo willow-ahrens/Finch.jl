@@ -82,8 +82,18 @@ function push_labels(root, bindings)
             rw = Rewrite(Postwalk(@rule b => relabel(d, i...)))
             plan(a1..., query(d, c), map(rw, a2)...)
         end),
+        (@rule plan(~a1..., query(~b, reorder(~c, ~i...)), ~a2...) => begin
+            d = alias(gensym(:A))
+            bindings[d] = c
+            rw = Rewrite(Postwalk(@rule b => reorder(d, i...)))
+            plan(a1..., query(d, c), map(rw, a2)...)
+        end),
     ]))))(root)
 end
+
+pad_labels = Rewrite(Postwalk(
+    @rule relabel(~arg, ~idxs...) => reorder(relabel(~arg, ~idxs...), idxs...)
+))
 
 function fuse_reformats(root)
     Rewrite(Postwalk(Chain([
@@ -145,6 +155,10 @@ function concordize(root, bindings)
     root = flatten_plans(root)
 end
 
+drop_noisy_reorders = Rewrite(Postwalk(
+    @rule reorder(relabel(~arg, ~idxs...), ~idxs...) => relabel(arg, idxs...)
+))
+
 compute(arg) = compute((arg,))
 #compute(arg) = compute((arg,))[1]
 function compute(args::Tuple)
@@ -168,4 +182,8 @@ function compute(args::Tuple)
     prgm = fuse_reformats(prgm)
     prgm = pad_with_aggregate(prgm)
     display(pretty_labels(prgm))
+    prgm = pad_labels(prgm)
+    prgm = push_labels(prgm, bindings)
+    display(pretty_labels(prgm))
+    display(drop_noisy_reorders(pretty_labels(prgm)))
 end
