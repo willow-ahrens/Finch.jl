@@ -14,7 +14,7 @@ const ID = 4
     reformat  =  8ID | IS_TREE
     subquery  =  9ID | IS_TREE
     query     = 10ID | IS_TREE | IS_STATEFUL
-    produces   = 11ID | IS_TREE | IS_STATEFUL
+    produces  = 11ID | IS_TREE | IS_STATEFUL
     plan      = 12ID | IS_TREE | IS_STATEFUL
 end
 
@@ -349,7 +349,7 @@ end
 
 function getbindings(root::LogicNode)
     bindings = Dict{LogicNode, LogicNode}()
-    for node in PostOrderDFS(node)
+    for node in PostOrderDFS(root)
         if @capture node query(~lhs, ~rhs)
             bindings[lhs] = rhs
         end
@@ -383,10 +383,3 @@ function getfields(node::LogicNode, bindings)
         return ArgumentError("getfields($(node.kind)) is undefined")
     end
 end
-    
-
-        
-
-    
-
-    

@@ -19,6 +19,7 @@ module FinchLogic
     export LogicNode
 
     export isimmediate, isalias, isfield, isstateful
+    export getbindings, getfields
 
     export isprotocol
 

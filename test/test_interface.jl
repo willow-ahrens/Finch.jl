@@ -8,5 +8,8 @@
     C = map(+, A, B)
     x = LogicTensor(zeros(2))
     y = sum(C .* x, dims=1)
-    Finch.compute(y)
+    z = copyto!(ones(2), y)
+    D = permutedims(C, [2, 1])
+    D += C
+    Finch.compute((z, D))
 end
