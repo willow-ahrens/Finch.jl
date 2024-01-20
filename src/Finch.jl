@@ -129,8 +129,6 @@ include("tensors/combinators/swizzle.jl")
 include("tensors/combinators/scale.jl")
 include("tensors/combinators/product.jl")
 
-include("traits.jl")
-
 export fsparse, fsparse!, fsprand, fspzeros, ffindnz, fread, fwrite, countstored
 
 export bspread, bspwrite
@@ -140,6 +138,7 @@ export moveto, postype
 
 include("FinchLogic/FinchLogic.jl")
 using .FinchLogic
+include("interface/traits.jl")
 include("interface/abstractarrays.jl")
 include("interface/abstractunitranges.jl")
 include("interface/broadcast.jl")
@@ -151,6 +150,7 @@ include("interface/fsparse.jl")
 include("interface/fileio/fileio.jl")
 include("interface/lazy.jl")
 include("interface/compute.jl")
+
 
 @static if !isdefined(Base, :get_extension)
     function __init__()
