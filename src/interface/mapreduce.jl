@@ -4,43 +4,6 @@ using Base.Broadcast: combine_eltypes
 using Base: broadcasted
 using LinearAlgebra
 
-"""
-    reduce_rep(op, tns, dims)
-
-Return a trait object representing the result of reducing a tensor represented
-by `tns` on `dims` by `op`.
-"""
-function reduce_rep end
-
-#TODO we really shouldn't use Drop like this here.
-reduce_rep(op, z, tns, dims) =
-    reduce_rep_def(op, z, tns, reverse(map(n -> n in dims ? Drop(n) : n, 1:ndims(tns)))...)
-
-reduce_rep_def(op, z, fbr::HollowData, idxs...) = HollowData(reduce_rep_def(op, z, fbr.lvl, idxs...))
-function reduce_rep_def(op, z, lvl::HollowData, idx, idxs...)
-    if op(z, default(lvl)) == z
-        HollowData(reduce_rep_def(op, z, lvl.lvl, idxs...))
-    else
-        HollowData(reduce_rep_def(op, z, lvl.lvl, idxs...))
-    end
-end
-
-reduce_rep_def(op, z, lvl::SparseData, idx::Drop, idxs...) = ExtrudeData(reduce_rep_def(op, z, lvl.lvl, idxs...))
-function reduce_rep_def(op, z, lvl::SparseData, idx, idxs...)
-    if op(z, default(lvl)) == z
-        SparseData(reduce_rep_def(op, z, lvl.lvl, idxs...))
-    else
-        DenseData(reduce_rep_def(op, z, lvl.lvl, idxs...))
-    end
-end
-
-reduce_rep_def(op, z, lvl::DenseData, idx::Drop, idxs...) = ExtrudeData(reduce_rep_def(op, z, lvl.lvl, idxs...))
-reduce_rep_def(op, z, lvl::DenseData, idx, idxs...) = DenseData(reduce_rep_def(op, z, lvl.lvl, idxs...))
-
-reduce_rep_def(op, z, lvl::ElementData) = ElementData(z, fixpoint_type(op, z, lvl))
-
-reduce_rep_def(op, z, lvl::RepeatData, idx::Drop) = ExtrudeData(reduce_rep_def(op, ElementData(lvl.default, lvl.eltype)))
-reduce_rep_def(op, z, lvl::RepeatData, idx) = RepeatData(z, fixpoint_type(op, z))
 
 function Base.reduce(op, src::Tensor; kw...)
     bc = broadcasted(identity, src)

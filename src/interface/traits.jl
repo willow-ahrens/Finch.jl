@@ -124,6 +124,172 @@ collapse_rep(::RepeatData, lvl::HollowData) = collapse_rep(SparseData(lvl.lvl))
 collapse_rep(::RepeatData, lvl) = DenseData(collapse_rep(lvl))
 
 """
+    map_rep(f, args...)
+
+Return a storage trait object representing the result of mapping `f` over
+storage traits `args`. Assumes representation is collapsed.
+"""
+function map_rep(f, args...)
+    map_rep(f, map(arg -> pad_data_rep(arg, maximum(ndims, args)), args))
+end
+
+pad_data_rep(rep, n) = ndims(rep) < n ? pad_data_rep(ExtrudeData(rep), n) : rep
+
+"""
+    extrude_rep(tns, dims)
+Expand the representation of `tns` to the dimensions `dims`, which must have length(ndims(tns)) and be in ascending order.
+"""
+extrude_rep(tns, dims) = extrude_rep_def(tns, reverse(dims...))
+extrude_rep_def(tns) = tns
+extrude_rep_def(tns::HollowData, dims...) = HollowData(extrude_rep_def(tns.lvl, dims...))
+extrude_rep_def(tns::SparseData, dim, dims...) = SparseData(pad_data_rep(extrude_rep_def(tns.lvl, dims...), dim - 1))
+extrude_rep_def(tns::DenseData, dim, dims...) = DenseData(pad_data_rep(extrude_rep_def(tns.lvl, dims...), dim - 1))
+extrude_rep_def(tns::ExtrudeData, dim, dims...) = ExtrudeData(pad_data_rep(extrude_rep_def(tns.lvl, dims...), dim - 1))
+extrude_rep_def(tns::RepeatData, dim) = dim == 1 ? tns : DenseData(extrude_rep_def(ElementData(default(tns), eltype(tns)), dim - 1))
+
+pad_data_rep(rep, n) = ndims(rep) < n ? pad_data_rep(ExtrudeData(rep), n) : rep
+
+struct MapRepExtrudeStyle end
+struct MapRepSparseStyle end
+struct MapRepDenseStyle end
+struct MapRepRepeatStyle end
+struct MapRepElementStyle end
+
+combine_style(a::MapRepSparseStyle, b::MapRepExtrudeStyle) = a
+combine_style(a::MapRepSparseStyle, b::MapRepSparseStyle) = a
+combine_style(a::MapRepSparseStyle, b::MapRepDenseStyle) = a
+combine_style(a::MapRepSparseStyle, b::MapRepRepeatStyle) = a
+combine_style(a::MapRepSparseStyle, b::MapRepElementStyle) = a
+
+combine_style(a::MapRepDenseStyle, b::MapRepExtrudeStyle) = a
+combine_style(a::MapRepDenseStyle, b::MapRepDenseStyle) = a
+combine_style(a::MapRepDenseStyle, b::MapRepRepeatStyle) = a
+combine_style(a::MapRepDenseStyle, b::MapRepElementStyle) = a
+
+combine_style(a::MapRepRepeatStyle, b::MapRepExtrudeStyle) = a
+combine_style(a::MapRepRepeatStyle, b::MapRepRepeatStyle) = a
+combine_style(a::MapRepRepeatStyle, b::MapRepElementStyle) = a
+
+combine_style(a::MapRepElementStyle, b::MapRepElementStyle) = a
+
+map_rep_style(r::ExtrudeData) = MapRepExtrudeStyle()
+map_rep_style(r::SparseData) = MapRepSparseStyle()
+map_rep_style(r::DenseData) = MapRepDenseStyle()
+map_rep_style(r::RepeatData) = MapRepRepeatStyle()
+map_rep_style(r::ElementData) = MapRepElementStyle()
+
+map_rep(f, args) = map_rep(mapreduce(map_rep_style, result_style, args), f, args)
+
+map_rep_child(r::ExtrudeData) = r.lvl
+map_rep_child(r::SparseData) = r.lvl
+map_rep_child(r::DenseData) = r.lvl
+map_rep_child(r::RepeatData) = r.lvl
+
+map_rep(::MapRepDenseStyle, f, args) = DenseData(map_rep(f, map(map_rep_child, args)))
+
+function map_rep(::MapRepSparseStyle, f, args)
+    if all(arg -> isa(arg, SparseData), args)
+        return SparseData(map_rep(f, map(map_rep_child, args)))
+    end
+    for arg in args
+        if isannihilator(DefaultAlgebra(), f, default(arg))
+            return SparseData(map_rep(f, map(map_rep_child, args)))
+        end
+    end
+    return DenseData(map_rep(f, map(map_rep_child, args)))
+end
+
+function map_rep(::MapRepRepeatStyle, f, args)
+    return RepeatData(map_rep(f, map(map_rep_child, args)))
+end
+
+function map_rep(::MapRepElementStyle, f, args)
+    return ElementData(f(map(default, args)...), combine_eltypes(f, (args...,)))
+end
+
+"""
+    aggregate_rep(op, init, tns, dims)
+
+Return a trait object representing the result of reducing a tensor represented
+by `tns` on `dims` by `op` starting at `init`.
+"""
+function aggregate_rep(op, init, tns, dims)
+    aggregate_rep_def(op, init, tns, reverse(map(n -> n in dims, 1:ndims(tns)))...)
+end
+
+#TODO I think HollowData here is wrong
+aggregate_rep_def(op, z, fbr::HollowData, drops...) = HollowData(aggregate_rep_def(op, z, fbr.lvl, drops...))
+function aggregate_rep_def(op, z, lvl::HollowData, drop, drops...)
+    if op(z, default(lvl)) == z
+        HollowData(aggregate_rep_def(op, z, lvl.lvl, drops...))
+    else
+        HollowData(aggregate_rep_def(op, z, lvl.lvl, drops...))
+    end
+end
+
+function aggregate_rep_def(op, z, lvl::SparseData, drop, drops...)
+    if drop
+        ExtrudeData(aggregate_rep_def(op, z, lvl.lvl, drops...))
+    else
+        if op(z, default(lvl)) == z
+            SparseData(aggregate_rep_def(op, z, lvl.lvl, drops...))
+        else
+            DenseData(aggregate_rep_def(op, z, lvl.lvl, drops...))
+        end
+    end
+end
+
+function aggregate_rep_def(op, z, lvl::DenseData, drop, drops...)
+    if drop
+        ExtrudeData(aggregate_rep_def(op, z, lvl.lvl, drops...))
+    else
+        DenseData(aggregate_rep_def(op, z, lvl.lvl, drops...))
+    end
+end
+
+aggregate_rep_def(op, z, lvl::ElementData) = ElementData(z, fixpoint_type(op, z, lvl))
+
+function aggregate_rep_def(op, z, lvl::RepeatData, drop)
+    if drop
+        ExtrudeData(aggregate_rep_def(op, ElementData(lvl.default, lvl.eltype)))
+    else
+        RepeatData(z, fixpoint_type(op, z))
+    end
+end
+
+"""
+    permutedims_rep(tns, perm)
+
+Return a trait object representing the result of permuting a tensor represented
+by `tns` to the permutation `perm`.
+"""
+function permutedims_rep(tns, perm)
+    j = 1
+    n = 1
+    dst_dims = []
+    src_dims = []
+    diags = []
+    for i = 1:length(perm)
+        push!(dst_dims, n)
+        while j <= length(perm) && perm[j] <= i
+            if perm[j] < i
+                n += 1
+                push!(diags, (perm[j], n))
+            end
+            j += 1
+            push!(src_dims, n)
+        end
+        n += 1
+    end
+    src = extrude_rep(tns, src_dims)
+    for mask_dims in diags
+        mask = extrude_rep(DenseData(SparseData(ElementData(default(src), eltype(src)))), mask_dims)
+        src = map_rep(filterop(default(src)), pad_rep(mask, ndims(src)), src)
+    end
+    reduce_rep(initwrite(default(tns)), default(tns), src, setminus(src_dims, dst_dims))
+end
+
+"""
     fiber_ctr(tns, protos...)
 
 Return an expression that would construct a tensor suitable to hold data with a
