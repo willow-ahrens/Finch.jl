@@ -188,15 +188,20 @@ map_rep_child(r::RepeatData) = r.lvl
 map_rep(::MapRepDenseStyle, f, args) = DenseData(map_rep(f, map(map_rep_child, args)))
 
 function map_rep(::MapRepSparseStyle, f, args)
+    lvl = map_rep(f, map(map_rep_child, args))
     if all(arg -> isa(arg, SparseData), args)
-        return SparseData(map_rep(f, map(map_rep_child, args)))
+        return SparseData(lvl)
     end
-    for arg in args
-        if isannihilator(DefaultAlgebra(), f, default(arg))
-            return SparseData(map_rep(f, map(map_rep_child, args)))
+    for (n, arg) in enumerate(args)
+        if arg isa SparseData
+            args_2 = map(arg -> value(gensym(), eltype(arg)), args)
+            args_2[n] = literal(default(arg))
+            if simplify(call(f, args_2...), LowerJulia()) == literal(default(lvl))
+                return SparseData(lvl)
+            end
         end
     end
-    return DenseData(map_rep(f, map(map_rep_child, args)))
+    return DenseData(lvl)
 end
 
 function map_rep(::MapRepRepeatStyle, f, args)

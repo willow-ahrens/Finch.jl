@@ -67,6 +67,8 @@ function get_program_rules(alg, shash)
         (@rule call(overwrite, ~a, ~b) => b),
         (@rule call(~f::isliteral, ~a, ~b) => if f.val isa InitWriter b end),
         (@rule assign(~a::isliteral, ~op, ~b) => if a.val === Null() block() end),
+        (@rule call(~f::isliteral, true, ~b) => if f.val isa FilterOp b end),
+        (@rule call(~f::isliteral, false, ~b) => if f.val isa FilterOp f.val(false, nothing) end),
         (@rule call(ifelse, true, ~a, ~b) => a),
         (@rule call(ifelse, false, ~a, ~b) => b),
         (@rule call(ifelse, ~a, ~b, ~b) => b),

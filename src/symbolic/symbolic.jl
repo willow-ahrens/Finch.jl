@@ -34,6 +34,36 @@ julia> x[]
 """
 choose(d) = Chooser{d}()
 
+struct FilterOp{D} end
+
+(f::FilterOp{D})(cond, arg) where {D} = ifelse(cond, arg, D)
+
+"""
+    filterop(z)(cond, arg)
+
+`filterop(z)` is a function which returns `ifelse(cond, arg, z)`. This operation
+is handy for filtering out values based on a mask or a predicate.
+`map(filterop(0), cond, arg)` is analogous to `filter(x -> cond ? x: z, arg)`.
+
+```jldoctest setup=:(using Finch)
+julia> a = Tensor(SparseList(Element(0.0)), [0, 1.1, 0, 4.4, 0])
+SparseList (0.0) [1:5]
+├─[2]: 1.1
+├─[4]: 4.4
+
+julia> x = Tensor(SparseList(Element(0.0)));
+
+julia> c = Tensor(SparseList(Element(false)), [false, false, false, true, false]);
+
+julia> @finch for i=_; x[i] = filterop(0.0)(c[i], a[i]) end;
+
+julia> x
+SparseList (0.0) [1:5]
+├─[4]: 4.4
+```
+"""
+filterop(d) = FilterOp{d}()
+
 """
     minby(a, b)
 
