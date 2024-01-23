@@ -85,8 +85,9 @@ mutable struct VirtualAtomicLevel <: AbstractVirtualLevel
     AVal
     Lvl
 end
-
 postype(lvl:: AtomicLevel) = postype(lvl.lvl)
+
+postype(lvl:: VirtualAtomicLevel) = postype(lvl.lvl)
 
 is_level_injective(::VirtualAtomicLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
 is_level_concurrent(::VirtualAtomicLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]

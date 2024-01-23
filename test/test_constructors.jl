@@ -787,4 +787,71 @@
         @test check_output("format_constructors_sl_p_sl_e.txt", String(take!(io)))
     end
 
+    @testset "Tensor(Atomic(SparseList(Element(0))))" begin
+        io = IOBuffer()
+        arr = [0.0, 2.0, 2.0, 0.0, 3.0, 3.0]
+
+        println(io, "Tensor(Atomic(SparseList(Element(0)))) constructors:")
+
+        fbr = dropdefaults!(Tensor(Atomic(SparseList(Element(zero(eltype(arr)))))), arr)
+        println(io, "initialized tensor: ", fbr)
+        lvl = fbr.lvl
+        @test Structure(fbr) == Structure(Tensor(Atomic(SparseList(lvl.lvl.lvl, lvl.lvl.shape, lvl.lvl.ptr, lvl.lvl.idx), lvl.atomicsArray)))
+        @test Structure(fbr) == Structure(Tensor(Atomic(SparseList{Int}(lvl.lvl.lvl, lvl.lvl.shape, lvl.lvl.ptr, lvl.lvl.idx), lvl.atomicsArray)))
+
+        fbr = dropdefaults!(Tensor(Atomic(SparseList{Int16}(Element(zero(eltype(arr)))))), arr)
+        println(io, "initialized tensor: ", fbr)
+        lvl = fbr.lvl
+        @test Structure(fbr) == Structure(Tensor(Atomic(SparseList{Int16}(lvl.lvl.lvl, lvl.lvl.shape, lvl.lvl.ptr, lvl.lvl.idx), lvl.atomicsArray)))
+
+        fbr = Tensor(Atomic(SparseList(Element(0.0), 7)))
+        println(io, "sized tensor: ", fbr)
+        @test Structure(fbr) == Structure(Tensor(Atomic(SparseList(Element(0.0), 7))))
+        @test Structure(fbr) == Structure(Tensor(Atomic(SparseList{Int}(Element(0.0), 7))))
+        @test Structure(fbr) == Structure(Tensor(Atomic(SparseList(Element(0.0), 7))))
+        @test Structure(fbr) == Structure(Tensor(Atomic(SparseList{Int}(Element(0.0), 7))))
+
+        @test check_output("format_constructors_a_sl_e.txt", String(take!(io)))
+    end
+
+    @testset "Tensor(SparseList(Atomic(Element(0))))" begin
+        io = IOBuffer()
+        arr = [0.0, 2.0, 2.0, 0.0, 3.0, 3.0]
+
+        println(io, "Tensor(SparseList(Atomic(Element(0)))) constructors:")
+
+        fbr = dropdefaults!(Tensor(SparseList(Atomic(Element(zero(eltype(arr)))))), arr)
+        println(io, "initialized tensor: ", fbr)
+        lvl = fbr.lvl
+        @test Structure(fbr) == Structure(Tensor(SparseList(lvl.lvl, lvl.shape, lvl.ptr, lvl.idx)))
+
+        fbr = dropdefaults!(Tensor(SparseList{Int16}(Atomic(Element(zero(eltype(arr)))))), arr)
+        println(io, "initialized tensor: ", fbr)
+        lvl = fbr.lvl
+        @test Structure(fbr) == Structure(Tensor(SparseList{Int16}(lvl.lvl, lvl.shape, lvl.ptr, lvl.idx)))
+
+        fbr = Tensor(SparseList(Atomic(Element(0.0)), 7))
+        println(io, "sized tensor: ", fbr)
+        lvl = fbr.lvl
+        @test Structure(fbr) == Structure(Tensor(SparseList(Element(0.0), 7)))
+        @test Structure(fbr) == Structure(Tensor(SparseList{Int}(Element(0.0), 7)))
+        @test Structure(fbr) == Structure(Tensor(SparseList(Element(0.0), 7)))
+        @test Structure(fbr) == Structure(Tensor(SparseList{Int}(Element(0.0), 7)))
+
+        fbr = Tensor(SparseList{Int16}(Atomic(Element(0.0)), 7))
+        println(io, "sized tensor: ", fbr)
+        lvl = fbr.lvl
+        @test Structure(fbr) == Structure(Tensor(SparseList(Element(0.0), Int16(7))))
+        @test Structure(fbr) == Structure(Tensor(SparseList{Int16}(Element(0.0), 7)))
+        @test Structure(fbr) == Structure(Tensor(SparseList(Element(0.0), Int16(7))))
+        @test Structure(fbr) == Structure(Tensor(SparseList{Int16}(Element(0.0), 7)))
+
+        fbr = Tensor(SparseList(Atomic(Element(0.0))))
+        println(io, "empty tensor: ", fbr)
+        lvl = fbr.lvl
+        @test Structure(fbr) == Structure(Tensor(SparseList(Atomic(Element(0.0)))))
+        @test Structure(fbr) == Structure(Tensor(SparseList{Int}(Atomic(Element(0.0)))))
+        
+        @test check_output("format_constructors_sl_a_e.txt", String(take!(io)))
+    end
 end
