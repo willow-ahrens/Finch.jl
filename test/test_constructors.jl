@@ -591,15 +591,15 @@
         @test check_output("format_constructors_srl_e.txt", String(take!(io)))
     end
 
-      @testset "Tensor(Dense(Separation(Dense(Element(0)))))" begin
+      @testset "Tensor(Dense(Atomic(Separation(Dense(Element(0))))))" begin
           io = IOBuffer()
           arr = [0.0 2.0 2.0 0.0 3.0 3.0;
               1.0 0.0 7.0 1.0 0.0 0.0;
               0.0 0.0 0.0 0.0 0.0 9.0]
           
-          println(io, "Tensor(Dense(Separation(Dense(Element(0))))):")
+          println(io, "Tensor(Dense(Atomic(Separation(Dense(Element(0)))))):")
           
-          fbr = dropdefaults!(Tensor(Dense(Separation(Dense(Element(0))))), arr)
+          fbr = dropdefaults!(Tensor(Dense(Atomic(Separation(Dense(Element(0)))))), arr)
 
           # sublvl = Tensor(Dense(Element(0)), [])
           # col1 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 1])
@@ -612,20 +612,56 @@
           
           
           println(io, "initialized tensor: ", fbr)
-          @test Structure(fbr) == Structure(Tensor(Dense(Separation(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
-          @test Structure(fbr) == Structure(Tensor(Dense(Separation{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
+          @test Structure(fbr) == Structure(Tensor(Dense(Atomic(Separation(fbr.lvl.lvl.lvl.val, fbr.lvl.lvl.lvl.lvl), fbr.lvl.lvl.atomicsArray), 6)))
+          @test Structure(fbr) == Structure(Tensor(Dense(Atomic{typeof(fbr.lvl.lvl.atomicsArray), Separation{typeof(fbr.lvl.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl.lvl)}}(Separation{typeof(fbr.lvl.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl.lvl)}(fbr.lvl.lvl.lvl.val, fbr.lvl.lvl.lvl.lvl), fbr.lvl.lvl.atomicsArray), 6)))
 
-          fbr = Tensor(Dense(Separation(Dense(Element(0), 3)), 6))
+          fbr = Tensor(Dense(Atomic(Separation(Dense(Element(0), 3))), 6))
           println(io, "sized tensor: ", fbr)
-          @test Structure(fbr) == Structure(Tensor(Dense(Separation(Dense(Element(0), 3)), 6)))
+          @test Structure(fbr) == Structure(Tensor(Dense(Atomic(Separation(Dense(Element(0), 3))), 6)))
 
 
-          fbr = Tensor(Dense(Separation(Dense(Element(0)))))
+          fbr = Tensor(Dense(Atomic(Separation(Dense(Element(0))))))
           println(io, "empty tensor: ", fbr)
-          @test Structure(fbr) == Structure(Tensor(Dense(Separation(Dense(Element(0))))))
+          @test Structure(fbr) == Structure(Tensor(Dense(Atomic(Separation(Dense(Element(0)))))))
 
-          @test check_output("format_constructors_d_p_d_e.txt", String(take!(io)))
+          @test check_output("format_constructors_d_a_p_d_e.txt", String(take!(io)))
       end
+
+      @testset "Tensor(Dense(Separation(Dense(Element(0)))))" begin
+        io = IOBuffer()
+        arr = [0.0 2.0 2.0 0.0 3.0 3.0;
+            1.0 0.0 7.0 1.0 0.0 0.0;
+            0.0 0.0 0.0 0.0 0.0 9.0]
+        
+        println(io, "Tensor(Dense(Separation(Dense(Element(0))))):")
+        
+        fbr = dropdefaults!(Tensor(Dense(Separation(Dense(Element(0))))), arr)
+
+        # sublvl = Tensor(Dense(Element(0)), [])
+        # col1 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 1])
+        # col2 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 2])
+        # col3 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 3])
+        # col4 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 4])
+        # col5 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 5])
+        # col6 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 6])
+        # vals = [col1, col2, col3, col4, col5, col6]
+        
+        
+        println(io, "initialized tensor: ", fbr)
+        @test Structure(fbr) == Structure(Tensor(Dense(Separation(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
+        @test Structure(fbr) == Structure(Tensor(Dense(Separation{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
+
+        fbr = Tensor(Dense(Separation(Dense(Element(0), 3)), 6))
+        println(io, "sized tensor: ", fbr)
+        @test Structure(fbr) == Structure(Tensor(Dense(Separation(Dense(Element(0), 3)), 6)))
+
+
+        fbr = Tensor(Dense(Separation(Dense(Element(0)))))
+        println(io, "empty tensor: ", fbr)
+        @test Structure(fbr) == Structure(Tensor(Dense(Separation(Dense(Element(0))))))
+
+        @test check_output("format_constructors_d_p_d_e.txt", String(take!(io)))
+    end
 
       @testset "Tensor(Dense(Atomic(Dense(Element(0)))))" begin
           io = IOBuffer()
