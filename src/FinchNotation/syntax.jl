@@ -1,5 +1,5 @@
 const incs = Dict(:+= => :+, :*= => :*, :&= => :&, :|= => :|, :(:=) => :overwrite)
-const evaluable_exprs = [:Inf, :Inf16, :Inf32, :Inf64, :(-Inf), :(-Inf16), :(-Inf32), :(-Inf64), :NaN, :NaN16, :NaN32, :NaN64, :nothing, :missing]
+const evaluable_exprs = [:Inf, :Inf16, :Inf32, :Inf64, :(-Inf), :(-Inf16), :(-Inf32), :(-Inf64), :NaN, :NaN16, :NaN32, :NaN64, :nothing, :missing, :Eps]
 
 const program_nodes = (
     index = index,
@@ -105,7 +105,7 @@ end
 function (ctx::FinchParserVisitor)(ex::Symbol)
     if ex == :_ || ex == :(:)
         return :($dimless)
-    elseif ex in evaluable_exprs || ex == :Eps 
+    elseif ex in evaluable_exprs 
         return ctx.nodes.literal(@eval($ex))
     else
         ctx.nodes.tag(ex)
