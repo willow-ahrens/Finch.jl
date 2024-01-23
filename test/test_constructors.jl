@@ -648,7 +648,7 @@
           
           
           println(io, "initialized tensor: ", fbr)
-          @test Structure(fbr) == Structure(Tensor(Dense(Atomic(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
+          @test Structure(fbr) == Structure(Tensor(Dense(Atomic(fbr.lvl.lvl.atomicsArray, fbr.lvl.lvl.lvl), 6)))
           @test Structure(fbr) == Structure(Tensor(Dense(Atomic{Vector{Base.Threads.SpinLock}, typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
 
           fbr = Tensor(Dense(Atomic(Dense(Element(0), 3)), 6))

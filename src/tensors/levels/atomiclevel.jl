@@ -94,7 +94,7 @@ is_level_atomic(lvl::AtomicLevel, ctx) = true
 
 function lower(lvl::AtomicLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
-        $AtomicLevel{$(lvl.Lvl)}($(lvl.ex).atomicsArray, $(ctx(lvl.lvl)))
+        $AtomicLevel{$(lvl.Lvl)}(($(lvl.ex)).atomicsArray, $(ctx(lvl.lvl)))
     end
 end
 
@@ -124,13 +124,11 @@ function declare_level!(lvl::VirtualAtomicLevel, ctx, pos, init)
               @inbounds for $idx = 1:$posV
                 lockVal = make_lock(eltype($(lvl.AVal)))
                 if !isnothing(lockVal)
-                    $(lvl.ex).atomicsArray[$idx] = lockVal
+                    ($(lvl.ex)).atomicsArray[$idx] = lockVal
                 end
               end
           end)
     lvl.lvl = declare_level!(lvl.lvl, ctx, pos, init)
-    # println(lvl.lvl)
-    # println(virtual_level_size(lvl.lvl, ctx))
     return lvl
 end
 
@@ -159,7 +157,7 @@ function trim_level!(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, pos)
     posV = ctx(pos)
     idx = freshen(ctx.code, :idx)
     push!(ctx.code.preamble, quote
-              resize!($(lvl.ex).atomicsArray, $posV)
+              resize!(($(lvl.ex)).atomicsArray, $posV)
           end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, pos)
     lvl
