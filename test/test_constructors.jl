@@ -662,6 +662,7 @@
 
         @test check_output("format_constructors_d_p_d_e.txt", String(take!(io)))
     end
+    
 
       @testset "Tensor(Dense(Atomic(Dense(Element(0)))))" begin
           io = IOBuffer()
