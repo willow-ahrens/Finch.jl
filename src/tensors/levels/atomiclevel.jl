@@ -163,6 +163,12 @@ function trim_level!(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, pos)
     lvl
 end
 
+function virtual_moveto_level(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, arch)
+    # FIXME
+    # and For Seperation Level tooo
+    virtual_moveto_level(lvl.lvl, ctx, arch)
+end
+
 function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Reader, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     lvl = freshen(ctx.code, lvl.ex, :_lvl)
