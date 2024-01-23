@@ -46,6 +46,11 @@ isstructequal(a::T, b::T) where {T <: Dense} =
     a.shape == b.shape &&
     isstructequal(a.lvl, b.lvl)
 
+isstructequal(a::T, b::T) where {T <: Atomic} =
+    typeof(a.atomicsArray) == typeof(b.atomicsArray) &&
+    isstructequal(a.lvl, b.lvl)
+# Temporary hack to deal with SpinLock allocate undefined references.
+
 isstructequal(a::T, b::T) where {T <: SparseList} =
     a.shape == b.shape &&
     a.ptr == b.ptr &&
