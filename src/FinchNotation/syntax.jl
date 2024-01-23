@@ -105,7 +105,7 @@ end
 function (ctx::FinchParserVisitor)(ex::Symbol)
     if ex == :_ || ex == :(:)
         return :($dimless)
-    elseif ex in evaluable_exprs
+    elseif ex in evaluable_exprs || ex == :Eps 
         return ctx.nodes.literal(@eval($ex))
     else
         ctx.nodes.tag(ex)
@@ -118,7 +118,6 @@ struct FinchSyntaxError msg end
 
 function (ctx::FinchParserVisitor)(ex::Expr)
     islinenum(ex) = ex isa LineNumberNode
-
     if @capture ex :if(~cond, ~body)
         return :($(ctx.nodes.sieve)($(ctx(cond)), $(ctx(body))))
     elseif @capture ex :if(~cond, ~body, ~tail)
