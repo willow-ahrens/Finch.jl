@@ -80,6 +80,7 @@ countstored_level(lvl::AtomicLevel, pos) = countstored_level(lvl.lvl, pos)
 mutable struct VirtualAtomicLevel <: AbstractVirtualLevel
     lvl # the level below us.
     ex
+    locks
     Tv
     Val
     AVal
@@ -95,17 +96,19 @@ is_level_atomic(lvl::VirtualAtomicLevel, ctx) = true
 
 function lower(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
-        $AtomicLevel{$(lvl.AVal), $(lvl.Lvl)}($(ctx(lvl.lvl)), ($(lvl.ex)).atomicsArray)
+        $AtomicLevel{$(lvl.AVal), $(lvl.Lvl)}($(ctx(lvl.lvl)), $(lvl.locks))
     end
 end
 
 function virtualize(ex, ::Type{AtomicLevel{AVal, Lvl}}, ctx, tag=:lvl) where {AVal, Lvl}
     sym = freshen(ctx, tag)
+    atomics = freshen(ctx, tag, :_locks)
     push!(ctx.preamble, quote
-        $sym = $ex
-          end)
+            $sym = $ex
+            $atomics = $ex.atomicsArray
+        end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    temp = VirtualAtomicLevel(lvl_2, sym, typeof(level_default(Lvl)), Val, AVal, Lvl)
+    temp = VirtualAtomicLevel(lvl_2, sym, atomics, typeof(level_default(Lvl)), Val, AVal, Lvl)
     temp
 end
 
@@ -127,11 +130,11 @@ function assemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
     idx = freshen(ctx.code, :idx)
     lockVal = freshen(ctx.code, :lock)
     push!(ctx.code.preamble, quote 
-              Finch.resize_if_smaller!($(lvl.ex).atomicsArray, $(ctx(pos_stop))) 
+              Finch.resize_if_smaller!($(lvl.locks), $(ctx(pos_stop))) 
               @inbounds for $idx = $(ctx(pos_start)):$(ctx(pos_stop))
                 lockVal = make_lock(eltype($(lvl.AVal)))
                 if !isnothing(lockVal)
-                    ($(lvl.ex)).atomicsArray[$idx] = lockVal
+                    $(lvl.locks)[$idx] = lockVal
                 end
               end
           end)
@@ -149,7 +152,7 @@ function reassemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
               @inbounds for $idx = $(ctx(pos_start)):$(ctx(pos_stop))
                 lockVal = make_lock(eltype($(lvl.AVal)))
                 if !isnothing(lockVal)
-                    ($(lvl.ex)).atomicsArray[$idx] = lockVal
+                    $lvl.locks[$idx] = lockVal
                 end
               end
           end)
@@ -172,15 +175,23 @@ function trim_level!(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, pos)
     posV = ctx(pos)
     idx = freshen(ctx.code, :idx)
     push!(ctx.code.preamble, quote
-              resize!(($(lvl.ex)).atomicsArray, $posV)
+              resize!($(lvl.locks), $posV)
           end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, pos)
     lvl
 end
 
 function virtual_moveto_level(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, arch)
-    # FIXME
-    # and For Seperation Level tooo
+    #Add for seperation level too.
+    atomics = freshen(ctx.code, :atomicsArray)
+
+    push!(ctx.code.preamble, quote
+        $atomics = $(lvl.locks)
+        $(lvl.locks) = $moveto($(lvl.locks), $(ctx(arch)))
+    end)
+    push!(ctx.code.epilogue, quote
+        $(lvl.locks) = $atomics
+    end)
     virtual_moveto_level(lvl.lvl, ctx, arch)
 end
 
@@ -199,11 +210,11 @@ function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Update
     (lvl, pos) = (fbr.lvl, fbr.pos)
     sym = freshen(ctx.code, lvl.ex, :after_atomic_lvl)
     atomicData = freshen(ctx.code, lvl.ex, :atomicArraysAcc)
-    lockVal = freshen(ctx.code, lvl.ex, :lockVal)
+    lockVal = freshen(ctx.code, lvl.ex, :lockVal) 
     dev = lower(virtual_get_device(ctx.code.task), ctx, DefaultStyle())
     return Thunk(
         preamble = quote  
-            $atomicData =  promote_val_to_lock($dev, ($(lvl.ex)).atomicsArray, $(ctx(pos)), eltype($(lvl.AVal)))
+            $atomicData =  promote_val_to_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
             $lockVal = get_lock($dev, $atomicData)
         end,
         body =  (ctx) -> begin
@@ -219,10 +230,11 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, ctx, mode::
     sym = freshen(ctx.code, lvl.ex, :after_atomic_lvl)
     atomicData = freshen(ctx.code, lvl.ex, :atomicArrays)
     lockVal = freshen(ctx.code, lvl.ex, :lockVal)
+    println(ctx.code.task)
     dev = lower(virtual_get_device(ctx.code.task), ctx, DefaultStyle())
     return Thunk(
         preamble = quote  
-            $atomicData =  promote_val_to_lock($dev, ($(lvl.ex)).atomicsArray, $(ctx(pos)), eltype($(lvl.AVal)))
+            $atomicData =  promote_val_to_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
             $lockVal = get_lock($dev, $atomicData)
         end,
         body =  (ctx) -> begin

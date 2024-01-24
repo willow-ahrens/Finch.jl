@@ -9,6 +9,7 @@ julia> @finch_code begin
 quote
     y_lvl = (ex.bodies[1]).tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
+    y_lvl_locks = y_lvl.lvl.atomicsArray
     y_lvl_3 = y_lvl_2.lvl
     y_lvl_2_val = y_lvl_2.lvl.val
     x_lvl = ((ex.bodies[2]).body.body.rhs.args[1]).tns.bind.lvl
@@ -19,15 +20,17 @@ quote
     A_lvl_idx = A_lvl_2.idx
     A_lvl_2_val = A_lvl_2.lvl.val
     A_lvl_2.shape == x_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl_2.shape) != $(x_lvl.shape))"))
-    Finch.resize_if_smaller!(y_lvl_2.atomicsArray, A_lvl.shape)
+    Finch.resize_if_smaller!(y_lvl_locks, A_lvl.shape)
     @inbounds for idx = 1:A_lvl.shape
             lockVal = make_lock(eltype(Vector{Base.Threads.SpinLock}))
             if !(isnothing(lockVal))
-                y_lvl_2.atomicsArray[idx] = lockVal
+                y_lvl_locks[idx] = lockVal
             end
         end
     Finch.resize_if_smaller!(y_lvl_2_val, A_lvl.shape)
     Finch.fill_range!(y_lvl_2_val, 0.0, 1, A_lvl.shape)
+    atomicsArray = y_lvl_locks
+    y_lvl_locks = moveto(y_lvl_locks, CPU(Threads.nthreads()))
     val = y_lvl_2_val
     y_lvl_2_val = moveto(y_lvl_2_val, CPU(Threads.nthreads()))
     A_lvl_ptr = moveto(A_lvl_ptr, CPU(Threads.nthreads()))
@@ -45,7 +48,7 @@ quote
                 for j_6 = phase_start_2:phase_stop_2
                     y_lvl_q = (1 - 1) * A_lvl.shape + j_6
                     A_lvl_q = (1 - 1) * A_lvl.shape + j_6
-                    y_lvl_2atomicArraysAcc = promote_val_to_lock(CPU(Threads.nthreads()), y_lvl_2.atomicsArray, y_lvl_q, eltype(Vector{Base.Threads.SpinLock}))
+                    y_lvl_2atomicArraysAcc = promote_val_to_lock(CPU(Threads.nthreads()), y_lvl_locks, y_lvl_q, eltype(Vector{Base.Threads.SpinLock}))
                     get_lock(CPU(Threads.nthreads()), y_lvl_2atomicArraysAcc)
                     A_lvl_2_q = A_lvl_ptr[A_lvl_q]
                     A_lvl_2_q_stop = A_lvl_ptr[A_lvl_q + 1]
@@ -99,9 +102,9 @@ quote
             end
         end
     qos = 1 * A_lvl.shape
-    resize!(y_lvl_2.atomicsArray, qos)
+    resize!(atomicsArray, qos)
     resize!(val, qos)
-    (y = Tensor((DenseLevel){Int64}((AtomicLevel){Vector{Base.Threads.SpinLock}, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}(y_lvl_3, y_lvl_2.atomicsArray), A_lvl.shape)),)
+    (y = Tensor((DenseLevel){Int64}((AtomicLevel){Vector{Base.Threads.SpinLock}, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}(y_lvl_3, atomicsArray), A_lvl.shape)),)
 end
 julia> @finch begin
         y .= 0

@@ -59,7 +59,7 @@ Call f on a subcontext of `ctx` and return the result. Variable bindings,
 preambles, and epilogues defined in the subcontext will not escape the call to
 contain.
 """
-function contain(f, ctx::AbstractCompiler, task=nothing)
+function contain(f, ctx::AbstractCompiler; task=nothing)
     ctx_2 = shallowcopy(ctx)
     ctx_2.task = something(task, ctx.task)
     preamble = Expr(:block)
