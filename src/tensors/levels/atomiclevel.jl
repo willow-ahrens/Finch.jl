@@ -117,28 +117,42 @@ virtual_level_eltype(lvl::VirtualAtomicLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualAtomicLevel) = virtual_level_default(lvl.lvl)
 
 function declare_level!(lvl::VirtualAtomicLevel, ctx, pos, init)
-    posV = ctx(pos)
+    lvl.lvl = declare_level!(lvl.lvl, ctx, pos, init)
+    return lvl
+end
+
+function assemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
+    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
+    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
     idx = freshen(ctx.code, :idx)
     lockVal = freshen(ctx.code, :lock)
     push!(ctx.code.preamble, quote 
-              Finch.resize_if_smaller!($(lvl.ex).atomicsArray, $posV) 
-              @inbounds for $idx = 1:$posV
+              Finch.resize_if_smaller!($(lvl.ex).atomicsArray, $(ctx(pos_stop))) 
+              @inbounds for $idx = $(ctx(pos_start)):$(ctx(pos_stop))
                 lockVal = make_lock(eltype($(lvl.AVal)))
                 if !isnothing(lockVal)
                     ($(lvl.ex)).atomicsArray[$idx] = lockVal
                 end
               end
           end)
-    lvl.lvl = declare_level!(lvl.lvl, ctx, pos, init)
-    return lvl
-end
-
-function assemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
     assemble_level!(lvl.lvl, ctx, pos_start, pos_stop)
 end
 
 supports_reassembly(lvl::VirtualAtomicLevel) = supports_reassembly(lvl.lvl)
 function reassemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
+    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
+    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
+    idx = freshen(ctx.code, :idx)
+    lockVal = freshen(ctx.code, :lock)
+    push!(ctx.code.preamble, quote 
+              Finch.resize_if_smaller!($(lvl.ex).atomicsArray, $(ctx(pos_stop))) 
+              @inbounds for $idx = $(ctx(pos_start)):$(ctx(pos_stop))
+                lockVal = make_lock(eltype($(lvl.AVal)))
+                if !isnothing(lockVal)
+                    ($(lvl.ex)).atomicsArray[$idx] = lockVal
+                end
+              end
+          end)
     reassemble_level!(lvl.lvl, ctx, pos_start, pos_stop)
     lvl
 end
