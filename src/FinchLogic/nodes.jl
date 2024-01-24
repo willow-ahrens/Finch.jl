@@ -35,21 +35,22 @@ field
 """
     alias(name)
 
-Logical AST expression for a alias named `name`.
+Logical AST expression for an alias named `name`.
 """
 alias
 
 """
     table(tns, idxs...)
 
-Logical AST expression for a tensor object `val`, fielded by indices `idxs...`.
+Logical AST expression for a tensor object `val`, indexed by fields `idxs...`.
 """
 table
 
 """
     mapjoin(op, args...)
 
-Logical AST expression for mapping the function `op` across `args...`. Indices of the arguments must form a total order.
+Logical AST expression for mapping the function `op` across `args...`.
+The order of fields in the mapjoin is `unique(vcat(map(getfields, args)...))`
 """
 mapjoin
 
@@ -57,7 +58,7 @@ mapjoin
     aggregate(op, init, arg, idxs...)
 
 Logical AST statement that reduces `arg` using `op`, starting with `init`.
-`inds` are the dimensions to reduce.
+`idxs` are the dimensions to reduce. May happen in any order.
 """
 aggregate
 
