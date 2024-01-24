@@ -773,10 +773,10 @@
             fbr = dropdefaults!(Tensor(SparseList(Atomic(Dense(Element(0))))), arr)
             
             println(io, "initialized tensor: ", fbr)
-            @test Structure(fbr) == Structure(Tensor(SparseList(Atomic(fbr.lvl.lvl.atomicsArray, fbr.lvl.lvl.lvl), 6, fbr.lvl.ptr, fbr.lvl.idx)))
-            @test Structure(fbr) == Structure(Tensor(SparseList(Atomic{typeof(fbr.lvl.lvl.lvl), typeof(fbr.lvl.lvl.atomicsArray)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6, fbr.lvl.ptr, fbr.lvl.idx)))
+            @test Structure(fbr) == Structure(Tensor(SparseList(Atomic(fbr.lvl.lvl.lvl, fbr.lvl.lvl.atomicsArray), 6, fbr.lvl.ptr, fbr.lvl.idx)))
+            @test Structure(fbr) == Structure(Tensor(SparseList(Atomic{typeof(fbr.lvl.lvl.atomicsArray), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.lvl, fbr.lvl.lvl.atomicsArray), 6, fbr.lvl.ptr, fbr.lvl.idx)))
   
-            fbr = Tensor(SparseList(Separation(Dense(Element(0), 3)), 6))
+            fbr = Tensor(SparseList(Atomic(Dense(Element(0), 3)), 6))
             println(io, "sized tensor: ", fbr)
             @test Structure(fbr) == Structure(Tensor(SparseList(Atomic(Dense(Element(0), 3)), 6)))
   
@@ -859,18 +859,18 @@
         fbr = Tensor(SparseList(Atomic(Element(0.0)), 7))
         println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Tensor(SparseList(Element(0.0), 7)))
-        @test Structure(fbr) == Structure(Tensor(SparseList{Int}(Element(0.0), 7)))
-        @test Structure(fbr) == Structure(Tensor(SparseList(Element(0.0), 7)))
-        @test Structure(fbr) == Structure(Tensor(SparseList{Int}(Element(0.0), 7)))
+        @test Structure(fbr) == Structure(Tensor(SparseList(Atomic(Element(0.0)), 7)))
+        @test Structure(fbr) == Structure(Tensor(SparseList{Int}(Atomic(Element(0.0)), 7)))
+        @test Structure(fbr) == Structure(Tensor(SparseList(Atomic(Element(0.0)), 7)))
+        @test Structure(fbr) == Structure(Tensor(SparseList{Int}(Atomic(Element(0.0)), 7)))
 
         fbr = Tensor(SparseList{Int16}(Atomic(Element(0.0)), 7))
         println(io, "sized tensor: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Tensor(SparseList(Element(0.0), Int16(7))))
-        @test Structure(fbr) == Structure(Tensor(SparseList{Int16}(Element(0.0), 7)))
-        @test Structure(fbr) == Structure(Tensor(SparseList(Element(0.0), Int16(7))))
-        @test Structure(fbr) == Structure(Tensor(SparseList{Int16}(Element(0.0), 7)))
+        @test Structure(fbr) == Structure(Tensor(SparseList(Atomic(Element(0.0)), Int16(7))))
+        @test Structure(fbr) == Structure(Tensor(SparseList{Int16}(Atomic(Element(0.0)), 7)))
+        @test Structure(fbr) == Structure(Tensor(SparseList(Atomic(Element(0.0)), Int16(7))))
+        @test Structure(fbr) == Structure(Tensor(SparseList{Int16}(Atomic(Element(0.0)), 7)))
 
         fbr = Tensor(SparseList(Atomic(Element(0.0))))
         println(io, "empty tensor: ", fbr)
