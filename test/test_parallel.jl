@@ -55,6 +55,25 @@
     end
 
     let
+        io = IOBuffer()
+
+        x = Tensor(Dense(Atomic(Element(0.0)), 100))
+        y = Tensor(Dense(Atomic(Element(0.0)), 5))
+        @repl io @finch_code begin
+            x .= 0
+            for j = _
+                x[j] = (j * j) % 5
+            end
+            y .= 0
+            for j = parallel(_)
+                y[x[j]] += 1
+            end
+        end
+
+        @test check_output("stress_dense_atomics.txt", String(take!(io)))
+    end
+
+    let
         A = Tensor(Dense(SparseList(Element(0.0))))
         x = Tensor(Dense(Element(0.0)))
         y = Tensor(Dense(Element(0.0)))
