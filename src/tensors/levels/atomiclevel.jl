@@ -219,7 +219,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, ctx, mode::
     sym = freshen(ctx.code, lvl.ex, :after_atomic_lvl)
     atomicData = freshen(ctx.code, lvl.ex, :atomicArrays)
     lockVal = freshen(ctx.code, lvl.ex, :lockVal)
-    dev = lower(virtual_get_device(ctx.code.task), ctx, DefaultStyle())
+    dev = lower(virtual_get_device(ctx.code.task[2]), ctx, DefaultStyle())
     return Thunk(
         preamble = quote  
             $atomicData =  promote_val_to_lock($dev, ($(lvl.ex)).atomicsArray, $(ctx(pos)), eltype($(lvl.AVal)))
