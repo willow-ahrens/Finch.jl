@@ -197,8 +197,8 @@ end
 
 function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Reader, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    lvl = freshen(ctx.code, lvl.ex, :_lvl)
-    sym = freshen(ctx.code, lvl.ex, :after_atomic_lvl)
+    # lvlp = freshen(ctx.code, lvl.ex, :_lvl)
+    # sym = freshen(ctx.code, lvl.ex, :_after_atomic_lvl)
     return body = Thunk(
         body = (ctx) -> begin
             instantiate(VirtualSubFiber(lvl.lvl, pos), ctx, mode, protos)

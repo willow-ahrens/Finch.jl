@@ -51,24 +51,52 @@
             end
         end
 
+        
+
         @test check_output("debug_parallel_spmv_atomics.txt", String(take!(io)))
     end
 
     let
         io = IOBuffer()
 
-        x = Tensor(Dense(Atomic(Element(0.0)), 100))
+        x = Tensor(Dense(Element(Int(0)), 100))
         y = Tensor(Dense(Atomic(Element(0.0)), 5))
         @repl io @finch_code begin
             x .= 0
             for j = _
-                x[j] = (j * j) % 5
+                x[j] = Int((j * j) % 5 + 1)
             end
             y .= 0
             for j = parallel(_)
                 y[x[j]] += 1
             end
         end
+        @repl io @finch begin
+            x .= 0
+            for j = _
+                x[j] = Int((j * j) % 5 + 1)
+            end
+            y .= 0
+            for j = parallel(_)
+                y[x[j]] += 1
+            end
+        end
+
+        xp = Tensor(Dense(Element(Int(0)), 100))
+        yp = Tensor(Dense(Element(0.0), 5))
+
+        @repl io @finch begin
+            xp .= 0
+            for j = _
+                xp[j] = Int((j * j) % 5 + 1)
+            end
+            yp .= 0
+            for j = _
+                yp[x[j]] += 1
+            end
+        end
+
+        @test yp == y
 
         @test check_output("stress_dense_atomics.txt", String(take!(io)))
     end
