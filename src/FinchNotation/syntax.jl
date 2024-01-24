@@ -158,9 +158,9 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         return ctx(body)
     elseif @capture ex :let(:block(:(=)(~lhs, ~rhs), ~tail...), ~body)
         if isempty(tail)
-            return ctx(:(for $lhs = $rhs; $body end))
+            return ctx(:(let $lhs = $rhs; $body end))
         else
-            return ctx(:(for $lhs = $rhs; $(Expr(:let, Expr(:block, tail...), body)) end))
+            return ctx(:(let $lhs = $rhs; $(Expr(:let, Expr(:block, tail...), body)) end))
         end
     elseif @capture ex :let(:(=)(~lhs, ~rhs), ~body)
         rhs = ctx(rhs)
