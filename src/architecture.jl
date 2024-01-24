@@ -106,7 +106,7 @@ function virtualize(ex, ::Type{CPUThread{Parent}}, ctx) where {Parent}
 end
 lower(task::VirtualCPUThread, ctx::AbstractCompiler, ::DefaultStyle) = :(CPUThread($(ctx(task.tid)), $(ctx(task.dev)), $(ctx(task.parent))))
 FinchNotation.finch_leaf(device::VirtualCPUThread) = virtual(device)
-virtual_get_device(task::VirtualCPUThread) = task.device
+virtual_get_device(task::VirtualCPUThread) = task.dev
 virtual_get_task(task::VirtualCPUThread) = task.parent
 
 struct CPULocalMemory

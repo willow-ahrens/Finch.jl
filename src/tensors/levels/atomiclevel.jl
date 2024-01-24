@@ -89,8 +89,8 @@ postype(lvl:: AtomicLevel) = postype(lvl.lvl)
 
 postype(lvl:: VirtualAtomicLevel) = postype(lvl.lvl)
 
-is_level_injective(::VirtualAtomicLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
-is_level_concurrent(::VirtualAtomicLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
+is_level_injective(lvl::VirtualAtomicLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
+is_level_concurrent(lvl::VirtualAtomicLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
 is_level_atomic(lvl::VirtualAtomicLevel, ctx) = true
 
 function lower(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, ::DefaultStyle)
@@ -200,7 +200,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Update
     sym = freshen(ctx.code, lvl.ex, :after_atomic_lvl)
     atomicData = freshen(ctx.code, lvl.ex, :atomicArraysAcc)
     lockVal = freshen(ctx.code, lvl.ex, :lockVal)
-    dev = lower(virtual_get_device(ctx.code.task), ctx, DefaultStyle())
+    dev = lower(virtual_get_device(ctx.code.task[2]), ctx, DefaultStyle())
     return Thunk(
         preamble = quote  
             $atomicData =  promote_val_to_lock($dev, ($(lvl.ex)).atomicsArray, $(ctx(pos)), eltype($(lvl.AVal)))

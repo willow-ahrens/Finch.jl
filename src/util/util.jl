@@ -218,6 +218,7 @@ isassign(x) = x in Set([:+=, :*=, :&=, :|=, :(=)])
 incs = Dict(:+= => :+, :-= => :-, :*= => :*, :&= => :&, :|= => :|)
 deincs = Dict(:+ => :+=, :* => :*=, :& => :&=, :| => :|=)
 function ispure(x)
+    return false
     if x isa Symbol
         return string(x) == "!" || (string(x)[end] != '!' && string(x) != "throw" && string(x) != "error")
     elseif @capture x :.(~mod, ~fn)

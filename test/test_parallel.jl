@@ -29,6 +29,32 @@
     end
 
     let
+        io = IOBuffer()
+        A = Tensor(Dense(SparseList(Element(0.0))), [1 2; 3 4])
+        x = Tensor(Dense(Element(0.0)), [1, 1])
+        y = Tensor(Dense(Atomic(Element(0.0))))
+        @repl io @finch_code begin
+            y .= 0
+            for j = parallel(_)
+                for i = _
+                    y[j] += x[i] * A[walk(i), j]
+                end
+            end
+        end
+
+        @repl io @finch begin
+            y .= 0
+            for i = parallel(_)
+                for j = _
+                    y[j] += x[i] * A[walk(i), j]
+                end
+            end
+        end
+
+        @test check_output("debug_parallel_spmv_atomics.txt", String(take!(io)))
+    end
+
+    let
         A = Tensor(Dense(SparseList(Element(0.0))))
         x = Tensor(Dense(Element(0.0)))
         y = Tensor(Dense(Element(0.0)))

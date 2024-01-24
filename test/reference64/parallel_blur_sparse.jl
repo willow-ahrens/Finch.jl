@@ -27,6 +27,10 @@ begin
     output_lvl_2_val = moveto(output_lvl_2_val, cpu)
     Threads.@threads for i = 1:cpu.n
             tmp_lvl_val = moveto(val_3, CPUThread(i, cpu, Serial()))
+            phase_stop = min(y_stop, fld(y_stop * (i + -1), cpu.n))
+            if phase_stop >= 1
+                phase_stop + 1
+            end
             phase_start_2 = max(1, 1 + fld(y_stop * (i + -1), cpu.n))
             phase_stop_2 = min(y_stop, fld(y_stop * i, cpu.n))
             if phase_stop_2 >= phase_start_2
@@ -123,6 +127,7 @@ begin
                             end
                             x = phase_stop_4 + 1
                         end
+                        phase_stop_3 + 1
                     end
                     phase_start_5 = max(1, 2 + input_lvl_2_i1)
                     phase_stop_5 = min(input_lvl_2.shape, input_lvl_2_i1_2, -1 + input_lvl_2_i1_3)
@@ -158,6 +163,7 @@ begin
                             end
                             x = phase_stop_6 + 1
                         end
+                        phase_stop_5 + 1
                     end
                     phase_start_7 = max(1, 1 + input_lvl_2_i1_2)
                     phase_stop_7 = min(input_lvl_2.shape, -1 + input_lvl_2_i1_3, 1 + input_lvl_2_i1)
@@ -193,6 +199,7 @@ begin
                             end
                             x = phase_stop_8 + 1
                         end
+                        phase_stop_7 + 1
                     end
                     phase_start_9 = max(1, 1 + input_lvl_2_i1_2, 2 + input_lvl_2_i1)
                     phase_stop_9 = min(input_lvl_2.shape, -1 + input_lvl_2_i1_3)
@@ -208,6 +215,7 @@ begin
                                 tmp_lvl_q = (1 - 1) * input_lvl_2.shape + phase_stop_10
                                 tmp_lvl_val[tmp_lvl_q] = input_lvl_3_val_8 + tmp_lvl_val[tmp_lvl_q]
                                 input_lvl_2_q_3 += 1
+                                phase_stop_10 + 1
                             else
                                 phase_stop_11 = min(-1 + input_lvl_2_i_3, phase_stop_9)
                                 if input_lvl_2_i_3 == phase_stop_11 + 1
@@ -216,9 +224,11 @@ begin
                                     tmp_lvl_val[tmp_lvl_q] = input_lvl_3_val_8 + tmp_lvl_val[tmp_lvl_q]
                                     input_lvl_2_q_3 += 1
                                 end
+                                phase_stop_11 + 1
                                 break
                             end
                         end
+                        phase_stop_9 + 1
                     end
                     phase_start_12 = max(1, input_lvl_2_i1_3)
                     phase_stop_12 = min(input_lvl_2.shape, input_lvl_2_i1_2, 1 + input_lvl_2_i1)
@@ -254,6 +264,7 @@ begin
                             end
                             x = phase_stop_13 + 1
                         end
+                        phase_stop_12 + 1
                     end
                     phase_start_14 = max(1, input_lvl_2_i1_3, 2 + input_lvl_2_i1)
                     phase_stop_14 = min(input_lvl_2.shape, input_lvl_2_i1_2)
@@ -268,6 +279,7 @@ begin
                                 tmp_lvl_q = (1 - 1) * input_lvl_2.shape + input_lvl_2_i_2
                                 tmp_lvl_val[tmp_lvl_q] = input_lvl_3_val_11 + tmp_lvl_val[tmp_lvl_q]
                                 input_lvl_2_q_2 += 1
+                                input_lvl_2_i_2 + 1
                             else
                                 phase_stop_16 = min(input_lvl_2_i_2, phase_stop_14)
                                 if input_lvl_2_i_2 == phase_stop_16
@@ -276,9 +288,11 @@ begin
                                     tmp_lvl_val[tmp_lvl_q] = input_lvl_3_val_11 + tmp_lvl_val[tmp_lvl_q]
                                     input_lvl_2_q_2 += 1
                                 end
+                                phase_stop_16 + 1
                                 break
                             end
                         end
+                        phase_stop_14 + 1
                     end
                     phase_start_16 = max(1, input_lvl_2_i1_3, 1 + input_lvl_2_i1_2)
                     phase_stop_17 = min(input_lvl_2.shape, 1 + input_lvl_2_i1)
@@ -294,6 +308,7 @@ begin
                                 tmp_lvl_q = (1 - 1) * input_lvl_2.shape + phase_stop_18
                                 tmp_lvl_val[tmp_lvl_q] = input_lvl_3_val_12 + tmp_lvl_val[tmp_lvl_q]
                                 input_lvl_2_q += 1
+                                phase_stop_18 + 1
                             else
                                 phase_stop_19 = min(1 + input_lvl_2_i, phase_stop_17)
                                 if input_lvl_2_i == phase_stop_19 + -1
@@ -302,9 +317,16 @@ begin
                                     tmp_lvl_val[tmp_lvl_q] = input_lvl_3_val_12 + tmp_lvl_val[tmp_lvl_q]
                                     input_lvl_2_q += 1
                                 end
+                                phase_stop_19 + 1
                                 break
                             end
                         end
+                        phase_stop_17 + 1
+                    end
+                    phase_start_19 = max(1, input_lvl_2_i1_3, 1 + input_lvl_2_i1_2, 2 + input_lvl_2_i1)
+                    phase_stop_20 = input_lvl_2.shape
+                    if phase_stop_20 >= phase_start_19
+                        phase_stop_20 + 1
                     end
                     for x_46 = 1:input_lvl_2.shape
                         output_lvl_2_q = (output_lvl_q - 1) * input_lvl_2.shape + x_46
@@ -313,6 +335,11 @@ begin
                         output_lvl_2_val[output_lvl_2_q] = tmp_lvl_2_val
                     end
                 end
+                phase_stop_2 + 1
+            end
+            phase_start_20 = max(1, 1 + fld(y_stop * i, cpu.n))
+            if y_stop >= phase_start_20
+                y_stop + 1
             end
         end
     qos = 1 * (input_lvl.shape + -0)
