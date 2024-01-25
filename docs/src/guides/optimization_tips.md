@@ -1,7 +1,7 @@
 ```@meta
 CurrentModule = Finch
 ```
-# Performance Tips for Finch
+# Optimization Tips for Finch
 
 It's easy to ask Finch to run the same operation in different ways. However,
 different approaches have different performance. The right approach really
@@ -208,7 +208,7 @@ end
 
 ## Use Known Functions
 
-Unless you declare the properties of your functions using Finch's [Custom Functions](@ref) interface, Finch doesn't know how they work. For example, using a lambda obscures
+Unless you declare the properties of your functions using Finch's [Custom Operators](@ref) interface, Finch doesn't know how they work. For example, using a lambda obscures
 the meaning of `*`.
 
 ```jldoctest example1

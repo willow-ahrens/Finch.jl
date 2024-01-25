@@ -1,15 +1,4 @@
-```@meta
-CurrentModule = Finch
-```
-# Level Formats
-
-Finch implements a flexible array datastructure called a `Tensor`. Finch tensors represent
-arrays as rooted trees, where the child of each node is selected by an array
-index. Finch is column major, so in an expression `A[i_1, ..., i_N]`, the
-rightmost dimension `i_N` corresponds to the root level of the tree, and the
-leftmost dimension `i_1` corresponds to the leaf level. When the array is dense,
-the leftmost dimension has stop 1. We can convert the matrix `A` to finch format
-with the `Tensor` constructor:
+# Advanced Tensor Storage Formats
 
 ```jldoctest example1; setup=:(using Finch)
 julia> A = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
@@ -85,7 +74,7 @@ When we print the tree in text, positions are numbered from top to bottom.
 However, if we visualize our tree with the root at the top, positions range from
 left to right:
 
-![Dense Format Index Tree](assets/levels-A-d-d-e.png)
+![Dense Format Index Tree](../../assets/levels-A-d-d-e.png)
 
 Because our array is sparse, (mostly zero, or another fill value), it would be
 more efficient to store only the nonzero values. In Finch, each level is
@@ -106,7 +95,7 @@ Dense [:,1:3]
 │ ├─[3]: 5.5
 ```
 
-![CSC Format Index Tree](assets/levels-A-d-sl-e.png)
+![CSC Format Index Tree](../../assets/levels-A-d-sl-e.png)
 
 Our `Dense(SparseList(Element(0.0)))` format is also known as
 ["CSC"](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29)
@@ -130,7 +119,7 @@ SparseList (0.0) [:,1:3]
 │ ├─[3]: 5.5
 ```
 
-![DCSC Format Index Tree](assets/levels-A-sl-sl-e.png)
+![DCSC Format Index Tree](../../assets/levels-A-sl-sl-e.png)
 
 Here we see that the entirely zero column has also been compressed. The
 `SparseList(SparseList(Element(0.0)))` format is also known as
@@ -155,7 +144,7 @@ SparseCOO (0.0) [1:4,1:3]
 ├─├─[3, 3]: 5.5
 ```
 
-![COO Format Index Tree](assets/levels-A-sc2-e.png)
+![COO Format Index Tree](../../assets/levels-A-sc2-e.png)
 
 The COO format is compact and straightforward, but doesn't support random
 access. For random access, one should use the `SparseHash` format. A full listing
@@ -174,7 +163,7 @@ postype
 Additionally, many levels have a `Vp` or `Vi` in their constructors; these stand for vector of element type `Tp` or `Ti`. 
 More generally, levels are paramterized by the types that they use for storage. By default, all levels use `Vector`, but a user 
 could could change any or all of the storage types of a tensor so that the tensor would be stored on a GPU or CPU or some combination thereof, 
-or eveni just via a vector with a different allocation mechanism.  The storage type should behave like `AbstractArray` 
+or even just via a vector with a different allocation mechanism.  The storage type should behave like `AbstractArray` 
 and needs to implement the usual abstract array functions and `Base.resize!`. See the tests for an example. 
 
 When levels are constructed in short form as in the examples above, the index, position, and storage types are inferred
@@ -187,24 +176,4 @@ If one needs to copy a tensor to another tensor with a different storage type, o
 
 ```@docs
 moveto
-```
-
-# Public Functions
-
-### Tensor Constructors
-
-```@docs
-Tensor
-```
-
-### Level Constructors
-
-```@docs
-DenseLevel
-ElementLevel
-SparseListLevel
-SparseCOOLevel
-SparseHashLevel
-SparseTriangleLevel
-SparseByteMapLevel
 ```

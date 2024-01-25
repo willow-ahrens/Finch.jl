@@ -1,6 +1,28 @@
 @testset "continuous" begin
-    @info "Testing Continuous Usage"
+    @info "Testing Continuous Insertion"
+    let 
+        s1 = Scalar(0)
+        x = Tensor(SparseRLE{Limit{Float32}}(Element(0)), 10)
+        @finch mode=fastfinch (x[3] = 1)
+        @finch mode=fastfinch (for i=realextent(5+Eps,7-Eps); x[~i] = 1 end)
+        @finch mode=fastfinch (for i=realextent(8,9+Eps); x[~i] = 1 end)
+        
+        @finch mode=fastfinch (for i=_; s1[] += x[i] * d(i) end)
+        @test s1.val == 3
+    end
+
+    let 
+        s1 = Scalar(0)
+        x = Tensor(SparseRLE{Limit{Float32}}(SparseList(Element(0))), 10, 10)
+        a = [1, 4, 8]
+        @finch mode=fastfinch (for i=realextent(2,4-Eps); for j=extent(1,3); x[a[j], ~i] = 1 end end)
+        @finch mode=fastfinch (for i=realextent(6+Eps,10-Eps); x[2, ~i] = 1 end)
+        
+        @finch mode=fastfinch (for i=_; for j=_; s1[] += x[j,i] * d(i) end end)
+        @test s1.val == 10
+    end   
     
+    @info "Testing Continuous Usage"
     using StatsBase
     using Random
     using StableRNGs
@@ -165,5 +187,6 @@
    
         @test s1.val==s2.val
     end
+
 
 end

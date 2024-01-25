@@ -2,7 +2,7 @@
 CurrentModule = Finch
 ```
 
-# Benchmarking
+# Benchmarking Tips
 
 Julia code is [nototoriously
 fussy](https://github.com/JuliaCI/BenchmarkTools.jl#why-does-this-package-exist)

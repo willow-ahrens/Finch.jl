@@ -1,5 +1,5 @@
 """
-    ElementLevel{D, [Tv=typeof(D), Tp=Int, Val]}()
+    ElementLevel{D, [Tv=typeof(D)], [Tp=Int], [Val]}()
 
 A subfiber of an element level is a scalar of type `Tv`, initialized to `D`. `D`
 may optionally be given as the first argument.

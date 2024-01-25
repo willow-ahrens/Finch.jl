@@ -23,7 +23,7 @@ The dimensions are semantically evaluated just before the corresponding loop or
 declaration statement.  The program is assumed to be scoped, so that all loops
 have unique index names.
 
-See also: [`virtual_size`](@ref), [`virtual_resize`](@ref), [`combinedim`](@ref)
+See also: [`virtual_size`](@ref), [`virtual_resize!`](@ref), [`combinedim`](@ref)
 """
 function dimensionalize!(prgm, ctx) 
     prgm = DeclareDimensions(ctx=ctx)(prgm)

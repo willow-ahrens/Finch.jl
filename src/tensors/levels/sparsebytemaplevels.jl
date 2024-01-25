@@ -1,5 +1,5 @@
 """
-    SparseByteMapLevel{[Ti=Tuple{Int...}], [Tp=Int], [Ptr] [Tbl]}(lvl, [dims])
+    SparseByteMapLevel{[Ti=Int], [Ptr, Tbl]}(lvl, [dims])
 
 Like the [`SparseListLevel`](@ref), but a dense bitmap is used to encode
 which slices are stored. This allows the ByteMap level to support random access.

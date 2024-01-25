@@ -149,7 +149,7 @@ quote
                         end
                     end
                 end
-                z_lvl_ptr_2[z_lvl_qos + 1] = (z_lvl_2_qos - z_lvl_2_qos_fill) - 1
+                z_lvl_ptr_2[z_lvl_qos + 1] += (z_lvl_2_qos - z_lvl_2_qos_fill) - 1
                 z_lvl_2_qos_fill = z_lvl_2_qos - 1
                 if z_lvldirty
                     z_lvl_left[z_lvl_qos] = phase_start_4
@@ -233,7 +233,7 @@ quote
                         end
                     end
                 end
-                z_lvl_ptr_2[z_lvl_qos + 1] = (z_lvl_2_qos_2 - z_lvl_2_qos_fill) - 1
+                z_lvl_ptr_2[z_lvl_qos + 1] += (z_lvl_2_qos_2 - z_lvl_2_qos_fill) - 1
                 z_lvl_2_qos_fill = z_lvl_2_qos_2 - 1
                 if z_lvldirty
                     z_lvl_left[z_lvl_qos] = phase_start_12
@@ -456,7 +456,7 @@ quote
                         end
                     end
                 end
-                z_lvl_ptr_2[z_lvl_qos + 1] = (z_lvl_2_qos_3 - z_lvl_2_qos_fill) - 1
+                z_lvl_ptr_2[z_lvl_qos + 1] += (z_lvl_2_qos_3 - z_lvl_2_qos_fill) - 1
                 z_lvl_2_qos_fill = z_lvl_2_qos_3 - 1
                 if z_lvldirty
                     z_lvl_left[z_lvl_qos] = phase_start_20
@@ -556,7 +556,7 @@ quote
                             end
                         end
                     end
-                    z_lvl_ptr_2[z_lvl_qos + 1] = (z_lvl_2_qos_4 - z_lvl_2_qos_fill) - 1
+                    z_lvl_ptr_2[z_lvl_qos + 1] += (z_lvl_2_qos_4 - z_lvl_2_qos_fill) - 1
                     z_lvl_2_qos_fill = z_lvl_2_qos_4 - 1
                     if z_lvldirty
                         z_lvl_left[z_lvl_qos] = phase_start_42
@@ -644,7 +644,7 @@ quote
                             end
                         end
                     end
-                    z_lvl_ptr_2[z_lvl_qos + 1] = (z_lvl_2_qos_5 - z_lvl_2_qos_fill) - 1
+                    z_lvl_ptr_2[z_lvl_qos + 1] += (z_lvl_2_qos_5 - z_lvl_2_qos_fill) - 1
                     z_lvl_2_qos_fill = z_lvl_2_qos_5 - 1
                     if z_lvldirty
                         z_lvl_left[z_lvl_qos] = phase_start_52
@@ -745,7 +745,7 @@ quote
                             end
                         end
                     end
-                    z_lvl_ptr_2[z_lvl_qos + 1] = (z_lvl_2_qos_6 - z_lvl_2_qos_fill) - 1
+                    z_lvl_ptr_2[z_lvl_qos + 1] += (z_lvl_2_qos_6 - z_lvl_2_qos_fill) - 1
                     z_lvl_2_qos_fill = z_lvl_2_qos_6 - 1
                     if z_lvldirty
                         z_lvl_left[z_lvl_qos] = phase_start_62
@@ -833,7 +833,7 @@ quote
                             end
                         end
                     end
-                    z_lvl_ptr_2[z_lvl_qos + 1] = (z_lvl_2_qos_7 - z_lvl_2_qos_fill) - 1
+                    z_lvl_ptr_2[z_lvl_qos + 1] += (z_lvl_2_qos_7 - z_lvl_2_qos_fill) - 1
                     z_lvl_2_qos_fill = z_lvl_2_qos_7 - 1
                     if z_lvldirty
                         z_lvl_left[z_lvl_qos] = phase_start_72
@@ -847,13 +847,13 @@ quote
             end
         end
     end
-    z_lvl_ptr[1 + 1] = (z_lvl_qos - 0) - 1
-    for p = 2:1 + 1
-        z_lvl_ptr[p] += z_lvl_ptr[p - 1]
+    z_lvl_ptr[1 + 1] += (z_lvl_qos - 0) - 1
+    for p = 1:1
+        z_lvl_ptr[p + 1] += z_lvl_ptr[p]
     end
     qos_stop = z_lvl_ptr[1 + 1] - 1
-    for p_2 = 2:qos_stop + 1
-        z_lvl_ptr_2[p_2] += z_lvl_ptr_2[p_2 - 1]
+    for p_2 = 1:qos_stop
+        z_lvl_ptr_2[p_2 + 1] += z_lvl_ptr_2[p_2]
     end
     resize!(z_lvl_ptr, 1 + 1)
     qos = z_lvl_ptr[end] - 1

@@ -78,7 +78,12 @@ convenient to use the unexported macro `Finch.finch_program_instance`:
 julia> using Finch: @finch_program_instance
 
 julia> prgm = Finch.@finch_program_instance (C .= 0; for i=_; C[i] = A[i] * B[i] end)
-block_instance(declare_instance(tag_instance(:variable_instance(:C), Tensor(SparseList{Int64}(Element{0, Int64, Int64}([24, 45]), 5, [1, 3], [2, 5]))), literal_instance(0)), loop_instance(index_instance(i), Finch.FinchNotation.Dimensionless(), assign_instance(access_instance(tag_instance(:variable_instance(:C), Tensor(SparseList{Int64}(Element{0, Int64, Int64}([24, 45]), 5, [1, 3], [2, 5]))), literal_instance(Finch.FinchNotation.Updater()), tag_instance(:variable_instance(:i), index_instance(i))), literal_instance(initwrite), call_instance(tag_instance(:variable_instance(:*), literal_instance(*)), access_instance(tag_instance(:variable_instance(:A), Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal_instance(Finch.FinchNotation.Reader()), tag_instance(:variable_instance(:i), index_instance(i))), access_instance(tag_instance(:variable_instance(:B), Tensor(Dense{Int64}(Element{0, Int64, Int64}([11, 12, 13, 14, 15]), 5))), literal_instance(Finch.FinchNotation.Reader()), tag_instance(:variable_instance(:i), index_instance(i)))))))
+Finch program instance: begin
+  tag(C, Tensor(SparseList(Element(0)))) .= 0
+  for i = Dimensionless()
+    tag(C, Tensor(SparseList(Element(0))))[tag(i, i)] <<initwrite>>= tag(*, *)(tag(A, Tensor(SparseList(Element(0))))[tag(i, i)], tag(B, Tensor(Dense(Element(0))))[tag(i, i)])
+  end
+end
 ```
 
 As we can see, our program instance contains not only the AST to be executed,
@@ -125,16 +130,6 @@ Dense [1:2]
 
 ```
 
-## Virtual Tensor Methods
-
-```@docs
-declare!
-instantiate
-freeze!
-trim!
-thaw!
-unfurl
-```
 ## Virtualization
 
 Finch generates different code depending on the types of the arguments to the
@@ -170,13 +165,15 @@ julia> inst = Finch.@finch_program_instance begin
                s[] += A[i]
            end
        end
-loop_instance(index_instance(i), Finch.FinchNotation.Dimensionless(), assign_instance(access_instance(tag_instance(:variable_instance(:s), Scalar{0, Int64}(0)), literal_instance(Finch.FinchNotation.Updater()), ), tag_instance(:variable_instance(:+), literal_instance(+)), access_instance(tag_instance(:variable_instance(:A), Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal_instance(Finch.FinchNotation.Reader()), tag_instance(:variable_instance(:i), index_instance(i)))))
+Finch program instance: for i = Dimensionless()
+  tag(s, Scalar{0, Int64}(0))[] <<tag(+, +)>>= tag(A, Tensor(SparseList(Element(0))))[tag(i, i)]
+end
 
 julia> typeof(inst)
 Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.Dimensionless, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:s}, Scalar{0, Int64}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Updater()}, Tuple{}}, Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:+}, Finch.FinchNotation.LiteralInstance{+}}, Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:A}, Tensor{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Reader()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}}}
 
 julia> Finch.virtualize(:inst, typeof(inst), Finch.JuliaContext())
-for i = virtual(Finch.FinchNotation.Dimensionless)
+Finch program: for i = virtual(Finch.FinchNotation.Dimensionless)
   tag(s, virtual(Finch.VirtualScalar))[] <<tag(+, +)>>= tag(A, virtual(Finch.VirtualFiber{Finch.VirtualSparseListLevel}))[tag(i, i)]
 end
 
@@ -249,6 +246,65 @@ in the scope of the executing context. Any aspect of virtuals visible to Finch s
 considered immutable, but virtuals may reference mutable variables in the scope of the
 executing context.
 
+```@docs
+virtualize
+```
+
+## Working with Finch IR
+
+Calling print on a finch program or program instance will print the
+structure of the program as one would call constructors to build it. For
+example, 
+
+```jldoctest example2; setup = :(using Finch)
+julia> prgm_inst = Finch.@finch_program_instance for i = _
+            s[] += A[i]
+        end;
+
+
+julia> println(prgm_inst)
+loop_instance(index_instance(i), Finch.FinchNotation.Dimensionless(), assign_instance(access_instance(tag_instance(variable_instance(:s), Scalar{0, Int64}(0)), literal_instance(Finch.FinchNotation.Updater())), tag_instance(variable_instance(:+), literal_instance(+)), access_instance(tag_instance(variable_instance(:A), Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal_instance(Finch.FinchNotation.Reader()), tag_instance(variable_instance(:i), index_instance(i)))))
+
+julia> prgm_inst
+Finch program instance: for i = Dimensionless()
+  tag(s, Scalar{0, Int64}(0))[] <<tag(+, +)>>= tag(A, Tensor(SparseList(Element(0))))[tag(i, i)]
+end
+
+julia> prgm = Finch.@finch_program for i = _
+               s[] += A[i]
+           end;
+
+
+julia> println(prgm)
+loop(index(i), virtual(Finch.FinchNotation.Dimensionless()), assign(access(literal(Scalar{0, Int64}(0)), literal(Finch.FinchNotation.Updater())), literal(+), access(literal(Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal(Finch.FinchNotation.Reader()), index(i))))
+
+julia> prgm
+Finch program: for i = virtual(Finch.FinchNotation.Dimensionless)
+  Scalar{0, Int64}(0)[] <<+>>= Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))[i]
+end
+
+```
+    
+Both the virtual and instance representations of Finch IR define
+[SyntaxInterface.jl](https://github.com/willow-ahrens/SyntaxInterface.jl) and
+[AbstractTrees.jl](https://github.com/JuliaCollections/AbstractTrees.jl)
+representations, so you can use the standard `operation`, `arguments`, `istree`, and `children` functions to inspect the structure of the program, as well as the rewriters defined by [RewriteTools.jl](https://github.com/willow-ahrens/RewriteTools.jl)
+
+```jldoctest example2; setup = :(using Finch, AbstractTrees, SyntaxInterface, RewriteTools)
+julia> using Finch.FinchNotation;
+
+
+julia> PostOrderDFS(prgm)
+PostOrderDFS{FinchNode}(loop(index(i), virtual(Dimensionless()), assign(access(literal(Scalar{0, Int64}(0)), literal(Updater())), literal(+), access(literal(Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal(Reader()), index(i)))))
+
+julia> (@capture prgm loop(~idx, ~ext, ~val))
+true
+
+julia> idx
+Finch program: i 
+
+```
+
 ## Tensor internals
 
 Tensor levels are implemented using the following methods:
@@ -266,3 +322,13 @@ level_eltype
 level_default
 ```
 
+## Virtual Tensor Methods
+
+```@docs
+declare!
+instantiate
+freeze!
+trim!
+thaw!
+unfurl
+```
