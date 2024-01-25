@@ -586,4 +586,11 @@ using CIndices
         Ans = Tensor(SparseList{Int64}(Dense{Int64}(Element{0, Int64, Int64}([1]), 1), 10, [1, 2], [1]))
         @test Ans == Output
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/385
+    let
+        c = Scalar(0)
+        @finch let a=1, b=2; c[] += a + b end
+        @test c[] == 3
+    end
 end
