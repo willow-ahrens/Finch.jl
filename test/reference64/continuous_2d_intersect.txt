@@ -138,7 +138,7 @@ quote
                         j = phase_stop_8 + limit(0+ϵ)
                     end
                 end
-                z_lvl_ptr_2[z_lvl_qos + 1] = (z_lvl_2_qos - z_lvl_2_qos_fill) - 1
+                z_lvl_ptr_2[z_lvl_qos + 1] += (z_lvl_2_qos - z_lvl_2_qos_fill) - 1
                 z_lvl_2_qos_fill = z_lvl_2_qos - 1
                 if z_lvldirty
                     z_lvl_left[z_lvl_qos] = phase_start_6
@@ -151,13 +151,13 @@ quote
             i = phase_stop_2 + limit(0+ϵ)
         end
     end
-    z_lvl_ptr[1 + 1] = (z_lvl_qos - 0) - 1
-    for p = 2:1 + 1
-        z_lvl_ptr[p] += z_lvl_ptr[p - 1]
+    z_lvl_ptr[1 + 1] += (z_lvl_qos - 0) - 1
+    for p = 1:1
+        z_lvl_ptr[p + 1] += z_lvl_ptr[p]
     end
     qos_stop = z_lvl_ptr[1 + 1] - 1
-    for p_2 = 2:qos_stop + 1
-        z_lvl_ptr_2[p_2] += z_lvl_ptr_2[p_2 - 1]
+    for p_2 = 1:qos_stop
+        z_lvl_ptr_2[p_2 + 1] += z_lvl_ptr_2[p_2]
     end
     resize!(z_lvl_ptr, 1 + 1)
     qos = z_lvl_ptr[end] - 1

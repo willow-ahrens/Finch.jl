@@ -1,5 +1,5 @@
 """
-    SparseListLevel{[Ti=Int], [Tp=Int], [Ptr=Vector{Tp}], [Idx=Vector{Ti}]}(lvl, [dim])
+    SparseListLevel{[Ti=Int], [Ptr, Idx]}(lvl, [dim])
 
 A subfiber of a sparse level does not need to represent slices `A[:, ..., :, i]`
 which are entirely [`default`](@ref). Instead, only potentially non-default
@@ -99,7 +99,7 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseLis
     p = fbr.pos
     lvl = fbr.lvl
     if p + 1 > length(lvl.ptr)
-        print(io, "SparseHash(undef...)")
+        print(io, "SparseList(undef...)")
         return
     end
 

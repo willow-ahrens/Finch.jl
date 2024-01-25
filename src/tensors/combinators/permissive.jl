@@ -51,6 +51,8 @@ function virtual_resize!(arr::VirtualPermissiveArray, ctx::AbstractCompiler, dim
     virtual_resize!(arr.body, ctx, ifelse.(arr.dims, virtual_size(arr.body, ctx), dim))
 end
 
+virtual_default(arr::VirtualPermissiveArray, ctx::AbstractCompiler) = virtual_default(arr.body, ctx)
+
 function instantiate(arr::VirtualPermissiveArray, ctx, mode, protos)
     VirtualPermissiveArray(instantiate(arr.body, ctx, mode, protos), arr.dims)
 end

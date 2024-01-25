@@ -23,7 +23,9 @@ export fastfinch, safefinch, debugfinch
 
 export Tensor
 export SparseRLE, SparseRLELevel 
+export SingleRLE, SingleRLELevel
 export SparseList, SparseListLevel
+export SingleList, SingleListLevel
 export SparseHash, SparseHashLevel
 export SparseCOO, SparseCOOLevel
 export SparseTriangle, SparseTriangleLevel
@@ -49,7 +51,7 @@ export parallelAnalysis, ParallelAnalysisResults
 export parallel, realextent, extent, dimless
 export CPU, CPULocalVector, CPULocalMemory
 
-export Limit
+export Limit, Eps
 
 struct FinchProtocolError <: Exception
     msg::String
@@ -102,7 +104,9 @@ include("tensors/scalars.jl")
 include("tensors/levels/abstractlevel.jl")
 include("tensors/fibers.jl")
 include("tensors/levels/sparserlelevels.jl")
+include("tensors/levels/singlerlelevels.jl")
 include("tensors/levels/sparselistlevels.jl")
+include("tensors/levels/singlelistlevels.jl")
 include("tensors/levels/sparsehashlevels.jl")
 include("tensors/levels/sparsecoolevels.jl")
 include("tensors/levels/sparsebytemaplevels.jl")
@@ -134,7 +138,7 @@ export fsparse, fsparse!, fsprand, fspzeros, ffindnz, fread, fwrite, countstored
 export bspread, bspwrite
 export ftnsread, ftnswrite, fttread, fttwrite
 
-export moveto
+export moveto, postype
 
 include("interface/abstractarrays.jl")
 include("interface/abstractunitranges.jl")

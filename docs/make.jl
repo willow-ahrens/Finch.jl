@@ -6,6 +6,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
 end
 
 using Documenter
+using Documenter.Remotes
 using Literate
 using Finch
 
@@ -14,10 +15,9 @@ DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch; using SparseArrays); re
 makedocs(;
     modules=[Finch],
     authors="Willow Ahrens",
-    repo="https://github.com/willow-ahrens/Finch.jl/blob/{commit}{path}#{line}",
+    repo=Remotes.GitHub("willow-ahrens", "Finch.jl"),
     sitename="Finch.jl",
     format=Documenter.HTML(;
-        repolink="https://github.com/willow-ahrens/Finch.jl/blob/{commit}{path}#{line}",
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://willow-ahrens.github.io/Finch.jl",
         assets=["assets/favicon.ico"],
@@ -28,8 +28,8 @@ makedocs(;
         #"Practical Tutorials and Use Cases" => "tutorials_use_cases/tutorials_use_cases.md",
         "Comprehensive Guides" => [
             "Calling Finch" => "guides/calling_finch.md",
+            "Tensor Formats" => "guides/tensor_formats.md",
             "The Finch Language" => "guides/finch_language.md",
-            "Exploration of Tensor Formats" => "guides/tensor_formats.md",
             #"Dimensionalization" => "guides/dimensionalization.md",
             #"Tensor Lifecycles" => "guides/tensor_lifecycles.md",
             #"Special Tensors" => [
@@ -49,13 +49,13 @@ makedocs(;
         ],
         "Technical Reference" => [
         #    "Finch Core API" => "reference/core_api.md",
-        #    "Function and Method Reference" => "reference/function_method_ref.md",
+            "Documentation Listing" => "reference/listing.md",
             "Advanced Implementation Details" => [
                 "Internals" => "reference/advanced_implementation/internals.md",
         #        "Looplets and Coiteration" => "reference/advanced_implementation/looplets_coiteration.md",
         #        "Concordization" => "reference/advanced_implementation/concordization.md",
         #        "Local Variables and Constant Propagation" => "reference/advanced_implementation/local_variables.md",
-        #        "Tensor Interface" => "reference/advanced_implementation/tensor_interface.md",
+                "Tensor Interface" => "reference/advanced_implementation/tensor_interface.md",
         #        "Looplet Interface" => "reference/advanced_implementation/looplet_interface.md",
             ],
         ],

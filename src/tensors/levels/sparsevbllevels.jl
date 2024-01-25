@@ -1,5 +1,5 @@
 """
-SparseVBLLevel{[Ti=Int], [Tp=Int], [Ptr=Vector{Tp}], [Idx=Vector{Ti}], [Ofs=Vector{Ofs}]}(lvl, [dim])
+SparseVBLLevel{[Ti=Int], [Ptr, Idx, Ofs]}(lvl, [dim])
 
 Like the [`SparseListLevel`](@ref), but contiguous subfibers are stored together in blocks.
 

@@ -67,6 +67,7 @@ using Base.Meta
         dropdefaults!(Tensor(SparseRLE(Element(zero(eltype(arr))))), arr)
     end
 
+
     mats = [
         fill(0.0, 5, 5),
         fill(1.0, 5, 5),
@@ -139,5 +140,34 @@ using Base.Meta
     end
     test_format(mats, name = "Tensor(SparseRLE(Dense(Element(zero))))", key = "srl_d_e") do arr
         dropdefaults!(Tensor(SparseRLE(Dense(Element(zero(eltype(arr)))))), arr)
+    end
+
+    # Test SingleList
+
+    @testset "SingleList level" begin
+        # 1D
+        @test Tensor(SingleList(Element(0.0)), [0, 0, 10]) == [0, 0, 10]
+        @test Tensor(SingleList(Element(0.0)), [0, 0, 10]) != [0, 20, 10]
+        @test_throws Finch.FinchProtocolError Tensor(SingleList(Element(0.0)), [0, 20, 10])
+
+        # 2D
+        dense_single = Tensor(Dense(SingleList(Element(0.0))), [10 0 0; 0 20 0; 0 0 30])
+        sparse_single = Tensor(SparseList(SingleList(Element(0.0))), [10 0 0; 0 20 0; 0 0 30])
+        @test dense_single == sparse_single
+        @test_throws Finch.FinchProtocolError Tensor(SingleList(SingleList(Element(0.0))), [10 0 0; 0 20 0; 0 0 30])
+        
+        @test Tensor(SingleList(Dense(Element(0.0))), [0 0 0; 0 0 30; 0 0 30]) == [0 0 0; 0 0 30; 0 0 30]
+        @test_throws Finch.FinchProtocolError Tensor(SingleList(SingleList(Element(0.0))), [0 0 0; 0 0 30; 0 0 30])
+    end
+
+    @testset "SingleRLE level" begin
+        # 1D
+        @test Tensor(SingleRLE(Element(0)), [0, 10, 0]) == [0, 10, 0]
+        @test_throws Finch.FinchProtocolError Tensor(SingleRLE(Element(0)), [0, 10, 10]) 
+
+
+        x = Tensor(SingleRLE(Element(0)), 10);
+        @finch begin for i = extent(3,6); x[~i] = 1 end end
+        @test x == [0,0,1,1,1,1,0,0,0,0]
     end
 end
