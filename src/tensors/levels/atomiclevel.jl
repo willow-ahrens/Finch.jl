@@ -222,7 +222,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Update
             update = instantiate(VirtualSubFiber(lvl_2, pos), ctx, mode, protos)
             return update
         end,
-        epilogue = quote release_lock!($dev, $lock) end 
+        epilogue = quote release_lock!($dev, $lockVal) end 
     )
 end
 function instantiate(fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, ctx, mode::Updater, protos)
@@ -242,6 +242,6 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, ctx, mode::
             update = instantiate(VirtualHollowSubFiber(lvl_2, pos, fbr.dirty), ctx, mode, protos)
             return update
         end,
-        epilogue = quote release_lock!($dev, $lock) end 
+        epilogue = quote release_lock!($dev, $lockVal) end 
     )
 end
