@@ -14,12 +14,12 @@ Dense [1:3] -> Atomic
 
 struct AtomicLevel{AVal <: AbstractVector, Lvl} <: AbstractLevel
     lvl::Lvl
-    atomicsArray::AVal
+    locks::AVal
 end
 const Atomic = AtomicLevel
 
 
-AtomicLevel(lvl::Lvl) where {Lvl} = AtomicLevel{Vector{Base.Threads.SpinLock}, Lvl}(lvl, Vector{Base.Threads.SpinLock}([]))
+AtomicLevel(lvl::Lvl) where {Lvl} = AtomicLevel{Vector{Base.Threads.SpinLock}, Lvl}(Vector{Base.Threads.SpinLock}([]), lvl)
 # AtomicLevel{AVal, Lvl}(atomics::AVal, lvl::Lvl) where {Lvl, AVal} =  AtomicLevel{AVal, Lvl}(lvl, atomics)
 Base.summary(::AtomicLevel{AVal, Lvl}) where {Lvl, AVal} = "AtomicLevel($(AVal), $(Lvl))"
 
@@ -29,14 +29,14 @@ postype(::Type{<:AtomicLevel{AVal, Lvl}}) where {Lvl, AVal} = postype(Lvl)
 
 function moveto(lvl::AtomicLevel, device)
     lvl_2 = moveto(lvl.lvl, device)
-    atomicsArray_2 = moveto(lvl.atomicsArray, device)
-    return AtomicLevel(lvl_2, atomicsArray_2)
+    locks_2 = moveto(lvl.locks, device)
+    return AtomicLevel(lvl_2, locks_2)
 end
 
-pattern!(lvl::AtomicLevel) = AtomicLevel(pattern!(lvl.lvl), lvl.atomicsArray)
-redefault!(lvl::AtomicLevel, init) = AtomicLevel(redefault!(lvl.lvl, init), lvl.atomicsArray)
+pattern!(lvl::AtomicLevel) = AtomicLevel(pattern!(lvl.lvl), lvl.locks)
+redefault!(lvl::AtomicLevel, init) = AtomicLevel(redefault!(lvl.lvl, init), lvl.locks)
 # TODO: FIXME: Need toa dopt the number of dims
-Base.resize!(lvl::AtomicLevel, dims...) = AtomicLevel(resize!(lvl.lvl, dims...), lvl.atomicsArray)
+Base.resize!(lvl::AtomicLevel, dims...) = AtomicLevel(resize!(lvl.lvl, dims...), lvl.locks)
 
 
 function Base.show(io::IO, lvl::AtomicLevel{AVal, Lvl}) where {AVal, Lvl}
@@ -44,7 +44,7 @@ function Base.show(io::IO, lvl::AtomicLevel{AVal, Lvl}) where {AVal, Lvl}
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>AVal), lvl.atomicsArray)
+        show(IOContext(io, :typeinfo=>AVal), lvl.locks)
         print(io, ", ")
         show(IOContext(io, :typeinfo=>Val), lvl.lvl)
     end
@@ -105,7 +105,7 @@ function virtualize(ex, ::Type{AtomicLevel{AVal, Lvl}}, ctx, tag=:lvl) where {AV
     atomics = freshen(ctx, tag, :_locks)
     push!(ctx.preamble, quote
             $sym = $ex
-            $atomics = $ex.atomicsArray
+            $atomics = $ex.locks
         end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     temp = VirtualAtomicLevel(lvl_2, sym, atomics, typeof(level_default(Lvl)), Val, AVal, Lvl)
@@ -148,7 +148,7 @@ function reassemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
     idx = freshen(ctx.code, :idx)
     lockVal = freshen(ctx.code, :lock)
     push!(ctx.code.preamble, quote 
-              Finch.resize_if_smaller!($(lvl.ex).atomicsArray, $(ctx(pos_stop))) 
+              Finch.resize_if_smaller!($lvl.locks, $(ctx(pos_stop))) 
               @inbounds for $idx = $(ctx(pos_start)):$(ctx(pos_stop))
                 lockVal = make_lock(eltype($(lvl.AVal)))
                 if !isnothing(lockVal)
@@ -183,7 +183,7 @@ end
 
 function virtual_moveto_level(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, arch)
     #Add for seperation level too.
-    atomics = freshen(ctx.code, :atomicsArray)
+    atomics = freshen(ctx.code, :locksArray)
 
     push!(ctx.code.preamble, quote
         $atomics = $(lvl.locks)
@@ -215,14 +215,14 @@ function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Update
     return Thunk(
         preamble = quote  
             $atomicData =  promote_val_to_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
-            $lockVal = get_lock($dev, $atomicData)
+            $lockVal = get_lock!($dev, $atomicData)
         end,
         body =  (ctx) -> begin
             lvl_2 = lvl.lvl
             update = instantiate(VirtualSubFiber(lvl_2, pos), ctx, mode, protos)
             return update
         end,
-        epilogue = quote release_lock($dev, $lock) end 
+        epilogue = quote release_lock!($dev, $lock) end 
     )
 end
 function instantiate(fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, ctx, mode::Updater, protos)
@@ -235,13 +235,13 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, ctx, mode::
     return Thunk(
         preamble = quote  
             $atomicData =  promote_val_to_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
-            $lockVal = get_lock($dev, $atomicData)
+            $lockVal = get_lock!($dev, $atomicData)
         end,
         body =  (ctx) -> begin
             lvl_2 = lvl.lvl
             update = instantiate(VirtualHollowSubFiber(lvl_2, pos, fbr.dirty), ctx, mode, protos)
             return update
         end,
-        epilogue = quote release_lock($dev, $lock) end 
+        epilogue = quote release_lock!($dev, $lock) end 
     )
 end

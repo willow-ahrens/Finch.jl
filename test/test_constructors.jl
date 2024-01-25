@@ -612,8 +612,8 @@
           
           
           println(io, "initialized tensor: ", fbr)
-          @test Structure(fbr) == Structure(Tensor(Dense(Atomic(Separation(fbr.lvl.lvl.lvl.val, fbr.lvl.lvl.lvl.lvl), fbr.lvl.lvl.atomicsArray), 6)))
-          @test Structure(fbr) == Structure(Tensor(Dense(Atomic{typeof(fbr.lvl.lvl.atomicsArray), Separation{typeof(fbr.lvl.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl.lvl)}}(Separation{typeof(fbr.lvl.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl.lvl)}(fbr.lvl.lvl.lvl.val, fbr.lvl.lvl.lvl.lvl), fbr.lvl.lvl.atomicsArray), 6)))
+          @test Structure(fbr) == Structure(Tensor(Dense(Atomic(Separation(fbr.lvl.lvl.lvl.val, fbr.lvl.lvl.lvl.lvl), fbr.lvl.lvl.locks), 6)))
+          @test Structure(fbr) == Structure(Tensor(Dense(Atomic{typeof(fbr.lvl.lvl.locks), Separation{typeof(fbr.lvl.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl.lvl)}}(Separation{typeof(fbr.lvl.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl.lvl)}(fbr.lvl.lvl.lvl.val, fbr.lvl.lvl.lvl.lvl), fbr.lvl.lvl.locks), 6)))
 
           fbr = Tensor(Dense(Atomic(Separation(Dense(Element(0), 3))), 6))
           println(io, "sized tensor: ", fbr)
@@ -685,8 +685,8 @@
           
           
           println(io, "initialized tensor: ", fbr)
-          @test Structure(fbr) == Structure(Tensor(Dense(Atomic(fbr.lvl.lvl.lvl, fbr.lvl.lvl.atomicsArray), 6)))
-          @test Structure(fbr) == Structure(Tensor(Dense(Atomic{Vector{Base.Threads.SpinLock}, typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.lvl, fbr.lvl.lvl.atomicsArray), 6)))
+          @test Structure(fbr) == Structure(Tensor(Dense(Atomic(fbr.lvl.lvl.lvl, fbr.lvl.lvl.locks), 6)))
+          @test Structure(fbr) == Structure(Tensor(Dense(Atomic{Vector{Base.Threads.SpinLock}, typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.lvl, fbr.lvl.lvl.locks), 6)))
 
           fbr = Tensor(Dense(Atomic(Dense(Element(0), 3)), 6))
           println(io, "sized tensor: ", fbr)
@@ -773,8 +773,8 @@
             fbr = dropdefaults!(Tensor(SparseList(Atomic(Dense(Element(0))))), arr)
             
             println(io, "initialized tensor: ", fbr)
-            @test Structure(fbr) == Structure(Tensor(SparseList(Atomic(fbr.lvl.lvl.lvl, fbr.lvl.lvl.atomicsArray), 6, fbr.lvl.ptr, fbr.lvl.idx)))
-            @test Structure(fbr) == Structure(Tensor(SparseList(Atomic{typeof(fbr.lvl.lvl.atomicsArray), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.lvl, fbr.lvl.lvl.atomicsArray), 6, fbr.lvl.ptr, fbr.lvl.idx)))
+            @test Structure(fbr) == Structure(Tensor(SparseList(Atomic(fbr.lvl.lvl.lvl, fbr.lvl.lvl.locks), 6, fbr.lvl.ptr, fbr.lvl.idx)))
+            @test Structure(fbr) == Structure(Tensor(SparseList(Atomic{typeof(fbr.lvl.lvl.locks), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.lvl, fbr.lvl.lvl.locks), 6, fbr.lvl.ptr, fbr.lvl.idx)))
   
             fbr = Tensor(SparseList(Atomic(Dense(Element(0), 3)), 6))
             println(io, "sized tensor: ", fbr)
@@ -822,13 +822,13 @@
         fbr = dropdefaults!(Tensor(Atomic(SparseList(Element(zero(eltype(arr)))))), arr)
         println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Tensor(Atomic(SparseList(lvl.lvl.lvl, lvl.lvl.shape, lvl.lvl.ptr, lvl.lvl.idx), lvl.atomicsArray)))
-        @test Structure(fbr) == Structure(Tensor(Atomic(SparseList{Int}(lvl.lvl.lvl, lvl.lvl.shape, lvl.lvl.ptr, lvl.lvl.idx), lvl.atomicsArray)))
+        @test Structure(fbr) == Structure(Tensor(Atomic(SparseList(lvl.lvl.lvl, lvl.lvl.shape, lvl.lvl.ptr, lvl.lvl.idx), lvl.locks)))
+        @test Structure(fbr) == Structure(Tensor(Atomic(SparseList{Int}(lvl.lvl.lvl, lvl.lvl.shape, lvl.lvl.ptr, lvl.lvl.idx), lvl.locks)))
 
         fbr = dropdefaults!(Tensor(Atomic(SparseList{Int16}(Element(zero(eltype(arr)))))), arr)
         println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Tensor(Atomic(SparseList{Int16}(lvl.lvl.lvl, lvl.lvl.shape, lvl.lvl.ptr, lvl.lvl.idx), lvl.atomicsArray)))
+        @test Structure(fbr) == Structure(Tensor(Atomic(SparseList{Int16}(lvl.lvl.lvl, lvl.lvl.shape, lvl.lvl.ptr, lvl.lvl.idx), lvl.locks)))
 
         fbr = Tensor(Atomic(SparseList(Element(0.0), 7)))
         println(io, "sized tensor: ", fbr)

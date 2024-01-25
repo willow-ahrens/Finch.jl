@@ -5,8 +5,8 @@ abstract type AbstractVirtualTask end
 
 
 
-get_lock(dev::AbstractDevice, val) = nothing
-release_lock(dev::AbstractDevice, val) = nothing
+get_lock!(dev::AbstractDevice, val) = nothing
+release_lock!(dev::AbstractDevice, val) = nothing
 promote_val_to_lock(dev::AbstractDevice, arr, idx, ty) = nothing
 make_lock(ty) = nothing
 
@@ -59,7 +59,7 @@ end
     return Threads.SpinLock()
 end
 
-@inline function get_lock(dev:: CPU, val::Threads.Atomic{T}) where {T}
+@inline function get_lock!(dev:: CPU, val::Threads.Atomic{T}) where {T}
     # Keep trying to catch x === false so we can set it to true.
     while (Threads.atomic_cas!(x, zero(T), one(T)) === one(T))
         
@@ -68,18 +68,18 @@ end
     @assert x === one(T)
 end
 
-@inline function get_lock(dev:: CPU, val::Threads.SpinLock)
+@inline function get_lock!(dev:: CPU, val::Threads.SpinLock)
     while !trylock(val)
     end
     @assert islocked(val)
 end
 
-@inline function release_lock(dev:: CPU, val::Threads.Atomic{T}) where {T}
+@inline function release_lock!(dev:: CPU, val::Threads.Atomic{T}) where {T}
     # set the atomic to false so someone else can grab it.
     Threads.atomic_cas!(x, one(T), zero(T)) 
 end
 
-@inline function release_lock(dev:: CPU, val::Threads.SpinLock)
+@inline function release_lock!(dev:: CPU, val::Threads.SpinLock)
     @assert islocked(val)
     unlock(val)
 end
