@@ -4,7 +4,7 @@
 
 Atomic Level Protects the level directly below it with atomics
 
-Each sublevel is stored in a vector of type Val with eltype(Val) = Lvl.
+Each position in the level below the atomic level is protected by an atomic.
 julia> Tensor(Dense(Atomic(Element(0.0))), [1, 2, 3])
 Dense [1:3] -> Atomic
 ├─[1]: 1.0
