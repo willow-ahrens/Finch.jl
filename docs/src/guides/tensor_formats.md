@@ -87,6 +87,8 @@ some general descriptions.
 | SingleSparseRun      | Advanced | Sparse Runs           | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
 | SingleBlock          | Advanced | Sparse Blocks         | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ⚙️     |
 | SparseBytemap        | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ❌              | ✅     |
+| AtomicLevel          | Modifier | No Data                | ❓                 | ❓           | ❓                        | ❓                 | ❓              | ❓    ⚙️ |
+| SeperationLevel      | Modifier | No Data                | ❓                 | ❓           | ❓                        | ❓                 | ❓              | ❓    ⚙️ |
 | SparseCOO            | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ✅              | ✅️    |
 | SparseHash           | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ✅              | 🕸️   |
 
@@ -99,6 +101,7 @@ The "Level Format Name" is the name of the level datatype. Other columns have de
 | ✅     | Indicates the level is ready for serious use. |
 | ⚙️     | Indicates the level is experimental and under development. |
 | 🕸️     | Indicates the level is deprecated, and may be removed in a future release. |
+| ❓   | Indicates a feature of a level only works in certain circumstances. |
 
 ### Groups 
 #### Core Group
@@ -109,6 +112,11 @@ order.
 Contains levels which are more specialized, and geared
 towards bulk updates. These levels may be more efficient in certain cases, but are
 also more restrictive about access orders and intended for more advanced usage.
+#### Modifier Group
+Contains levels which are more specialized, but not towards a sparsity pattern. 
+These levels modify other levels in a variety of ways, but don't store sparsity patterns.
+Typically, they modify how levels are stored or attach data to levels to support the utilization
+of various hardware features.
 #### Legacy Group
 Contains levels which are not recommended for new code, but
 are included for compatibility with older code.
@@ -123,6 +131,9 @@ are included for compatibility with older code.
 | **Sparse Runs**    | Levels which store runs of repeated non-fill values. |
 | **Sparse Blocks**  | Levels which store Blocks of repeated non-fill values. |
 | **Dense Runs**     | Levels which store runs of repeated values, and no compile-time zero annihilation. |
+| **No Data**        | Levels which don't store data but which alter the storage pattern or attach additional data. |
+
+Note that the `Single` sparse levels store a single instance of each nonzero, run, or block. These are useful with a parent level 
 
 Note that the `Single` sparse levels store a single instance of each nonzero, run, or block. These are useful with a parent level to represent IDs.
 
@@ -180,8 +191,16 @@ SparseRLELevel
 SparseVBLLevel
 ```
 
+## Modified Levels
+```@docs
+AtomicLevel
+SeperationLevel
+```
+
 ## Legacy Levels
 ```@docs
 SparseCOOLevel
 SparseHashLevel
 ```
+
+
