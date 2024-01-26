@@ -50,7 +50,7 @@ export parallelAnalysis, ParallelAnalysisResults
 export parallel, realextent, extent, dimless
 export CPU, CPULocalVector, CPULocalMemory
 
-export Limit
+export Limit, Eps
 
 struct FinchProtocolError <: Exception
     msg::String

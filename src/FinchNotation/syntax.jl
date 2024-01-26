@@ -1,5 +1,5 @@
 const incs = Dict(:+= => :+, :*= => :*, :&= => :&, :|= => :|, :(:=) => :overwrite)
-const evaluable_exprs = [:Inf, :Inf16, :Inf32, :Inf64, :(-Inf), :(-Inf16), :(-Inf32), :(-Inf64), :NaN, :NaN16, :NaN32, :NaN64, :nothing, :missing]
+const evaluable_exprs = [:Inf, :Inf16, :Inf32, :Inf64, :(-Inf), :(-Inf16), :(-Inf32), :(-Inf64), :NaN, :NaN16, :NaN32, :NaN64, :nothing, :missing, :Eps]
 
 const program_nodes = (
     index = index,
@@ -105,7 +105,7 @@ end
 function (ctx::FinchParserVisitor)(ex::Symbol)
     if ex == :_ || ex == :(:)
         return :($dimless)
-    elseif ex in evaluable_exprs
+    elseif ex in evaluable_exprs 
         return ctx.nodes.literal(@eval($ex))
     else
         ctx.nodes.tag(ex)
@@ -118,7 +118,6 @@ struct FinchSyntaxError msg end
 
 function (ctx::FinchParserVisitor)(ex::Expr)
     islinenum(ex) = ex isa LineNumberNode
-
     if @capture ex :if(~cond, ~body)
         return :($(ctx.nodes.sieve)($(ctx(cond)), $(ctx(body))))
     elseif @capture ex :if(~cond, ~body, ~tail)
@@ -157,9 +156,9 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         return ctx(body)
     elseif @capture ex :let(:block(:(=)(~lhs, ~rhs), ~tail...), ~body)
         if isempty(tail)
-            return ctx(:(for $lhs = $rhs; $body end))
+            return ctx(:(let $lhs = $rhs; $body end))
         else
-            return ctx(:(for $lhs = $rhs; $(Expr(:let, Expr(:block, tail...), body)) end))
+            return ctx(:(let $lhs = $rhs; $(Expr(:let, Expr(:block, tail...), body)) end))
         end
     elseif @capture ex :let(:(=)(~lhs, ~rhs), ~body)
         rhs = ctx(rhs)

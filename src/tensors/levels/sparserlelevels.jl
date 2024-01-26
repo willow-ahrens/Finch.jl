@@ -259,14 +259,37 @@ function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_st
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
-        for $p = 2:($pos_stop + 1)
-            $(lvl.ptr)[$p] += $(lvl.ptr)[$p - 1]
+        for $p = 1:$pos_stop
+            $(lvl.ptr)[$p + 1] += $(lvl.ptr)[$p]
         end
         $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
 end
+
+
+function thaw_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_stop)
+    p = freshen(ctx.code, :p)
+    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    qos_stop = freshen(ctx.code, :qos_stop)
+    push!(ctx.code.preamble, quote
+        $(lvl.qos_fill) = $(lvl.ptr)[$pos_stop + 1] - 1
+        $(lvl.qos_stop) = $(lvl.qos_fill)
+        $qos_stop = $(lvl.qos_fill)
+        $(if issafe(ctx.mode)
+            quote
+                $(lvl.prev_pos) = Finch.scansearch($(lvl.ptr), $(lvl.qos_stop) + 1, 1, $pos_stop) - 1
+            end
+        end)
+        for $p = $pos_stop:-1:1
+            $(lvl.ptr)[$p + 1] -= $(lvl.ptr)[$p]
+        end
+    end)
+    lvl.lvl = thaw_level!(lvl.lvl, ctx, value(qos_stop))
+    return lvl
+end
+
 
 
 
@@ -386,7 +409,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseRLELevel}, ctx, mod
                 )
             ),
             epilogue = quote
-                $(lvl.ptr)[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
+                $(lvl.ptr)[$(ctx(pos)) + 1] += $qos - $qos_fill - 1
                 $qos_fill = $qos - 1
             end
         )
