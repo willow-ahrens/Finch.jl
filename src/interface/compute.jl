@@ -41,12 +41,19 @@ function simplify_queries(bindings)
     ]))))
 end
 
-propagate_copy_queries = Rewrite(Fixpoint(Postwalk(Chain([
-    (@rule plan(~a1..., query(~b, ~c), ~a2..., produces(~d...)) => if c.kind === alias && !(b in d)
-        rw = Rewrite(Postwalk(@rule b => c))
-        plan(a1..., map(rw, a2)..., produces(d...))
-    end),
-]))))
+function propagate_copy_queries(root)
+    copies = Dict()
+    for node in PostOrderDFS(root)
+        if @capture node query(~a, ~b::isalias)
+            copies[a] = b
+        end
+    end
+    Rewrite(Postwalk(Chain([
+        Fixpoint(a -> if haskey(copies, a) copies[a] end),
+        (@rule query(~a, ~a) => plan()),
+        (@rule plan(~a1..., plan(), ~a2...) => plan(a1..., a2...)),
+    ])))(root)
+end
 
 function pretty_labels(root)
     fields = Dict()
@@ -82,6 +89,11 @@ function push_labels(root, bindings)
             rw = Rewrite(Postwalk(@rule b => relabel(d, i...)))
             plan(a1..., query(d, c), map(rw, a2)...)
         end),
+    ]))))(root)
+end
+
+function push_reorders(root, bindings)
+    Rewrite(Fixpoint(Postwalk(Chain([
         (@rule plan(~a1..., query(~b, reorder(~c, ~i...)), ~a2...) => begin
             d = alias(gensym(:A))
             bindings[d] = c
@@ -104,15 +116,6 @@ function fuse_reformats(root)
         end),
     ])))(root)
 end
-
-pad_with_aggregate = Rewrite(Postwalk(Chain([
-    (@rule query(~a, reformat(~tns, ~b)) => begin
-        if b.kind !== aggregate && b.kind !== table
-            z = default(tns.val)
-            query(a, reformat(tns, aggregate(initwrite(z), z, b)))
-        end
-    end),
-])))
 
 function issubsequence(a, b)
     a = collect(a)
@@ -141,7 +144,9 @@ function concordize(root, bindings)
             idxs_2 = getfields(a, bindings)
             idxs_3 = intersect(idxs, idxs_2)
             if !issubsequence(idxs_3, idxs_2)
-                reorder(get!(get!(needed_swizzles, a, Dict()), idxs_3, alias(gensym(:A))), idxs...)
+                res = reorder(get!(get!(needed_swizzles, a, Dict()), idxs_3, alias(gensym(:A))), idxs...)
+                println(res)
+                res
             end
         end),
     ])))(root)
@@ -152,7 +157,7 @@ function concordize(root, bindings)
                 swizzle_queries = map(collect(needed_swizzles[a])) do (idxs_2, c)
                     idxs_3 = withsubsequence(idxs_2, idxs)
                     bindings[c] = reorder(a, idxs_3...)
-                    query(c, reorder(a, idxs_3...))
+                    query(c, reorder(relabel(a, idxs), idxs_3...))
                 end
                 plan(query(a, b), swizzle_queries...)
             end
@@ -218,20 +223,21 @@ function compute(args::Tuple)
     bindings = getbindings(prgm)
     prgm = simplify_queries(bindings)(prgm)
     prgm = propagate_copy_queries(prgm)
+    prgm = pretty_labels(prgm)
     bindings = getbindings(prgm)
-    display(pretty_labels(prgm))
+    display(prgm)
     prgm = push_labels(prgm, bindings)
-    display(pretty_labels(prgm))
+    prgm = push_reorders(prgm, bindings)
+    display(prgm)
     prgm = concordize(prgm, bindings)
+    display(prgm)
     prgm = fuse_reformats(prgm)
-    display(pretty_labels(prgm))
+    display(prgm)
     prgm = pad_labels(prgm)
     prgm = push_labels(prgm, bindings)
-    display(pretty_labels(prgm))
+    prgm = propagate_copy_queries(prgm)
     prgm = format_queries(bindings)(prgm)
-    display(pretty_labels(prgm))
-    prgm = pad_with_aggregate(prgm)
-    display(pretty_labels(prgm))
+    display(prgm)
     FinchInterpreter(Dict())(prgm)
 end
 
@@ -239,7 +245,7 @@ struct FinchInterpreter
     scope::Dict
 end
 
-using Finch.FinchNotation: call_instance, loop_instance, index_instance, access_instance, assign_instance, literal_instance
+using Finch.FinchNotation: block_instance, declare_instance, call_instance, loop_instance, index_instance, variable_instance, tag_instance, access_instance, assign_instance, literal_instance
 
 function finch_pointwise_logic_to_program(scope, ex)
     if @capture ex mapjoin(~op, ~args...)
@@ -248,7 +254,7 @@ function finch_pointwise_logic_to_program(scope, ex)
         idxs_3 = map(enumerate(idxs_1)) do (n, idx)
             idx in idxs_2 ? index_instance(idx.name) : first(axes(arg)[n])
         end
-        access(scope[arg], reader, idxs_3...)
+        access_instance(tag_instance(variable_instance(arg.name), scope[arg]), literal_instance(reader), idxs_3...)
     else
         error("Unrecognized logic: $(ex)")
     end
@@ -263,18 +269,22 @@ function (ctx::FinchInterpreter)(ex)
     elseif @capture ex table(~tns, ~idxs...)
         return tns.val
     elseif @capture ex reformat(~tns, reorder(relabel(~arg::isalias, ~idxs_1...), ~idxs_2...))
-        copyto!(tns.val, swizzle(ctx.scope[arg], map(idx -> findfirst(isequal(idx), idxs_1), idxs_2)))
+        copyto!(tns.val, swizzle(ctx.scope[arg], map(idx -> findfirst(isequal(idx), idxs_1), idxs_2)...))
+    elseif @capture ex reformat(~tns, mapjoin(~args...))
+        z = default(tns.val)
+        ctx(reformat(tns, aggregate(initwrite(z), immediate(z), mapjoin(args...))))
     elseif @capture ex reformat(~tns, aggregate(~op, ~init, ~arg, ~idxs_1...))
         idxs_2 = map(idx -> index_instance(idx.name), getfields(arg, Dict()))
         idxs_3 = map(idx -> index_instance(idx.name), setdiff(getfields(arg, Dict()), idxs_1))
-        lhs = access_instance(tns.val, updater, idxs_3...)
+        res = tag_instance(variable_instance(:res), tns.val)
+        lhs = access_instance(res, literal_instance(updater), idxs_3...)
         rhs = finch_pointwise_logic_to_program(ctx.scope, arg)
         body = assign_instance(lhs, literal_instance(op.val), rhs)
         for idx in idxs_2
             body = loop_instance(idx, dimless, body)
         end
-        display(body)
-        execute(body)
+        body = block_instance(declare_instance(res, literal_instance(default(tns.val))), body)
+        execute(body).res
     elseif @capture ex produces(~args...)
         return map(arg -> ctx.scope[arg], args)
     elseif @capture ex plan(~head)
