@@ -241,9 +241,24 @@ function compute(args::Tuple)
     FinchInterpreter(Dict())(prgm)
 end
 
+"""
+    FinchInterpreter
+
+The finch interpreter is a simple interpreter for finch logic programs. The interpreter is
+only capable of executing programs of the form:
+REORDER = relabel(reorder(tns::isalias, idxs_1...), idxs_2...)
+ACCESS = relabel(reorder(tns::isalias, idxs_1...), idxs_2...) where issubsequence(idxs_1, idxs_2)
+MAPREDUCE = ACCESS | mapjoin(f, arg::EXPR...) | aggregate(op, init, arg::EXPR, idxs...)
+TABLE = table(tns, idxs...)
+COMPUTE_QUERY = query(lhs, reformat(tns, arg::(REORDER | MAPREDUCE)))
+INPUT_QUERY = query(lhs, TABLE)
+ROOT = PLAN(args::(COMPUTE_QUERY | INPUT_QUERY | produces(args...))...)
+"""
 struct FinchInterpreter
     scope::Dict
 end
+
+FinchInterpreter() = FinchInterpreter(Dict())
 
 using Finch.FinchNotation: block_instance, declare_instance, call_instance, loop_instance, index_instance, variable_instance, tag_instance, access_instance, assign_instance, literal_instance
 
