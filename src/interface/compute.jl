@@ -108,12 +108,8 @@ end
 pad_with_aggregate = Rewrite(Postwalk(Chain([
     (@rule query(~a, reformat(~tns, ~b)) => begin
         if b.kind !== aggregate && b.kind !== table
-            query(a, reformat(tns, aggregate(overwrite, immediate(nothing), b)))
-        end
-    end),
-    (@rule query(~a, ~b) => begin
-        if b.kind !== aggregate && b.kind !== reformat && b.kind !== table
-            query(a, aggregate(overwrite, immediate(nothing), b))
+            z = default(tns.val)
+            query(a, reformat(tns, aggregate(initwrite(z), z, b)))
         end
     end),
 ])))
@@ -169,6 +165,41 @@ drop_noisy_reorders = Rewrite(Postwalk(
     @rule reorder(relabel(~arg, ~idxs...), ~idxs...) => relabel(arg, idxs...)
 ))
 
+function format_queries(bindings)
+    Rewrite(Postwalk(
+        @rule query(~a, ~b) => if b.kind !== reformat && b.kind !== table
+            query(a, reformat(immediate(suitable_storage(b, bindings)), b))
+        end
+    ))
+end
+
+struct SuitableRep
+    bindings::Dict
+end
+suitable_storage(ex, bindings) = rep_construct(SuitableRep(bindings)(ex))
+function (ctx::SuitableRep)(ex)
+    if ex.kind === alias
+        return ctx(ctx.bindings[ex])
+    elseif ex.kind === table
+        return data_rep(ex.tns.val)
+    elseif ex.kind === mapjoin
+        ##Assumes concordant mapjoin arguments, probably okay
+        return map_rep(ex.op.val, map(ctx, ex.args)...)
+    elseif ex.kind === aggregate
+        idxs = getfields(ex.arg, ctx.bindings)
+        return aggregate_rep(ex.op.val, ex.init.val, ctx(ex.arg), map(idx->findfirst(isequal(idx), idxs), ex.idxs))
+    elseif ex.kind === reorder
+        idxs = getfields(ex.arg, ctx.bindings)
+        return permutedims_rep(ctx(ex.arg), map(idx->findfirst(isequal(idx), ex.idxs), idxs))
+    elseif ex.kind === relabel
+        return ctx(ex.arg)
+    elseif ex.kind === reformat
+        return data_rep(ex.tns.val)
+    else
+        error("Unrecognized expression: $(ex.kind)")
+    end
+end
+
 compute(arg) = compute((arg,))
 #compute(arg) = compute((arg,))[1]
 function compute(args::Tuple)
@@ -193,9 +224,12 @@ function compute(args::Tuple)
     display(pretty_labels(prgm))
     prgm = concordize(prgm, bindings)
     prgm = fuse_reformats(prgm)
-    prgm = pad_with_aggregate(prgm)
     display(pretty_labels(prgm))
     prgm = pad_labels(prgm)
     prgm = push_labels(prgm, bindings)
+    display(pretty_labels(prgm))
+    prgm = format_queries(bindings)(prgm)
+    display(pretty_labels(prgm))
+    prgm = pad_with_aggregate(prgm)
     display(pretty_labels(prgm))
 end

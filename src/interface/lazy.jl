@@ -27,6 +27,14 @@ function LogicTensor{T}(arr::Base.AbstractArrayOrBroadcasted) where {T}
     tns = subquery(query(name, table(immediate(arr), idxs...)), name)
     LogicTensor{eltype(arr), ndims(arr)}(tns, extrude)
 end
+LogicTensor(arr::Tensor) = LogicTensor{eltype(arr)}(arr)
+function LogicTensor{T}(arr::Tensor) where {T}
+    name = alias(gensym(:A))
+    idxs = [field(gensym(:i)) for _ in 1:ndims(arr)]
+    extrude = ntuple(n -> size(arr)[n] == 1, ndims(arr))
+    tns = subquery(query(name, table(immediate(arr), idxs...)), name)
+    LogicTensor{eltype(arr), ndims(arr)}(tns, extrude)
+end
 LogicTensor(data::LogicTensor) = data
 
 Base.sum(arr::LogicTensor; kwargs...) = reduce(+, arr; kwargs...)
