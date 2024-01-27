@@ -374,8 +374,8 @@ function getfields(node::LogicNode, bindings)
         idxs = getfields(node.arg, bindings)
         return intersect(node.idxs, idxs)
     elseif node.kind == relabel
-        idxs = getfields(node.arg, bindings)
-        @assert length(idxs) == length(node.idxs)
+        #idxs = getfields(node.arg, bindings)
+        #@assert length(idxs) == length(node.idxs)
         return node.idxs
     elseif node.kind == reformat
         return getfields(node.arg, bindings)

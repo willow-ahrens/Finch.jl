@@ -232,4 +232,57 @@ function compute(args::Tuple)
     display(pretty_labels(prgm))
     prgm = pad_with_aggregate(prgm)
     display(pretty_labels(prgm))
+    FinchInterpreter(Dict())(prgm)
+end
+
+struct FinchInterpreter
+    scope::Dict
+end
+
+using Finch.FinchNotation: call_instance, loop_instance, index_instance, access_instance, assign_instance, literal_instance
+
+function finch_pointwise_logic_to_program(scope, ex)
+    if @capture ex mapjoin(~op, ~args...)
+        call_instance(op.val, map(arg -> finch_pointwise_logic_to_program(scope, arg), args)...)
+    elseif (@capture ex reorder(relabel(~arg::isalias, ~idxs_1...), ~idxs_2...)) && issubsequence(idxs_1, idxs_2)
+        idxs_3 = map(enumerate(idxs_1)) do (n, idx)
+            idx in idxs_2 ? index_instance(idx.name) : first(axes(arg)[n])
+        end
+        access(scope[arg], reader, idxs_3...)
+    else
+        error("Unrecognized logic: $(ex)")
+    end
+end
+
+function (ctx::FinchInterpreter)(ex)
+    if ex.kind === alias
+        ex.scope[ex]
+    elseif @capture ex query(~lhs, ~rhs)
+        ctx.scope[lhs] = ctx(rhs)
+        (ctx.scope[lhs],)
+    elseif @capture ex table(~tns, ~idxs...)
+        return tns.val
+    elseif @capture ex reformat(~tns, reorder(relabel(~arg::isalias, ~idxs_1...), ~idxs_2...))
+        copyto!(tns.val, swizzle(ctx.scope[arg], map(idx -> findfirst(isequal(idx), idxs_1), idxs_2)))
+    elseif @capture ex reformat(~tns, aggregate(~op, ~init, ~arg, ~idxs_1...))
+        idxs_2 = map(idx -> index_instance(idx.name), getfields(arg, Dict()))
+        idxs_3 = map(idx -> index_instance(idx.name), setdiff(getfields(arg, Dict()), idxs_1))
+        lhs = access_instance(tns.val, updater, idxs_3...)
+        rhs = finch_pointwise_logic_to_program(ctx.scope, arg)
+        body = assign_instance(lhs, literal_instance(op.val), rhs)
+        for idx in idxs_2
+            body = loop_instance(idx, dimless, body)
+        end
+        display(body)
+        execute(body)
+    elseif @capture ex produces(~args...)
+        return map(arg -> ctx.scope[arg], args)
+    elseif @capture ex plan(~head)
+        ctx(head)
+    elseif @capture ex plan(~head, ~tail...)
+        ctx(head)
+        return ctx(plan(tail...))
+    else
+        error("Unrecognized logic: $(ex)")
+    end
 end
