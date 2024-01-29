@@ -593,4 +593,22 @@ using CIndices
         @finch let a=1, b=2; c[] += a + b end
         @test c[] == 3
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/387
+    let
+        A = zeros(2, 4, 3)
+        A[1,:,:] = [0.0 0.0 4.4; 1.1 0.0 0.0; 0.0 0.0 0.0; 3.3 0.0 0.0]
+        A[2,:,:] = [1.0 0.0 0.0; 0.0 0.0 0.0; 0.0 1.0 0.0; 3.3 0.0 0.0]
+
+        for p in [(1, 2, 3), (3, 2, 1), (3, 1, 2), (1, 3, 2), (2, 3, 1)]
+            expected = permutedims(A, p)
+
+            t = Tensor(Dense(Dense(Dense(Element(0.0)))), A)
+            actual = Finch.permutedims(t, p)
+
+            @test size(expected) == size(actual)
+            @test vcat(expected...) == actual.lvl.lvl.lvl.lvl.val
+        end
+    end
+
 end

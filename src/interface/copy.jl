@@ -28,13 +28,11 @@ function permutedims(src::Tensor, perm)
 end
 
 function Base.copyto!(dst::Union{Tensor, AbstractArray}, src::SwizzleArray{dims}) where {dims}
-    ret = copyto!(swizzle(dst, invperm(dims)...), src.body)
-    return ret
+    return copyto!(swizzle(dst, invperm(dims)...), src.body)
 end
 
 function Base.copyto!(dst::SwizzleArray{dims1}, src::SwizzleArray{dims2}) where {dims1, dims2}
-    ret = copyto!(swizzle(dst, invperm(dims2)[collect(dims1)]...), src.body)
-    return ret
+    return copyto!(swizzle(dst, invperm(dims2)[collect(dims1)]...), src.body)
 end
 
 function Base.copyto!(dst::SwizzleArray{dims}, src::Union{Tensor, AbstractArray}) where {dims}
