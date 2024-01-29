@@ -151,7 +151,7 @@ begin
         end
         fmt_lvl_2_p_prev = fmt_lvl_2_p_2
     end
-    fmt_lvl_ptr[fmt_lvl_2_p_2 + 1] = fmt_lvl_2_qos_fill + 1
+    fmt_lvl_ptr[fmt_lvl_2_p_prev + 1] = fmt_lvl_2_qos_fill + 1
     qos = 1 * fmt_lvl.shape
     resize!(fmt_lvl_ptr, qos + 1)
     resize!(fmt_lvl_tbl, qos * fmt_lvl_2.shape)

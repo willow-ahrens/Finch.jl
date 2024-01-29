@@ -183,7 +183,7 @@ begin
             end
             w_lvl_p_prev = w_lvl_p_2
         end
-        w_lvl_ptr[w_lvl_p_2 + 1] = w_lvl_qos_fill + 1
+        w_lvl_ptr[w_lvl_p_prev + 1] = w_lvl_qos_fill + 1
         B_lvl_2_qos = B_lvl_2_qos_fill + 1
         B_lvl_2_prev_pos < B_lvl_q || throw(FinchProtocolError("SparseListLevels cannot be updated multiple times"))
         w_lvl_r_3 = w_lvl_ptr[1]

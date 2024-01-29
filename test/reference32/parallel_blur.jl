@@ -4,6 +4,8 @@ begin
     output_lvl_3 = output_lvl_2.lvl
     output_lvl_2_val = output_lvl_2.lvl.val
     cpu = ((ex.bodies[2]).ext.args[2]).bind
+    tmp_lvl = ((ex.bodies[2]).body.bodies[1]).tns.bind.lvl
+    tmp_lvl_val = tmp_lvl.lvl.val
     input_lvl = (((ex.bodies[2]).body.bodies[2]).body.rhs.args[1]).tns.bind.lvl
     input_lvl_2 = input_lvl.lvl
     input_lvl_2_val = input_lvl_2.lvl.val
@@ -22,7 +24,8 @@ begin
     val_2 = output_lvl_2_val
     output_lvl_2_val = moveto(output_lvl_2_val, cpu)
     Threads.@threads for i = 1:cpu.n
-            tmp_lvl_val = moveto(val_3, CPUThread(i, cpu, Serial()))
+            val_3 = tmp_lvl_val
+            tmp_lvl_val = moveto(tmp_lvl_val, CPUThread(i, cpu, Serial()))
             phase_start_2 = max(1, 1 + fld(y_stop * (i + -1), cpu.n))
             phase_stop_2 = min(y_stop, fld(y_stop * i, cpu.n))
             if phase_stop_2 >= phase_start_2
@@ -51,6 +54,7 @@ begin
                     end
                 end
             end
+            tmp_lvl_val = val_3
         end
     qos = 1 * (input_lvl.shape + -0)
     qos_2 = qos * input_lvl_2.shape
