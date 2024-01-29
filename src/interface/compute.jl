@@ -205,42 +205,6 @@ function (ctx::SuitableRep)(ex)
     end
 end
 
-compute(arg) = compute((arg,))
-#compute(arg) = compute((arg,))[1]
-function compute(args::Tuple)
-    args = collect(args)
-    vars = map(arg -> alias(gensym(:A)), args)
-    bodies = map((arg, var) -> query(var, arg.data), args, vars)
-    prgm = plan(bodies, produces(vars))
-    display(prgm)
-    prgm = lift_subqueries(prgm)
-    #At this point in the program, all statements should be unique, so the
-    #isolate calls that name things to lift them should be okay.
-    prgm = isolate_reformats(prgm)
-    prgm = isolate_aggregates(prgm)
-    prgm = isolate_tables(prgm)
-    prgm = lift_subqueries(prgm)
-    bindings = getbindings(prgm)
-    prgm = simplify_queries(bindings)(prgm)
-    prgm = propagate_copy_queries(prgm)
-    prgm = pretty_labels(prgm)
-    bindings = getbindings(prgm)
-    display(prgm)
-    prgm = push_labels(prgm, bindings)
-    prgm = push_reorders(prgm, bindings)
-    display(prgm)
-    prgm = concordize(prgm, bindings)
-    display(prgm)
-    prgm = fuse_reformats(prgm)
-    display(prgm)
-    prgm = pad_labels(prgm)
-    prgm = push_labels(prgm, bindings)
-    prgm = propagate_copy_queries(prgm)
-    prgm = format_queries(bindings)(prgm)
-    display(prgm)
-    FinchInterpreter(Dict())(prgm)
-end
-
 """
     FinchInterpreter
 
@@ -311,4 +275,40 @@ function (ctx::FinchInterpreter)(ex)
     else
         error("Unrecognized logic: $(ex)")
     end
+end
+
+struct DefaultOptimizer
+    ctx
+end
+
+default_optimizer = DefaultOptimizer(FinchInterpreter())
+
+compute(arg) = compute(arg, default_optimizer)
+compute(arg, ctx) = compute((arg,), ctx)[1]
+function compute(args::Tuple, ctx::DefaultOptimizer)
+    args = collect(args)
+    vars = map(arg -> alias(gensym(:A)), args)
+    bodies = map((arg, var) -> query(var, arg.data), args, vars)
+    prgm = plan(bodies, produces(vars))
+    prgm = lift_subqueries(prgm)
+    #At this point in the program, all statements should be unique, so the
+    #isolate calls that name things to lift them should be okay.
+    prgm = isolate_reformats(prgm)
+    prgm = isolate_aggregates(prgm)
+    prgm = isolate_tables(prgm)
+    prgm = lift_subqueries(prgm)
+    bindings = getbindings(prgm)
+    prgm = simplify_queries(bindings)(prgm)
+    prgm = propagate_copy_queries(prgm)
+    prgm = pretty_labels(prgm)
+    bindings = getbindings(prgm)
+    prgm = push_labels(prgm, bindings)
+    prgm = push_reorders(prgm, bindings)
+    prgm = concordize(prgm, bindings)
+    prgm = fuse_reformats(prgm)
+    prgm = pad_labels(prgm)
+    prgm = push_labels(prgm, bindings)
+    prgm = propagate_copy_queries(prgm)
+    prgm = format_queries(bindings)(prgm)
+    FinchInterpreter(Dict())(prgm)
 end

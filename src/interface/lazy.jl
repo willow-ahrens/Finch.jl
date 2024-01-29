@@ -337,3 +337,15 @@ function LinearAlgebra.norm(arr::LogicTensor, p::Real = 2)
         return root(sum(map(power, map(norm, arr, p), p)))
     end
 end
+
+"""
+    fused(f, args...; [optimizer=DefaultOptimizer()])
+
+This function decorator modifies `f` to fuse the contained array
+operations and optimize the resulting program. The function must return a single
+array or tuple of arrays. The `optimizer` keyword argument specifies the
+optimizer to use.
+"""
+function fused(f, args...; optimizer=DefaultOptimizer())
+    compute(f(map(LogicTensor, args...)), optimizer)
+end
