@@ -78,6 +78,7 @@ end
 using Finch
 
 include("data_matrices.jl")
+include("continuous_data.jl")
 
 include("utils.jl")
 
@@ -93,6 +94,7 @@ include("utils.jl")
     if should_run("issues") include("test_issues.jl") end
     if should_run("base") include("test_base.jl") end
     if should_run("continuous") include("test_continuous.jl") end
+    if should_run("continuousexamples") include("test_continuousexamples.jl") end
     if should_run("examples") include("test_examples.jl") end
     if should_run("fileio") include("test_fileio.jl") end
     if should_run("docs") && Sys.WORD_SIZE == 64
