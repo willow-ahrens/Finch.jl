@@ -170,7 +170,7 @@ begin
         end
         tmp_lvl_2_p_prev = tmp_lvl_2_p_2
     end
-    tmp_lvl_ptr[tmp_lvl_2_p_2 + 1] = tmp_lvl_2_qos_fill + 1
+    tmp_lvl_ptr[tmp_lvl_2_p_prev + 1] = tmp_lvl_2_qos_fill + 1
     qos = 1 * ref_lvl.shape
     resize!(tmp_lvl_ptr, qos + 1)
     resize!(tmp_lvl_tbl, qos * ref_lvl_2.shape)
