@@ -16,6 +16,7 @@ using Compat
 using DataStructures
 using JSON
 using CIndices
+#using CUDA
 
 export @finch, @finch_program, @finch_code, @finch_kernel, value
 
@@ -47,8 +48,11 @@ export choose, minby, maxby, overwrite, initwrite, d
 export default, AsArray
 
 export parallelAnalysis, ParallelAnalysisResults
-export parallel, realextent, extent, dimless
+
+export parallel, gpublock_parallel, gputhread_parallel, extent, dimless
 export CPU, CPULocalVector, CPULocalMemory
+export GPUBlock, GPUBlockLocalVector, GPUBlockLocalMemory
+export GPUThread, GPUThreadkLocalVector, GPUThreadLocalMemory
 
 export Limit, Eps
 

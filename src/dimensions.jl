@@ -147,6 +147,41 @@ function virtual_call(::typeof(parallel), ctx, ext, device)
     end
 end
 
+# Begin GPU part
+gpublock_parallel(dim, device=GPUBlock(nthreads())) = ParallelDimension(dim, device)
+
+function virtual_call(::typeof(gpublock_parallel), ctx, ext)
+    if ext.kind === virtual
+        n = cache!(ctx, :n, value(:(Threads.nthreads()), Int))
+        virtual_call(gpublock_parallel, ctx, ext, finch_leaf(VirtualGPUBlock(nothing, n)))
+    end
+end
+
+function virtual_call(::typeof(gpublock_parallel), ctx, ext, device)
+    device = resolve(device, ctx) #TODO this feels broken
+    if ext.kind === virtual
+        ParallelDimension(ext.val, device)
+    end
+end
+
+gputhread_parallel(dim, device=GPUThread(nthreads())) = ParallelDimension(dim, device)
+
+function virtual_call(::typeof(gputhread_parallel), ctx, ext)
+    if ext.kind === virtual
+        n = cache!(ctx, :n, value(:(Threads.nthreads()), Int))
+        virtual_call(gputhread_parallel, ctx, ext, finch_leaf(VirtualGPUThread(nothing, n)))
+    end
+end
+
+function virtual_call(::typeof(gputhread_parallel), ctx, ext, device)
+    device = resolve(device, ctx) #TODO this feels broken
+    if ext.kind === virtual
+        ParallelDimension(ext.val, device)
+    end
+end
+# End GPU part
+
+
 virtual_uncall(ext::ParallelDimension) = call(parallel, ext.ext, ext.device)
 
 FinchNotation.finch_leaf(x::ParallelDimension) = virtual(x)

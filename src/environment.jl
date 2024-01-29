@@ -28,6 +28,8 @@ end
     preamble::Vector{Any} = []
     epilogue::Vector{Any} = []
     task = VirtualSerial()
+    topPreamble::Vector{Any} = []
+    top::Bool = true
 end
 
 """
@@ -66,22 +68,33 @@ Call f on a subcontext of `ctx` and return the result. Variable bindings,
 preambles, and epilogues defined in the subcontext will not escape the call to
 contain.
 """
-function contain(f, ctx::AbstractCompiler, task=nothing)
+function contain(f, ctx::AbstractCompiler, task=nothing, top=false)
     ctx_2 = shallowcopy(ctx)
+    ctx_2.topPreamble = ctx.topPreamble
+    ctx_2.top = top
     ctx_2.task = something(task, ctx.task)
     preamble = Expr(:block)
     ctx_2.preamble = preamble.args
     epilogue = Expr(:block)
     ctx_2.epilogue = epilogue.args
     body = f(ctx_2)
+    if (ctx.top && length(ctx_2.topPreamble) > 0)
+            toppre2 = ctx_2.topPreamble
+        toppre = :($(toppre2...),)
+    else
+        toppre = Expr(:block)
+    end
+
     if epilogue == Expr(:block)
         return quote
+            $toppre
             $preamble
             $body
         end
     else
         res = freshen(ctx_2, :res)
         return quote
+            $toppre
             $preamble
             $res = $(contain_epilogue_helper(body, epilogue))
             $epilogue
