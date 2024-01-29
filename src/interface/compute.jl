@@ -248,7 +248,8 @@ The finch interpreter is a simple interpreter for finch logic programs. The inte
 only capable of executing programs of the form:
 REORDER = relabel(reorder(tns::isalias, idxs_1...), idxs_2...)
 ACCESS = relabel(reorder(tns::isalias, idxs_1...), idxs_2...) where issubsequence(idxs_1, idxs_2)
-MAPREDUCE = ACCESS | mapjoin(f, arg::EXPR...) | aggregate(op, init, arg::EXPR, idxs...)
+POINTWISE = ACCESS | mapjoin(f, arg::POINTWISE...)
+MAPREDUCE = POINTWISE | aggregate(op, init, arg::POINTWISE, idxs...)
 TABLE = table(tns, idxs...)
 COMPUTE_QUERY = query(lhs, reformat(tns, arg::(REORDER | MAPREDUCE)))
 INPUT_QUERY = query(lhs, TABLE)
