@@ -73,7 +73,7 @@ macro staged(def)
             # Taken from https://github.com/NHDaly/StagedFunctions.jl/blob/6fafbc560421f70b05e3df330b872877db0bf3ff/src/StagedFunctions.jl#L116
             body_2 = () -> begin
                 code = $name_generator($(args...))
-                if has_function_def(macroexpand($@__MODULE__, code))
+		if has_function_def(macroexpand($@__MODULE__, code))
                     :($($(name_invokelatest))($($(map(QuoteNode, args)...))))
                 else 
                     quote
@@ -369,6 +369,9 @@ function (ctx::PropagateCopies)(ex)
             ctx_2 == ctx && break
         end
         return Expr(:while, cond_2, body_2)
+
+    elseif isexpr(ex) && ex.head == :function
+        return ex
     elseif !isexpr(ex) || ex.head == :break
         ex
     else
@@ -405,6 +408,9 @@ function (ctx::MarkDead)(ex, res)
     elseif !isexpr(ex) || ex.head == :break
         ex
     elseif @capture ex :macrocall(~f, ~ln, ~args...)
+        if (string(f) == "@cuda")
+            return ex
+        end
         return Expr(:macrocall, f, ln, reverse(map((arg)->ctx(arg, res), reverse(args)))...)
     elseif @capture ex :block(~args...)
         args_2 = []
@@ -461,6 +467,8 @@ function (ctx::MarkDead)(ex, res)
             ctx == ctx_2 && break
         end
         return Expr(:while, cond_2, body_2)
+    elseif isexpr(ex) && ex.head == :function
+        return ex
     else
         error("dead code elimination reached unrecognized expression $ex")
     end

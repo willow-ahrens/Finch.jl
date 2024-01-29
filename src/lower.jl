@@ -264,3 +264,185 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
         end
     end
 end
+
+##Begin GPU Part
+
+global fun_id=0
+
+function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualGPUBlock)
+    root = ensure_concurrent(root, ctx)
+    
+    tid = index(freshen(ctx.code, :tid))
+    i = freshen(ctx.code, :i)
+
+    global fun_id+=1
+
+    decl_in_scope = unique(filter(!isnothing, map(node-> begin
+        if @capture(node, declare(~tns, ~init))
+            tns 
+        end
+    end, PostOrderDFS(root.body))))
+
+    used_in_scope = unique(filter(!isnothing, map(node-> begin
+        if @capture(node, access(~tns, ~mode, ~idxs...))
+            getroot(tns)
+        end
+    end, PostOrderDFS(root.body))))
+
+    root_2 = loop(tid, Extent(value(i, Int), value(i, Int)),
+        loop(root.idx, ext.ext,
+            sieve(access(VirtualSplitMask(device.n), reader, root.idx, tid),
+                root.body
+            )
+        )
+    )
+
+    bindings_2 = copy(ctx.bindings)
+    for tns in setdiff(used_in_scope, decl_in_scope)
+        virtual_moveto(resolve(tns, ctx), ctx, device)
+    end
+    
+    temp = (contain(ctx, bindings=bindings_2) do ctx_2
+    subtask = VirtualGPUThreadBlock(value(i, Int), device, ctx_2.code.task)
+    contain(ctx_2, task=subtask) do ctx_3
+        bindings_2 = copy(ctx_3.bindings)
+        for tns in intersect(used_in_scope, decl_in_scope)
+            virtual_moveto(resolve(tns, ctx_3), ctx_3, subtask)
+        end
+        contain(ctx_3, bindings=bindings_2) do ctx_4
+            ctx_4(instantiate!(root_2, ctx_4))
+        end
+    end
+end)
+
+    consume_GPU_scope = unique(filter(!isnothing, map(node-> begin
+       if issymbol(node)
+        node
+        end
+    end, PostOrderDFS(temp))))
+
+    ex_add = Vector{Symbol}()
+    decl_GPU_scope = unique(filter(!isnothing, map(node-> begin
+        if @capture(node, :(=)(~lhs, ~rhs))
+            if(typeof(lhs) == Symbol)
+                lhs
+            elseif(typeof(lhs) == Expr)
+                for i in 1:length(lhs.args)
+                    push!(ex_add,lhs.args[i])
+                end
+            end
+        end        
+    end, PostOrderDFS(temp))))
+
+    ex_symbol = [:($i), :Threads, :GPUThread, :threadIdx, :+=, :*=, :>=, :<=, :>, :<, :&=, :|=, :(=), :(:), :+, :-, :*, :&, :|]
+    for i in 1:length(ex_symbol)
+        push!(ex_add, ex_symbol[i])
+    end
+    decl_GPU_scope = union(decl_GPU_scope, ex_add)
+
+    GPU_scope_diff = setdiff(consume_GPU_scope, decl_GPU_scope)
+    #println("***")
+    #println(GPU_scope_diff)
+    #println("***")
+
+    tmp_scope = string.(GPU_scope_diff)
+    tmp_str = ""
+    for i in 1:length(tmp_scope)
+        tmp_str = string(tmp_str, tmp_scope[i])
+        if(i < length(tmp_scope))
+            tmp_str = string(tmp_str,", ")
+        end
+    end
+
+    #gpu_call = Meta.parse("CUDA.@cuda threads=512 blocks=160 gpu_kernel_$(fun_id)!($tmp_str)")
+    gpu_call = Meta.parse("@cuda threads=512 blocks=160 gpu_kernel_$(fun_id)!($tmp_str)")
+    #gpu_call = Meta.parse("$CUDA.@cuda gpu_kernel_$(fun_id)!($tmp_str)")
+
+    gpu_func = Meta.parse("function gpu_kernel_$(fun_id)!($tmp_str)
+                            $i = blockIdx().x
+                            $temp
+                        end")
+
+    s1 = "function gpu_kernel!()"
+
+    push!(ctx.code.topPreamble, 
+        gpu_func
+    )
+
+    return gpu_call
+end
+
+function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualGPUThread)
+    root = ensure_concurrent(root, ctx)
+    
+    tid = index(freshen(ctx.code, :tid))
+    i = freshen(ctx.code, :i)
+
+    decl_in_scope = unique(filter(!isnothing, map(node-> begin
+        if @capture(node, declare(~tns, ~init))
+            tns
+        end
+    end, PostOrderDFS(root.body))))
+
+    used_in_scope = unique(filter(!isnothing, map(node-> begin
+        if @capture(node, access(~tns, ~mode, ~idxs...))
+            getroot(tns)
+        end
+    end, PostOrderDFS(root.body))))
+
+    root_2 = loop(tid, Extent(value(i, Int), value(i, Int)),
+        loop(root.idx, ext.ext,
+            sieve(access(VirtualSplitMask(device.n), reader, root.idx, tid),
+                root.body
+            )
+        )
+    )
+
+    bindings_2 = copy(ctx.bindings)
+    for tns in setdiff(used_in_scope, decl_in_scope)
+        virtual_moveto(resolve(tns, ctx), ctx, device)
+    end
+
+    return quote
+        #Threads.@threads for $i = threadIdx().x:blockDim().x:$(ctx(device.n))
+            $i = threadIdx().x
+            $(contain(ctx, bindings=bindings_2) do ctx_2
+                subtask = VirtualGPUThreadThread(value(i, Int), device, ctx_2.code.task)
+                contain(ctx_2, task=subtask) do ctx_3
+                    bindings_2 = copy(ctx_3.bindings)
+                    for tns in intersect(used_in_scope, decl_in_scope)
+                        virtual_moveto(resolve(tns, ctx_3), ctx_3, subtask)
+                    end
+                    contain(ctx_3, bindings=bindings_2) do ctx_4
+                        ctx_4(instantiate!(root_2, ctx_4))
+                    end
+                end
+            end)
+#        end
+    end
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
