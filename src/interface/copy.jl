@@ -24,24 +24,23 @@ end
 
 function permutedims(src::Tensor, perm)
     dst = similar(src)
-    copyto!(dst, swizzle(src, perm...))
+    return copyto!(dst, swizzle(src, perm...))
 end
 
 function Base.copyto!(dst::Union{Tensor, AbstractArray}, src::SwizzleArray{dims}) where {dims}
     ret = copyto!(swizzle(dst, invperm(dims)...), src.body)
-    return ret.body
+    return ret
 end
 
 function Base.copyto!(dst::SwizzleArray{dims1}, src::SwizzleArray{dims2}) where {dims1, dims2}
-    println(invperm(dims2)[collect(dims1)])
     ret = copyto!(swizzle(dst, invperm(dims2)[collect(dims1)]...), src.body)
-    return ret.body
+    return ret
 end
 
 function Base.copyto!(dst::SwizzleArray{dims}, src::Union{Tensor, AbstractArray}) where {dims}
     tmp = Tensor(SparseHash{ndims(src)}(Element(default(src))))
     tmp = copyto_helper!(swizzle(tmp, dims...), src)
-    swizzle(copyto_helper!(dst.body, tmp), dims...)
+    return copyto_helper!(swizzle(dst.body, dims...), tmp)
 end
 
 dropdefaults(src) = dropdefaults!(similar(src), src)
