@@ -81,6 +81,15 @@ function (ctx::LifecycleVisitor)(node::FinchNode)
             throw(LifecycleError("cannot mix reads and writes to $(node.tns) outside of defining scope (hint: perhaps add a declaration like `var .= 0` or use an updating operator like `var += 1`)"))
         uses[getroot(node.tns)] = node.mode.val
         access(node.tns, node.mode, idxs...)
+    elseif node.kind === yieldbind
+        args_2 = map(node.args) do arg
+            uses = get(ctx.scoped_uses, getroot(arg), ctx.global_uses)
+            get(uses, getroot(arg), reader) !== reader &&
+                throw(LifecycleError("cannot return $(arg) outside of defining scope"))
+            uses[getroot(arg)] = reader
+            ctx(arg)
+        end
+        open_stmt(yieldbind(args_2...), ctx)
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
     else

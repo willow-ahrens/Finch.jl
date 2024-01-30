@@ -105,6 +105,7 @@ function lower_global(prgm, ctx)
                     ctx_3(prgm)
                 end
             end)
+            nothing
         end
     end
 end

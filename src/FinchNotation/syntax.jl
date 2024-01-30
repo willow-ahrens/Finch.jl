@@ -397,7 +397,6 @@ function display_statement(io, mime, node::Union{FinchNode, FinchNodeInstance}, 
         print(io, ")")
     elseif operation(node) === yieldbind
         print(io, " "^indent * "return (")
-        print(io, "(")
         for arg in node.args[1:end-1]
             display_expression(io, mime, arg)
             print(io, ", ")
