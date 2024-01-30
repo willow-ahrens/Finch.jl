@@ -144,6 +144,7 @@ function reduce_helper_code(::Type{Callable{op}}, bc::Type{<:Broadcasted{FinchSt
                 $(Expr(:for, exts, quote
                     $dst[$(dst_idxs...)] <<$op>>= $pw_ex
                 end))
+                return dst
             end
             $res_ex
         end

@@ -44,6 +44,7 @@ using CIndices
                 for j = _, i = _
                     E[i, j] += C[i, j]
                 end
+                return (D, E)
             end
             @test D == D_ref
             @test E == E_ref
@@ -72,7 +73,7 @@ using CIndices
     let
         B = Tensor(Dense(Element(0)), [2, 4, 5])
         A = Tensor(Dense(Element(0)), 6)
-        @finch (A .= 0; for i=_; A[B[i]] = i end)
+        @finch (A .= 0; for i=_; A[B[i]] = i end; return A)
         @test reference_isequal(A, [0, 1, 0, 2, 3, 0])
     end
 
@@ -91,8 +92,8 @@ using CIndices
     A = copyto!(Tensor(Dense(Dense(Element(0)))), A)
     B = Tensor(Dense(Element(0)))
     
-    @test check_output("fiber_as_idx.jl", @finch_code (B .= 0; for i=_; B[i] = A[I[i], i] end))
-    @finch (B .= 0; for i=_; B[i] = A[I[i], i] end)
+    @test check_output("fiber_as_idx.jl", @finch_code (B .= 0; for i=_; B[i] = A[I[i], i] end; return B))
+    @finch (B .= 0; for i=_; B[i] = A[I[i], i] end; return B)
 
     @test B == [11, 12, 93, 34, 35]
 
@@ -101,9 +102,9 @@ using CIndices
         t = Tensor(SparseList(SparseList(Element(0.0))))
         X = Tensor(SparseList(SparseList(Element(0.0))))
         A = Tensor(SparseList(SparseList(Element(0.0))), SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3]))
-        @test_throws DimensionMismatch @finch (t .= 0; for j=_, i=_; t[i, j] = min(X[i, j],  A[i, j]) end)
+        @test_throws DimensionMismatch @finch (t .= 0; for j=_, i=_; t[i, j] = min(X[i, j],  A[i, j]) end; return t)
         X = Tensor(SparseList(SparseList(Element(0.0))), 4, 4)
-        @finch (t .= 0; for j=_, i=_; t[i, j] = min(X[i, j],  A[i, j]) end)
+        @finch (t .= 0; for j=_, i=_; t[i, j] = min(X[i, j],  A[i, j]) end; return t)
         @test t == A
     end
 
@@ -118,7 +119,7 @@ using CIndices
         t = Tensor(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Tensor(SparseList(SparseList(Element(0.0)))), B))
-        @finch algebra=MyAlgebra115() (t .= 0; for j=_, i=_; t[i, j] = f(A[i,j], A[i,j], A[i,j]) end)
+        @finch algebra=MyAlgebra115() (t .= 0; for j=_, i=_; t[i, j] = f(A[i,j], A[i,j], A[i,j]) end; return t)
         @test t == B .* 3
     end
 
@@ -128,14 +129,14 @@ using CIndices
         t = Tensor(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Tensor(SparseList(SparseList(Element(0.0)))), B))
-        @test_logs (:warn, "Performance Warning: non-concordant traversal of t[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)") match_mode=:any @test_throws Finch.FinchProtocolError @finch (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
+        @test_logs (:warn, "Performance Warning: non-concordant traversal of t[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)") match_mode=:any @test_throws Finch.FinchProtocolError @finch (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end; return t)
     end
 
     let
         t = Tensor(Dense(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Tensor(Dense(SparseList(Element(0.0)))), B))
-        @test_logs (:warn, "Performance Warning: non-concordant traversal of t[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)") match_mode=:any @test_throws Finch.FinchProtocolError @finch (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
+        @test_logs (:warn, "Performance Warning: non-concordant traversal of t[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)") match_mode=:any @test_throws Finch.FinchProtocolError @finch (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end; return t)
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/129
@@ -159,7 +160,7 @@ using CIndices
 
         B = Tensor(Dense(SparseList(Element(0.0))))
 
-        @finch (B .= 0; for j=_, i=_; B[i, j] = A[i, j] end)
+        @finch (B .= 0; for j=_, i=_; B[i, j] = A[i, j] end; return B)
 
         @test Structure(B) == Structure(Tensor(A))
 
@@ -167,7 +168,7 @@ using CIndices
 
         w = Tensor(SparseList(Element(0.0)))
 
-        @finch (w .= 0; for i=_; w[i] = v[i] end)
+        @finch (w .= 0; for i=_; w[i] = v[i] end; return w)
 
         @test Structure(w) == Structure(Tensor(v))
     end
@@ -249,7 +250,7 @@ using CIndices
         A = [0.0 1.0 0.0 2.0; 0.0 1.0 0.0 3.0; 0.0 0.0 2.0 0.0]
         B = Tensor(Dense(SparseList(Element(0.0))), A)
         C = Tensor(Dense(SparseList(Element(Inf))))
-        @finch (C .= Inf; for j = _, i = _ C[i, j] = ifelse(B[i, j] == 0, Inf, B[i, j]) end)
+        @finch (C .= Inf; for j = _, i = _ C[i, j] = ifelse(B[i, j] == 0, Inf, B[i, j]) end; return C)
 
         println(io, "A :", A)
         println(io, "C :", C)
@@ -267,9 +268,9 @@ using CIndices
         A = fsprand(10, 11, 0.5)
         B = Tensor(Dense(SparseList(Element(0.0))))
         C = fsprand(10, 10, 0.5)
-        @test_throws DimensionMismatch @finch (A .= 0; for j=_, i=_; A[i, j] = B[i] end)
-        @test_throws DimensionMismatch @finch (A .= 0; for j=_, i=_; A[i] = B[i, j] end)
-        @test_throws DimensionMismatch @finch (A .= 0; for j=_, i=_; A[i, j] = B[i, j] + C[i, j] end)
+        @test_throws DimensionMismatch @finch (A .= 0; for j=_, i=_; A[i, j] = B[i] end; return A)
+        @test_throws DimensionMismatch @finch (A .= 0; for j=_, i=_; A[i] = B[i, j] end; return A)
+        @test_throws DimensionMismatch @finch (A .= 0; for j=_, i=_; A[i, j] = B[i, j] + C[i, j] end; return A)
         @test_throws DimensionMismatch copyto!(Tensor(SparseList(Element(0.0))), A)
         @test_throws DimensionMismatch dropdefaults!(Tensor(SparseList(Element(0.0))), A)
 
@@ -327,7 +328,7 @@ using CIndices
     let
         A = [1.0 2.0 3.0; 4.0 5.0 6.0; 7.0 8.0 9.0]
         x = Scalar{0.0}()
-        @finch (x .= 0; for i = _ x[] += A[i, i] end)
+        @finch (x .= 0; for i = _ x[] += A[i, i] end; return x)
         @test x[] == 15.0
     end
 
@@ -534,13 +535,13 @@ using CIndices
         copyto!(b_fiber, b_matrix)
         output_tensor = Tensor(SparseHash{1}(SparseHash{1}(Element(0.0))), 2, 2)
 
-        @finch (output_tensor .=0; for j=_,i=_,k=_; output_tensor[i,k] += a_fiber[i,j] * b_fiber[k,j]; end)
+        @finch (output_tensor .=0; for j=_,i=_,k=_; output_tensor[i,k] += a_fiber[i,j] * b_fiber[k,j]; end; return output_tensor)
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/319
     let
         x = SparseMatrixCSC(spzeros(2,2))
-        @test_throws Finch.FinchProtocolError @finch x .= 0
+        @test_throws Finch.FinchProtocolError @finch (x .= 0; return x)
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/321
@@ -580,6 +581,7 @@ using CIndices
                     end
                 end
             end
+            return Output
         end)
 
         test(Output, Point, Kernel)

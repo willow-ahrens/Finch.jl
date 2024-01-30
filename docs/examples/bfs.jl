@@ -28,6 +28,7 @@ function bfs(edges, source=5)
                     P[k] <<choose(0)>>= j #Only set the parent for this vertex
                 end
             end
+            return _F
         end
         @finch for k=_; V[k] |= _F[k] end
         (F, _F) = (_F, F)

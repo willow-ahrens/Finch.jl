@@ -66,6 +66,7 @@ Base.getindex(arr::Tensor, inds...) = getindex_helper(arr, to_indices(arr, inds)
             $(Expr(:for, exts, quote
                 win[$(dst_modes...)] = arr[$(coords...)]
             end))
+            return win
         end
         return win
     end

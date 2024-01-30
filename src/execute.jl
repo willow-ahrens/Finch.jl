@@ -117,9 +117,12 @@ loops, statements, and branches over pointwise array assignments. For example,
 the following program computes the sum of two arrays `A = B + C`:
 
 ```julia   
-A .= 0
-@finch for i = _
-    A[i] = B[i] + C[i]
+@finch begin
+    A .= 0
+    for i = _
+        A[i] = B[i] + C[i]
+    end
+    return A
 end
 ```
 
@@ -133,6 +136,7 @@ Finch programs are composed using the following syntax:
  - `arr[inds...] <<min>>= ex`: a incrementing array expression with a custom operator, e.g. `<<min>>` is the minimum operator.
  - `for i = _ body end`: a loop over the index `i`, where `_` is computed from array access with `i` in `body`.
  - `if cond body end`: a conditional branch that executes only iterations where `cond` is true.
+ - `return (tnss...,)`: at global scope, exit the program and return the tensors `tnss` with their new dimensions.
 
 Symbols are used to represent variables, and their values are taken from the environment. Loops introduce
 index variables into the scope of their bodies.

@@ -14,6 +14,7 @@
                     y[j] += x[i] * A[walk(i), j]
                 end
             end
+            return y
         end
 
         @repl io @finch begin
@@ -23,6 +24,7 @@
                     y[j] += x[i] * A[walk(i), j]
                 end
             end
+            return y
         end
 
         @test check_output("debug_parallel_spmv.txt", String(take!(io)))
@@ -40,6 +42,7 @@
                         y[i+j] += x[i] * A[walk(i), j]
                     end
                 end
+                return y
             end
         end
     end
@@ -58,6 +61,7 @@
                         y[i+1] += x[i] * A[walk(i), j]
                     end
                 end
+                return y
             end
         end
     end
@@ -75,6 +79,7 @@
                         y[i+1] *= x[i] * A[walk(i), j]
                     end
                 end
+                return y
             end
         end
     end
@@ -115,6 +120,7 @@
                     output[x, y] = tmp[x]
                 end
             end
+            return output
         end)
     end
 
@@ -137,6 +143,7 @@
                     output[x, y] = tmp[x]
                 end
             end
+            return output
         end)
     end
 end

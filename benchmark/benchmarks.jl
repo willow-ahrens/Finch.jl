@@ -39,7 +39,7 @@ let
 
     SUITE["compile"]["compile_SpGeMM"] = @benchmarkable begin   
         A, B, C = ($A, $B, $C)
-        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance (C .= 0; for i=_, j=_, k=_; C[j, i] += A[k, i] * B[k, j] end)))
+        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance (C .= 0; for i=_, j=_, k=_; C[j, i] += A[k, i] * B[k, j] end; return C)))
     end
 end
 
@@ -85,7 +85,7 @@ SUITE["indices"] = BenchmarkGroup()
 
 function spmv32(A, x)
     y = Tensor(Dense{Int32}(Element{0.0, Float64, Int32}()))
-    @finch (y .= 0; for i=_, j=_; y[i] += A[j, i] * x[j] end)
+    @finch (y .= 0; for i=_, j=_; y[i] += A[j, i] * x[j] end; return y)
     return y
 end
 
@@ -99,7 +99,7 @@ end
 
 function spmv64(A, x)
     y = Tensor(Dense{Int64}(Element{0.0, Float64, Int64}()))
-    @finch (y .= 0; for i=_, j=_; y[i] += A[j, i] * x[j] end)
+    @finch (y .= 0; for i=_, j=_; y[i] += A[j, i] * x[j] end; return y)
     return y
 end
 

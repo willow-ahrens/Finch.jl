@@ -25,6 +25,7 @@
                     y[i] += A[i, j] * x[j]
                 end
             end
+            return y
         end
         @repl io @finch begin
             y .= 0
@@ -33,6 +34,7 @@
                     y[i] += A[i, j] * x[j]
                 end
             end
+            return y
         end
         
         @test check_output("typical_spmv_sparsematrixcsc.txt", String(take!(io)))
@@ -51,6 +53,7 @@
                     y[i] += A[i, j] * x[j]
                 end
             end
+            return y
         end
         @repl io @finch begin
             y .= 0
@@ -59,6 +62,7 @@
                     y[i] += A[i, j] * x[j]
                 end
             end
+            return y
         end
         
         @test check_output("typical_spmv_csc.txt", String(take!(io)))
@@ -76,6 +80,7 @@
                     B[j, i] = A[i, j]
                 end
             end
+            return B
         end
         @repl io @finch mode=fastfinch begin
             B .= 0
@@ -84,6 +89,7 @@
                     B[j, i] = A[i, j]
                 end
             end
+            return B
         end
         
         @test check_output("typical_transpose_csc_to_coo.txt", String(take!(io)))
@@ -102,22 +108,22 @@
     
         io = IOBuffer()
 
-        @repl io @finch_code (z .= 0; for i=_; z[i] = x[gallop(i)] + y[gallop(i)] end)
-        @repl io @finch (z .= 0; for i=_; z[i] = x[gallop(i)] + y[gallop(i)] end)
+        @repl io @finch_code (z .= 0; for i=_; z[i] = x[gallop(i)] + y[gallop(i)] end; return z)
+        @repl io @finch (z .= 0; for i=_; z[i] = x[gallop(i)] + y[gallop(i)] end; return z)
 
         @test check_output("typical_merge_gallop.txt", String(take!(io)))
 
         io = IOBuffer()
 
-        @repl io @finch_code (z .= 0; for i=_; z[i] = x[gallop(i)] + y[i] end)
-        @repl io @finch (z .= 0; for i=_; z[i] = x[gallop(i)] + y[i] end)
+        @repl io @finch_code (z .= 0; for i=_; z[i] = x[gallop(i)] + y[i] end; return z)
+        @repl io @finch (z .= 0; for i=_; z[i] = x[gallop(i)] + y[i] end; return z)
 
         @test check_output("typical_merge_leadfollow.txt", String(take!(io)))
 
         io = IOBuffer()
 
-        @repl io @finch_code (z .= 0; for i=_; z[i] = x[i] + y[i] end)
-        @repl io @finch (z .= 0; for i=_; z[i] = x[i] + y[i] end)
+        @repl io @finch_code (z .= 0; for i=_; z[i] = x[i] + y[i] end; return z)
+        @repl io @finch (z .= 0; for i=_; z[i] = x[i] + y[i] end; return z)
 
         @test check_output("typical_merge_twofinger.txt", String(take!(io)))
 

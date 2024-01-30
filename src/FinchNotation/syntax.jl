@@ -183,9 +183,9 @@ function (ctx::FinchParserVisitor)(ex::Expr)
             return :($(ctx.nodes.block)($(map(ctx, bodies)...)))
         end
     elseif @capture ex :return(:tuple(~args...))
-        return ctx(:($(ctx.nodes.yield)($(map(ctx, args)...))))
+        return :($(ctx.nodes.yield)($(map(ctx, args)...)))
     elseif @capture ex :return(~arg)
-        return ctx(:($(ctx.nodes.yield)($(ctx(arg)))))
+        return :($(ctx.nodes.yield)($(ctx(arg))))
     elseif @capture ex :ref(~tns, ~idxs...)
         mode = ctx.nodes.reader
         return :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
@@ -243,7 +243,7 @@ function finch_parse_yield(ex)
     elseif @capture ex :return(:tuple(~args...))
         return filter(arg => arg isa Symbol, collect(args))
     elseif ex isa Expr
-        return mapreduce(finch_parse_yield, something, ex.args)
+        return mapreduce(finch_parse_yield, (x, y) -> something(x, y, Some(nothing)), ex.args)
     end
 end
 

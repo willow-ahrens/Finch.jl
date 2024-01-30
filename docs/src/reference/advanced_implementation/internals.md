@@ -33,7 +33,7 @@ julia> A = Tensor(SparseList(Element(0)), [0, 2, 0, 0, 3]);
 
 julia> B = Tensor(Dense(Element(0)), [11, 12, 13, 14, 15]);
 
-julia> @finch (C .= 0; for i=_; C[i] = A[i] * B[i] end);
+julia> @finch (C .= 0; for i=_; C[i] = A[i] * B[i] end; return C);
 
 
 julia> C
@@ -49,7 +49,7 @@ happens when we use the `@finch` macro (we've stripped line numbers from the
 result to clean it up):
 
 ```jldoctest example1
-julia> (@macroexpand @finch (C .= 0; for i=_; C[i] = A[i] * B[i] end)) |> Finch.striplines |> Finch.regensym
+julia> (@macroexpand @finch (C .= 0; for i=_; C[i] = A[i] * B[i] end; return C)) |> Finch.striplines |> Finch.regensym
 quote
     _res_1 = (Finch.execute)((Finch.FinchNotation.block_instance)((Finch.FinchNotation.declare_instance)((Finch.FinchNotation.tag_instance)(variable_instance(:C), (Finch.FinchNotation.finch_leaf_instance)(C)), literal_instance(0)), begin
                     let i = index_instance(i)
@@ -118,7 +118,7 @@ julia> function pointwise_sum(As...)
            for A_var in A_vars
                ex = @finch_program_instance $A_var[i] + $ex
            end
-           prgm = @finch_program_instance (B .= 0; for i=_; B[i] = $ex end)
+           prgm = @finch_program_instance (B .= 0; for i=_; B[i] = $ex end; return B)
            return Finch.execute(prgm).B
        end
 pointwise_sum (generic function with 1 method)

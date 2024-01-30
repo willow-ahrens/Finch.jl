@@ -33,6 +33,7 @@ y = zeros(5)
     for i=_, j=_
         y[i] += A[i, j]
     end
+    return y
 end
 ```
 
@@ -53,6 +54,7 @@ s = Scalar(0.0)
     for i=_, j=_
         s[] += A[i, j]
     end
+    return s
 end
 ```
 

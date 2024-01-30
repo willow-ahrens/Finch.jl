@@ -43,7 +43,7 @@
                     ref = dropdefaults!(ref, arr)
                     tmp = Tensor(inner())
                     @testset "convert $(summary(tmp)) $(idx)" begin
-                        @finch (tmp .= 0; for i=_; tmp[i] = ref[i] end)
+                        @finch (tmp .= 0; for i=_; tmp[i] = ref[i] end; return tmp)
                         check = Scalar(true)
                         @finch for i=_; check[] &= tmp[i] == ref[i] end
                         @test check[]
@@ -67,7 +67,7 @@
                         ref = dropdefaults!(ref, arr)
                         tmp = Tensor(outer())
                         @testset "convert $arr_key $(summary(tmp))"  begin
-                            @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
+                            @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end; return tmp)
                             check = Scalar(true)
                             @finch for j=_, i=_; check[] &= tmp[i, j] == ref[i, j] end
                             @test check[]
@@ -97,12 +97,12 @@
                 tmp = Tensor(inner())
                 @testset "convert $(summary(tmp))" begin
                     if !output
-                        check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for i=_; tmp[i] = ref[i] end))
-                        check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for i=_; res[i] = tmp[i] end))
+                        check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for i=_; tmp[i] = ref[i] end; return tmp))
+                        check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for i=_; res[i] = tmp[i] end; return tmp))
                         output = true
                     end
-                    @finch (tmp .= 0; for i=_; tmp[i] = ref[i] end)
-                    @finch (res .= 0; for i=_; res[i] = tmp[i] end)
+                    @finch (tmp .= 0; for i=_; tmp[i] = ref[i] end; return tmp)
+                    @finch (res .= 0; for i=_; res[i] = tmp[i] end; return tmp)
                     @test Structure(ref) == Structure(res)
                 end
             end
@@ -127,12 +127,12 @@
                     tmp = Tensor(outer())
                     @testset "convert $arr_key $(summary(tmp))"  begin
                         if !output
-                            check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
-                            check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end))
+                            check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end; return tmp))
+                            check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end; return res))
                             output = true
                         end
-                        @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
-                        @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end)
+                        @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end; return tmp)
+                        @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end; return res)
                         @test Structure(ref) == Structure(res)
                     end
                 end
@@ -154,13 +154,13 @@
                 tmp = Tensor(inner())
                 @testset "convert $(summary(tmp))" begin
                     if !output
-                        check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for i=_; tmp[i] = ref[i] end))
-                        check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for i=_; res[i] = tmp[i] end))
+                        check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for i=_; tmp[i] = ref[i] end; return tmp))
+                        check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for i=_; res[i] = tmp[i] end; return res))
                         output = true
                     end
-                    @finch (ref .= 0; for i=_; ref[i] = arr[i] end)
-                    @finch (tmp .= 0; for i=_; tmp[i] = ref[i] end)
-                    @finch (res .= 0; for i=_; res[i] = tmp[i] end)
+                    @finch (ref .= 0; for i=_; ref[i] = arr[i] end; return ref)
+                    @finch (tmp .= 0; for i=_; tmp[i] = ref[i] end; return tmp)
+                    @finch (res .= 0; for i=_; res[i] = tmp[i] end; return res)
                     @test Structure(ref) == Structure(res)
                 end
             end
@@ -183,13 +183,13 @@
                     tmp = Tensor(outer())
                     @testset "convert $arr_key $(summary(tmp))"  begin
                         if !output
-                            check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
-                            check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end))
+                            check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end; return tmp))
+                            check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end; return res))
                             output = true
                         end
-                        @finch (ref .= 0; for j=_, i=_; ref[i, j] = arr[i, j] end)
-                        @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
-                        @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end)
+                        @finch (ref .= 0; for j=_, i=_; ref[i, j] = arr[i, j] end; return ref)
+                        @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end; return tmp)
+                        @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end; return res)
                         @test Structure(ref) == Structure(res)
                     end
                 end
@@ -217,12 +217,12 @@
                 tmp = Tensor(outer())
                 @testset "convert $arr_key $(summary(tmp))"  begin
                     if !output
-                        check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
-                        check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end))
+                        check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end; return tmp))
+                        check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end; return res))
                         output = true
                     end
-                    @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
-                    @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end)
+                    @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end; return tmp)
+                    @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end; return res)
                     @test Structure(ref) == Structure(res)
                 end
             end
@@ -247,12 +247,12 @@
                 tmp = Tensor(outer())
                 @testset "convert $arr_key $(summary(tmp))"  begin
                     if !output
-                        check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
-                        check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end))
+                        check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end; return tmp))
+                        check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end; return res))
                         output = true
                     end
-                    @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
-                    @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end)
+                    @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end; return tmp)
+                    @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end; return res)
                     check = Scalar(true)
                     @finch for j=_, i=_; if j >= i check[] &= tmp[i, j] == ref[i, j] end end
                     @test check[]
@@ -309,7 +309,7 @@
                 ref = dropdefaults!(ref, arr)
                 tmp = Tensor(outer())
                 @testset "convert Separation $arr_key $(summary(tmp))"  begin
-                    @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
+                    @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end; return tmp)
                     check = Scalar(true)
                     @finch for j=_, i=_; check[] &= tmp[i, j] == ref[i, j] end
                     @test check[]

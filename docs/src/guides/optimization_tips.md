@@ -158,7 +158,7 @@ densify `B`, filling it with `m * n` stored values:
 ```jldoctest example1
 A = Tensor(Dense(SparseList(Element(0.0))), fsparse([2, 3, 4, 1, 3], [1, 1, 1, 3, 3], [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
 B = Tensor(Dense(SparseList(Element(0.0)))) #DO NOT DO THIS, B has the wrong fill value
-@finch (B .= 0; for j=_, i=_; B[i, j] = A[i, j] + 1 end)
+@finch (B .= 0; for j=_, i=_; B[i, j] = A[i, j] + 1 end; return B)
 countstored(B)
 
 # output
@@ -171,7 +171,7 @@ Since `A` is filled with `0.0`, adding `1` to the fill value produces `1.0`. How
 ```jldoctest example1
 A = Tensor(Dense(SparseList(Element(0.0))), fsparse([2, 3, 4, 1, 3], [1, 1, 1, 3, 3], [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
 B = Tensor(Dense(SparseList(Element(1.0))))
-@finch (B .= 1; for j=_, i=_; B[i, j] = A[i, j] + 1 end)
+@finch (B .= 1; for j=_, i=_; B[i, j] = A[i, j] + 1 end; return B)
 countstored(B)
 
 # output
@@ -189,7 +189,7 @@ behind a variable `x`, Finch can only determine that `x` has type `Int`, not tha
 A = Tensor(Dense(SparseList(Element(0.0))), fsparse([2, 3, 4, 1, 3], [1, 1, 1, 3, 3], [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
 B = Tensor(Dense(SparseList(Element(1.0))))
 x = 1 #DO NOT DO THIS, Finch cannot see the value of x anymore
-@finch (B .= 1; for j=_, i=_; B[i, j] = A[i, j] + x end)
+@finch (B .= 1; for j=_, i=_; B[i, j] = A[i, j] + x end; return B)
 countstored(B)
 
 # output
@@ -202,7 +202,7 @@ However, there are some situations where you may want a value to be dynamic. For
 ```julia
 function saxpy(x, a, y)
     z = Tensor(SparseList(Element(0.0)))
-    @finch (z .= 0; for i=_; z[i] = a * x[i] + y[i] end)
+    @finch (z .= 0; for i=_; z[i] = a * x[i] + y[i] end; return z)
 end
 ```
 
@@ -216,7 +216,7 @@ A = Tensor(Dense(SparseList(Element(0.0))), fsparse([2, 3, 4, 1, 3], [1, 1, 1, 3
 B = ones(4, 3)
 C = Scalar(0.0)
 f(x, y) = x * y # DO NOT DO THIS, Obscures *
-@finch (C .= 0; for j=_, i=_; C[] += f(A[i, j], B[i, j]) end)
+@finch (C .= 0; for j=_, i=_; C[] += f(A[i, j], B[i, j]) end; return C)
 
 # output
 
@@ -226,7 +226,7 @@ f(x, y) = x * y # DO NOT DO THIS, Obscures *
 Checking the generated code, we see that this code is indeed densifying (notice the for-loop which repeatedly evaluates `f(B[i, j], 0.0)`).
 
 ```jldoctest example1
-@finch_code (C .= 0; for j=_, i=_; C[] += f(A[i, j], B[i, j]) end)
+@finch_code (C .= 0; for j=_, i=_; C[] += f(A[i, j], B[i, j]) end; return C)
 
 # output
 
