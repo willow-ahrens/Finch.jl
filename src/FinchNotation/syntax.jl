@@ -240,9 +240,9 @@ function finch_parse_yield(ex)
         return nothing
     elseif @capture ex :return(~arg)
         return arg isa Symbol ? [arg] : []
-    elseif @capture ex :return(:tuple(args...))
+    elseif @capture ex :return(:tuple(~args...))
         return filter(arg => arg isa Symbol, collect(args))
-    else
+    elseif ex isa Expr
         return mapreduce(finch_parse_yield, something, ex.args)
     end
 end
