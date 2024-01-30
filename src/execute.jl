@@ -105,17 +105,6 @@ function lower_global(prgm, ctx)
                     ctx_3(prgm)
                 end
             end)
-            $(begin
-                res = contain(ctx_2) do ctx_3
-                    :((; $(map(getresults(prgm)) do tns
-                        @assert tns.kind === variable
-                        name = tns.name
-                        tns = trim!(resolve(tns, ctx_2), ctx_3)
-                        Expr(:kw, name, ctx_3(tns))
-                    end...), ))
-                end
-                res
-            end)
         end
     end
 end
@@ -166,13 +155,12 @@ See also: [`@finch_code`](@ref)
 macro finch(opts_ex...)
     length(opts_ex) >= 1 || throw(ArgumentError("Expected at least one argument to @finch(opts..., ex)"))
     (opts, ex) = (opts_ex[1:end-1], opts_ex[end])
-    results = Set()
-    prgm = FinchNotation.finch_parse_instance(ex, results)
+    prgm = FinchNotation.finch_parse_instance(ex)
     res = esc(:res)
     thunk = quote
         res = $execute($prgm, (;$(map(esc, opts)...),))
     end
-    for tns in results
+    for tns in something(FinchNotation.finch_parse_yield(ex), [])
         push!(thunk.args, quote
             if haskey(res, $(QuoteNode(tns)))
                 $(esc(tns)) = res[$(QuoteNode(tns))]

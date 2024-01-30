@@ -101,7 +101,6 @@ function realextent end
 
 struct FinchParserVisitor
     nodes
-    results
 end
 
 function (ctx::FinchParserVisitor)(ex::Symbol)
@@ -114,7 +113,7 @@ function (ctx::FinchParserVisitor)(ex::Symbol)
     end
 end
 (ctx::FinchParserVisitor)(ex::QuoteNode) = ctx.nodes.literal(ex.value)
-(ctx::FinchParserVisitor)(ex) = ctx.nodes.literal(ex)
+(ctx::FinchParserVisitor)(ex) = ctx.nodes.literal(ex) #TODO error on any unrecognized syntax like this.
 
 struct FinchSyntaxError msg end
 
@@ -183,21 +182,21 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         else
             return :($(ctx.nodes.block)($(map(ctx, bodies)...)))
         end
-    elseif @capture ex :return(:tuple(args...))
+    elseif @capture ex :return(:tuple(~args...))
         return ctx(:($(ctx.nodes.yield)($(map(ctx, args)...))))
+    elseif @capture ex :return(~arg)
+        return ctx(:($(ctx.nodes.yield)($(ctx(arg)))))
     elseif @capture ex :ref(~tns, ~idxs...)
         mode = ctx.nodes.reader
         return :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
     elseif (@capture ex (~op)(~lhs, ~rhs)) && haskey(incs, op)
         return ctx(:($lhs << $(incs[op]) >>= $rhs))
     elseif @capture ex :(=)(:ref(~tns, ~idxs...), ~rhs)
-        tns isa Symbol && push!(ctx.results, tns)
         mode = ctx.nodes.updater
         lhs = :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
         op = :($(ctx.nodes.literal)($initwrite))
         return :($(ctx.nodes.assign)($lhs, $op, $(ctx(rhs))))
     elseif @capture ex :>>=(:call(:<<, :ref(~tns, ~idxs...), ~op), ~rhs)
-        tns isa Symbol && push!(ctx.results, tns)
         mode = ctx.nodes.updater
         lhs = :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
         return :($(ctx.nodes.assign)($lhs, $(ctx(op)), $(ctx(rhs))))
@@ -221,7 +220,7 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         else
             return :($(ctx.nodes.call)($(ctx(op)), $(map(ctx, args)...)))
         end
-    elseif @capture ex :(...)(~arg)
+    elseif @capture ex :(...)(~arg) #TODO error on any unrecognized syntax like this.
         return esc(ex)
     elseif @capture ex :$(~arg)
         return esc(arg)
@@ -232,14 +231,23 @@ function (ctx::FinchParserVisitor)(ex::Expr)
     end
 end
 
-finch_parse_program(ex, results=Set()) = FinchParserVisitor(program_nodes, results)(ex)
-finch_parse_instance(ex, results=Set()) = FinchParserVisitor(instance_nodes, results)(ex)
-
-macro finch_program(ex)
-    return finch_parse_program(ex)
+finch_parse_program(ex) = FinchParserVisitor(program_nodes)(ex)
+finch_parse_instance(ex) = FinchParserVisitor(instance_nodes)(ex)
+function finch_parse_yield(ex)
+    if @capture ex :$(~arg)
+        return nothing
+    elseif @capture ex :macrocall(~args)
+        return nothing
+    elseif @capture ex :return(~arg)
+        return arg isa Symbol ? [arg] : []
+    elseif @capture ex :return(:tuple(args...))
+        return filter(arg => arg isa Symbol, collect(args))
+    else
+        return mapreduce(finch_parse_yield, something, ex.args)
+    end
 end
 
-macro f(ex)
+macro finch_program(ex)
     return finch_parse_program(ex)
 end
 

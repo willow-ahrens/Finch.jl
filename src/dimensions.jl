@@ -232,8 +232,8 @@ virtual_intersect(ctx, a::Dimensionless, b::Dimensionless) = b
 
 function virtual_intersect(ctx, a::Extent, b::Extent)
     Extent(
-        start = @f(max($(getstart(a)), $(getstart(b)))),
-        stop = @f(min($(getstop(a)), $(getstop(b))))
+        start = call(max, getstart(a), getstart(b)),
+        stop = call(min, getstop(a), getstop(b))
     )
 end
 
@@ -244,8 +244,8 @@ virtual_union(ctx, a::Dimensionless, b::Dimensionless) = b
 #virtual_union(ctx, a, b) = virtual_union(ctx, promote(a, b)...)
 function virtual_union(ctx, a::Extent, b::Extent)
     Extent(
-        start = @f(min($(getstart(a)), $(getstart(b)))),
-        stop = @f(max($(getstop(a)), $(getstop(b))))
+        start = call(min, getstart(a), getstart(b)),
+        stop = call(max, getstop(a), getstop(b))
     )
 end
 
@@ -299,14 +299,14 @@ is_continuous_extent(x::ParallelDimension) = is_continuous_extent(x.dim)
 
 function virtual_intersect(ctx, a::ContinuousExtent, b::ContinuousExtent)
     ContinuousExtent(
-        start = @f(max($(getstart(a)), $(getstart(b)))),
-        stop = @f(min($(getstop(a)), $(getstop(b))))
+        start = call(max, getstart(a), getstart(b)),
+        stop = call(min, getstop(a), getstop(b))
     )
 end
 
 function virtual_union(ctx, a::ContinuousExtent, b::ContinuousExtent)
     ContinuousExtent(
-        start = @f(min($(getstart(a)), $(getstart(b)))),
-        stop = @f(max($(getstop(a)), $(getstop(b))))
+        start = call(min, getstart(a), getstart(b)),
+        stop = call(max, getstop(a), getstop(b))
     )
 end

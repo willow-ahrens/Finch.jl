@@ -187,6 +187,15 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         return :($lhs = $rhs)
     elseif root.kind === variable
         return ctx(ctx.bindings[root])
+    elseif root.kind === yield
+        contain(ctx) do ctx_2
+            :(return (; $(map(root.args) do tns
+                @assert tns.kind === variable
+                name = tns.name
+                tns = trim!(resolve(tns, ctx), ctx_2)
+                Expr(:kw, name, ctx_2(tns))
+            end...), ))
+        end
     else
         error("unimplemented ($root)")
     end
