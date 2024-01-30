@@ -27,6 +27,7 @@ const ID = 8
     thaw     = 16ID | IS_TREE | IS_STATEFUL
     freeze   = 17ID | IS_TREE | IS_STATEFUL
     block    = 18ID | IS_TREE | IS_STATEFUL
+    yield    = 19ID | IS_TREE | IS_STATEFUL
 end
 
 """
@@ -167,6 +168,13 @@ instantiate.
 block
 
 """
+    yield(args...)
+
+Finch AST statement that terminates the program, returning the values of variables `args...`.
+"""
+yield
+
+"""
     FinchNode
 
 A Finch IR node. Finch uses a variant of Concrete Index Notation as an
@@ -262,7 +270,8 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         (kind === declare && length(args) == 2) ||
         (kind === freeze && length(args) == 1) ||
         (kind === thaw && length(args) == 1) ||
-        (kind === block)
+        (kind === block) || 
+        (kind === yield)
         return FinchNode(kind, nothing, nothing, args)
     else
         error("wrong number of arguments to $kind(...)")
@@ -303,6 +312,7 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
     elseif node.kind === freeze && sym === :tns node.children[1]
     elseif node.kind === thaw && sym === :tns node.children[1]
     elseif node.kind === block && sym === :bodies node.children
+    elseif node.kind === yeild && sym === :args node.children
     else
         error("type FinchNode($(node.kind), ...) has no property $sym")
     end

@@ -13,6 +13,7 @@ const program_nodes = (
     assign = assign,
     call = call,
     access = access,
+    yield = yield,
     reader = literal(reader),
     updater = literal(updater),
     variable = variable,
@@ -34,6 +35,7 @@ const instance_nodes = (
     assign = assign_instance,
     call = call_instance,
     access = access_instance,
+    yield = yield_instance,
     reader = literal_instance(reader),
     updater = literal_instance(updater),
     variable = variable_instance,
@@ -181,6 +183,8 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         else
             return :($(ctx.nodes.block)($(map(ctx, bodies)...)))
         end
+    elseif @capture ex :return(:tuple(args...))
+        return ctx(:($(ctx.nodes.yield)($(map(ctx, args)...))))
     elseif @capture ex :ref(~tns, ~idxs...)
         mode = ctx.nodes.reader
         return :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
@@ -382,6 +386,17 @@ function display_statement(io, mime, node::Union{FinchNode, FinchNodeInstance}, 
     elseif operation(node) === thaw
         print(io, " "^indent * "@thaw(")
         display_expression(io, mime, node.tns)
+        print(io, ")")
+    elseif operation(node) === yield
+        print(io, " "^indent * "return (")
+        print(io, "(")
+        for arg in node.args[1:end-1]
+            display_expression(io, mime, arg)
+            print(io, ", ")
+        end
+        if !isempty(node.args)
+            display_expression(io, mime, node.args[end])
+        end
         print(io, ")")
     elseif operation(node) === block
         print(io, " "^indent * "begin\n")
