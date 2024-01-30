@@ -98,11 +98,11 @@
                 @testset "convert $(summary(tmp))" begin
                     if !output
                         check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for i=_; tmp[i] = ref[i] end; return tmp))
-                        check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for i=_; res[i] = tmp[i] end; return tmp))
+                        check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for i=_; res[i] = tmp[i] end; return res))
                         output = true
                     end
                     @finch (tmp .= 0; for i=_; tmp[i] = ref[i] end; return tmp)
-                    @finch (res .= 0; for i=_; res[i] = tmp[i] end; return tmp)
+                    @finch (res .= 0; for i=_; res[i] = tmp[i] end; return res)
                     @test Structure(ref) == Structure(res)
                 end
             end
