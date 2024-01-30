@@ -187,7 +187,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         return :($lhs = $rhs)
     elseif root.kind === variable
         return ctx(ctx.bindings[root])
-    elseif root.kind === yield
+    elseif root.kind === yieldbind
         contain(ctx) do ctx_2
             :(return (; $(map(root.args) do tns
                 @assert tns.kind === variable

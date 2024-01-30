@@ -10,24 +10,24 @@ const IS_CONST = 4
 const ID = 8
 
 @enum FinchNodeKind begin
-    literal  =  0ID | IS_CONST
-    value    =  1ID | IS_CONST
-    index    =  2ID
-    variable =  3ID
-    virtual  =  4ID
-    tag      =  5ID | IS_TREE
-    call     =  6ID | IS_TREE
-    access   =  7ID | IS_TREE 
-    cached   = 10ID | IS_TREE
-    assign   = 11ID | IS_TREE | IS_STATEFUL
-    loop     = 12ID | IS_TREE | IS_STATEFUL
-    sieve    = 13ID | IS_TREE | IS_STATEFUL
-    define   = 14ID | IS_TREE | IS_STATEFUL
-    declare  = 15ID | IS_TREE | IS_STATEFUL
-    thaw     = 16ID | IS_TREE | IS_STATEFUL
-    freeze   = 17ID | IS_TREE | IS_STATEFUL
-    block    = 18ID | IS_TREE | IS_STATEFUL
-    yield    = 19ID | IS_TREE | IS_STATEFUL
+    literal   =  0ID | IS_CONST
+    value     =  1ID | IS_CONST
+    index     =  2ID
+    variable  =  3ID
+    virtual   =  4ID
+    tag       =  5ID | IS_TREE
+    call      =  6ID | IS_TREE
+    access    =  7ID | IS_TREE 
+    cached    = 10ID | IS_TREE
+    assign    = 11ID | IS_TREE | IS_STATEFUL
+    loop      = 12ID | IS_TREE | IS_STATEFUL
+    sieve     = 13ID | IS_TREE | IS_STATEFUL
+    define    = 14ID | IS_TREE | IS_STATEFUL
+    declare   = 15ID | IS_TREE | IS_STATEFUL
+    thaw      = 16ID | IS_TREE | IS_STATEFUL
+    freeze    = 17ID | IS_TREE | IS_STATEFUL
+    block     = 18ID | IS_TREE | IS_STATEFUL
+    yieldbind = 19ID | IS_TREE | IS_STATEFUL
 end
 
 """
@@ -168,11 +168,11 @@ instantiate.
 block
 
 """
-    yield(args...)
+    yieldbind(args...)
 
 Finch AST statement that terminates the program, returning the values of variables `args...`.
 """
-yield
+yieldbind
 
 """
     FinchNode
@@ -271,7 +271,7 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         (kind === freeze && length(args) == 1) ||
         (kind === thaw && length(args) == 1) ||
         (kind === block) || 
-        (kind === yield)
+        (kind === yieldbind)
         return FinchNode(kind, nothing, nothing, args)
     else
         error("wrong number of arguments to $kind(...)")
@@ -312,7 +312,7 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
     elseif node.kind === freeze && sym === :tns node.children[1]
     elseif node.kind === thaw && sym === :tns node.children[1]
     elseif node.kind === block && sym === :bodies node.children
-    elseif node.kind === yeild && sym === :args node.children
+    elseif node.kind === yieldbind && sym === :args node.children
     else
         error("type FinchNode($(node.kind), ...) has no property $sym")
     end

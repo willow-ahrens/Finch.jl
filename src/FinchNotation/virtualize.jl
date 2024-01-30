@@ -50,9 +50,9 @@ function Finch.virtualize(ex, ::Type{FinchNotation.TagInstance{Var, Bind}}, ctx)
     bind = virtualize(:($ex.bind), Bind, ctx, var.name)
     tag(var, bind)
 end
-function Finch.virtualize(ex, ::Type{FinchNotation.YieldInstance{Args}}, ctx) where {Args}
+function Finch.virtualize(ex, ::Type{FinchNotation.YieldBindInstance{Args}}, ctx) where {Args}
     args = map(enumerate(Args.parameters)) do (n, Arg)
         virtualize(:($ex.args[$n]), Arg, ctx)
     end
-    yield(args...)
+    yieldbind(args...)
 end

@@ -19,6 +19,7 @@ module FinchNotation
     export block
     export protocol
     export sieve
+    export yieldbind
     export FinchNode
 
     export follow

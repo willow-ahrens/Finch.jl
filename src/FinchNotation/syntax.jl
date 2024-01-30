@@ -13,7 +13,7 @@ const program_nodes = (
     assign = assign,
     call = call,
     access = access,
-    yield = yield,
+    yieldbind = yieldbind,
     reader = literal(reader),
     updater = literal(updater),
     variable = variable,
@@ -35,7 +35,7 @@ const instance_nodes = (
     assign = assign_instance,
     call = call_instance,
     access = access_instance,
-    yield = yield_instance,
+    yieldbind = yieldbind_instance,
     reader = literal_instance(reader),
     updater = literal_instance(updater),
     variable = variable_instance,
@@ -183,9 +183,9 @@ function (ctx::FinchParserVisitor)(ex::Expr)
             return :($(ctx.nodes.block)($(map(ctx, bodies)...)))
         end
     elseif @capture ex :return(:tuple(~args...))
-        return :($(ctx.nodes.yield)($(map(ctx, args)...)))
+        return :($(ctx.nodes.yieldbind)($(map(ctx, args)...)))
     elseif @capture ex :return(~arg)
-        return :($(ctx.nodes.yield)($(ctx(arg))))
+        return :($(ctx.nodes.yieldbind)($(ctx(arg))))
     elseif @capture ex :ref(~tns, ~idxs...)
         mode = ctx.nodes.reader
         return :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
@@ -233,7 +233,7 @@ end
 
 finch_parse_program(ex) = FinchParserVisitor(program_nodes)(ex)
 finch_parse_instance(ex) = FinchParserVisitor(instance_nodes)(ex)
-function finch_parse_yield(ex)
+function finch_parse_yieldbind(ex)
     if @capture ex :$(~arg)
         return nothing
     elseif @capture ex :macrocall(~args)
@@ -243,7 +243,7 @@ function finch_parse_yield(ex)
     elseif @capture ex :return(:tuple(~args...))
         return filter(arg => arg isa Symbol, collect(args))
     elseif ex isa Expr
-        return mapreduce(finch_parse_yield, (x, y) -> something(x, y, Some(nothing)), ex.args)
+        return mapreduce(finch_parse_yieldbind, (x, y) -> something(x, y, Some(nothing)), ex.args)
     end
 end
 
@@ -395,7 +395,7 @@ function display_statement(io, mime, node::Union{FinchNode, FinchNodeInstance}, 
         print(io, " "^indent * "@thaw(")
         display_expression(io, mime, node.tns)
         print(io, ")")
-    elseif operation(node) === yield
+    elseif operation(node) === yieldbind
         print(io, " "^indent * "return (")
         print(io, "(")
         for arg in node.args[1:end-1]

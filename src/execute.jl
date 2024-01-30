@@ -164,11 +164,9 @@ macro finch(opts_ex...)
     thunk = quote
         res = $execute($prgm, (;$(map(esc, opts)...),))
     end
-    for tns in something(FinchNotation.finch_parse_yield(ex), [])
+    for tns in something(FinchNotation.finch_parse_yieldbind(ex), [])
         push!(thunk.args, quote
-            if haskey(res, $(QuoteNode(tns)))
-                $(esc(tns)) = res[$(QuoteNode(tns))]
-            end
+            $(esc(tns)) = res[$(QuoteNode(tns))]
         end)
     end
     push!(thunk.args, quote
