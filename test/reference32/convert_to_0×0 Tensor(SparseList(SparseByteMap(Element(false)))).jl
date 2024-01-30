@@ -208,7 +208,7 @@ begin
         end
         tmp_lvl_2_p_prev = tmp_lvl_2_p_2
     end
-    tmp_lvl_ptr_2[tmp_lvl_2_p_2 + 1] = tmp_lvl_2_qos_fill + 1
+    tmp_lvl_ptr_2[tmp_lvl_2_p_prev + 1] = tmp_lvl_2_qos_fill + 1
     resize!(tmp_lvl_ptr, 1 + 1)
     qos = tmp_lvl_ptr[end] - 1
     resize!(tmp_lvl_idx, qos)

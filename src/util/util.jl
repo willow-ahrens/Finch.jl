@@ -353,7 +353,9 @@ function (ctx::PropagateCopies)(ex)
         body_2 = body
         while true
             ctx_2 = copy(ctx)
-            body_2 = ctx(body)
+            ctx_3 = copy(ctx)
+            body_2 = ctx_3(body)
+            merge!(ctx, ctx_3)
             ctx_2 == ctx && break
         end
         return Expr(:for, Expr(:def, Expr(:(=), i, ext), id), body_2)
