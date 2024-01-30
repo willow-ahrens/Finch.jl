@@ -177,7 +177,7 @@ function get_wrapper_rules(alg, depth, ctx)
         (@rule call(swizzle, call(swizzle, ~A, ~sigma_1...), ~sigma_2...) =>
             call(swizzle, A, sigma_1[getval.(sigma_2)]...)),
         (@rule access(call(swizzle, ~A, ~sigma...), ~m, ~i...) =>
-            access(A, m, i[getval.(sigma)]...)),
+            access(A, m, i[invperm(getval.(sigma))]...)),
         (@rule define(~x, call(swizzle, ~A, ~sigma...), ~s) => begin
             x_2 = variable(freshen(ctx.code, x))
             s_2 = Rewrite(Prewalk(Chain([
