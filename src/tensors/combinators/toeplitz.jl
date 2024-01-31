@@ -46,6 +46,8 @@ virtual_uncall(arr::VirtualToeplitzArray) = call(toeplitz, arr.body, arr.dim)
 
 lower(tns::VirtualToeplitzArray, ctx::AbstractCompiler, ::DefaultStyle) = :(ToeplitzArray($(ctx(tns.body)), $(tns.dim)))
 
+virtual_size(arr::Thunk, ctx::AbstractCompiler) = (dimless,)
+
 function virtual_size(arr::VirtualToeplitzArray, ctx::AbstractCompiler)
     dims = virtual_size(arr.body, ctx)
     return (dims[1:arr.dim - 1]..., dimless, dimless, dims[arr.dim + 1:end]...)
@@ -63,8 +65,8 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::VirtualToep
     stylize_access(node, ctx, tns.body)
 end
 
-function popdim(node::VirtualToeplitzArray)
-    if length(virtual_size(node)) == node.dim
+function popdim(node::VirtualToeplitzArray, ctx::AbstractCompiler)
+    if length(virtual_size(node, ctx)) == node.dim
         return node.body
     else
         return node
@@ -78,7 +80,7 @@ function get_point_body(node::VirtualToeplitzArray, ctx, ext, idx)
     if body_2 === nothing
         return nothing
     else
-        return popdim(VirtualToeplitzArray(body_2, node.dim))
+        return popdim(VirtualToeplitzArray(body_2, node.dim), ctx)
     end
 end
 
@@ -89,7 +91,7 @@ function get_run_body(node::VirtualToeplitzArray, ctx, ext)
     if body_2 === nothing
         return nothing
     else
-        return popdim(VirtualToeplitzArray(body_2, node.dim))
+        return popdim(VirtualToeplitzArray(body_2, node.dim), ctx)
     end
 end
 
@@ -98,7 +100,7 @@ function get_acceptrun_body(node::VirtualToeplitzArray, ctx, ext)
     if body_2 === nothing
         return nothing
     else
-        return popdim(VirtualToeplitzArray(body_2, node.dim))
+        return popdim(VirtualToeplitzArray(body_2, node.dim), ctx)
     end
 end
 
