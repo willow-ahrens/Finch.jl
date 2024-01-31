@@ -97,7 +97,7 @@
         end
 
         @test yp == y
-        @test Threads.nthreads() > 1
+        @assert Threads.nthreads() > 1
 
         @test check_output("stress_dense_atomics.txt", String(take!(io)))
     end
