@@ -193,7 +193,6 @@ SparseVBLLevel
 
 ## Modified Levels
 ```@docs
-AtomicLevel
 SeparationLevel
 ```
 
