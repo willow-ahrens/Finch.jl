@@ -593,4 +593,21 @@ using CIndices
         @finch let a=1, b=2; c[] += a + b end
         @test c[] == 3
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/387
+
+    A = zeros(2, 4, 3)
+    A[1,:,:] = [0.0 0.0 4.4; 1.1 0.0 0.0; 0.0 0.0 0.0; 3.3 0.0 0.0]
+    A[2,:,:] = [1.0 0.0 0.0; 0.0 0.0 0.0; 0.0 1.0 0.0; 3.3 0.0 0.0]
+
+    permutation = (3, 1, 2)
+
+    new_shape_1 = size(permutedims(A, permutation))
+
+    t = Tensor(Dense(SparseList(SparseList(Element(0.0)))), A)
+    st = swizzle(t, permutation...)
+    # materialize swizzle
+    new_shape_2 = size(Tensor(Dense(SparseList(SparseList(Element(0.0)))), st))
+
+    @test new_shape_1 == new_shape_2
 end

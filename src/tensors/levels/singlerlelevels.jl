@@ -26,7 +26,7 @@ SingleRLE (0) [1:10]
 ├─[3:6]: 1
 ```
 """
-struct SingleRLELevel{Ti, Ptr, Left, Right, Lvl} <: AbstractLevel
+struct SingleRLELevel{Ti, Ptr<:AbstractVector, Left<:AbstractVector, Right<:AbstractVector, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     ptr::Ptr
@@ -36,7 +36,7 @@ end
 
 const SingleRLE = SingleRLELevel
 SingleRLELevel(lvl::Lvl) where {Lvl} = SingleRLELevel{Int}(lvl)
-SingleRLELevel(lvl, shape::Ti) where {Ti} = SingleRLELevel{Ti}(lvl, shape)
+SingleRLELevel(lvl, shape::Ti, args...) where {Ti} = SingleRLELevel{Ti}(lvl, shape, args...)
 SingleRLELevel{Ti}(lvl) where {Ti} = SingleRLELevel{Ti}(lvl, zero(Ti))
 SingleRLELevel{Ti}(lvl, shape) where {Ti} = SingleRLELevel{Ti}(lvl, shape, postype(lvl)[1], Ti[], Ti[])
 
@@ -52,7 +52,7 @@ function memtype(::Type{SingleRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, P
 end
 
 function postype(::Type{SingleRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl}
-    return Ptr 
+    return postype(Lvl) 
 end
 
 function moveto(lvl::SingleRLELevel{Ti, Ptr, Left, Right, Lvl}, Tm) where {Ti, Ptr, Left, Right, Lvl}
@@ -101,6 +101,10 @@ end
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SingleRLELevel}, depth)
     p = fbr.pos
     lvl = fbr.lvl
+    if p + 1 > length(lvl.ptr)
+        print(io, "SingleRLE(undef...)")
+        return
+    end
     left_endpoints = @view(lvl.left[lvl.ptr[p]:lvl.ptr[p + 1] - 1])
 
     crds = []

@@ -89,7 +89,7 @@ begin
         end
         tmp_lvl_p_prev = tmp_lvl_p_2
     end
-    tmp_lvl_ptr[tmp_lvl_p_2 + 1] = tmp_lvl_qos_fill + 1
+    tmp_lvl_ptr[tmp_lvl_p_prev + 1] = tmp_lvl_qos_fill + 1
     resize!(tmp_lvl_ptr, 1 + 1)
     resize!(tmp_lvl_tbl, 1 * ref_lvl.shape)
     resize!(tmp_lvl_srt, tmp_lvl_qos_fill)
