@@ -6,10 +6,10 @@ Atomic Level Protects the level directly below it with atomics
 
 Each position in the level below the atomic level is protected by an atomic.
 julia> Tensor(Dense(Atomic(Element(0.0))), [1, 2, 3])
-Dense [1:3] -> Atomic
-├─[1]: 1.0
-├─[2]: 2.0
-├─[3]: 3.0
+Dense [1:3]
+├─[1]: Atomic -> 1.0
+├─[2]: Atomic -> 2.0
+├─[3]: Atomic -> 3.0
 """
 
 struct AtomicLevel{AVal <: AbstractVector, Lvl} <: AbstractLevel
@@ -54,12 +54,12 @@ end
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:AtomicLevel}, depth)
     p = fbr.pos
     lvl = fbr.lvl
-    if p > length(lvl.atomicArray)
+    if p > length(lvl.locks)
         print(io, "Atomic -> undef")
         return
     end
     print(io, "Atomic -> ")
-    display_fiber(io, mime, SubFiber(fbr.lvl, 1), depth)
+    display_fiber(io, mime, SubFiber(lvl.lvl, p), depth)
 end
 
 @inline level_ndims(::Type{<:AtomicLevel{AVal, Lvl}}) where {AVal, Lvl} = level_ndims(Lvl)
