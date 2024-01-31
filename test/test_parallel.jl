@@ -1,7 +1,7 @@
 # FIXME: Add a test for failures of concurrent.
 @testset "parallel" begin
     @info "Testing Julia Threads Parallelism and Analysis"
-
+    @assert Threads.nthreads() > 1
     let
         io = IOBuffer()
         A = Tensor(Dense(SparseList(Element(0.0))), [1 2; 3 4])
@@ -97,7 +97,6 @@
         end
 
         @test yp == y
-        @assert Threads.nthreads() > 1
 
         @test check_output("stress_dense_atomics.txt", String(take!(io)))
     end
