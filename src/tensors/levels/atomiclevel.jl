@@ -1,15 +1,17 @@
 
 """
-    AtomicLevel{Lvl, Val}()
+    AtomicLevel{Val, Lvl}()
 
 Atomic Level Protects the level directly below it with atomics
 
 Each position in the level below the atomic level is protected by an atomic.
+```jldoctest
 julia> Tensor(Dense(Atomic(Element(0.0))), [1, 2, 3])
 Dense [1:3]
 ├─[1]: Atomic -> 1.0
 ├─[2]: Atomic -> 2.0
 ├─[3]: Atomic -> 3.0
+```
 """
 
 struct AtomicLevel{AVal <: AbstractVector, Lvl} <: AbstractLevel

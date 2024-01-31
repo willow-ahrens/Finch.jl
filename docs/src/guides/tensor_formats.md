@@ -194,7 +194,7 @@ SparseVBLLevel
 ## Modified Levels
 ```@docs
 AtomicLevel
-SeperationLevel
+SeparationLevel
 ```
 
 ## Legacy Levels
