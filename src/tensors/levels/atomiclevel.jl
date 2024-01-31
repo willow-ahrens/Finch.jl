@@ -150,7 +150,7 @@ function reassemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
     push!(ctx.code.preamble, quote 
               Finch.resize_if_smaller!($lvl.locks, $(ctx(pos_stop))) 
               @inbounds for $idx = $(ctx(pos_start)):$(ctx(pos_stop))
-                lockVal = make_lock(eltype($(lvl.AVal)))
+                lockVal = Finch.make_lock(eltype($(lvl.AVal)))
                 if !isnothing(lockVal)
                     $lvl.locks[$idx] = lockVal
                 end
@@ -222,7 +222,8 @@ function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Update
             update = instantiate(VirtualSubFiber(lvl_2, pos), ctx, mode, protos)
             return update
         end,
-        epilogue = quote release_lock!($dev, $lockVal) end 
+        epilogue = quote 
+            release_lock!($dev, $atomicData) end 
     )
 end
 function instantiate(fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, ctx, mode::Updater, protos)
@@ -241,6 +242,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, ctx, mode::
             update = instantiate(VirtualHollowSubFiber(lvl_2, pos, fbr.dirty), ctx, mode, protos)
             return update
         end,
-        epilogue = quote release_lock!($dev, $lockVal) end 
+        epilogue = quote 
+            release_lock!($dev, $atomicData) end 
     )
 end

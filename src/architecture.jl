@@ -4,11 +4,35 @@ abstract type AbstractTask end
 abstract type AbstractVirtualTask end
 
 
+"""
+    get_lock!(dev::AbstractDevice, val)
 
+Lock the lock, val, on the device dev, waiting until it can acquire lock.
+"""
 get_lock!(dev::AbstractDevice, val) = nothing
+
+"""
+    release_lock!(dev::AbstractDevice, val)
+
+Release the lock, val, on the device dev.
+"""
 release_lock!(dev::AbstractDevice, val) = nothing
+
+"""
+    promote_val_to_lock(dev::AbstractDevice, arr, idx, ty)
+
+Given a device, an array of elements of type ty, and an index to the array, idx, gets a lock of type ty associated to arr[idx] on dev.
+"""
 promote_val_to_lock(dev::AbstractDevice, arr, idx, ty) = nothing
-make_lock(ty) = nothing
+
+"""
+    make_lock(ty)
+
+Makes a lock of type ty.
+"""
+function make_lock(ty)
+    return nothing
+end 
 
 struct CPU <: AbstractDevice
     n::Int
@@ -51,11 +75,11 @@ end
 get_device(task::CPUThread) = task.device
 get_task(task::CPUThread) = task.parent
 
-@inline function make_lock(::Threads.Atomic{T}) where {T}
+@inline function make_lock(::Type{Threads.Atomic{T}}) where {T}
     return Threads.Atomic{T}(zero(T))
 end
 
-@inline function make_lock(::Threads.SpinLock)
+@inline function make_lock(::Type{Base.Threads.SpinLock})
     return Threads.SpinLock()
 end
 
@@ -69,8 +93,7 @@ end
 end
 
 @inline function get_lock!(dev:: CPU, val::Threads.SpinLock)
-    while !trylock(val)
-    end
+    lock(val)
     @assert islocked(val)
 end
 
@@ -79,16 +102,16 @@ end
     Threads.atomic_cas!(x, one(T), zero(T)) 
 end
 
-@inline function release_lock!(dev:: CPU, val::Threads.SpinLock)
+@inline function release_lock!(dev:: CPU, val::Base.Threads.SpinLock)
     @assert islocked(val)
     unlock(val)
 end
 
-function promote_val_to_lock(dev::CPU, arr, idx, ::Threads.Atomic{T}) where {T}
+function promote_val_to_lock(dev::CPU, arr, idx, ::Type{Threads.Atomic{T}}) where {T}
     return arr[idx]
 end
 
-function promote_val_to_lock(dev::CPU, arr, idx, ::Threads.SpinLock)
+function promote_val_to_lock(dev::CPU, arr, idx, ::Type{Base.Threads.SpinLock})
     return arr[idx]
 end
 

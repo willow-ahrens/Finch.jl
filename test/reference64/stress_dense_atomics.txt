@@ -47,9 +47,9 @@ quote
                     x_lvl_2_val = x_lvl_val[x_lvl_q_2]
                     y_lvl_q = (1 - 1) * y_lvl.shape + x_lvl_2_val
                     y_lvl_2atomicArraysAcc = promote_val_to_lock(CPU(Threads.nthreads()), y_lvl_locks, y_lvl_q, eltype(Vector{Base.Threads.SpinLock}))
-                    y_lvl_2lockVal = get_lock!(CPU(Threads.nthreads()), y_lvl_2atomicArraysAcc)
+                    get_lock!(CPU(Threads.nthreads()), y_lvl_2atomicArraysAcc)
                     y_lvl_2_val[y_lvl_q] = 1 + y_lvl_2_val[y_lvl_q]
-                    release_lock!(CPU(Threads.nthreads()), y_lvl_2lockVal)
+                    release_lock!(CPU(Threads.nthreads()), y_lvl_2atomicArraysAcc)
                 end
             end
         end
@@ -70,7 +70,7 @@ julia> @finch begin
             y[x[j]] += 1
         end
     end
-(x = Tensor(Dense{Int64}(Element{0, Int64, Int64}([2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1]), 100)), y = Tensor(Dense{Int64}(Atomic([#undef, #undef, #undef, #undef, #undef], Element{0.0, Float64, Int64}([20.0, 40.0, 0.0, 0.0, 40.0])), 5)))
+(x = Tensor(Dense{Int64}(Element{0, Int64, Int64}([2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1]), 100)), y = Tensor(Dense{Int64}(Atomic([Base.Threads.SpinLock(0), Base.Threads.SpinLock(0), Base.Threads.SpinLock(0), Base.Threads.SpinLock(0), Base.Threads.SpinLock(0)], Element{0.0, Float64, Int64}([20.0, 40.0, 0.0, 0.0, 40.0])), 5)))
 julia> @finch begin
         xp .= 0
         for j = _

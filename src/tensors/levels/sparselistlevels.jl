@@ -194,11 +194,11 @@ function declare_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos,
     #TODO check that init == default
     Ti = lvl.Ti
     Tp = postype(lvl)
-    qosName = freshen(ctx.code, :dec_pos)
-    # qos = call(-, call(getindex, :($(lvl.ptr)), call(+, pos, 1)),  1)
-    qos = value(qosName, Tp)
+    # qosName = freshen(ctx.code, :dec_pos)
+    qos = call(-, call(getindex, :($(lvl.ptr)), call(+, pos, 1)),  1)
+    # qos = value(qosName, Tp)
     push!(ctx.code.preamble, quote
-        $qosName = $(lvl.ptr)[1 + $(ctx(pos))] - 1
+        # $qosName = $(lvl.ptr)[1 + $(ctx(pos))] - 1
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
     end)

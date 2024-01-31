@@ -45,7 +45,7 @@ quote
                     y_lvl_q = (1 - 1) * A_lvl.shape + j_6
                     A_lvl_q = (1 - 1) * A_lvl.shape + j_6
                     y_lvl_2atomicArraysAcc = promote_val_to_lock(CPU(Threads.nthreads()), y_lvl_locks, y_lvl_q, eltype(Vector{Base.Threads.SpinLock}))
-                    y_lvl_2lockVal = get_lock!(CPU(Threads.nthreads()), y_lvl_2atomicArraysAcc)
+                    get_lock!(CPU(Threads.nthreads()), y_lvl_2atomicArraysAcc)
                     A_lvl_2_q = A_lvl_ptr[A_lvl_q]
                     A_lvl_2_q_stop = A_lvl_ptr[A_lvl_q + 1]
                     if A_lvl_2_q < A_lvl_2_q_stop
@@ -79,7 +79,7 @@ quote
                             end
                         end
                     end
-                    release_lock!(CPU(Threads.nthreads()), y_lvl_2lockVal)
+                    release_lock!(CPU(Threads.nthreads()), y_lvl_2atomicArraysAcc)
                 end
             end
         end
@@ -96,5 +96,5 @@ julia> @finch begin
             end
         end
     end
-(y = Tensor(Dense{Int64}(Atomic([#undef, #undef], Element{0.0, Float64, Int64}([4.0, 6.0])), 2)),)
+(y = Tensor(Dense{Int64}(Atomic([Base.Threads.SpinLock(0), Base.Threads.SpinLock(0)], Element{0.0, Float64, Int64}([4.0, 6.0])), 2)),)
 
