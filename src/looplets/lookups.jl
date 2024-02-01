@@ -23,11 +23,13 @@ combine_style(a::LookupStyle, b::LookupStyle) = LookupStyle()
 function lower(root::FinchNode, ctx::AbstractCompiler,  ::LookupStyle)
     if root.kind === loop
         idx_sym = freshen(ctx.code, root.idx.name)
+
         body = contain(ctx) do ctx_2
             ctx_2.bindings[root.idx] = value(idx_sym)
             body_3 = Rewrite(Postwalk(
                 @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin
                     a_2 = get_point_body(a.val, ctx_2, root.ext.val, value(idx_sym))
+
                     if a_2 != nothing
                         access(a_2, m, i...)
                     else
@@ -37,6 +39,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::LookupStyle)
             ))(root.body)
             open_scope(body_3, ctx_2)
         end
+        
         @assert isvirtual(root.ext)
 
         target = is_continuous_extent(root.ext) ? 0 : 1

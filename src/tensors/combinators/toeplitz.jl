@@ -2,6 +2,8 @@ struct ToeplitzArray{dim, Body} <: AbstractCombinator
     body::Body
 end
 
+
+
 ToeplitzArray(body, dim) = ToeplitzArray{dim}(body)
 ToeplitzArray{dim}(body::Body) where {dim, Body} = ToeplitzArray{dim, Body}(body)
 
@@ -15,6 +17,13 @@ end
 struct VirtualToeplitzArray <: AbstractVirtualCombinator
     body
     dim
+    VirtualToeplitzArray(body,dim) = begin
+      if body isa Thunk
+        @assert(false)
+      else
+        new(body,dim)
+      end
+    end
 end
 
 function is_injective(lvl::VirtualToeplitzArray, ctx)
@@ -46,9 +55,9 @@ virtual_uncall(arr::VirtualToeplitzArray) = call(toeplitz, arr.body, arr.dim)
 
 lower(tns::VirtualToeplitzArray, ctx::AbstractCompiler, ::DefaultStyle) = :(ToeplitzArray($(ctx(tns.body)), $(tns.dim)))
 
-virtual_size(arr::Thunk, ctx::AbstractCompiler) = (dimless,)
 
 function virtual_size(arr::VirtualToeplitzArray, ctx::AbstractCompiler)
+    #println(arr.body)
     dims = virtual_size(arr.body, ctx)
     return (dims[1:arr.dim - 1]..., dimless, dimless, dims[arr.dim + 1:end]...)
 end
@@ -75,6 +84,7 @@ end
 
 truncate(node::VirtualToeplitzArray, ctx, ext, ext_2) = VirtualToeplitzArray(truncate(node.body, ctx, ext, ext_2), node.dim)
 
+#get_point_body(node::VirtualScalar, ctx, ext, idx) = node.val
 function get_point_body(node::VirtualToeplitzArray, ctx, ext, idx)
     body_2 = get_point_body(node.body, ctx, ext, idx)
     if body_2 === nothing
@@ -141,6 +151,9 @@ end
 getroot(tns::VirtualToeplitzArray) = getroot(tns.body)
 
 function unfurl(tns::VirtualToeplitzArray, ctx, ext, mode, protos...)
+  println("UNFURL : ", ext, " ", mode, " ", protos...)
+    println("UNFURL1 : ", tns, " -- arrdim : ", virtual_size(tns.body, ctx))
+    println("UNFURL2 : ", virtual_size(tns, ctx), " vs ", tns.dim, length(virtual_size(tns,ctx)) == tns.dim + 1 )
     if length(virtual_size(tns, ctx)) == tns.dim + 1
         Unfurled(tns,
             Lookup(

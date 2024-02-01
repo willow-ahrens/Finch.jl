@@ -41,6 +41,7 @@ end
 function popdim(node::Unfurled, ctx)
     if node.ndims + 1 == length(virtual_size(node.arr, ctx))
         return node.body
+        #return Unfurled(node.arr, node.ndims, node.body)
     else
         return Unfurled(node.arr, node.ndims + 1, node.body)
     end
@@ -50,6 +51,7 @@ truncate(node::Unfurled, ctx, ext, ext_2) = Unfurled(node.arr, node.ndims, trunc
 
 function get_point_body(node::Unfurled, ctx, ext, idx)
     body_2 = get_point_body(node.body, ctx, ext, idx)
+    #println(node, "   -   ", body_2)
     if body_2 === nothing
         return nothing
     else
