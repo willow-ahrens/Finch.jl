@@ -2,8 +2,6 @@ struct ToeplitzArray{dim, Body} <: AbstractCombinator
     body::Body
 end
 
-
-
 ToeplitzArray(body, dim) = ToeplitzArray{dim}(body)
 ToeplitzArray{dim}(body::Body) where {dim, Body} = ToeplitzArray{dim, Body}(body)
 
@@ -55,9 +53,7 @@ virtual_uncall(arr::VirtualToeplitzArray) = call(toeplitz, arr.body, arr.dim)
 
 lower(tns::VirtualToeplitzArray, ctx::AbstractCompiler, ::DefaultStyle) = :(ToeplitzArray($(ctx(tns.body)), $(tns.dim)))
 
-
 function virtual_size(arr::VirtualToeplitzArray, ctx::AbstractCompiler)
-    #println(arr.body)
     dims = virtual_size(arr.body, ctx)
     return (dims[1:arr.dim - 1]..., dimless, dimless, dims[arr.dim + 1:end]...)
 end
@@ -74,17 +70,16 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::VirtualToep
     stylize_access(node, ctx, tns.body)
 end
 
+#Note, popdim is NOT recursive, it should only be called on the node itself to
+#reflect that the child lost a dimension and perhaps update this wrapper
+#accordingly.
 function popdim(node::VirtualToeplitzArray, ctx::AbstractCompiler)
-    if length(virtual_size(node, ctx)) == node.dim
-        return node.body
-    else
-        return node
-    end
+    @assert length(virtual_size(node, ctx)) >= node.dim + 1
+    return node
 end
 
 truncate(node::VirtualToeplitzArray, ctx, ext, ext_2) = VirtualToeplitzArray(truncate(node.body, ctx, ext, ext_2), node.dim)
 
-#get_point_body(node::VirtualScalar, ctx, ext, idx) = node.val
 function get_point_body(node::VirtualToeplitzArray, ctx, ext, idx)
     body_2 = get_point_body(node.body, ctx, ext, idx)
     if body_2 === nothing
@@ -151,9 +146,6 @@ end
 getroot(tns::VirtualToeplitzArray) = getroot(tns.body)
 
 function unfurl(tns::VirtualToeplitzArray, ctx, ext, mode, protos...)
-  println("UNFURL : ", ext, " ", mode, " ", protos...)
-    println("UNFURL1 : ", tns, " -- arrdim : ", virtual_size(tns.body, ctx))
-    println("UNFURL2 : ", virtual_size(tns, ctx), " vs ", tns.dim, length(virtual_size(tns,ctx)) == tns.dim + 1 )
     if length(virtual_size(tns, ctx)) == tns.dim + 1
         Unfurled(tns,
             Lookup(

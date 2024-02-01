@@ -73,8 +73,8 @@ function get_wrapper_rules(alg, depth, ctx)
             end
             call(scale, A, s3...)
         end),
+        #Jaeyeon, do we need to add this condition? It feels too restrictive, since the toeplitz should only modify j1 and j2
         (@rule access(~A, ~m, ~i1::(All(isindex))..., call(+, ~j1..., ~k, ~j2...), ~i2...) => begin
-            println(call(+, j1..., k, j2...), "   ", i2...)
             if (!isempty(j1) || !isempty(j2))
                 k_2 = call(+, ~j1..., ~j2...)
                 if depth(k_2) < depth(k) && depth(k_2) != 0
@@ -223,6 +223,5 @@ function wrapperize(root, ctx::AbstractCompiler)
     root = Rewrite(Fixpoint(Chain([
         Postwalk(Fixpoint(Chain(get_wrapper_rules(ctx.algebra, depth, ctx))))
     ])))(root)
-    display(root)
     evaluate_partial(root, ctx)
 end
