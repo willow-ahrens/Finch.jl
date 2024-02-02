@@ -41,6 +41,8 @@ function virtualize(ex, ::Type{SwizzleArray{dims, Body}}, ctx) where {dims, Body
 end
 
 swizzle(body, dims::Int...) = SwizzleArray(body, dims)
+swizzle(body::SwizzleArray{dims}, dims_2::Int...) where {dims} = SwizzleArray(body.body, dims[dims_2])
+
 function virtual_call(::typeof(swizzle), ctx, body, dims...)
     @assert All(isliteral)(dims)
     VirtualSwizzleArray(body, map(dim -> dim.val, collect(dims)))
