@@ -30,9 +30,7 @@ get_lock(dev::AbstractDevice, arr, idx, ty) = nothing
 
 Makes a lock of type ty.
 """
-function make_lock(ty)
-    return false
-end 
+function make_lock end
 
 struct CPU <: AbstractDevice
     n::Int

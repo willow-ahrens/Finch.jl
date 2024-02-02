@@ -134,12 +134,7 @@ function assemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
     push!(ctx.code.preamble, quote 
               Finch.resize_if_smaller!($(lvl.locks), $(ctx(pos_stop))) 
               @inbounds for $idx = $(ctx(pos_start)):$(ctx(pos_stop))
-                lockVal = make_lock(eltype($(lvl.AVal)))
-                if lockVal == false
-                    break
-                else
-                    $(lvl.locks)[$idx] = lockVal
-                end
+                $(lvl.locks)[$idx] = make_lock(eltype($(lvl.AVal)))
               end
           end)
     assemble_level!(lvl.lvl, ctx, pos_start, pos_stop)
@@ -154,12 +149,7 @@ function reassemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
     push!(ctx.code.preamble, quote 
               Finch.resize_if_smaller!($lvl.locks, $(ctx(pos_stop))) 
               @inbounds for $idx = $(ctx(pos_start)):$(ctx(pos_stop))
-                lockVal = Finch.make_lock(eltype($(lvl.AVal)))
-                if lockVal == false
-                    break
-                else
-                    $lvl.locks[$idx] = lockVal
-                end
+                $lvl.locks[$idx] = Finch.make_lock(eltype($(lvl.AVal)))
               end
           end)
     reassemble_level!(lvl.lvl, ctx, pos_start, pos_stop)
