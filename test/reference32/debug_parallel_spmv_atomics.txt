@@ -23,7 +23,9 @@ quote
     Finch.resize_if_smaller!(y_lvl_locks, A_lvl.shape)
     @inbounds for idx = 1:A_lvl.shape
             lockVal = make_lock(eltype(Vector{Base.Threads.SpinLock}))
-            if !(isnothing(lockVal))
+            if lockVal == false
+                break
+            else
                 y_lvl_locks[idx] = lockVal
             end
         end
