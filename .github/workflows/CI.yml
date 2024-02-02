@@ -51,7 +51,6 @@ jobs:
       - name: Set and Retrieve Github ENV variables
         shell: bash
         run: |
-          export JULIA_NUM_THREADS=2
           echo "JULIA_NUM_THREADS=2" >> $GITHUB_ENV
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1

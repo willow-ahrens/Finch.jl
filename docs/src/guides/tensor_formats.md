@@ -87,8 +87,8 @@ some general descriptions.
 | SingleSparseRun      | Advanced | Sparse Runs           | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
 | SingleBlock          | Advanced | Sparse Blocks         | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ⚙️     |
 | SparseBytemap        | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ❌              | ✅     |
-| AtomicLevel          | Modifier | No Data               | ❓                  | ❓            | ❓                        | ❓                  | ❓              | ⚙️ |
-| SeperationLevel      | Modifier | No Data               | ❓                  | ❓            | ❓                        | ❓                  | ❓              | ⚙️ |
+| AtomicLevel          | Modifier | No Data               | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️ |
+| SeperationLevel      | Modifier | No Data               | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️ |
 | SparseCOO            | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ✅              | ✅️    |
 | SparseHash           | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ✅              | 🕸️   |
 
@@ -101,7 +101,6 @@ The "Level Format Name" is the name of the level datatype. Other columns have de
 | ✅     | Indicates the level is ready for serious use. |
 | ⚙️     | Indicates the level is experimental and under development. |
 | 🕸️     | Indicates the level is deprecated, and may be removed in a future release. |
-| ❓   | Indicates a feature of a level only works in certain circumstances. |
 
 ### Groups 
 #### Core Group
