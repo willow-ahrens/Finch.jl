@@ -610,4 +610,6 @@ using CIndices
     new_shape_2 = size(Tensor(Dense(SparseList(SparseList(Element(0.0)))), st))
 
     @test new_shape_1 == new_shape_2
+
+    @test swizzle(swizzle(zeros(3, 3, 3), 3, 1, 2), 3, 2, 1) isa Finch.SwizzleArray{(2, 1, 3), <:Array}
 end
