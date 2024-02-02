@@ -44,8 +44,8 @@ quote
                 for j_6 = phase_start_2:phase_stop_2
                     y_lvl_q = (1 - 1) * A_lvl.shape + j_6
                     A_lvl_q = (1 - 1) * A_lvl.shape + j_6
-                    y_lvl_2atomicArraysAcc = promote_val_to_lock(CPU(Threads.nthreads()), y_lvl_locks, y_lvl_q, eltype(Vector{Base.Threads.SpinLock}))
-                    get_lock!(CPU(Threads.nthreads()), y_lvl_2atomicArraysAcc)
+                    y_lvl_2atomicArraysAcc = get_lock(CPU(Threads.nthreads()), y_lvl_locks, y_lvl_q, eltype(Vector{Base.Threads.SpinLock}))
+                    aquire_lock!(CPU(Threads.nthreads()), y_lvl_2atomicArraysAcc)
                     A_lvl_2_q = A_lvl_ptr[A_lvl_q]
                     A_lvl_2_q_stop = A_lvl_ptr[A_lvl_q + 1]
                     if A_lvl_2_q < A_lvl_2_q_stop

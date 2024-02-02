@@ -135,7 +135,9 @@ function assemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
               Finch.resize_if_smaller!($(lvl.locks), $(ctx(pos_stop))) 
               @inbounds for $idx = $(ctx(pos_start)):$(ctx(pos_stop))
                 lockVal = make_lock(eltype($(lvl.AVal)))
-                if !isnothing(lockVal)
+                if lockVal == false
+                    break
+                else
                     $(lvl.locks)[$idx] = lockVal
                 end
               end
@@ -216,8 +218,8 @@ function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Update
     dev = lower(virtual_get_device(ctx.code.task), ctx, DefaultStyle())
     return Thunk(
         preamble = quote  
-            $atomicData =  promote_val_to_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
-            $lockVal = get_lock!($dev, $atomicData)
+            $atomicData =  get_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
+            $lockVal = aquire_lock!($dev, $atomicData)
         end,
         body =  (ctx) -> begin
             lvl_2 = lvl.lvl
@@ -236,8 +238,8 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, ctx, mode::
     dev = lower(virtual_get_device(ctx.code.task), ctx, DefaultStyle())
     return Thunk(
         preamble = quote  
-            $atomicData =  promote_val_to_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
-            $lockVal = get_lock!($dev, $atomicData)
+            $atomicData =  get_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
+            $lockVal = aquire_lock!($dev, $atomicData)
         end,
         body =  (ctx) -> begin
             lvl_2 = lvl.lvl

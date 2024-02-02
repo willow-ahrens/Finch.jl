@@ -46,8 +46,8 @@ quote
                     x_lvl_q_2 = (1 - 1) * x_lvl.shape + j_10
                     x_lvl_2_val = x_lvl_val[x_lvl_q_2]
                     y_lvl_q = (1 - 1) * y_lvl.shape + x_lvl_2_val
-                    y_lvl_2atomicArraysAcc = promote_val_to_lock(CPU(Threads.nthreads()), y_lvl_locks, y_lvl_q, eltype(Vector{Base.Threads.SpinLock}))
-                    get_lock!(CPU(Threads.nthreads()), y_lvl_2atomicArraysAcc)
+                    y_lvl_2atomicArraysAcc = get_lock(CPU(Threads.nthreads()), y_lvl_locks, y_lvl_q, eltype(Vector{Base.Threads.SpinLock}))
+                    aquire_lock!(CPU(Threads.nthreads()), y_lvl_2atomicArraysAcc)
                     y_lvl_2_val[y_lvl_q] = 1 + y_lvl_2_val[y_lvl_q]
                     release_lock!(CPU(Threads.nthreads()), y_lvl_2atomicArraysAcc)
                 end
