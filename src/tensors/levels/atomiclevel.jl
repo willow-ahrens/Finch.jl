@@ -155,7 +155,9 @@ function reassemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
               Finch.resize_if_smaller!($lvl.locks, $(ctx(pos_stop))) 
               @inbounds for $idx = $(ctx(pos_start)):$(ctx(pos_stop))
                 lockVal = Finch.make_lock(eltype($(lvl.AVal)))
-                if !isnothing(lockVal)
+                if lockVal == false
+                    break
+                else
                     $lvl.locks[$idx] = lockVal
                 end
               end
