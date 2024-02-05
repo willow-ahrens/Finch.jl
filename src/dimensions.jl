@@ -46,14 +46,14 @@ end
 end
 
 function virtual_call(::typeof(extent), ctx, start, stop)
-    if isconstant(start) && isconstant(stop)
+    #if isconstant(start) && isconstant(stop)
         Extent(start, stop)
-    end
+    #end
 end
 function virtual_call(::typeof(realextent), ctx, start, stop)
-    if isconstant(start) && isconstant(stop)
+    #if isconstant(start) && isconstant(stop)
         ContinuousExtent(start, stop)
-    end
+    #end
 end
 
 virtual_uncall(ext::Extent) = call(extent, ext.start, ext.stop)
@@ -192,7 +192,6 @@ function shiftdim(ext::FinchNode, body)
         error("unimplemented")
     end
 end
-
 
 function scaledim(ext::Extent, scale)
     Extent(

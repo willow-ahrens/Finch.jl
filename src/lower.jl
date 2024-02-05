@@ -142,21 +142,26 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
     elseif root.kind === access
         return lower_access(ctx, root, resolve(root.tns, ctx))
     elseif root.kind === call
-        if root.op == literal(and)
-            if isempty(root.args)
-                return true
+        root = simplify(root, ctx)
+        if root.kind === call 
+            if root.op == literal(and)
+                if isempty(root.args)
+                    return true
+                else
+                    reduce((x, y) -> :($x && $y), map(ctx, root.args)) #TODO This could be better. should be able to handle empty case
+                end
+            elseif root.op == literal(or)
+                if isempty(root.args)
+                    return false
+                else
+                    reduce((x, y) -> :($x || $y), map(ctx, root.args))
+                end
             else
-                reduce((x, y) -> :($x && $y), map(ctx, root.args)) #TODO This could be better. should be able to handle empty case
+                :($(ctx(root.op))($(map(ctx, root.args)...)))
             end
-        elseif root.op == literal(or)
-            if isempty(root.args)
-                return false
-            else
-                reduce((x, y) -> :($x || $y), map(ctx, root.args))
-            end
-        else
-            :($(ctx(root.op))($(map(ctx, root.args)...)))
-        end
+         else 
+           return ctx(root) 
+         end
     elseif root.kind === cached
         return ctx(root.arg)
     elseif root.kind === loop
