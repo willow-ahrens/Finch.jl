@@ -169,6 +169,25 @@ function get_program_rules(alg, shash)
         (@rule block(~s1..., freeze(~a::isvariable), ~s2..., thaw(~a), ~s3...) => if ortho(a, s2)
             block(s1..., s2..., s3...)
         end),
+
+        # Common subexpression elimination
+        (@rule block(~s1...) => begin
+            counts = Dict()
+            ex = block(~s1...)
+            for node in PostOrderDFS(block(~s1...))
+                counts[node] = get(counts, node, 0) + 1
+            end
+            for (node, count) in counts
+                if @capture(node, access(~tn, reader, ~idxs...)) && count > 1
+                    ctx = JuliaContext()
+                    var_name = Symbol(tn.val, "_", join([idx.val for idx in idxs]))
+                    var = freshen(ctx, var_name)
+                    ex = Postwalk(@rule node => var)(ex)
+                    ex = define(var, access(tn, reader, idxs...), ex)
+                end
+            end
+            ex
+        end),
     ]
 end
 
