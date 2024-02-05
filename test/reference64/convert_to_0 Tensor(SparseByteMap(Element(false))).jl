@@ -93,6 +93,6 @@ begin
     resize!(tmp_lvl_ptr, 1 + 1)
     resize!(tmp_lvl_tbl, 1 * ref_lvl.shape)
     resize!(tmp_lvl_srt, tmp_lvl_qos_fill)
-    resize!(tmp_lvl_val, 1 * ref_lvl.shape)
+    resize!(tmp_lvl_val, ref_lvl.shape)
     (tmp = Tensor((SparseByteMapLevel){Int64}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt)),)
 end
