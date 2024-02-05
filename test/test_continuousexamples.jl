@@ -19,7 +19,7 @@
         point_ptr_x = [1,length(point_x)+1]
         point_ptr_y = collect(Int64, 1:length(point_y)+1)
         point_ptr_id = collect(Int64, 1:length(point_y)+1)
-        Point = Tensor(SparseList{Float64}(SparseList{Float64}(SingleList{Int64}(Pattern(),
+        points = Tensor(SparseList{Float64}(SparseList{Float64}(SingleList{Int64}(Pattern(),
                                                               shape_id,
                                                               point_ptr_id,
                                                               point_id),
@@ -37,7 +37,7 @@
         box_y_stop = [query[1][4]]
         box_ptr_x = [1,2]
         box_ptr_y = [1,2]
-        Box = Tensor(SingleRLE{Float64}(SingleRLE{Float64}(Pattern(),
+        box = Tensor(SingleRLE{Float64}(SingleRLE{Float64}(Pattern(),
                                           shape,
                                           box_ptr_y,
                                           box_y_start,
@@ -47,22 +47,22 @@
                        box_x_start,
                        box_x_stop))
 
-        Output = Tensor(SparseByteMap{Int64}(Pattern(), shape_id))
+        output = Tensor(SparseByteMap{Int64}(Pattern(), shape_id))
 
-        def = @finch_kernel mode=fastfinch function rangequery(Output, Box, Point)
-            Output .= false 
+        def = @finch_kernel mode=fastfinch function rangequery(output, box, points)
+            output .= false 
             for x=_, y=_, id=_
-                Output[id] |= Box[y,x] && Point[id,y,x]
+                output[id] |= box[y,x] && points[id,y,x]
             end
         end
 
-        Radius=Ox=Oy=0.0 #placeholder
-        def2 = @finch_kernel mode=fastfinch function radiusquery(Output, Point, Radius, Ox, Oy)
-            Output .= false 
-            for x=realextent(Ox-Radius,Ox+Radius), y=realextent(Oy-Radius,Oy+Radius)
-                if (x-Ox)^2 + (y-Oy)^2 <= Radius^2
+        radius=ox=oy=0.0 #placeholder
+        def2 = @finch_kernel mode=fastfinch function radiusquery(output, points, radius, ox, oy)
+            output .= false 
+            for x=realextent(ox-radius,ox+radius), y=realextent(oy-radius,oy+radius)
+                if (x-ox)^2 + (y-oy)^2 <= radius^2
                     for id=_
-                        Output[id] |= coalesce(Point[id,~y,~x], false)
+                        output[id] |= coalesce(points[id,~y,~x], false)
                     end
                 end
             end
@@ -79,7 +79,7 @@
             box_y_stop = [query[i][4]]
             box_ptr_x = [1,2]
             box_ptr_y = [1,2]
-            Box = Tensor(SingleRLE{Float64}(SingleRLE{Float64}(Pattern(),
+            box = Tensor(SingleRLE{Float64}(SingleRLE{Float64}(Pattern(),
                                        shape,
                                        box_ptr_y,
                                        box_y_start,
@@ -89,27 +89,27 @@
                     box_x_start,
                     box_x_stop))
 
-            Output = Tensor(SparseByteMap{Int64}(Pattern(), shape_id))
-            rangequery(Output, Box, Point)
+            output = Tensor(SparseByteMap{Int64}(Pattern(), shape_id))
+            rangequery(output, box, points)
             count = Scalar(0)
             @finch begin
                 for id=_
-                    if Output[id]
+                    if output[id]
                         count[] += 1
                     end
                 end
             end
             @test count.val == answer[i]
 
-            Output = Tensor(SparseByteMap{Int64}(Pattern(), shape_id))
-            Ox = (query[i][1] + query[i][3]) / 2.0
-            Oy = (query[i][2] + query[i][4]) / 2.0
-            Radius = sqrt((query[i][1]-query[i][3])^2 + (query[i][2]-query[i][4])^2) / 2.0
-            radiusquery(Output, Point, Radius, Ox, Oy)
+            output = Tensor(SparseByteMap{Int64}(Pattern(), shape_id))
+            ox = (query[i][1] + query[i][3]) / 2.0
+            oy = (query[i][2] + query[i][4]) / 2.0
+            radius = sqrt((query[i][1]-query[i][3])^2 + (query[i][2]-query[i][4])^2) / 2.0
+            radiusquery(output, points, radius, ox, oy)
             count = Scalar(0)
             @finch begin
                 for id=_
-                    if Output[id]
+                    if output[id]
                         count[] += 1
                     end
                 end
@@ -121,22 +121,22 @@
 
 
     @testset "Trilinear Interpolation on Sampled Ray" begin
-        Output = Tensor(SparseList(Dense(Element(Float32(0.0)))), 16, 100)
-        Grid = Tensor(SparseRLE{Float64}(SparseRLE{Float64}(SparseRLE{Float64}(Dense(Element(0))))), 16,16,16,27)
-        TimeRay = Tensor(SingleRLE{Int64}(Pattern()), 100)
+        output = Tensor(SparseList(Dense(Element(Float32(0.0)))), 16, 100)
+        grid = Tensor(SparseRLE{Float64}(SparseRLE{Float64}(SparseRLE{Float64}(Dense(Element(0))))), 16,16,16,27)
+        timeray = Tensor(SingleRLE{Int64}(Pattern()), 100)
         @finch begin
-            Grid .= 0
+            grid .= 0
             for i=realextent(4.0,12.0),j=realextent(4.0,12.0),k=realextent(4.0,12.0)
                 for c=_
-                    Grid[c,~k,~j,~i] = 1.0
+                    grid[c,~k,~j,~i] = 1.0
                 end
             end
         end
 
         @finch begin
-            TimeRay .= 0
+            timeray .= 0
             for i=extent(23,69)
-               TimeRay[i] = true
+               timeray[i] = true
             end
         end
 
@@ -145,12 +145,12 @@
 
         #Main Kernel
         @finch mode=fastfinch begin
-             Output .= 0
+             output .= 0
              for t=_
-                 if TimeRay[t]
+                 if timeray[t]
                      for i=realextent(0.0,1.0), j=realextent(0.0,1.0), k=realextent(0.0,1.0)
                          for c = _
-                             Output[c,t] += coalesce(Grid[c,(k+dz*t+oz),(j+dy*t+oy),(i+dx*t+ox)],0) * d(i) * d(j) * d(k)
+                             output[c,t] += coalesce(grid[c,(k+dz*t+oz),(j+dy*t+oy),(i+dx*t+ox)],0) * d(i) * d(j) * d(k)
                          end
                      end
                  end
@@ -160,7 +160,7 @@
         res = Scalar(0.0)
         @finch begin
             for i=_, c=_
-                res[] += Output[c,i]
+                res[] += output[c,i]
             end
         end
 
