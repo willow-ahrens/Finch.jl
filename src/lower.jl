@@ -1,7 +1,7 @@
 @kwdef mutable struct LowerJulia <: AbstractCompiler
     code = JuliaContext()
     algebra = DefaultAlgebra()
-    bindings::Dict{Any, Any} = Dict()
+    bindings::Dict{FinchNode, FinchNode} = Dict{FinchNode, FinchNode}()
     mode = fastfinch
     modes::Dict{Any, Any} = Dict()
     scope = Set()

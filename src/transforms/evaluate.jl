@@ -9,16 +9,7 @@ into the context bindings.
 function evaluate_partial(root, ctx)
     root = Rewrite(Fixpoint(Postwalk(Chain([
         (@rule tag(~var, ~bind::isindex) => bind),
-        (@rule tag(~var, ~bind::isvariable) => begin
-            val = get(ctx.bindings, bind, nothing)
-            if val isa FinchNode
-                if isconstant(val)
-                    val
-                end
-            else
-                bind
-            end
-        end),
+        (@rule tag(~var, ~bind::isvariable) => bind),
         (@rule tag(~var, ~bind::isliteral) => bind),
         (@rule tag(~var, ~bind::isvalue) => bind),
         (@rule tag(~var, ~bind::isvirtual) => begin
@@ -35,8 +26,17 @@ function evaluate_partial(root, ctx)
         end),
         Postwalk(Fixpoint(Chain([
             (@rule call(~f::isliteral, ~a::(All(Or(isvariable, isvirtual, isfoldable)))...) => begin
-               virtual_call(f.val, ctx, a...)
+               x = virtual_call(f.val, ctx, a...)
+               if x !== nothing
+                   finch_leaf(x)
+               end
              end),
+            (@rule ~v::isvariable => if haskey(ctx.bindings, v) 
+                val = ctx.bindings[v]
+                if isvariable(val) || isconstant(val)
+                    val
+                end
+            end),
             (@rule call(~f::isliteral, ~a::(All(isliteral))...) => finch_leaf(getval(f)(getval.(a)...))),
             (@rule define(~a::isvariable, ~v::isconstant, ~body) => begin
                 body_2 = Postwalk(@rule a => v)(body)
