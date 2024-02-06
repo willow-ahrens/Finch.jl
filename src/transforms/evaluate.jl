@@ -1,4 +1,4 @@
-isfoldable(x) = isconstant(x) || isvariable(x) || (x.kind === call && isliteral(x.op) && all(isfoldable, x.args))
+isfoldable(x) = isconstant(x) || (x.kind === call && isliteral(x.op) && all(isfoldable, x.args))
 
 """
     evaluate_partial(root, ctx)
@@ -9,7 +9,16 @@ into the context bindings.
 function evaluate_partial(root, ctx)
     root = Rewrite(Fixpoint(Postwalk(Chain([
         (@rule tag(~var, ~bind::isindex) => bind),
-        (@rule tag(~var, ~bind::isvariable) => bind),
+        (@rule tag(~var, ~bind::isvariable) => begin
+            val = get(ctx.bindings, bind, nothing)
+            if val isa FinchNode
+                if isconstant(val)
+                    val
+                end
+            else
+                bind
+            end
+        end),
         (@rule tag(~var, ~bind::isliteral) => bind),
         (@rule tag(~var, ~bind::isvalue) => bind),
         (@rule tag(~var, ~bind::isvirtual) => begin
@@ -18,6 +27,7 @@ function evaluate_partial(root, ctx)
         end
         )
     ]))))(root)
+
     root = Rewrite(Fixpoint(Chain([
         Fixpoint(@rule define(~a::isvariable, ~v::Or(isconstant, isvirtual), ~s) => begin
             ctx.bindings[a] = v

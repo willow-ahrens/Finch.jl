@@ -46,14 +46,14 @@ end
 end
 
 function virtual_call(::typeof(extent), ctx, start, stop)
-    #if isconstant(start) && isconstant(stop)
+    if isfoldable(start) && isfoldable(stop)
         Extent(start, stop)
-    #end
+    end
 end
 function virtual_call(::typeof(realextent), ctx, start, stop)
-    #if isconstant(start) && isconstant(stop)
+    if isfoldable(start) && isfoldable(stop)
         ContinuousExtent(start, stop)
-    #end
+    end
 end
 
 virtual_uncall(ext::Extent) = call(extent, ext.start, ext.stop)
