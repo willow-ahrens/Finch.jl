@@ -156,6 +156,6 @@ begin
     resize!(fmt_lvl_ptr, qos + 1)
     resize!(fmt_lvl_tbl, qos * fmt_lvl_2.shape)
     resize!(fmt_lvl_srt, fmt_lvl_2_qos_fill)
-    resize!(fmt_lvl_2_val, qos * fmt_lvl_2.shape)
+    resize!(fmt_lvl_2_val, fmt_lvl_2.shape * qos)
     (fmt = Tensor((DenseLevel){Int32}((SparseByteMapLevel){Int32}(fmt_lvl_3, fmt_lvl_2.shape, fmt_lvl_ptr, fmt_lvl_tbl, fmt_lvl_srt), fmt_lvl.shape)),)
 end

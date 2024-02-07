@@ -15,6 +15,13 @@ end
 struct VirtualToeplitzArray <: AbstractVirtualCombinator
     body
     dim
+    VirtualToeplitzArray(body,dim) = begin
+      if body isa Thunk
+        @assert(false)
+      else
+        new(body,dim)
+      end
+    end
 end
 
 function is_injective(lvl::VirtualToeplitzArray, ctx)
@@ -63,12 +70,12 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::VirtualToep
     stylize_access(node, ctx, tns.body)
 end
 
-function popdim(node::VirtualToeplitzArray)
-    if length(virtual_size(node)) == node.dim
-        return node.body
-    else
-        return node
-    end
+#Note, popdim is NOT recursive, it should only be called on the node itself to
+#reflect that the child lost a dimension and perhaps update this wrapper
+#accordingly.
+function popdim(node::VirtualToeplitzArray, ctx::AbstractCompiler)
+    @assert length(virtual_size(node, ctx)) >= node.dim + 1
+    return node
 end
 
 truncate(node::VirtualToeplitzArray, ctx, ext, ext_2) = VirtualToeplitzArray(truncate(node.body, ctx, ext, ext_2), node.dim)
@@ -78,7 +85,7 @@ function get_point_body(node::VirtualToeplitzArray, ctx, ext, idx)
     if body_2 === nothing
         return nothing
     else
-        return popdim(VirtualToeplitzArray(body_2, node.dim))
+        return popdim(VirtualToeplitzArray(body_2, node.dim), ctx)
     end
 end
 
@@ -89,7 +96,7 @@ function get_run_body(node::VirtualToeplitzArray, ctx, ext)
     if body_2 === nothing
         return nothing
     else
-        return popdim(VirtualToeplitzArray(body_2, node.dim))
+        return popdim(VirtualToeplitzArray(body_2, node.dim), ctx)
     end
 end
 
@@ -98,7 +105,7 @@ function get_acceptrun_body(node::VirtualToeplitzArray, ctx, ext)
     if body_2 === nothing
         return nothing
     else
-        return popdim(VirtualToeplitzArray(body_2, node.dim))
+        return popdim(VirtualToeplitzArray(body_2, node.dim), ctx)
     end
 end
 

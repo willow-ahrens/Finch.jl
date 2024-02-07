@@ -42,7 +42,7 @@ begin
                 val = X[i_9, j_5]
                 for l_6 = 1:A_mode2_stop
                     val_2 = A[i_9, l_6, k_6]
-                    phase_stop = min(i_9, (l_6 + 0) + -1)
+                    phase_stop = min(i_9, l_6 + -1)
                     if phase_stop >= i_9
                         for s_7 = i_9:phase_stop
                             C[i_9, j_5, k_6] = val_2 * val + C[i_9, j_5, k_6]
@@ -52,7 +52,7 @@ begin
                     A_mode1_stop = sugar_19[1]
                     A_mode2_stop = sugar_19[2]
                     val_3 = A[i_9, l_6, k_6]
-                    phase_stop_3 = min((l_6 + 0) + -1, i_9)
+                    phase_stop_3 = min(l_6 + -1, i_9)
                     if phase_stop_3 >= i_9
                         for s_12 = i_9:phase_stop_3
                             C[i_9, j_5, k_6] = val * val_3 + C[i_9, j_5, k_6]
