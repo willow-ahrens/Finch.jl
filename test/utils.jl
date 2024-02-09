@@ -1,5 +1,5 @@
 reference_getindex(arr, inds...) = getindex(arr, inds...)
-reference_getindex(arr::Fiber, inds...) = arr(inds...)
+reference_getindex(arr::Tensor, inds...) = arr(inds...)
 
 function reference_isequal(a,b)
     size(a) == size(b) || return false
@@ -21,7 +21,7 @@ isstructequal(a, b) = a === b
 isstructequal(a::T, b::T) where {T <: Finch.SwizzleArray} = 
     isstructequal(a.body, b.body)
 
-isstructequal(a::T, b::T) where {T <: Fiber} = 
+isstructequal(a::T, b::T) where {T <: Tensor} = 
     isstructequal(a.lvl, b.lvl)
 
 isstructequal(a::T, b::T) where {T <: Finch.SubFiber} = 
@@ -33,6 +33,9 @@ isstructequal(a::T, b::T)  where {T <: Pattern} = true
 isstructequal(a::T, b::T) where {T <: Element} =
     a.val == b.val
 
+isstructequal(a::T, b::T) where {T <: Separation} =
+  all(isstructequal(x,y) for (x,y) in zip(a.val, b.val)) && isstructequal(a.lvl, b.lvl)
+
 isstructequal(a::T, b::T) where {T <: RepeatRLE} =
     a.shape == b.shape &&
     a.ptr == b.ptr &&
@@ -42,6 +45,11 @@ isstructequal(a::T, b::T) where {T <: RepeatRLE} =
 isstructequal(a::T, b::T) where {T <: Dense} =
     a.shape == b.shape &&
     isstructequal(a.lvl, b.lvl)
+
+isstructequal(a::T, b::T) where {T <: Atomic} =
+    typeof(a.locks) == typeof(b.locks) &&
+    isstructequal(a.lvl, b.lvl)
+# Temporary hack to deal with SpinLock allocate undefined references.
 
 isstructequal(a::T, b::T) where {T <: SparseList} =
     a.shape == b.shape &&

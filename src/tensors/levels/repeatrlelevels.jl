@@ -6,11 +6,11 @@ values once. The RepeatRLELevel records locations of repeats using a sorted
 list. Optionally, `dim` is the size of the vectors.
 
 The fibers have type `Tv`, initialized to `D`. `D` may optionally be given as
-the first argument.  `Ti` is the type of the last fiber index, and `Tp` is the
+the first argument.  `Ti` is the type of the last tensor index, and `Tp` is the
 type used for positions in the level.
 
 ```jldoctest
-julia> Fiber!(RepeatRLE(0.0), [11, 11, 22, 22, 00, 00, 00, 33, 33])
+julia> Tensor(RepeatRLE(0.0), [11, 11, 22, 22, 00, 00, 00, 33, 33])
 RepeatRLE (0.0) [1:9]
 ├─[1:2]: 11.0
 ├─[3:4]: 22.0
@@ -20,7 +20,7 @@ RepeatRLE (0.0) [1:9]
 
 ```
 """
-struct RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}
+struct RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val} <: AbstractLevel
     shape::Ti
     ptr::Ptr
     idx::Idx
@@ -64,7 +64,10 @@ pattern!(lvl::RepeatRLELevel{D, Ti}) where {D, Ti} =
     DenseLevel{Ti}(Pattern(), lvl.shape)
 
 redefault!(lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}, init) where {D, Ti, Tp, Tv, Ptr, Idx, Val} = 
-    RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}(lvl.val)
+    RepeatRLELevel{init, Ti, Tp, Tv, Ptr, Idx, Val}(lvl.shape, lvl.ptr, lvl.idx, lvl.val)
+
+Base.resize!(lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}, dim) where {D, Ti, Tp, Tv, Ptr, Idx, Val} = 
+    RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}(dim, lvl.ptr, lvl.idx, lvl.val)
 
 function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}) where {D, Ti, Tp, Tv, Ptr, Idx, Val}
     print(io, "RepeatRLE{")
@@ -91,6 +94,12 @@ end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:RepeatRLELevel}, depth)
     p = fbr.pos
+    lvl = fbr.lvl
+    if p + 1 > length(lvl.ptr)
+        print(io, "RepeatRLELevel(undef...)")
+        return
+    end
+
     crds = fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1
 
     print_coord(io, crd) = print(io, crd == fbr.lvl.ptr[p] ? 1 : fbr.lvl.idx[crd - 1] + 1, ":", fbr.lvl.idx[crd])
@@ -106,7 +115,7 @@ end
 @inline level_eltype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}}) where {D, Ti, Tp, Tv, Ptr, Idx, Val} = Tv
 @inline level_default(::Type{<:RepeatRLELevel{D}}) where {D} = D
 (fbr::AbstractFiber{<:RepeatRLELevel})() = fbr
-(fbr::Fiber{<:RepeatRLELevel})(idx...) = SubFiber(fbr.lvl, 1)(idx...)
+(fbr::Tensor{<:RepeatRLELevel})(idx...) = SubFiber(fbr.lvl, 1)(idx...)
 function (fbr::SubFiber{<:RepeatRLELevel})(i, tail...)
     lvl = fbr.lvl
     p = fbr.pos

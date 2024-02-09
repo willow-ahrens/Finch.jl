@@ -73,6 +73,10 @@ virtual
     tag(var, bind)
 
 Finch AST expression for a global variable `var` with the value `bind`.
+Because the finch compiler cannot pass variable state from the program domain to
+the type domain directly, the `tag` type represents a value `bind`
+referred to by a variable named `bind`. All `tag` in the same program
+must agree on the value of variables, and only one value will be virtualized.
 """
 tag
 
@@ -98,6 +102,7 @@ access
 Finch AST expression `val`, equivalent to the quoted expression `ref`
 """
 cached
+
 """
     loop(idx, ext, body) 
 
@@ -242,108 +247,25 @@ function SyntaxInterface.similarterm(::Type{FinchNode}, op::FinchNodeKind, args)
 end
 
 function FinchNode(kind::FinchNodeKind, args::Vector)
-    if kind === value
-        if length(args) == 1
-            return FinchNode(value, args[1], Any, FinchNode[])
-        elseif length(args) == 2
-            return FinchNode(value, args[1], args[2], FinchNode[])
-        else
-            error("wrong number of arguments to value(...)")
-        end
-    elseif kind === literal
-        if length(args) == 1
-            return FinchNode(kind, args[1], nothing, FinchNode[])
-        else
-            error("wrong number of arguments to $kind(...)")
-        end
-    elseif kind === index
-        if length(args) == 1
-            return FinchNode(kind, args[1], nothing, FinchNode[])
-        else
-            error("wrong number of arguments to $kind(...)")
-        end
-    elseif kind === variable
-        if length(args) == 1
-            return FinchNode(kind, args[1], nothing, FinchNode[])
-        else
-            error("wrong number of arguments to $kind(...)")
-        end
-    elseif kind === virtual
-        if length(args) == 1
-            return FinchNode(kind, args[1], nothing, FinchNode[])
-        else
-            error("wrong number of arguments to $kind(...)")
-        end
-    elseif kind === cached
-        if length(args) == 2
-            return FinchNode(kind, nothing, nothing, args)
-        else
-            error("wrong number of arguments to $kind(...)")
-        end
-    elseif kind === access
-        if length(args) >= 2
-            return FinchNode(access, nothing, nothing, args)
-        else
-            error("wrong number of arguments to access(...)")
-        end
-    elseif kind === tag
-        if length(args) == 2
-            return FinchNode(tag, nothing, nothing, args)
-        else
-            error("wrong number of arguments to tag(...)")
-        end
-    elseif kind === call
-        if length(args) >= 1
-            return FinchNode(call, nothing, nothing, args)
-        else
-            error("wrong number of arguments to call(...)")
-        end
-    elseif kind === loop
-        if length(args) == 3
-            return FinchNode(loop, nothing, nothing, args)
-        else
-            error("wrong number of arguments to loop(...)")
-        end
-    elseif kind === sieve
-        if length(args) == 2
-            return FinchNode(sieve, nothing, nothing, args)
-        else
-            error("wrong number of arguments to sieve(...)")
-        end
-    elseif kind === assign
-        if length(args) == 3
-            return FinchNode(assign, nothing, nothing, args)
-        else
-            error("wrong number of arguments to assign(...)")
-        end
-    elseif kind === define
-        if length(args) == 3
-            return FinchNode(define, nothing, nothing, args)
-        else
-            error("wrong number of arguments to define(...)")
-        end
-    elseif kind === declare
-        if length(args) == 2
-            return FinchNode(declare, nothing, nothing, args)
-        else
-            error("wrong number of arguments to declare(...)")
-        end
-    elseif kind === freeze
-        if length(args) == 1
-            return FinchNode(freeze, nothing, nothing, args)
-        else
-            error("wrong number of arguments to freeze(...)")
-        end
-    elseif kind === thaw
-        if length(args) == 1
-            return FinchNode(thaw, nothing, nothing, args)
-        else
-            error("wrong number of arguments to thaw(...)")
-        end
-    elseif kind === block
-        return FinchNode(block, nothing, nothing, args)
+    if (kind === value || kind === literal || kind === index || kind === variable || kind === virtual) && length(args) == 1
+        return FinchNode(kind, args[1], Any, FinchNode[])
+    elseif (kind === value || kind === literal || kind === index || kind === variable || kind === virtual) && length(args) == 2
+        return FinchNode(kind, args[1], args[2], FinchNode[])
+    elseif (kind === cached && length(args) == 2) ||
+        (kind === access && length(args) >= 2) ||
+        (kind === tag && length(args) == 2) ||
+        (kind === call && length(args) >= 1) ||
+        (kind === loop && length(args) == 3) ||
+        (kind === sieve && length(args) == 2) ||
+        (kind === assign && length(args) == 3) ||
+        (kind === define && length(args) == 3) ||
+        (kind === declare && length(args) == 2) ||
+        (kind === freeze && length(args) == 1) ||
+        (kind === thaw && length(args) == 1) ||
+        (kind === block)
+        return FinchNode(kind, nothing, nothing, args)
     else
-        error("unimplemented")
+        error("wrong number of arguments to $kind(...)")
     end
 end
 
@@ -354,121 +276,35 @@ end
 function Base.getproperty(node::FinchNode, sym::Symbol)
     if sym === :kind || sym === :val || sym === :type || sym === :children
         return Base.getfield(node, sym)
-    elseif node.kind === value ||
-            node.kind === literal || 
-            node.kind === virtual
-        error("type FinchNode($(node.kind), ...) has no property $sym")
-    elseif node.kind === index
-        if sym === :name
-            return node.val::Symbol
-        else
-            error("type FinchNode(index, ...) has no property $sym")
-        end
-    elseif node.kind === variable
-        if sym === :name
-            return node.val::Symbol
-        else
-            error("type FinchNode(variable, ...) has no property $sym")
-        end
-    elseif node.kind === tag
-        if sym === :var
-            return node.children[1]
-        elseif sym === :bind
-            return node.children[2]
-        end
-        error("type FinchNode(tag, ...) has no property $sym")
-    elseif node.kind === access
-        if sym === :tns
-            return node.children[1]
-        elseif sym === :mode
-            return node.children[2]
-        elseif sym === :idxs
-            return @view node.children[3:end]
-        else
-            error("type FinchNode(access, ...) has no property $sym")
-        end
-    elseif node.kind === call
-        if sym === :op
-            return node.children[1]
-        elseif sym === :args
-            return @view node.children[2:end]
-        else
-            error("type FinchNode(call, ...) has no property $sym")
-        end
-    elseif node.kind === cached
-        if sym === :arg
-            return node.children[1]
-        elseif sym === :ref
-            return node.children[2]
-        else
-            error("type FinchNode(cached, ...) has no property $sym")
-        end
-    elseif node.kind === loop
-        if sym === :idx
-            return node.children[1]
-        elseif sym === :ext
-            return node.children[2]
-        elseif sym === :body
-            return node.children[3]
-        else
-            error("type FinchNode(loop, ...) has no property $sym")
-        end
-    elseif node.kind === sieve
-        if sym === :cond
-            return node.children[1]
-        elseif sym === :body
-            return node.children[2]
-        else
-            error("type FinchNode(sieve, ...) has no property $sym")
-        end
-    elseif node.kind === assign
-        if sym === :lhs
-            return node.children[1]
-        elseif sym === :op
-            return node.children[2]
-        elseif sym === :rhs
-            return node.children[3]
-        else
-            error("type FinchNode(assign, ...) has no property $sym")
-        end
-    elseif node.kind === define
-        if sym === :lhs
-            return node.children[1]
-        elseif sym === :rhs
-            return node.children[2]
-        elseif sym === :body
-            return node.children[3]
-        else
-            error("type FinchNode(define, ...) has no property $sym")
-        end
-    elseif node.kind === declare
-        if sym === :tns
-            return node.children[1]
-        elseif sym === :init
-            return node.children[2]
-        else
-            error("type FinchNode(declare, ...) has no property $sym")
-        end
-    elseif node.kind === freeze
-        if sym === :tns
-            return node.children[1]
-        else
-            error("type FinchNode(freeze, ...) has no property $sym")
-        end
-    elseif node.kind === thaw
-        if sym === :tns
-            return node.children[1]
-        else
-            error("type FinchNode(thaw, ...) has no property $sym")
-        end
-    elseif node.kind === block
-        if sym === :bodies
-            return node.children
-        else
-            error("type FinchNode(block, ...) has no property $sym")
-        end
+    elseif node.kind === index && sym === :name node.val::Symbol
+    elseif node.kind === variable && sym === :name node.val::Symbol
+    elseif node.kind === tag && sym === :var node.children[1]
+    elseif node.kind === tag && sym === :bind node.children[2]
+    elseif node.kind === access && sym === :tns node.children[1]
+    elseif node.kind === access && sym === :mode node.children[2]
+    elseif node.kind === access && sym === :idxs @view node.children[3:end]
+    elseif node.kind === call && sym === :op node.children[1]
+    elseif node.kind === call && sym === :args @view node.children[2:end]
+    elseif node.kind === cached && sym === :arg node.children[1]
+    elseif node.kind === cached && sym === :ref node.children[2]
+    elseif node.kind === loop && sym === :idx node.children[1]
+    elseif node.kind === loop && sym === :ext node.children[2]
+    elseif node.kind === loop && sym === :body node.children[3]
+    elseif node.kind === sieve && sym === :cond node.children[1]
+    elseif node.kind === sieve && sym === :body node.children[2]
+    elseif node.kind === assign && sym === :lhs node.children[1]
+    elseif node.kind === assign && sym === :op node.children[2]
+    elseif node.kind === assign && sym === :rhs node.children[3]
+    elseif node.kind === define && sym === :lhs node.children[1]
+    elseif node.kind === define && sym === :rhs node.children[2]
+    elseif node.kind === define && sym === :body node.children[3]
+    elseif node.kind === declare && sym === :tns node.children[1]
+    elseif node.kind === declare && sym === :init node.children[2]
+    elseif node.kind === freeze && sym === :tns node.children[1]
+    elseif node.kind === thaw && sym === :tns node.children[1]
+    elseif node.kind === block && sym === :bodies node.children
     else
-        error("type FinchNode has no property $sym")
+        error("type FinchNode($(node.kind), ...) has no property $sym")
     end
 end
 
@@ -483,160 +319,11 @@ function Base.show(io::IO, node::FinchNode)
 end
 
 function Base.show(io::IO, mime::MIME"text/plain", node::FinchNode) 
+    print(io, "Finch program: ")
     if isstateful(node)
         display_statement(io, mime, node, 0)
     else
         display_expression(io, mime, node)
-    end
-end
-
-function display_expression(io, mime, node::FinchNode)
-    if get(io, :compact, false)
-        print(io, "@finch(…)")
-    elseif node.kind === value
-        print(io, node.val)
-        if node.type !== Any
-            print(io, "::")
-            print(io, node.type)
-        end
-    elseif node.kind === literal
-        print(io, node.val)
-    elseif node.kind === index
-        print(io, node.name)
-    elseif node.kind === variable
-        print(io, node.name)
-    elseif node.kind === cached
-        print(io, "cached(")
-        display_expression(io, mime, node.arg)
-        print(io, ", ")
-        display_expression(io, mime, node.ref.val)
-        print(io, ")")
-    elseif node.kind === tag
-        print(io, "tag(")
-        display_expression(io, mime, node.var)
-        print(io, ", ")
-        display_expression(io, mime, node.bind)
-        print(io, ")")
-    elseif node.kind === virtual
-        print(io, "virtual(")
-        #print(io, node.val)
-        summary(io, node.val)
-        print(io, ")")
-    elseif node.kind === access
-        display_expression(io, mime, node.tns)
-        print(io, "[")
-        if length(node.idxs) >= 1
-            for idx in node.idxs[1:end-1]
-                display_expression(io, mime, idx)
-                print(io, ", ")
-            end
-            display_expression(io, mime, node.idxs[end])
-        end
-        print(io, "]")
-    elseif node.kind === call
-        display_expression(io, mime, node.op)
-        print(io, "(")
-        for arg in node.args[1:end-1]
-            display_expression(io, mime, arg)
-            print(io, ", ")
-        end
-        if !isempty(node.args)
-            display_expression(io, mime, node.args[end])
-        end
-        print(io, ")")
-    elseif istree(node)
-        print(io, operation(node))
-        print(io, "(")
-        for arg in arguments(node)[1:end-1]
-            print(io, arg)
-            print(io, ",")
-        end
-        if !isempty(arguments(node))
-            print(arguments(node)[end])
-        end
-    else
-        error("unimplemented")
-    end
-end
-
-function display_statement(io, mime, node::FinchNode, indent)
-    if node.kind === loop
-        print(io, " "^indent * "for ")
-        display_expression(io, mime, node.idx)
-        print(io, " = ")
-        display_expression(io, mime, node.ext)
-        body = node.body
-        while body.kind === loop
-            print(io, ", ")
-            display_expression(io, mime, body.idx)
-            print(io, " = ")
-            display_expression(io, mime, body.ext)
-            body = body.body
-        end
-        println(io)
-        display_statement(io, mime, body, indent + 2)
-        println(io)
-        print(io, " "^indent * "end")
-    elseif node.kind === define
-        print(io, " "^indent * "let ")
-        display_expression(io, mime, node.lhs)
-        print(io, " = ")
-        display_expression(io, mime, node.rhs)
-        body = node.body
-        while body.kind === define
-            print(io, ", ")
-            display_expression(io, mime, body.lhs)
-            print(io, " = ")
-            display_expression(io, mime, body.rhs)
-            body = body.body
-        end
-        println(io)
-        display_statement(io, mime, body, indent + 2)
-        println(io)
-        print(io, " "^indent * "end")
-    elseif node.kind === sieve
-        print(io, " "^indent * "if ")
-        while node.body.kind === sieve
-            display_expression(io, mime, node.cond)
-            print(io," && ")
-            node = node.body
-        end
-        display_expression(io, mime, node.cond)
-        println(io)
-        node = node.body
-        display_statement(io, mime, node, indent + 2)
-        println(io)
-        print(io, " "^indent * "end")
-    elseif node.kind === assign
-        print(io, " "^indent)
-        display_expression(io, mime, node.lhs)
-        print(io, " <<")
-        display_expression(io, mime, node.op)
-        print(io, ">>= ")
-        display_expression(io, mime, node.rhs)
-    elseif node.kind === declare
-        print(io, " "^indent)
-        display_expression(io, mime, node.tns)
-        print(io, " .= ")
-        display_expression(io, mime, node.init)
-    elseif node.kind === freeze
-        print(io, " "^indent * "@freeze(")
-        display_expression(io, mime, node.tns)
-        print(io, ")")
-    elseif node.kind === thaw
-        print(io, " "^indent * "@thaw(")
-        display_expression(io, mime, node.tns)
-        print(io, ")")
-    elseif node.kind === block
-        print(io, " "^indent * "begin\n")
-        for body in node.bodies
-            display_statement(io, mime, body, indent + 2)
-            println(io)
-        end
-        print(io, " "^indent * "end")
-    else
-        println(node)
-        error("unimplemented")
     end
 end
 
@@ -666,14 +353,8 @@ function Base.hash(a::FinchNode, h::UInt)
     if !istree(a)
         if a.kind === value
             return hash(value, hash(a.val, hash(a.type, h)))
-        elseif a.kind === literal
-            return hash(literal, hash(a.val, h))
-        elseif a.kind === virtual
-            return hash(virtual, hash(a.val, h))
-        elseif a.kind === index
-            return hash(index, hash(a.name, h))
-        elseif a.kind === variable
-            return hash(variable, hash(a.name, h))
+        elseif a.kind === literal || a.kind === virtual || a.kind === index || a.kind === variable
+            return hash(a.kind, hash(a.val, h))
         else
             error("unimplemented")
         end
@@ -691,8 +372,6 @@ function getname(x::FinchNode)
         error("unimplemented")
     end
 end
-
-display_expression(io, mime, ex) = show(IOContext(io, :compact=>true), mime, ex)
 
 """
     finch_leaf(x)

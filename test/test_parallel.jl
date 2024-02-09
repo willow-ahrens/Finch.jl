@@ -1,12 +1,12 @@
 # FIXME: Add a test for failures of concurrent.
 @testset "parallel" begin
     @info "Testing Julia Threads Parallelism and Analysis"
-
+    @assert Threads.nthreads() > 1
     let
         io = IOBuffer()
-        A = Fiber!(Dense(SparseList(Element(0.0))), [1 2; 3 4])
-        x = Fiber!(Dense(Element(0.0)), [1, 1])
-        y = Fiber!(Dense(Element(0.0)))
+        A = Tensor(Dense(SparseList(Element(0.0))), [1 2; 3 4])
+        x = Tensor(Dense(Element(0.0)), [1, 1])
+        y = Tensor(Dense(Element(0.0)))
         @repl io @finch_code begin
             y .= 0
             for j = parallel(_)
@@ -29,9 +29,82 @@
     end
 
     let
-        A = Fiber!(Dense(SparseList(Element(0.0))))
-        x = Fiber!(Dense(Element(0.0)))
-        y = Fiber!(Dense(Element(0.0)))
+        io = IOBuffer()
+        A = Tensor(Dense(SparseList(Element(0.0))), [1 2; 3 4])
+        x = Tensor(Dense(Element(0.0)), [1, 1])
+        y = Tensor(Dense(Atomic(Element(0.0))))
+        @repl io @finch_code begin
+            y .= 0
+            for j = parallel(_)
+                for i = _
+                    y[j] += x[i] * A[walk(i), j]
+                end
+            end
+        end
+
+        @repl io @finch begin
+            y .= 0
+            for i = parallel(_)
+                for j = _
+                    y[j] += x[i] * A[walk(i), j]
+                end
+            end
+        end
+
+        
+
+        @test check_output("debug_parallel_spmv_atomics.txt", String(take!(io)))
+    end
+
+    let
+        io = IOBuffer()
+
+        x = Tensor(Dense(Element(Int(0)), 100))
+        y = Tensor(Dense(Atomic(Element(0.0)), 5))
+        @repl io @finch_code begin
+            x .= 0
+            for j = _
+                x[j] = Int((j * j) % 5 + 1)
+            end
+            y .= 0
+            for j = parallel(_)
+                y[x[j]] += 1
+            end
+        end
+        @repl io @finch begin
+            x .= 0
+            for j = _
+                x[j] = Int((j * j) % 5 + 1)
+            end
+            y .= 0
+            for j = parallel(_)
+                y[x[j]] += 1
+            end
+        end
+
+        xp = Tensor(Dense(Element(Int(0)), 100))
+        yp = Tensor(Dense(Element(0.0), 5))
+
+        @repl io @finch begin
+            xp .= 0
+            for j = _
+                xp[j] = Int((j * j) % 5 + 1)
+            end
+            yp .= 0
+            for j = _
+                yp[x[j]] += 1
+            end
+        end
+
+        @test yp == y
+
+        @test check_output("stress_dense_atomics.txt", String(take!(io)))
+    end
+
+    let
+        A = Tensor(Dense(SparseList(Element(0.0))))
+        x = Tensor(Dense(Element(0.0)))
+        y = Tensor(Dense(Element(0.0)))
         @test_throws Finch.FinchConcurrencyError begin
             @finch_code begin
                 y .= 0
@@ -45,9 +118,9 @@
     end
 
     let
-        A = Fiber!(Dense(SparseList(Element(0.0))))
-        x = Fiber!(Dense(Element(0.0)))
-        y = Fiber!(Dense(Element(0.0)))
+        A = Tensor(Dense(SparseList(Element(0.0))))
+        x = Tensor(Dense(Element(0.0)))
+        y = Tensor(Dense(Element(0.0)))
 
         @test_throws Finch.FinchConcurrencyError begin
             @finch_code begin
@@ -62,9 +135,9 @@
         end
     end
     let
-        A = Fiber!(Dense(SparseList(Element(0.0))))
-        x = Fiber!(Dense(Element(0.0)))
-        y = Fiber!(Dense(Element(0.0)))
+        A = Tensor(Dense(SparseList(Element(0.0))))
+        x = Tensor(Dense(Element(0.0)))
+        y = Tensor(Dense(Element(0.0)))
 
         @test_throws Finch.FinchConcurrencyError begin
             @finch_code begin
@@ -98,10 +171,10 @@
 
     let
         # Computes a horizontal blur a row at a time
-        input = Fiber!(Dense(Dense(Element(0.0))))
-        output = Fiber!(Dense(Dense(Element(0.0))))
+        input = Tensor(Dense(Dense(Element(0.0))))
+        output = Tensor(Dense(Dense(Element(0.0))))
         cpu = CPU(Threads.nthreads())
-        tmp = moveto(Fiber!(Dense(Element(0))), CPULocalMemory(cpu))
+        tmp = moveto(Tensor(Dense(Element(0))), CPULocalMemory(cpu))
 
         check_output("parallel_blur.jl", @finch_code begin
             output .= 0
@@ -120,10 +193,10 @@
 
     let
         # Computes a horizontal blur a row at a time
-        input = Fiber!(Dense(SparseList(Element(0.0))))
-        output = Fiber!(Dense(Dense(Element(0.0))))
+        input = Tensor(Dense(SparseList(Element(0.0))))
+        output = Tensor(Dense(Dense(Element(0.0))))
         cpu = CPU(Threads.nthreads())
-        tmp = moveto(Fiber!(Dense(Element(0))), CPULocalMemory(cpu))
+        tmp = moveto(Tensor(Dense(Element(0))), CPULocalMemory(cpu))
 
         check_output("parallel_blur_sparse.jl", @finch_code begin
             output .= 0

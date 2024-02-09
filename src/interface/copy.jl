@@ -14,20 +14,20 @@
     end
 end
 
-function Base.copyto!(dst::Fiber, src::Union{Fiber, AbstractArray})
+function Base.copyto!(dst::Tensor, src::Union{Tensor, AbstractArray})
     return copyto_helper!(dst, src)
 end
 
-function Base.copyto!(dst::Array, src::Fiber)
+function Base.copyto!(dst::Array, src::Tensor)
     return copyto_helper!(dst, src)
 end
 
-function permutedims(src::Fiber, perm)
+function permutedims(src::Tensor, perm)
     dst = similar(src)
     copyto!(dst, swizzle(src, perm...))
 end
 
-function Base.copyto!(dst::Union{Fiber, AbstractArray}, src::SwizzleArray{dims}) where {dims}
+function Base.copyto!(dst::Union{Tensor, AbstractArray}, src::SwizzleArray{dims}) where {dims}
     ret = copyto!(swizzle(dst, invperm(dims)...), src.body)
     return ret.body
 end
@@ -38,15 +38,15 @@ function Base.copyto!(dst::SwizzleArray{dims1}, src::SwizzleArray{dims2}) where 
     return ret.body
 end
 
-function Base.copyto!(dst::SwizzleArray{dims}, src::Union{Fiber, AbstractArray}) where {dims}
-    tmp = Fiber!(SparseHash{ndims(src)}(Element(default(src))))
+function Base.copyto!(dst::SwizzleArray{dims}, src::Union{Tensor, AbstractArray}) where {dims}
+    tmp = Tensor(SparseHash{ndims(src)}(Element(default(src))))
     tmp = copyto_helper!(swizzle(tmp, dims...), src)
     swizzle(copyto_helper!(dst.body, tmp), dims...)
 end
 
 dropdefaults(src) = dropdefaults!(similar(src), src)
 
-dropdefaults!(dst::Fiber, src) = dropdefaults_helper!(dst, src)
+dropdefaults!(dst::Tensor, src) = dropdefaults_helper!(dst, src)
 
 @staged function dropdefaults_helper!(dst, src)
     ndims(dst) > ndims(src) && throw(DimensionMismatch("more dimensions in destination than source"))

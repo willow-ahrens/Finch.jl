@@ -40,5 +40,5 @@ begin
         end
     end
     resize!(tmp_lvl_val, 1 * fld(ref_lvl.shape, 1))
-    (tmp = Fiber((SparseTriangleLevel){1, Int32}(tmp_lvl_2, ref_lvl.shape)),)
+    (tmp = Tensor((SparseTriangleLevel){1, Int32}(tmp_lvl_2, ref_lvl.shape)),)
 end

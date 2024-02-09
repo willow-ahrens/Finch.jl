@@ -1,10 +1,10 @@
 """
-SparseVBLLevel{[Ti=Int], [Tp=Int], [Ptr=Vector{Tp}], [Idx=Vector{Ti}], [Ofs=Vector{Ofs}]}(lvl, [dim])
+SparseVBLLevel{[Ti=Int], [Ptr, Idx, Ofs]}(lvl, [dim])
 
 Like the [`SparseListLevel`](@ref), but contiguous subfibers are stored together in blocks.
 
 ```jldoctest
-julia> Fiber!(Dense(SparseVBL(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+julia> Tensor(Dense(SparseVBL(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
 ├─[:,1]: SparseList (0.0) [1:3]
 │ ├─[1]: 10.0
@@ -14,7 +14,7 @@ Dense [:,1:3]
 │ ├─[1]: 20.0
 │ ├─[3]: 40.0
 
-julia> Fiber!(SparseVBL(SparseVBL(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+julia> Tensor(SparseVBL(SparseVBL(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 SparseList (0.0) [:,1:3]
 ├─[:,1]: SparseList (0.0) [1:3]
 │ ├─[1]: 10.0
@@ -23,7 +23,7 @@ SparseList (0.0) [:,1:3]
 │ ├─[1]: 20.0
 │ ├─[3]: 40.0
 """
-struct SparseVBLLevel{Ti, Ptr<:AbstractVector, Idx<:AbstractVector, Ofs<:AbstractVector, Lvl}
+struct SparseVBLLevel{Ti, Ptr<:AbstractVector, Idx<:AbstractVector, Ofs<:AbstractVector, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     ptr::Ptr
@@ -65,6 +65,9 @@ end
 redefault!(lvl::SparseVBLLevel{Ti}, init) where {Ti} = 
     SparseVBLLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
 
+Base.resize!(lvl::SparseVBLLevel{Ti}, dims...) where {Ti} = 
+    SparseVBLLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.idx, lvl.ofs)
+
 function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}) where {Ti, Ptr, Idx, Ofs, Lvl}
     if get(io, :compact, false)
         print(io, "SparseVBL(")
@@ -90,6 +93,11 @@ end
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseVBLLevel}, depth)
     p = fbr.pos
     crds = []
+    lvl = fbr.lvl
+    if p + 1 > length(lvl.ptr)
+        print(io, "SparseVBL(undef...)")
+        return
+    end
     for r in fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1
         i = fbr.lvl.idx[r]
         l = fbr.lvl.ofs[r + 1] - fbr.lvl.ofs[r]

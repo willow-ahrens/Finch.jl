@@ -1,7 +1,7 @@
 """
     fttwrite(filename, tns)
 
-Write a sparse Finch fiber to a TensorMarket file.
+Write a sparse Finch tensor to a TensorMarket file.
     
 [TensorMarket](https://github.com/willow-ahrens/TensorMarket.jl) must be loaded for this function to be available.
 
@@ -12,7 +12,7 @@ fttwrite(args...) = throw(FinchExtensionError("TensorMarket.jl must be loaded to
 """
     fttread(filename, infoonly=false, retcoord=false)
 
-Read the TensorMarket file into a Finch fiber. The fiber will be dense or
+Read the TensorMarket file into a Finch tensor. The tensor will be dense or
 COO depending on the format of the file.
 
 [TensorMarket](https://github.com/willow-ahrens/TensorMarket.jl) must be loaded for this function to be available.
@@ -24,7 +24,7 @@ fttread(args...) = throw(FinchExtensionError("TensorMarket.jl must be loaded to 
 """
     ftnswrite(filename, tns)
 
-Write a sparse Finch fiber to a FROSTT `.tns` file.
+Write a sparse Finch tensor to a FROSTT `.tns` file.
 
 [TensorMarket](https://github.com/willow-ahrens/TensorMarket.jl) must be loaded for this function to be available.
  
@@ -39,7 +39,7 @@ ftnswrite(args...) = throw(FinchExtensionError("TensorMarket.jl must be loaded t
 """
     ftnsread(filename)
 
-Read the contents of the FROSTT `.tns` file 'filename' into a Finch COO Fiber.
+Read the contents of the FROSTT `.tns` file 'filename' into a Finch COO Tensor.
 
 [TensorMarket](https://github.com/willow-ahrens/TensorMarket.jl) must be loaded for this function to be available.
 

@@ -183,7 +183,7 @@ begin
             end
             w_lvl_p_prev = w_lvl_p_2
         end
-        w_lvl_ptr[w_lvl_p_2 + 1] = w_lvl_qos_fill + 1
+        w_lvl_ptr[w_lvl_p_prev + 1] = w_lvl_qos_fill + 1
         B_lvl_2_qos = B_lvl_2_qos_fill + 1
         B_lvl_2_prev_pos < B_lvl_q || throw(FinchProtocolError("SparseListLevels cannot be updated multiple times"))
         w_lvl_r_3 = w_lvl_ptr[1]
@@ -246,5 +246,5 @@ begin
     qos_2 = B_lvl_ptr[end] - 1
     resize!(B_lvl_idx, qos_2)
     resize!(B_lvl_2_val, qos_2)
-    (B = Fiber((DenseLevel){Int32}((SparseListLevel){Int32}(B_lvl_3, A_lvl_2.shape, B_lvl_ptr, B_lvl_idx), A_lvl.shape)),)
+    (B = Tensor((DenseLevel){Int32}((SparseListLevel){Int32}(B_lvl_3, A_lvl_2.shape, B_lvl_ptr, B_lvl_idx), A_lvl.shape)),)
 end

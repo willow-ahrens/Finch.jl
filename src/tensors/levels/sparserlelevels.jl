@@ -1,4 +1,27 @@
-struct SparseRLELevel{Ti, Ptr<:AbstractVector, Left<:AbstractVector, Right<:AbstractVector, Lvl}
+"""
+    SparseRLELevel{[Ti=Int], [Ptr, Left, Right]}(lvl, [dim])
+
+The sparse RLE level represent runs of equivalent slices `A[:, ..., :, i]`
+which are not entirely [`default`](@ref). A sorted list is used to record the
+left and right endpoints of each run. Optionally, `dim` is the size of the last dimension.
+
+`Ti` is the type of the last tensor index, and `Tp` is the type used for
+positions in the level. The types `Ptr`, `Left`, and `Right` are the types of the
+arrays used to store positions and endpoints. 
+
+```jldoctest
+julia> Tensor(Dense(SparseRLELevel(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+Dense [:,1:3]
+├─[:,1]: SparseRLE (0.0) [1:3]
+│ ├─[1:1]: 10.0
+│ ├─[2:2]: 30.0
+├─[:,2]: SparseRLE (0.0) [1:3]
+├─[:,3]: SparseRLE (0.0) [1:3]
+│ ├─[1:1]: 20.0
+│ ├─[3:3]: 40.0
+```
+"""
+struct SparseRLELevel{Ti, Ptr<:AbstractVector, Left<:AbstractVector, Right<:AbstractVector, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     ptr::Ptr
@@ -40,6 +63,9 @@ end
 redefault!(lvl::SparseRLELevel{Ti}, init) where {Ti} = 
     SparseRLELevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.left, lvl.right)
 
+Base.resize!(lvl::SparseRLELevel{Ti}, dims...) where {Ti} = 
+    SparseRLELevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.left, lvl.right)
+
 function Base.show(io::IO, lvl::SparseRLELevel{Ti, Ptr, Left, Right, Lvl}) where {Ti, Ptr, Left, Right, Lvl}
     if get(io, :compact, false)
         print(io, "SparseRLE(")
@@ -65,6 +91,10 @@ end
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseRLELevel}, depth)
     p = fbr.pos
     lvl = fbr.lvl
+    if p + 1 > length(lvl.ptr)
+        print(io, "SparseRLE(undef...)")
+        return
+    end
     left_endpoints = @view(lvl.left[lvl.ptr[p]:lvl.ptr[p + 1] - 1])
 
     crds = []
@@ -80,8 +110,8 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseRLE
 end
 
 @inline level_ndims(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = 1 + level_ndims(Lvl)
-@inline level_size(lvl::SparseRLELevel) = (lvl.shape, level_size(lvl.lvl)...)
-@inline level_axes(lvl::SparseRLELevel) = (Base.OneTo(lvl.shape), level_axes(lvl.lvl)...)
+@inline level_size(lvl::SparseRLELevel) = (level_size(lvl.lvl)..., lvl.shape)
+@inline level_axes(lvl::SparseRLELevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
 @inline level_eltype(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = level_eltype(Lvl)
 @inline level_default(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl}= level_default(Lvl)
 data_rep_level(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = SparseData(data_rep_level(Lvl))
@@ -229,14 +259,37 @@ function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_st
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
-        for $p = 2:($pos_stop + 1)
-            $(lvl.ptr)[$p] += $(lvl.ptr)[$p - 1]
+        for $p = 1:$pos_stop
+            $(lvl.ptr)[$p + 1] += $(lvl.ptr)[$p]
         end
         $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
 end
+
+
+function thaw_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_stop)
+    p = freshen(ctx.code, :p)
+    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    qos_stop = freshen(ctx.code, :qos_stop)
+    push!(ctx.code.preamble, quote
+        $(lvl.qos_fill) = $(lvl.ptr)[$pos_stop + 1] - 1
+        $(lvl.qos_stop) = $(lvl.qos_fill)
+        $qos_stop = $(lvl.qos_fill)
+        $(if issafe(ctx.mode)
+            quote
+                $(lvl.prev_pos) = Finch.scansearch($(lvl.ptr), $(lvl.qos_stop) + 1, 1, $pos_stop) - 1
+            end
+        end)
+        for $p = $pos_stop:-1:1
+            $(lvl.ptr)[$p + 1] -= $(lvl.ptr)[$p]
+        end
+    end)
+    lvl.lvl = thaw_level!(lvl.lvl, ctx, value(qos_stop))
+    return lvl
+end
+
 
 
 
@@ -356,7 +409,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseRLELevel}, ctx, mod
                 )
             ),
             epilogue = quote
-                $(lvl.ptr)[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
+                $(lvl.ptr)[$(ctx(pos)) + 1] += $qos - $qos_fill - 1
                 $qos_fill = $qos - 1
             end
         )

@@ -52,54 +52,54 @@ reduce_rep_def(op, z, lvl::ElementData) = ElementData(z, fixpoint_type(op, z, lv
 reduce_rep_def(op, z, lvl::RepeatData, idx::Drop) = ExtrudeData(reduce_rep_def(op, ElementData(lvl.default, lvl.eltype)))
 reduce_rep_def(op, z, lvl::RepeatData, idx) = RepeatData(z, fixpoint_type(op, z))
 
-function Base.reduce(op, src::Fiber; kw...)
+function Base.reduce(op, src::Tensor; kw...)
     bc = broadcasted(identity, src)
     reduce(op, broadcasted(identity, src); kw...)
 end
-function Base.mapreduce(f, op, src::Fiber, args::Union{Fiber, Base.AbstractArrayOrBroadcasted, Number}...; kw...)
+function Base.mapreduce(f, op, src::Tensor, args::Union{Tensor, Base.AbstractArrayOrBroadcasted, Number}...; kw...)
     reduce(op, broadcasted(f, src, args...); kw...)
 end
-function Base.map(f, src::Fiber, args::Union{Fiber, Base.AbstractArrayOrBroadcasted, Number}...)
+function Base.map(f, src::Tensor, args::Union{Tensor, Base.AbstractArrayOrBroadcasted, Number}...)
     f.(src, args...)
 end
-function Base.map!(dst, f, src::Fiber, args::Union{Fiber, Base.AbstractArrayOrBroadcasted}...)
+function Base.map!(dst, f, src::Tensor, args::Union{Tensor, Base.AbstractArrayOrBroadcasted}...)
     copyto!(dst, Base.broadcasted(f, src, args...))
 end
 
 Base.:+(
-    x::Fiber,
-    y::Union{Fiber, Base.AbstractArrayOrBroadcasted, Number},
-    z::Union{Fiber, Base.AbstractArrayOrBroadcasted, Number}...
+    x::Tensor,
+    y::Union{Tensor, Base.AbstractArrayOrBroadcasted, Number},
+    z::Union{Tensor, Base.AbstractArrayOrBroadcasted, Number}...
 ) = map(+, x, y, z...)
 Base.:+(
-    x::Union{Fiber, Base.AbstractArrayOrBroadcasted, Number},
-    y::Fiber,
-    z::Union{Fiber, Base.AbstractArrayOrBroadcasted, Number}...
+    x::Union{Tensor, Base.AbstractArrayOrBroadcasted, Number},
+    y::Tensor,
+    z::Union{Tensor, Base.AbstractArrayOrBroadcasted, Number}...
 ) = map(+, y, x, z...)
 Base.:+(
-    x::Fiber,
-    y::Fiber,
-    z::Union{Fiber, Base.AbstractArrayOrBroadcasted, Number}...
+    x::Tensor,
+    y::Tensor,
+    z::Union{Tensor, Base.AbstractArrayOrBroadcasted, Number}...
 ) = map(+, x, y, z...)
 Base.:*(
-    x::Fiber,
+    x::Tensor,
     y::Number,
     z::Number...
 ) = map(*, x, y, z...)
 Base.:*(
     x::Number,
-    y::Fiber,
+    y::Tensor,
     z::Number...
 ) = map(*, y, x, z...)
 
-Base.:-(x::Fiber) = map(-, x)
+Base.:-(x::Tensor) = map(-, x)
 
-Base.:-(x::Fiber, y::Union{Fiber, Base.AbstractArrayOrBroadcasted, Number}) = map(-, x, y)
-Base.:-(x::Union{Fiber, Base.AbstractArrayOrBroadcasted, Number}, y::Fiber) = map(-, x, y)
-Base.:-(x::Fiber, y::Fiber) = map(-, x, y)
+Base.:-(x::Tensor, y::Union{Tensor, Base.AbstractArrayOrBroadcasted, Number}) = map(-, x, y)
+Base.:-(x::Union{Tensor, Base.AbstractArrayOrBroadcasted, Number}, y::Tensor) = map(-, x, y)
+Base.:-(x::Tensor, y::Tensor) = map(-, x, y)
 
-Base.:/(x::Fiber, y::Number) = map(/, x, y)
-Base.:/(x::Number, y::Fiber) = map(\, y, x)
+Base.:/(x::Tensor, y::Number) = map(/, x, y)
+Base.:/(x::Number, y::Tensor) = map(\, y, x)
 
 function initial_value(op, T)
     try
@@ -150,7 +150,7 @@ function reduce_helper_code(::Type{Callable{op}}, bc::Type{<:Broadcasted{FinchSt
     end
 end
 
-const FiberOrBroadcast = Union{<:Fiber, <:Broadcasted{FinchStyle{N}} where N}
+const FiberOrBroadcast = Union{<:Tensor, <:Broadcasted{FinchStyle{N}} where N}
 
 Base.sum(arr::FiberOrBroadcast; kwargs...) = reduce(+, arr; kwargs...)
 Base.prod(arr::FiberOrBroadcast; kwargs...) = reduce(*, arr; kwargs...)

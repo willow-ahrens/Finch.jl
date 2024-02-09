@@ -2,36 +2,36 @@ using Finch: AsArray
 
 @testset "base" begin
     @info "Testing Julia Base Functions"
-    A = Fiber!(SparseList(Element(0.0)), fsparse([1, 3, 5, 7, 9], [2.0, 3.0, 4.0, 5.0, 6.0], (10,)))
-    B = Fiber!(SparseList(Element(0.0)), A)
+    A = Tensor(SparseList(Element(0.0)), fsparse([1, 3, 5, 7, 9], [2.0, 3.0, 4.0, 5.0, 6.0], (10,)))
+    B = Tensor(SparseList(Element(0.0)), A)
     @test A == B
 
     A = [0.0 0.0 0.0 0.0; 1.0 0.0 0.0 1.0]
-    B = Fiber!(Dense(SparseList(Element(0.0))), A)
-    C = Fiber!(Dense(Dense(Element(0.0))), A)
+    B = Tensor(Dense(SparseList(Element(0.0))), A)
+    C = Tensor(Dense(Dense(Element(0.0))), A)
     @test A == B
 
     A = [0 0; 0 0]
-    B = Fiber!(Dense(Dense(Element(0.0))), A)
+    B = Tensor(Dense(Dense(Element(0.0))), A)
     @test A == B
 
-    A = Fiber!(Dense(Element(0.0)), [0, 0, 0, 0])
-    B = Fiber!(Dense(Element(0.0)), [0, 0, 0, 0, 0])
+    A = Tensor(Dense(Element(0.0)), [0, 0, 0, 0])
+    B = Tensor(Dense(Element(0.0)), [0, 0, 0, 0, 0])
     @test size(A) != size(B) && A != B
         
     A = [0 0 0 0 1 0 0 1]
-    B = Fiber!(Dense(SparseList(Element(0))), [0 0 0 0; 1 0 0 1])
+    B = Tensor(Dense(SparseList(Element(0))), [0 0 0 0; 1 0 0 1])
     @test size(A) != size(B) && A != B
 
-    A = Fiber!(Dense(SparseList(Element(0.0))), [1 0 0 0; 1 1 0 0; 1 1 1 0])
+    A = Tensor(Dense(SparseList(Element(0.0))), [1 0 0 0; 1 1 0 0; 1 1 1 0])
     B = [0 0 0 0; 1 1 0 0; 1 1 1 0]
     @test size(A) == size(B) && A != B
-    C = Fiber!(Dense(SparseList(Element(0.0))), [0 0 0 0; 1 1 0 0; 1 1 1 0])
+    C = Tensor(Dense(SparseList(Element(0.0))), [0 0 0 0; 1 1 0 0; 1 1 1 0])
     @test B == C
     
     A = [NaN, 0.0, 3.14, 0.0]
-    B = Fiber!(SparseList(Element(0.0)), [NaN, 0.0, 3.14, 0.0])
-    C = Fiber!(SparseList(Element(0.0)), [NaN, 0.0, 3.14, 0.0])
+    B = Tensor(SparseList(Element(0.0)), [NaN, 0.0, 3.14, 0.0])
+    C = Tensor(SparseList(Element(0.0)), [NaN, 0.0, 3.14, 0.0])
     D = [1.0, 2.0, 4.0, 8.0]
     @test isequal(A, B)
     @test isequal(A, C)
@@ -44,7 +44,7 @@ using Finch: AsArray
         io = IOBuffer()
         println(io, "getindex tests")
 
-        A = Fiber(SparseList(Dense(SparseList(Element{0.0}(collect(1:30).* 1.01), 5, [1, 3, 6, 8, 12, 14, 17, 20, 24, 27, 27, 28, 31], [2, 3, 3, 4, 5, 2, 3, 1, 3, 4, 5, 2, 4, 2, 4, 5, 2, 3, 5, 1, 3, 4, 5, 2, 3, 4, 2, 1, 2, 3]), 3), 4, [1, 5], [1, 2, 3, 4]))
+        A = Tensor(SparseList(Dense(SparseList(Element{0.0}(collect(1:30).* 1.01), 5, [1, 3, 6, 8, 12, 14, 17, 20, 24, 27, 27, 28, 31], [2, 3, 3, 4, 5, 2, 3, 1, 3, 4, 5, 2, 4, 2, 4, 5, 2, 3, 5, 1, 3, 4, 5, 2, 3, 4, 2, 1, 2, 3]), 3), 4, [1, 5], [1, 2, 3, 4]))
 
         print(io, "A = ")
         show(io, MIME("text/plain"), A)
@@ -63,7 +63,7 @@ using Finch: AsArray
         io = IOBuffer()
         println(io, "setindex! tests")
 
-        @repl io A = Fiber!(Dense(Dense(Element(0.0), 10), 12))
+        @repl io A = Tensor(Dense(Dense(Element(0.0))), 10, 12)
         @repl io A[1, 4] = 3
         @repl io AsArray(A)
         @repl io A[4:6, 6] = 5:7
@@ -78,7 +78,7 @@ using Finch: AsArray
         io = IOBuffer()
         println(io, "broadcast tests")
 
-        @repl io A = Fiber!(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        @repl io A = Tensor(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
         @repl io B = [1, 2, 3, 4]
         @repl io C = A .+ B true
         @repl io AsArray(C)
@@ -94,7 +94,7 @@ using Finch: AsArray
         io = IOBuffer()
         println(io, "reduce tests")
 
-        @repl io A = Fiber!(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        @repl io A = Tensor(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
         @repl io reduce(+, A, dims=(1,))
         @repl io reduce(+, A, dims=1)
         @repl io reduce(+, A, dims=(2,))
@@ -109,13 +109,13 @@ using Finch: AsArray
         io = IOBuffer()
         println(io, "countstored tests")
 
-        @repl io A = Fiber!(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        @repl io A = Tensor(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
         @repl io countstored(A)
-        @repl io A = Fiber!(SparseCOO{2}(Element(0.0)), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        @repl io A = Tensor(SparseCOO{2}(Element(0.0)), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
         @repl io countstored(A)
-        @repl io A = Fiber!(Dense(Dense(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        @repl io A = Tensor(Dense(Dense(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
         @repl io countstored(A)
-        @repl io A = Fiber!(SparseList(Dense(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        @repl io A = Tensor(SparseList(Dense(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
         @repl io countstored(A)
         
         @test check_output("countstored.txt", String(take!(io)))
@@ -125,7 +125,7 @@ using Finch: AsArray
         io = IOBuffer()
         println(io, "+,-, *, / tests")
 
-        @repl io A = Fiber!(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        @repl io A = Tensor(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
         @repl io A + 1
         @repl io 1 + A 
         @repl io A + A 
@@ -140,7 +140,7 @@ using Finch: AsArray
     let
         A_ref = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
         A_ref = A_ref * floatmax()/sum(A_ref)
-        A= Fiber!(Dense(SparseList(Element(0.0))), A_ref)
+        A= Tensor(Dense(SparseList(Element(0.0))), A_ref)
         @test sum(A) == sum(A_ref)
         @test minimum(A) == minimum(A_ref)
         @test maximum(A) == maximum(A_ref)

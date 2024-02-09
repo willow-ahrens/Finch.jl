@@ -30,6 +30,13 @@ end
     task = VirtualSerial()
 end
 
+"""
+    virtualize(ex, T, ctx, [tag])
+
+Return the virtual program corresponding to the Julia expression `ex` of type
+`T` in the `JuliaContext` `ctx`. Implementaters may support the optional `tag`
+argument is used to name the resulting virtual variable.
+"""
 virtualize(ex, T, ctx, tag) = virtualize(ex, T, ctx)
 function virtualize(ex, T::Type{NamedTuple{names, args}}, ctx) where {names, args}
     Dict(map(zip(names, args.parameters)) do (name, arg)
@@ -59,7 +66,7 @@ Call f on a subcontext of `ctx` and return the result. Variable bindings,
 preambles, and epilogues defined in the subcontext will not escape the call to
 contain.
 """
-function contain(f, ctx::AbstractCompiler, task=nothing)
+function contain(f, ctx::AbstractCompiler; task=nothing)
     ctx_2 = shallowcopy(ctx)
     ctx_2.task = something(task, ctx.task)
     preamble = Expr(:block)

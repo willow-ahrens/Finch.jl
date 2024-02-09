@@ -71,7 +71,7 @@ quote
                 end
                 while true
                     y_lvl_i2 = y_lvl_idx[y_lvl_q]
-                    if y_lvl_i2 < phase_stop_2 - 1
+                    if y_lvl_i2 < -1 + phase_stop_2
                         y_lvl_2_val = y_lvl_val[y_lvl_q]
                         if z_lvl_qos > z_lvl_qos_stop
                             z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
@@ -107,7 +107,7 @@ quote
                 end
                 y_lvl_i2 = y_lvl_idx[y_lvl_q]
                 if y_lvl_i2 < phase_stop_2
-                    for i_12 = phase_stop_2:y_lvl_i2 - 1
+                    for i_12 = phase_stop_2:-1 + y_lvl_i2
                         if z_lvl_qos > z_lvl_qos_stop
                             z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
                             Finch.resize_if_smaller!(z_lvl_idx, z_lvl_qos_stop)
@@ -132,7 +132,7 @@ quote
                 else
                     phase_stop_6 = min(y_lvl_i2, phase_stop_2)
                     if y_lvl_i2 == phase_stop_6
-                        for i_14 = phase_stop_2:phase_stop_6 - 1
+                        for i_14 = phase_stop_2:-1 + phase_stop_6
                             if z_lvl_qos > z_lvl_qos_stop
                                 z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
                                 Finch.resize_if_smaller!(z_lvl_idx, z_lvl_qos_stop)
@@ -177,7 +177,7 @@ quote
                 end
                 while true
                     x_lvl_i2 = x_lvl_idx[x_lvl_q]
-                    if x_lvl_i2 < phase_stop_2 - 1
+                    if x_lvl_i2 < -1 + phase_stop_2
                         x_lvl_2_val = x_lvl_val[x_lvl_q]
                         if z_lvl_qos > z_lvl_qos_stop
                             z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
@@ -213,7 +213,7 @@ quote
                 end
                 x_lvl_i2 = x_lvl_idx[x_lvl_q]
                 if x_lvl_i2 < phase_stop_2
-                    for i_21 = phase_stop_2:x_lvl_i2 - 1
+                    for i_21 = phase_stop_2:-1 + x_lvl_i2
                         if z_lvl_qos > z_lvl_qos_stop
                             z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
                             Finch.resize_if_smaller!(z_lvl_idx, z_lvl_qos_stop)
@@ -238,7 +238,7 @@ quote
                 else
                     phase_stop_10 = min(x_lvl_i2, phase_stop_2)
                     if x_lvl_i2 == phase_stop_10
-                        for i_23 = phase_stop_2:phase_stop_10 - 1
+                        for i_23 = phase_stop_2:-1 + phase_stop_10
                             if z_lvl_qos > z_lvl_qos_stop
                                 z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
                                 Finch.resize_if_smaller!(z_lvl_idx, z_lvl_qos_stop)
@@ -465,7 +465,7 @@ quote
     qos = z_lvl_ptr[end] - 1
     resize!(z_lvl_idx, qos)
     resize!(z_lvl_val, qos)
-    (z = Fiber((SparseListLevel){Int32}(z_lvl_2, y_lvl.shape, z_lvl_ptr, z_lvl_idx)),)
+    (z = Tensor((SparseListLevel){Int32}(z_lvl_2, y_lvl.shape, z_lvl_ptr, z_lvl_idx)),)
 end
 julia> @finch begin
         z .= 0
@@ -473,5 +473,5 @@ julia> @finch begin
             z[i] = x[gallop(i)] + y[gallop(i)]
         end
     end
-(z = Fiber(SparseList{Int32}(Element{0.0, Float64, Int32}([2.0, 1.0, 6.0]), 10, [1, 4], [1, 2, 9])),)
+(z = Tensor(SparseList{Int32}(Element{0.0, Float64, Int32}([2.0, 1.0, 6.0]), 10, [1, 4], [1, 2, 9])),)
 

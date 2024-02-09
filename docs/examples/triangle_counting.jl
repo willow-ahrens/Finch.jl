@@ -9,7 +9,7 @@ function tricount(edges)
     @assert n == m
 
     #store lower triangles
-    L = Fiber!(Dense(SparseList(Element(0), n), n))
+    L = Tensor(Dense(SparseList(Element(0))), n, n)
     @finch begin
         L .= 0
         for j=_, i=_

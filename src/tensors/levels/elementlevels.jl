@@ -1,5 +1,5 @@
 """
-    ElementLevel{D, [Tv=typeof(D), Tp=Int, Val]}()
+    ElementLevel{D, [Tv=typeof(D)], [Tp=Int], [Val]}()
 
 A subfiber of an element level is a scalar of type `Tv`, initialized to `D`. `D`
 may optionally be given as the first argument.
@@ -9,14 +9,14 @@ of type `Val` with `eltype(Val) = Tv`. The type `Ti` is the index type used to
 access Val.
 
 ```jldoctest
-julia> Fiber!(Dense(Element(0.0)), [1, 2, 3])
+julia> Tensor(Dense(Element(0.0)), [1, 2, 3])
 Dense [1:3]
 ├─[1]: 1.0
 ├─[2]: 2.0
 ├─[3]: 3.0
 ```
 """
-struct ElementLevel{D, Tv, Tp, Val}
+struct ElementLevel{D, Tv, Tp, Val} <: AbstractLevel
     val::Val
 end
 const Element = ElementLevel
@@ -46,6 +46,7 @@ pattern!(lvl::ElementLevel{D, Tv, Tp}) where  {D, Tv, Tp} =
     Pattern{Tp}()
 redefault!(lvl::ElementLevel{D, Tv, Tp}, init) where {D, Tv, Tp} = 
     ElementLevel{init, Tv, Tp}(lvl.val)
+Base.resize!(lvl::ElementLevel) = lvl
 
 
 function Base.show(io::IO, lvl::ElementLevel{D, Tv, Tp, Val}) where {D, Tv, Tp, Val}
@@ -62,6 +63,11 @@ end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:ElementLevel}, depth)
     p = fbr.pos
+    lvl = fbr.lvl
+    if p > length(fbr.lvl.val)
+        show(io, mime, undef)
+        return
+    end
     show(io, mime, fbr.lvl.val[p])
 end
 
@@ -72,7 +78,7 @@ end
 @inline level_default(::Type{<:ElementLevel{D}}) where {D} = D
 data_rep_level(::Type{<:ElementLevel{D, Tv}}) where {D, Tv} = ElementData(D, Tv)
 
-(fbr::Fiber{<:ElementLevel})() = SubFiber(fbr.lvl, 1)()
+(fbr::Tensor{<:ElementLevel})() = SubFiber(fbr.lvl, 1)()
 function (fbr::SubFiber{<:ElementLevel})()
     q = fbr.pos
     return fbr.lvl.val[q]

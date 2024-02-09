@@ -22,8 +22,8 @@ quote
     phase_stop = min(i_stop, 0.5f0 * (-10 + x_lvl_i1))
     if phase_stop >= -4.5f0
         i = -4.5f0
-        if x_lvl_idx[x_lvl_q] < -4.5f0 * 2 + 10
-            x_lvl_q = Finch.scansearch(x_lvl_idx, -4.5f0 * 2 + 10, x_lvl_q, x_lvl_q_stop - 1)
+        if x_lvl_idx[x_lvl_q] < 10 + 2 * -4.5f0
+            x_lvl_q = Finch.scansearch(x_lvl_idx, 10 + 2 * -4.5f0, x_lvl_q, x_lvl_q_stop - 1)
         end
         while true
             x_lvl_i = x_lvl_idx[x_lvl_q]
@@ -36,7 +36,7 @@ quote
             else
                 phase_stop_3 = min(phase_stop, 0.5f0 * (-10 + x_lvl_i))
                 if phase_stop_3 >= i
-                    if x_lvl_i == phase_stop_3 * 2 + 10
+                    if x_lvl_i == 10 + 2phase_stop_3
                         x_lvl_2_val = x_lvl_val[x_lvl_q]
                         z1_val = z1_val + x_lvl_2_val
                         x_lvl_q += 1

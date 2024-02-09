@@ -105,8 +105,8 @@ begin
         end
         phase_stop_9 = min(phase_stop_8, 10 + B_lvl_i1)
         if phase_stop_9 >= 11
-            if B_lvl_idx[B_lvl_q] < 11 + -10
-                B_lvl_q = Finch.scansearch(B_lvl_idx, 11 + -10, B_lvl_q, B_lvl_q_stop - 1)
+            if B_lvl_idx[B_lvl_q] < -10 + 11
+                B_lvl_q = Finch.scansearch(B_lvl_idx, -10 + 11, B_lvl_q, B_lvl_q_stop - 1)
             end
             while true
                 B_lvl_i = B_lvl_idx[B_lvl_q]
@@ -125,7 +125,7 @@ begin
                     B_lvl_q += 1
                 else
                     phase_stop_11 = min(phase_stop_9, 10 + B_lvl_i)
-                    if B_lvl_i == phase_stop_11 + -10
+                    if B_lvl_i == -10 + phase_stop_11
                         B_lvl_2_val = B_lvl_val[B_lvl_q]
                         if C_lvl_qos > C_lvl_qos_stop
                             C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
@@ -165,14 +165,14 @@ begin
             if A_lvl_idx[A_lvl_q] < 11
                 A_lvl_q = Finch.scansearch(A_lvl_idx, 11, A_lvl_q, A_lvl_q_stop - 1)
             end
-            if B_lvl_idx[B_lvl_q] < 11 + -10
-                B_lvl_q = Finch.scansearch(B_lvl_idx, 11 + -10, B_lvl_q, B_lvl_q_stop - 1)
+            if B_lvl_idx[B_lvl_q] < -10 + 11
+                B_lvl_q = Finch.scansearch(B_lvl_idx, -10 + 11, B_lvl_q, B_lvl_q_stop - 1)
             end
             while i <= phase_stop_14
                 A_lvl_i = A_lvl_idx[A_lvl_q]
                 B_lvl_i = B_lvl_idx[B_lvl_q]
                 phase_stop_15 = min(A_lvl_i, 10 + B_lvl_i, phase_stop_14)
-                if A_lvl_i == phase_stop_15 && B_lvl_i == phase_stop_15 + -10
+                if A_lvl_i == phase_stop_15 && B_lvl_i == -10 + phase_stop_15
                     A_lvl_2_val_2 = A_lvl_val[A_lvl_q]
                     B_lvl_2_val_2 = B_lvl_val[B_lvl_q]
                     if C_lvl_qos > C_lvl_qos_stop
@@ -186,7 +186,7 @@ begin
                     C_lvl_qos += 1
                     A_lvl_q += 1
                     B_lvl_q += 1
-                elseif B_lvl_i == phase_stop_15 + -10
+                elseif B_lvl_i == -10 + phase_stop_15
                     B_lvl_q += 1
                 elseif A_lvl_i == phase_stop_15
                     A_lvl_2_val_2 = A_lvl_val[A_lvl_q]
@@ -256,8 +256,8 @@ begin
         end
         phase_stop_22 = min(10 + B_lvl_i1, phase_stop_21)
         if phase_stop_22 >= phase_start_19
-            if B_lvl_idx[B_lvl_q] < phase_start_19 + -10
-                B_lvl_q = Finch.scansearch(B_lvl_idx, phase_start_19 + -10, B_lvl_q, B_lvl_q_stop - 1)
+            if B_lvl_idx[B_lvl_q] < -10 + phase_start_19
+                B_lvl_q = Finch.scansearch(B_lvl_idx, -10 + phase_start_19, B_lvl_q, B_lvl_q_stop - 1)
             end
             while true
                 B_lvl_i = B_lvl_idx[B_lvl_q]
@@ -276,7 +276,7 @@ begin
                     B_lvl_q += 1
                 else
                     phase_stop_24 = min(10 + B_lvl_i, phase_stop_22)
-                    if B_lvl_i == phase_stop_24 + -10
+                    if B_lvl_i == -10 + phase_stop_24
                         B_lvl_2_val_4 = B_lvl_val[B_lvl_q]
                         if C_lvl_qos > C_lvl_qos_stop
                             C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
@@ -381,5 +381,5 @@ begin
     qos = C_lvl_ptr[end] - 1
     resize!(C_lvl_idx, qos)
     resize!(C_lvl_val, qos)
-    (C = Fiber((SparseListLevel){Int64}(C_lvl_2, C_lvl.shape, C_lvl_ptr, C_lvl_idx)),)
+    (C = Tensor((SparseListLevel){Int64}(C_lvl_2, C_lvl.shape, C_lvl_ptr, C_lvl_idx)),)
 end

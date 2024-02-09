@@ -62,13 +62,13 @@ execute(ex) = execute(ex, NamedTuple())
     contain(JuliaContext()) do ctx
         code = execute_code(:ex, ex; virtualize(:opts, opts, ctx)...)
         quote
-            #try
+            # try
                 @inbounds begin
                     $(code |> unblock)
                 end
-            #catch
+            # catch
             #    println("Error executing code:")
-            #    println($(QuoteNode(code |> unblock |> pretty |> dataflow |> unquote_literals)))
+            #    println($(QuoteNode(code |> unblock |> pretty |> unquote_literals)))
             #    rethrow()
             #end
         end
@@ -214,7 +214,7 @@ function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = safe
     maybe_typeof(x) = x isa Type ? x : typeof(x)
     code = contain(ctx) do ctx_2
         foreach(args) do (key, val)
-            ctx_2.bindings[variable(key)] = virtualize(key, maybe_typeof(val), ctx_2.code, key)
+            ctx_2.bindings[variable(key)] = finch_leaf(virtualize(key, maybe_typeof(val), ctx_2.code, key))
         end
         execute_code(:UNREACHABLE, prgm, algebra = algebra, mode = mode, ctx = ctx_2)
     end |> pretty |> dataflow |> unquote_literals

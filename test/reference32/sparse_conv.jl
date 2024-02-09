@@ -51,8 +51,8 @@ begin
                     end
                     phase_stop_5 = min(phase_stop_4, -v_3 + -3 + A_lvl_i1)
                     if phase_stop_5 >= phase_start_3
-                        if A_lvl_idx[A_lvl_q] < (phase_start_3 + v_3) + 3
-                            A_lvl_q = Finch.scansearch(A_lvl_idx, (phase_start_3 + v_3) + 3, A_lvl_q, A_lvl_q_stop - 1)
+                        if A_lvl_idx[A_lvl_q] < 3 + v_3 + phase_start_3
+                            A_lvl_q = Finch.scansearch(A_lvl_idx, 3 + v_3 + phase_start_3, A_lvl_q, A_lvl_q_stop - 1)
                         end
                         while true
                             A_lvl_i = A_lvl_idx[A_lvl_q]
@@ -66,7 +66,7 @@ begin
                                 A_lvl_q += 1
                             else
                                 phase_stop_7 = min(phase_stop_5, -v_3 + -3 + A_lvl_i)
-                                if A_lvl_i == (phase_stop_7 + v_3) + 3
+                                if A_lvl_i == 3 + v_3 + phase_stop_7
                                     A_lvl_2_val_2 = A_lvl_val[A_lvl_q]
                                     F_lvl_q = (1 - 1) * F_lvl.shape + phase_stop_7
                                     F_lvl_2_val_2 = F_lvl_val[F_lvl_q]
@@ -108,8 +108,8 @@ begin
                         end
                         phase_stop_13 = min(phase_stop_12, -3 + A_lvl_i1 + -v_5)
                         if phase_stop_13 >= phase_start_11
-                            if A_lvl_idx[A_lvl_q] < (phase_start_11 + v_5) + 3
-                                A_lvl_q = Finch.scansearch(A_lvl_idx, (phase_start_11 + v_5) + 3, A_lvl_q, A_lvl_q_stop - 1)
+                            if A_lvl_idx[A_lvl_q] < 3 + v_5 + phase_start_11
+                                A_lvl_q = Finch.scansearch(A_lvl_idx, 3 + v_5 + phase_start_11, A_lvl_q, A_lvl_q_stop - 1)
                             end
                             while true
                                 A_lvl_i = A_lvl_idx[A_lvl_q]
@@ -123,7 +123,7 @@ begin
                                     A_lvl_q += 1
                                 else
                                     phase_stop_15 = min(phase_stop_13, -3 + A_lvl_i + -v_5)
-                                    if A_lvl_i == (phase_stop_15 + v_5) + 3
+                                    if A_lvl_i == 3 + v_5 + phase_stop_15
                                         A_lvl_2_val_3 = A_lvl_val[A_lvl_q]
                                         F_lvl_q = (1 - 1) * F_lvl.shape + phase_stop_15
                                         F_lvl_2_val_4 = F_lvl_val[F_lvl_q]
@@ -154,5 +154,5 @@ begin
     qos = C_lvl_ptr[end] - 1
     resize!(C_lvl_idx, qos)
     resize!(C_lvl_val, qos)
-    (C = Fiber((SparseListLevel){Int64}(C_lvl_2, A_lvl.shape, C_lvl_ptr, C_lvl_idx)),)
+    (C = Tensor((SparseListLevel){Int64}(C_lvl_2, A_lvl.shape, C_lvl_ptr, C_lvl_idx)),)
 end

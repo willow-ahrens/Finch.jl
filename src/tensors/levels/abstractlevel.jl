@@ -63,6 +63,24 @@ previously assembled and frozen. The resulting level has no assembled positions.
 function declare_level! end
 
 """
+    freeze_level!(lvl, ctx, pos, init)
+
+Given the last reference position, `pos`, freeze all fibers within `lvl` assuming
+that we have potentially updated `1:pos`. 
+"""
+function freeze_level! end
+
+
+"""
+    thaw_level!(lvl, ctx, pos, init)
+
+Given the last reference position, `pos`, thaw all fibers within `lvl` assuming
+that we have previously assembled and frozen `1:pos`.
+"""
+function thaw_level! end
+
+
+"""
     assemble_level!(lvl, ctx, pos, new_pos)
 
 Assemble and positions `pos+1:new_pos` in `lvl`, assuming positions `1:pos` were
@@ -74,7 +92,7 @@ function assemble_level! end
     reassemble_level!(lvl, ctx, pos_start, pos_end) 
 
 Set the previously assempled positions from `pos_start` to `pos_end` to
-`level_default(lvl)`.
+`level_default(lvl)`.  Not avaliable on all level types as this presumes updating.
 """
 function reassemble_level! end
 
@@ -88,7 +106,7 @@ freeze_level!(fbr, ctx, mode) = fbr.lvl
 """
     postype(lvl)
 Return a position type with the same flavor as those used to store the positions of the fibers contained in `lvl`.
-The name position descends from the pos or position or pointer arrays found in many definitions of CSR or CSC.
+The name position descends from the pos or position or Separation arrays found in many definitions of CSR or CSC.
 In Finch, positions should be data used to access either a subfiber or some other similar auxiliary data. Thus,
 we often end up iterating over positions.
 """

@@ -1,5 +1,5 @@
 const incs = Dict(:+= => :+, :*= => :*, :&= => :&, :|= => :|, :(:=) => :overwrite)
-const evaluable_exprs = [:Inf, :Inf16, :Inf32, :Inf64, :(-Inf), :(-Inf16), :(-Inf32), :(-Inf64), :NaN, :NaN16, :NaN32, :NaN64, :nothing, :missing]
+const evaluable_exprs = [:Inf, :Inf16, :Inf32, :Inf64, :(-Inf), :(-Inf16), :(-Inf32), :(-Inf64), :NaN, :NaN16, :NaN32, :NaN64, :nothing, :missing, :Eps]
 
 const program_nodes = (
     index = index,
@@ -61,7 +61,6 @@ struct InitWriter{D} end
     end
     y
 end
-    
 
 """
     initwrite(z)(a, b)
@@ -80,7 +79,7 @@ initwrite(z) = InitWriter{z}()
 `lhs[] <<overwrite>>= rhs`.
 
 ```jldoctest setup=:(using Finch)
-julia> a = Fiber!(SparseList(Element(0.0)), [0, 1.1, 0, 4.4, 0])
+julia> a = Tensor(SparseList(Element(0.0)), [0, 1.1, 0, 4.4, 0])
 SparseList (0.0) [1:5]
 ├─[2]: 1.1
 ├─[4]: 4.4
@@ -106,7 +105,7 @@ end
 function (ctx::FinchParserVisitor)(ex::Symbol)
     if ex == :_ || ex == :(:)
         return :($dimless)
-    elseif ex in evaluable_exprs
+    elseif ex in evaluable_exprs 
         return ctx.nodes.literal(@eval($ex))
     else
         ctx.nodes.tag(ex)
@@ -119,7 +118,6 @@ struct FinchSyntaxError msg end
 
 function (ctx::FinchParserVisitor)(ex::Expr)
     islinenum(ex) = ex isa LineNumberNode
-
     if @capture ex :if(~cond, ~body)
         return :($(ctx.nodes.sieve)($(ctx(cond)), $(ctx(body))))
     elseif @capture ex :if(~cond, ~body, ~tail)
@@ -158,9 +156,9 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         return ctx(body)
     elseif @capture ex :let(:block(:(=)(~lhs, ~rhs), ~tail...), ~body)
         if isempty(tail)
-            return ctx(:(for $lhs = $rhs; $body end))
+            return ctx(:(let $lhs = $rhs; $body end))
         else
-            return ctx(:(for $lhs = $rhs; $(Expr(:let, Expr(:block, tail...), body)) end))
+            return ctx(:(let $lhs = $rhs; $(Expr(:let, Expr(:block, tail...), body)) end))
         end
     elseif @capture ex :let(:(=)(~lhs, ~rhs), ~body)
         rhs = ctx(rhs)
@@ -247,4 +245,153 @@ macro finch_program_instance(ex)
             $(finch_parse_instance(ex))
         end
     )
+end
+
+display_expression(io, mime, ex) = show(IOContext(io, :compact=>true), mime, ex) # TODO virtual or value is currently determined in virtualize.
+function display_expression(io, mime, node::Union{FinchNode, FinchNodeInstance})
+    if operation(node) === value
+        print(io, node.val)
+        if node.type !== Any
+            print(io, "::")
+            print(io, node.type)
+        end
+    elseif operation(node) === literal
+        print(io, node.val)
+    elseif operation(node) === index
+        print(io, node.name)
+    elseif operation(node) === variable
+        print(io, node.name)
+    elseif operation(node) === cached
+        print(io, "cached(")
+        display_expression(io, mime, node.arg)
+        print(io, ", ")
+        display_expression(io, mime, node.ref.val)
+        print(io, ")")
+    elseif operation(node) === tag
+        print(io, "tag(")
+        display_expression(io, mime, node.var)
+        print(io, ", ")
+        display_expression(io, mime, node.bind)
+        print(io, ")")
+    elseif operation(node) === virtual
+        print(io, "virtual(")
+        #print(io, node.val)
+        summary(io, node.val)
+        print(io, ")")
+    elseif operation(node) === access
+        display_expression(io, mime, node.tns)
+        print(io, "[")
+        if length(node.idxs) >= 1
+            for idx in node.idxs[1:end-1]
+                display_expression(io, mime, idx)
+                print(io, ", ")
+            end
+            display_expression(io, mime, node.idxs[end])
+        end
+        print(io, "]")
+    elseif operation(node) === call
+        display_expression(io, mime, node.op)
+        print(io, "(")
+        for arg in node.args[1:end-1]
+            display_expression(io, mime, arg)
+            print(io, ", ")
+        end
+        if !isempty(node.args)
+            display_expression(io, mime, node.args[end])
+        end
+        print(io, ")")
+    elseif istree(node)
+        print(io, operation(node))
+        print(io, "(")
+        for arg in arguments(node)[1:end-1]
+            print(io, arg)
+            print(io, ",")
+        end
+        if !isempty(arguments(node))
+            print(arguments(node)[end])
+        end
+    else
+        error("unimplemented")
+    end
+end
+
+function display_statement(io, mime, node::Union{FinchNode, FinchNodeInstance}, indent)
+    if operation(node) === loop
+        print(io, " "^indent * "for ")
+        display_expression(io, mime, node.idx)
+        print(io, " = ")
+        display_expression(io, mime, node.ext)
+        body = node.body
+        while operation(body) === loop
+            print(io, ", ")
+            display_expression(io, mime, body.idx)
+            print(io, " = ")
+            display_expression(io, mime, body.ext)
+            body = body.body
+        end
+        println(io)
+        display_statement(io, mime, body, indent + 2)
+        println(io)
+        print(io, " "^indent * "end")
+    elseif operation(node) === define
+        print(io, " "^indent * "let ")
+        display_expression(io, mime, node.lhs)
+        print(io, " = ")
+        display_expression(io, mime, node.rhs)
+        body = node.body
+        while operation(body) === define
+            print(io, ", ")
+            display_expression(io, mime, body.lhs)
+            print(io, " = ")
+            display_expression(io, mime, body.rhs)
+            body = body.body
+        end
+        println(io)
+        display_statement(io, mime, body, indent + 2)
+        println(io)
+        print(io, " "^indent * "end")
+    elseif operation(node) === sieve
+        print(io, " "^indent * "if ")
+        while operation(node.body) === sieve
+            display_expression(io, mime, node.cond)
+            print(io," && ")
+            node = node.body
+        end
+        display_expression(io, mime, node.cond)
+        println(io)
+        node = node.body
+        display_statement(io, mime, node, indent + 2)
+        println(io)
+        print(io, " "^indent * "end")
+    elseif operation(node) === assign
+        print(io, " "^indent)
+        display_expression(io, mime, node.lhs)
+        print(io, " <<")
+        display_expression(io, mime, node.op)
+        print(io, ">>= ")
+        display_expression(io, mime, node.rhs)
+    elseif operation(node) === declare
+        print(io, " "^indent)
+        display_expression(io, mime, node.tns)
+        print(io, " .= ")
+        display_expression(io, mime, node.init)
+    elseif operation(node) === freeze
+        print(io, " "^indent * "@freeze(")
+        display_expression(io, mime, node.tns)
+        print(io, ")")
+    elseif operation(node) === thaw
+        print(io, " "^indent * "@thaw(")
+        display_expression(io, mime, node.tns)
+        print(io, ")")
+    elseif operation(node) === block
+        print(io, " "^indent * "begin\n")
+        for body in node.bodies
+            display_statement(io, mime, body, indent + 2)
+            println(io)
+        end
+        print(io, " "^indent * "end")
+    else
+        println(node)
+        error("unimplemented")
+    end
 end

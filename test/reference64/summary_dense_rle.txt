@@ -1,1 +1,1 @@
-5×10 Fiber!(Dense(RepeatRLE(0.0)))
+5×10 Tensor(Dense(RepeatRLE(0.0)))

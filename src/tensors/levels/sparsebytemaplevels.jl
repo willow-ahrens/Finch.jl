@@ -1,14 +1,14 @@
 """
-    SparseByteMapLevel{[Ti=Tuple{Int...}], [Tp=Int], [Ptr] [Tbl]}(lvl, [dims])
+    SparseByteMapLevel{[Ti=Int], [Ptr, Tbl]}(lvl, [dims])
 
 Like the [`SparseListLevel`](@ref), but a dense bitmap is used to encode
 which slices are stored. This allows the ByteMap level to support random access.
 
-`Ti` is the type of the last fiber index, and `Tp` is the type used for
+`Ti` is the type of the last tensor index, and `Tp` is the type used for
 positions in the level. 
 
 ```jldoctest
-julia> Fiber!(Dense(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+julia> Tensor(Dense(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
 ├─[:,1]: SparseByteMap (0.0) [1:3]
 │ ├─[1]: 10.0
@@ -18,7 +18,7 @@ Dense [:,1:3]
 │ ├─[1]: 20.0
 │ ├─[3]: 40.0
 
-julia> Fiber!(SparseByteMap(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+julia> Tensor(SparseByteMap(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 SparseByteMap (0.0) [:,1:3]
 ├─[:,1]: SparseByteMap (0.0) [1:3]
 │ ├─[1]: 10.0
@@ -28,7 +28,7 @@ SparseByteMap (0.0) [:,1:3]
 │ ├─[3]: 40.0
 ```
 """
-struct SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}
+struct SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     ptr::Ptr
@@ -67,6 +67,9 @@ pattern!(lvl::SparseByteMapLevel{Ti}) where {Ti} =
 redefault!(lvl::SparseByteMapLevel{Ti}, init) where {Ti} = 
     SparseByteMapLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
 
+Base.resize!(lvl::SparseByteMapLevel{Ti}, dims...) where {Ti} = 
+    SparseByteMapLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.tbl, lvl.srt)
+
 function countstored_level(lvl::SparseByteMapLevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
@@ -95,6 +98,12 @@ end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseByteMapLevel}, depth)
     p = fbr.pos
+    lvl = fbr.lvl
+    if p + 1 > length(lvl.ptr)
+        print(io, "SparseBytemap(undef...)")
+        return
+    end
+
     crds = @view(fbr.lvl.srt[fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1])
 
     print_coord(io, (p, i)) = show(io, i)
