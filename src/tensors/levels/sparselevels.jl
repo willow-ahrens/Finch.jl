@@ -1,3 +1,97 @@
+struct DictTable{Ti, Tp, Ptr, Idx, Val, Tbl}
+    ptr::Ptr
+    idx::Idx
+    val::Val
+    tbl::Tbl
+end
+
+DictTable{Ti, Tp}() where {Ti, Tp} =
+    DictTable{Ti, Tp}(Tp[1], Ti[], Tp[], Dict{Tuple{Tp, Ti}, Tp}())
+DictTable{Ti, Tp}(ptr::Ptr, idx::Idx, val::Val, tbl::Tbl) where {Ti, Tp, Ptr, Idx, Val, Tbl} =
+    DictTable{Ti, Tp, Ptr, Idx, Val, Tbl}(ptr, idx, val, tbl)
+
+function declare_table!(tbl::DictTable{Ti, Tp}, pos) where {Ti, Tp}
+    resize!(tbl.ptr, pos + Tp(1))
+    fill_range!(tbl.ptr, 0, pos + Tp(1), pos + Tp(1))
+    empty!(tbl.tbl)
+    return Tp(0)
+end
+
+function trim_table!(tbl::DictTable, pos)
+    resize!(tbl.ptr, pos + 1)
+    qos = tbl.ptr[end] - 1
+    resize!(tbl.idx, qos)
+    return qos
+end
+
+function assemble_table!(tbl::DictTable, pos_start, pos_stop)
+    resize_if_smaller!(tbl.ptr, pos_stop + 1)
+    fill_range!(tbl.ptr, 0, pos_start + 1, pos_stop + 1)
+end
+
+function freeze_table!(tbl::DictTable, pos_stop)
+    srt = sort(pairs(tbl.tbl))
+    resize!(tbl.idx, length(srt))
+    resize!(tbl.val, length(srt))
+    for (q, ((p, i), v)) in enumerate(srt)
+        tbl.val[q] = v
+        tbl.idx[q] = i
+    end
+    for p = 2:pos_stop + 1
+        tbl.ptr[p] += tbl.ptr[p - 1]
+    end
+    tbl.ptr[pos_stop + 1] - 1
+end
+
+function table_length(tbl::DictTable)
+    return length(tbl.ptr) - 1
+end
+
+function moveto(tbl::DictTable, arch)
+    error(
+        "The table type $(typeof(tbl)) does not support moveto. ",
+        "Please use a table type that supports moveto."
+    )
+end
+
+table_query(tbl::DictTable{Ti, Tp}, p) where {Ti, Tp} = (p, tbl.ptr[p], tbl.ptr[p + 1])
+
+subtable_init(tbl::DictTable, (p, start, stop)) = (tbl.idx[start], tbl.idx[stop - 1], start)
+
+subtable_next(tbl::DictTable, (p, start, stop), q) = q + 1
+
+subtable_get(tbl::DictTable, (p, start, stop), q) = (tbl.idx[q], tbl.val[q])
+
+function subtable_seek(tbl, subtbl, state, i, j)
+    while i < j
+        (i, state) = subtable_iterate(tbl, subtbl, state)
+    end
+    return (i, state)
+end
+
+function subtable_seek(tbl::DictTable, (p, start, stop), q, (i, _), j)
+    q = Finch.scansearch(tbl.idx, j, q, stop)
+    return q
+end
+
+function table_register(tbl::DictTable, pos)
+    pos
+end
+
+function table_commit(tbl::DictTable, pos)
+end
+
+function subtable_register(tbl::DictTable, pos, idx)
+    return get(tbl.tbl, (pos, idx), length(tbl.tbl) + 1)
+end
+
+function subtable_commit(tbl::DictTable, pos, qos, idx)
+    if qos > length(tbl.tbl)
+        tbl.tbl[(pos, idx)] = qos
+        tbl.ptr[pos + 1] += 1
+    end
+end
+
 """
     SparseLevel{[Ti=Int], [Tp=Int], [Tbl=TreeTable]}(lvl, [dim])
 
@@ -41,7 +135,7 @@ const Sparse = SparseLevel
 SparseLevel(lvl) = SparseLevel{Int}(lvl)
 SparseLevel(lvl, shape::Ti) where {Ti} = SparseLevel{Ti}(lvl, shape)
 SparseLevel{Ti}(lvl) where {Ti} = SparseLevel{Ti}(lvl, zero(Ti))
-SparseLevel{Ti}(lvl, shape) where {Ti} = SparseLevel{Ti}(lvl, shape, TreeTable{Tuple{postype(lvl), Ti}, postype(lvl)}())
+SparseLevel{Ti}(lvl, shape) where {Ti} = SparseLevel{Ti}(lvl, shape, DictTable{Ti, postype(lvl)}())
 
 SparseLevel{Ti}(lvl::Lvl, shape, tbl::Tbl) where {Ti, Lvl, Tbl} =
     SparseLevel{Ti, Tbl, Lvl}(lvl, shape, tbl)
@@ -70,7 +164,7 @@ pattern!(lvl::SparseLevel{Ti}) where {Ti} =
 redefault!(lvl::SparseLevel{Ti}, init) where {Ti} = 
     SparseLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.tbl)
 
-function Base.show(io::IO, lvl::SparseLevel{Ti, Ptr, Idx, Lvl}) where {Ti, Lvl, Idx, Ptr}
+function Base.show(io::IO, lvl::SparseLevel{Ti, Tbl, Lvl}) where {Ti, Tbl, Lvl}
     if get(io, :compact, false)
         print(io, "Sparse(")
     else
@@ -101,12 +195,12 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseLev
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
-@inline level_ndims(::Type{<:SparseLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = 1 + level_ndims(Lvl)
+@inline level_ndims(::Type{<:SparseLevel{Ti, Tbl, Lvl}}) where {Ti, Tbl, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::SparseLevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::SparseLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
-@inline level_eltype(::Type{<:SparseLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = level_default(Lvl)
-data_rep_level(::Type{<:SparseLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = SparseData(data_rep_level(Lvl))
+@inline level_eltype(::Type{<:SparseLevel{Ti, Tbl, Lvl}}) where {Ti, Tbl, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SparseLevel{Ti, Tbl, Lvl}}) where {Ti, Tbl, Lvl} = level_default(Lvl)
+data_rep_level(::Type{<:SparseLevel{Ti, Tbl, Lvl}}) where {Ti, Tbl, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseLevel})() = fbr
 function (fbr::SubFiber{<:SparseLevel{Ti}})(idxs...) where {Ti}
@@ -125,29 +219,31 @@ mutable struct VirtualSparseLevel <: AbstractVirtualLevel
     Ti
     tbl
     shape
+    qos_stop
 end
   
 is_level_injective(lvl::VirtualSparseLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
 is_level_atomic(lvl::VirtualSparseLevel, ctx) = false
 
-function virtualize(ex, ::Type{SparseLevel{Ti, Ptr, Idx, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Idx, Lvl}
+function virtualize(ex, ::Type{SparseLevel{Ti, Tbl, Lvl}}, ctx, tag=:lvl) where {Ti, Tbl, Lvl}
     sym = freshen(ctx, tag)
     tbl = freshen(ctx, tag, :_tbl)
+    qos_stop = freshen(ctx, tag, :_qos_stop)
     push!(ctx.preamble, quote
         $sym = $ex
         $tbl = $sym.tbl
+        $qos_stop = table_length($tbl)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     shape = value(:($sym.shape), Int)
-    VirtualSparseLevel(lvl_2, sym, Ti, tbl, shape)
+    VirtualSparseLevel(lvl_2, sym, Ti, tbl, shape, qos_stop)
 end
 function lower(lvl::VirtualSparseLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
         $SparseLevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
             $(ctx(lvl.shape)),
-            $(lvl.ptr),
-            $(lvl.idx),
+            $(lvl.tbl),
         )
     end
 end
@@ -170,76 +266,48 @@ virtual_level_default(lvl::VirtualSparseLevel) = virtual_level_default(lvl.lvl)
 
 postype(lvl::VirtualSparseLevel) = postype(lvl.lvl)
 
-struct ListTable{Ti, Tp, Ptr, Idx}
-    ptr::Ptr
-    idx::Idx
-end
-
-ListTable{Ti, Tp}() = ListTable{Ti, Tp}(Tp[1], Ti[], Ref{Ti}(0))
-ListTable{Ti, Tp}(ptr::Ptr, idx::Idx) where {Ptr, Idx} = ListTable{Ti, Tp, Ptr, Idx}(Tp[1], Ti[])
-
-
 function declare_level!(lvl::VirtualSparseLevel, ctx::AbstractCompiler, pos, init)
     #TODO check that init == default
     Ti = lvl.Ti
     Tp = postype(lvl)
-    qos = ctx.freshen(qos)
+    qos = freshen(ctx.code, :qos)
     push!(ctx.code.preamble, quote
-        $qos = Finch.declare_table!($(lvl.tbl), $pos)
+        $qos = Finch.declare_table!($(lvl.tbl), $(ctx(pos)))
     end)
     lvl.lvl = declare_level!(lvl.lvl, ctx, value(qos, Tp), init)
     return lvl
-end
-
-function declare_table!(tbl::ListTable, pos)
-    return tbl.ptr[pos + 1] - 1
 end
 
 function trim_level!(lvl::VirtualSparseLevel, ctx::AbstractCompiler, pos)
     qos = freshen(ctx.code, :qos)
     Tp = postype(lvl)
     push!(ctx.code.preamble, quote
-        $qos = Finch.trim_table!($(lvl.tbl), $pos)
+        $qos = Finch.trim_table!($(lvl.tbl), $(ctx(pos)))
     end)
     lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
     return lvl
 end
 
-function trim_table!(tbl::ListTable, pos)
-    resize!(lvl.ptr, pos + 1)
-    qos = lvl.ptr[end] - 1
-    resize!(lvl.idx, qos)
-    return qos
-end
-
 function assemble_level!(lvl::VirtualSparseLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
-    return quote
-        resize!($(lvl.tbl), $pos_stop)
-    end
-end
-
-function assemble_table!(tbl::ListTable, pos_start, pos_stop)
-    resize_if_smaller!(tbl.ptr, pos_stop + 1)
-    fill_range!(tbl.ptr, 0, pos_start + 1, pos_stop + 1)
+    qos_start = freshen(ctx.code, :qos_start)
+    qos_stop = freshen(ctx.code, :qos_stop)
+    push!(ctx.code.preamble, quote
+        ($qos_start, $qos_stop) = assemble_table!($(lvl.tbl), $(ctx(pos_start)), $(ctx(pos_stop)))
+    end)
+    assemble_level!(lvl.lvl, ctx, value(qos_start), value(qos_stop))
 end
 
 function freeze_level!(lvl::VirtualSparseLevel, ctx::AbstractCompiler, pos_stop)
     p = freshen(ctx.code, :p)
-    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
-        $qos_stop = Finch.freeze_table!($(lvl.tbl), pos_stop)
+        $qos_stop = Finch.freeze_table!($(lvl.tbl), $(ctx(pos_stop)))
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
-end
-
-function freeze_table!(tbl::ListTable, pos_stop)
-    for p = 2:(pos_stop + 1)
-        tbl.ptr[p] += tbl.ptr[p - 1]
-    end
 end
 
 function virtual_moveto_level(lvl::VirtualSparseLevel, ctx::AbstractCompiler, arch)
@@ -255,12 +323,6 @@ function virtual_moveto_level(lvl::VirtualSparseLevel, ctx::AbstractCompiler, ar
     virtual_moveto_level(lvl.lvl, ctx, arch)
 end
 
-function moveto(tbl::ListTable, arch)
-    ptr_2 = moveto(ptr_2, arch)
-    idx_2 = moveto(idx_2, arch)
-    return ListTable(ptr_2, idx_2)
-end
-
 function instantiate(fbr::VirtualSubFiber{VirtualSparseLevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
@@ -270,26 +332,31 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseLevel}, ctx, mode::Reader
     my_q = freshen(ctx.code, tag, :_q)
     my_q_stop = freshen(ctx.code, tag, :_q_stop)
     my_i1 = freshen(ctx.code, tag, :_i1)
+    subtbl = freshen(ctx.code, tag, :_subtbl)
+    state = freshen(ctx.code, tag, :_state)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
             preamble = quote
-                $sub_tbl = $(lvl.tbl)[$(ctx(pos))]
-                (($my_i, $my_q), $state) = iterate($sub_tbl)
+                $subtbl = table_query($(lvl.tbl), $(ctx(pos)))
+                ($my_i, $my_i1, $state) = subtable_init($(lvl.tbl), $subtbl)
             end,
             body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
-                            (($my_i, $my_q), $state) = seek($subtbl, $state, $my_i, $my_q)
+                            if $my_i < $(ctx(getstart(ext)))
+                                ($my_i, $state) = subtable_seek($(lvl.tbl), $subtbl, $state, $my_i, $(ctx(getstart(ext))))
+                            end
                         end,
+                        preamble = :(($my_i, $my_q) = subtable_get($(lvl.tbl), $subtbl, $state)),
                         stop = (ctx, ext) -> value(my_i),
                         chunk = Spike(
                             body = Fill(virtual_level_default(lvl)),
                             tail = Simplify(instantiate(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, mode, subprotos))
                         ),
-                        next = (ctx, ext) -> :(($my_i, $my_q), $state = iterate($sub_tbl, $state)) 
+                        next = (ctx, ext) -> :($state = subtable_next($(lvl.tbl), $subtbl, $state)) 
                     )
                 ),
                 Phase(
@@ -300,9 +367,6 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseLevel}, ctx, mode::Reader
     )
 end
 
-struct ListTableWalk{Ti, Tp, Tbl}
-    
-
 instantiate(fbr::VirtualSubFiber{VirtualSparseLevel}, ctx, mode::Updater, protos) = begin
     instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
 end
@@ -311,20 +375,19 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseLevel}, ctx, mode::
     tag = lvl.ex
     Tp = postype(lvl)
     qos = freshen(ctx.code, tag, :_qos)
-    qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
-    qos = freshen(ctx.code, tag, :_q)
-    dirty = freshen(ctx.code, tag, :dirty)
+    dirty = freshen(ctx.code, tag, :_dirty)
+    subtbl = freshen(ctx.code, tag, :_subtbl)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
             preamble = quote
-                $subtbl = $(lvl.tbl)[$(ctx(pos))]
+                $subtbl = table_register($(lvl.tbl), $(ctx(pos)))
             end,
             body = (ctx) -> Lookup(
                 body = (ctx, idx) -> Thunk(
                     preamble = quote
-                        $qos = get($subtbl, $idx, $(qos_fill) + $(Tp(1)))
+                        $qos = subtable_register($(lvl.tbl), $subtbl, $(ctx(idx)))
                         if $qos > $qos_stop
                             $qos_stop = max($qos_stop << 1, 1)
                             $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, Tp), value(qos_stop, Tp)), ctx))
@@ -334,13 +397,15 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseLevel}, ctx, mode::
                     body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), ctx, mode, subprotos),
                     epilogue = quote
                         if $dirty
+                            subtable_commit($(lvl.tbl), $subtbl, $qos, $(ctx(idx)))
                             $(fbr.dirty) = true
-                            $(lvl.qos_fill) = $qos
-                            $(subtbl)[$idx] = $qos
                         end
                     end
                 )
-            )
+            ),
+            epilogue = quote
+                table_commit($(lvl.tbl), $(ctx(pos)))
+            end
         )
     )
 end
