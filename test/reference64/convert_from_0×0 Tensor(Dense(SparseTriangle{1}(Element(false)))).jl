@@ -27,7 +27,7 @@ begin
         end
         res_lvldirty = false
         tmp_lvl_q = (1 - 1) * tmp_lvl.shape + j_4
-        tmp_lvl_2_q = (tmp_lvl_q - 1) * fld(tmp_lvl_2.shape, 1) + 1
+        tmp_lvl_2_q = 1 + fld(tmp_lvl_2.shape, 1) * (tmp_lvl_q + -1)
         res_lvl_2_qos = res_lvl_2_qos_fill + 1
         res_lvl_2_prev_pos < res_lvl_qos || throw(FinchProtocolError("SparseListLevels cannot be updated multiple times"))
         phase_stop = tmp_lvl_2.shape
@@ -39,7 +39,7 @@ begin
                     Finch.resize_if_smaller!(res_lvl_2_val, res_lvl_2_qos_stop)
                     Finch.fill_range!(res_lvl_2_val, false, res_lvl_2_qos, res_lvl_2_qos_stop)
                 end
-                tmp_lvl_3_val = tmp_lvl_2_val[tmp_lvl_2_q + -1 + i_5]
+                tmp_lvl_3_val = tmp_lvl_2_val[-1 + tmp_lvl_2_q + i_5]
                 res = (res_lvl_2_val[res_lvl_2_qos] = tmp_lvl_3_val)
                 res_lvldirty = true
                 res_lvl_idx_2[res_lvl_2_qos] = i_5

@@ -25,10 +25,7 @@ quote
     end
     Finch.resize_if_smaller!(y_lvl_locks, y_lvl.shape)
     @inbounds for idx = 1:y_lvl.shape
-            lockVal = make_lock(eltype(Vector{Base.Threads.SpinLock}))
-            if !(isnothing(lockVal))
-                y_lvl_locks[idx] = lockVal
-            end
+            y_lvl_locks[idx] = make_lock(eltype(Vector{Base.Threads.SpinLock}))
         end
     Finch.resize_if_smaller!(y_lvl_2_val, y_lvl.shape)
     Finch.fill_range!(y_lvl_2_val, 0.0, 1, y_lvl.shape)

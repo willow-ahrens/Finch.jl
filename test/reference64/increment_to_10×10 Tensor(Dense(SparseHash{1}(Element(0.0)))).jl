@@ -15,7 +15,7 @@ begin
     arr_2_lvl_val = arr_2_lvl.lvl.val
     arr_2_lvl.shape[1] == fmt_lvl_2.shape[1] || throw(DimensionMismatch("mismatched dimension limits ($(arr_2_lvl.shape[1]) != $(fmt_lvl_2.shape[1]))"))
     arr_2_lvl.shape[2] == fmt_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(arr_2_lvl.shape[2]) != $(fmt_lvl.shape))"))
-    for fmt_lvl_2_p = 1 * fmt_lvl.shape + 1:-1:2
+    for fmt_lvl_2_p = fmt_lvl.shape + 1:-1:2
         fmt_lvl_ptr[fmt_lvl_2_p] = fmt_lvl_ptr[fmt_lvl_2_p] - fmt_lvl_ptr[fmt_lvl_2_p - 1]
     end
     fmt_lvl_ptr[1] = 1
