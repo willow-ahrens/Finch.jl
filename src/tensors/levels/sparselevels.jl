@@ -216,7 +216,7 @@ function assemble_level!(lvl::VirtualSparseLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
-        Finch.assemble_table!($(lvl.tbl), $pos_start, $pos_stop)
+        resize!($(lvl.tbl), $pos_stop)
     end
 end
 
@@ -274,7 +274,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseLevel}, ctx, mode::Reader
     Furlable(
         body = (ctx, ext) -> Thunk(
             preamble = quote
-                $subtbl = walk_table($(lvl.tbl), $(ctx(pos)))
+                $sub_tbl = $(lvl.tbl)[$(ctx(pos))]
                 (($my_i, $my_q), $state) = iterate($sub_tbl)
             end,
             body = (ctx) -> Sequence([
@@ -313,17 +313,18 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseLevel}, ctx, mode::
     qos = freshen(ctx.code, tag, :_qos)
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
+    qos = freshen(ctx.code, tag, :_q)
     dirty = freshen(ctx.code, tag, :dirty)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
             preamble = quote
-                $subtbl = open_subtable($(lvl.tbl), $(ctx(pos)))
+                $subtbl = $(lvl.tbl)[$(ctx(pos))]
             end,
             body = (ctx) -> Lookup(
                 body = (ctx, idx) -> Thunk(
                     preamble = quote
-                        $ref, $qos = register_update($subtbl, $idx)
+                        $qos = get($subtbl, $idx, $(qos_fill) + $(Tp(1)))
                         if $qos > $qos_stop
                             $qos_stop = max($qos_stop << 1, 1)
                             $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, Tp), value(qos_stop, Tp)), ctx))
@@ -334,14 +335,12 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseLevel}, ctx, mode::
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true
-                            commit_update($ref)
+                            $(lvl.qos_fill) = $qos
+                            $(subtbl)[$idx] = $qos
                         end
                     end
                 )
-            ),
-            epilogue = quote
-                close_subtable($subtbl)
-            end
+            )
         )
     )
 end
