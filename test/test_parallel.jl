@@ -30,6 +30,130 @@
 
     let
         io = IOBuffer()
+        A = fsprand(42, 42, 0.1)
+        B = fsprand(42, 42, 0.1)
+        C = zeros(42, 42)
+        CR = A * B
+
+        formats = [Dense, SparseList]
+        for fmtA1 in formats
+            for fmtA2 in formats
+                Af = fmatA2(fmatA1(Element(0.0)))
+                At = Tensor(Af, A)
+                for fmatB1 in formats
+                    for fmatB2 in formats 
+                        Bf = fmatB2(fmatB1(Element(0.0)))
+                        Bt = Tensor(Bf, B)
+
+                        Ct = Tensor(Dense(Dense(Element(0.0))), C)
+
+                        @repl io @finch_code begin
+                            Ct .= 0
+                            for i = parallel(_)
+                                for j = _
+                                    for k = _
+                                        Ct[i, j] += A[i, k] * B[k, j]
+                                    end
+                                end
+                            end
+                        end
+                        @repl io @finch_code begin
+                            Ct .= 0
+                            for i = parallel(_)
+                                for j = _
+                                    for k = _
+                                        Ct[i, j] += A[i, k] * B[k, j]
+                                    end
+                                end
+                            end
+                        end
+
+                        @test Ct == CR
+
+
+                        @repl io @finch_code begin
+                            Ct .= 0
+                            for i = _
+                                for j = parallel(_)
+                                    for k = _
+                                        Ct[i, j] += A[i, k] * B[k, j]
+                                    end
+                                end
+                            end
+                        end
+                        @repl io @finch_code begin
+                            Ct .= 0
+                            for i = _
+                                for j = parallel(_)
+                                    for k = _
+                                        Ct[i, j] += A[i, k] * B[k, j]
+                                    end
+                                end
+                            end
+                        end
+
+                        @test Ct == CR
+
+                        @repl io @finch_code begin
+                            Ct .= 0
+                            for j = parallel(_)
+                                for i = _
+                                    for k = _
+                                        Ct[i, j] += A[i, k] * B[k, j]
+                                    end
+                                end
+                            end
+                        end
+                        @repl io @finch_code begin
+                            Ct .= 0
+                            for j = parallel(_)
+                                for i = _
+                                    for k = _
+                                        Ct[i, j] += A[i, k] * B[k, j]
+                                    end
+                                end
+                            end
+                        end
+
+                        @test Ct == CR
+
+
+                        @repl io @finch_code begin
+                            Ct .= 0
+                            for j = _
+                                for i = parallel(_)
+                                    for k = _
+                                        Ct[i, j] += A[i, k] * B[k, j]
+                                    end
+                                end
+                            end
+                        end
+                        @repl io @finch_code begin
+                            Ct .= 0
+                            for j = _
+                                for i = parallel(_)
+                                    for k = _
+                                        Ct[i, j] += A[i, k] * B[k, j]
+                                    end
+                                end
+                            end
+                        end
+
+                        @test Ct == CR
+
+
+                    end 
+                end 
+
+        end
+
+        @test check_output("debug_parallel_spmms_no_atomics.txt", String(take!(io)))
+
+
+    end
+
+    let
+        io = IOBuffer()
         A = Tensor(Dense(SparseList(Element(0.0))), [1 2; 3 4])
         x = Tensor(Dense(Element(0.0)), [1, 1])
         y = Tensor(Dense(Atomic(Element(0.0))))
