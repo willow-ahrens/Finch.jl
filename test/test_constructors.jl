@@ -2,7 +2,7 @@
     @info "Testing Tensor Constructors"
 
     using Base.Meta
-    
+
     @testset "Tensor(SparseList(Element(0)))" begin
         io = IOBuffer()
         arr = [0.0, 2.0, 2.0, 0.0, 3.0, 3.0]
@@ -879,5 +879,35 @@
         @test Structure(fbr) == Structure(Tensor(SparseList{Int}(Atomic(Element(0.0)))))
 
         @test check_output("format_constructors_sl_a_e.txt", String(take!(io)))
+    end
+
+    @testset "OffByOneVector" begin
+        # test off-by-one
+        v = Vector([1, 0, 2, 3])
+        obov = OffByOneVector(v)
+        @test obov == v .+ 1
+        @test obov.data == v
+
+        # test off-by-one in a tensor
+        coo = Tensor(
+            SparseCOO{2}(
+                Element(0, Vector([1, 2, 3])),  # data
+                (3, 3),  # shape
+                Vector([1, 4]),  # ptr
+                (
+                    OffByOneVector(Vector([0, 0, 2])),
+                    OffByOneVector(Vector([0, 2, 2])),
+                ),  # off-by-one indices
+            )
+        )
+        @test Array(Tensor(Dense(Dense(Element(0))), coo)) == [1 0 2; 0 0 0; 0 0 3]
+
+        # test off-by-one write operation
+        val = 10
+        obov[2] = val
+        @test obov == [2, val, 3, 4] && obov.data == [1, val - 1, 2, 3]
+        obov[1:3] .= val
+        @test obov == [val, val, val, 4] && obov.data == [val-1, val-1, val-1, 3]
+
     end
 end
