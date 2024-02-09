@@ -62,11 +62,16 @@ function ensure_concurrent(root, ctx)
             throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not associative"))
         end
 
+        atomicity = (is_atomic(acc.tns, ctx))
+        injectivity = (@capture(acc, access(~tns, ~mode, ~i..., idx)) ?  (is_injective(tns, ctx), [length(i) + 1]) : ([false], [1]))
+        injectivityAlt = (@capture(acc, access(~tns, ~mode, ~i...)) ?  (is_injective(tns, ctx), [length(i)]) : ([false], [1]))
+        testInjectivity = injectivity[1][injectivity[2]][1]
+        testInjectivityp = injectivityAlt[1][injectivityAlt[2]][1]
         if !(
-            (is_atomic(acc.tns, ctx)) ||
-            (@capture(acc, access(~tns, ~mode, ~i..., idx)) && is_injective(tns, ctx)[length(i) + 1])
+            atomicity || testInjectivity || testInjectivityp
+            
         )
-            throw(FinchConcurrencyError("Cannot prove that $(acc) is safe to update from multiple threads"))
+            throw(FinchConcurrencyError("Cannot prove that $(acc) is safe to update from multiple threads due atomicity = $(atomicity) and injectivity = $(injectivity)  and erg=$(injectivityAlt)"))
         end
     end
 
