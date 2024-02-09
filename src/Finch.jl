@@ -42,6 +42,7 @@ export walk, gallop, follow, extrude, laminate
 export Tensor, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
 export scale, product, offset, permissive, protocolize, swizzle, toeplitz, window
+export OffByOneVector
 
 export choose, minby, maxby, overwrite, initwrite, d
 
@@ -103,6 +104,7 @@ include("looplets/fills.jl")
 include("tensors/scalars.jl")
 include("tensors/levels/abstractlevel.jl")
 include("tensors/fibers.jl")
+include("tensors/vectors.jl")
 include("tensors/levels/sparserlelevels.jl")
 include("tensors/levels/singlerlelevels.jl")
 include("tensors/levels/sparselistlevels.jl")

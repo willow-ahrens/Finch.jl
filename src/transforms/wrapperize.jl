@@ -26,8 +26,10 @@ function get_wrapper_rules(alg, depth, ctx)
             dims = ([false for _ in i1]..., true, [false for _ in i2]...)
             access(call(permissive, A, dims...), m, i1..., j, i2...)
         end),
-        (@rule call(permissive, call(permissive, ~A, ~dims_1...), ~dims_2...) =>
-            call(permissive, A, (dims_1 .| dims_2)...)),
+        (@rule call(permissive, call(permissive, ~A, ~dims_1...), ~dims_2...) => begin
+            union_dims = getval.(dims_1) .| getval.(dims_2)
+            call(permissive, A, union_dims...)
+        end), 
         (@rule call(permissive, call(swizzle, ~A, ~sigma...), ~dims...) =>
             call(swizzle, call(permissive, A, dims[invperm(getval.(sigma))]...), sigma...)),
         (@rule access(~A, ~m, ~i1..., call(-, ~j, ~k), ~i2...) =>
@@ -71,7 +73,8 @@ function get_wrapper_rules(alg, depth, ctx)
             end
             call(scale, A, s3...)
         end),
-        (@rule access(~A, ~m, ~i1..., call(+, ~j1..., ~k, ~j2...), ~i2...) => begin
+        #Jaeyeon, do we need to add this condition? It feels too restrictive, since the toeplitz should only modify j1 and j2
+        (@rule access(~A, ~m, ~i1::(All(isindex))..., call(+, ~j1..., ~k, ~j2...), ~i2...) => begin
             if (!isempty(j1) || !isempty(j2))
                 k_2 = call(+, ~j1..., ~j2...)
                 if depth(k_2) < depth(k) && depth(k_2) != 0
@@ -155,7 +158,7 @@ function get_wrapper_rules(alg, depth, ctx)
         end),
         (@rule call(offset, call(offset, ~A, ~delta_1...), ~delta_2...) => begin
             delta_3 = map(delta_1, delta_2) do proto_1, proto_2
-                call(+, delta_1, delta_2) 
+                call(+, proto_1, proto_2) 
             end
             call(offset, A, delta_3...)
         end),
