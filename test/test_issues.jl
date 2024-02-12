@@ -176,9 +176,9 @@ using CIndices
     let 
         m = 4; n = 3; ptr_c = [0, 3, 3, 5]; idx_c = [1, 2, 3, 0, 2]; val_c = [1.1, 2.2, 3.3, 4.4, 5.5];
 
-        ptr_jl = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Int}}, pointer(ptr_c)), length(ptr_c); own = false)
-        idx_jl = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Int}}, pointer(idx_c)), length(idx_c); own = false)
-        A = Tensor(Dense(SparseList{CIndex{Int}}(Element{0.0, Float64, CIndex{Int}}(val_c), m, ptr_jl, idx_jl), n))
+        ptr_jl = OffByOneVector(ptr_c)
+        idx_jl = OffByOneVector(idx_c)
+        A = Tensor(Dense(SparseList{Int}(Element{0.0, Float64, Int}(val_c), m, ptr_jl, idx_jl), n))
 
         @test A == [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
     end
@@ -610,4 +610,6 @@ using CIndices
     new_shape_2 = size(Tensor(Dense(SparseList(SparseList(Element(0.0)))), st))
 
     @test new_shape_1 == new_shape_2
+
+    @test swizzle(swizzle(zeros(3, 3, 3), 3, 1, 2), 3, 2, 1) isa Finch.SwizzleArray{(2, 1, 3), <:Array}
 end

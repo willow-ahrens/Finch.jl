@@ -519,9 +519,9 @@ end
 return the first value of `v` greater than or equal to `x`, within the range
 `lo:hi`. Return `hi+1` if all values are less than `x`.
 """
-Base.@propagate_inbounds function scansearch(v, x, lo::T, hi::T)::T where T<:Integer
-    u = T(1)
-    stop = min(hi, lo + T(32))
+Base.@propagate_inbounds function scansearch(v, x, lo::T1, hi::T2) where {T1<:Integer, T2<:Integer} # TODO types for `lo` and `hi` #406
+    u = T1(1)
+    stop = min(hi, lo + T1(32))
     while lo + u < stop && v[lo] < x
         lo += u
     end

@@ -37,7 +37,7 @@ begin
                     A_mode1_stop = sugar_11[1]
                     A_mode2_stop = sugar_11[2]
                     val_2 = A[i_6, l_4, k_4]
-                    phase_stop = min(i_6, (l_4 + 0) + -1)
+                    phase_stop = min(i_6, l_4 + -1)
                     if phase_stop >= i_6
                         for s_5 = i_6:phase_stop
                             C[i_6, j_4, k_4] = val_2 * val + C[i_6, j_4, k_4]
