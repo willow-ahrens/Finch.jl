@@ -612,4 +612,18 @@ using CIndices
     @test new_shape_1 == new_shape_2
 
     @test swizzle(swizzle(zeros(3, 3, 3), 3, 1, 2), 3, 2, 1) isa Finch.SwizzleArray{(2, 1, 3), <:Array}
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/134
+    let
+        A = Tensor(Dense(Dense(Element(0.0))), rand(3, 3))
+        x = Tensor(Dense(Element(0.0)), rand(3))
+        y = Tensor(Dense(Element(0.0)), rand(3))
+
+        check_output("cse_symv.jl", @finch_code begin
+            for i=_, j=_
+                y[i] += A[i, j] * x[j]
+                y[j] += A[i, j] * x[i]
+            end
+        end)
+    end
 end
