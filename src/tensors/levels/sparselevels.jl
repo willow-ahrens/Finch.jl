@@ -208,6 +208,12 @@ end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseLevel}, depth)
     p = fbr.pos
+    lvl = fbr.lvl
+    if p + 1 > length(lvl.tbl.ptr)
+        print(io, "Sparse(undef...)")
+        return
+    end
+
     crds = table_coords(fbr.lvl.tbl, p)
 
     print_coord(io, crd) = show(io, crd)
@@ -232,8 +238,7 @@ function (fbr::SubFiber{<:SparseLevel{Ti}})(idxs...) where {Ti}
     crds = table_coords(lvl.tbl, p)
     r = searchsorted(crds, idxs[end])
     q = lvl.tbl.ptr[p] + first(r) - 1
-    fbr_2 = SubFiber(lvl.lvl, q)
-    length(r) == 0 ? default(fbr_2) : fbr_2(idxs[1:end-1]...)
+    length(r) == 0 ? default(fbr) : SubFiber(lvl.lvl, lvl.tbl.val[q])(idxs[1:end-1]...)
 end
 
 mutable struct VirtualSparseLevel <: AbstractVirtualLevel
@@ -296,6 +301,7 @@ function declare_level!(lvl::VirtualSparseLevel, ctx::AbstractCompiler, pos, ini
     qos = freshen(ctx.code, :qos)
     push!(ctx.code.preamble, quote
         $qos = Finch.declare_table!($(lvl.tbl), $(ctx(pos)))
+        $(lvl.qos_stop) = 0
     end)
     lvl.lvl = declare_level!(lvl.lvl, ctx, value(qos, Tp), init)
     return lvl
