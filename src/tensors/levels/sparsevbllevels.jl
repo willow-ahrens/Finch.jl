@@ -225,8 +225,6 @@ end
 function declare_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos, init)
     Tp = postype(lvl)
     Ti = lvl.Ti
-    ros = call(-, call(getindex, :($(lvl.ptr)), call(+, pos, 1)), 1)
-    qos = call(-, call(getindex, :($(lvl.ofs)), call(+, ros, 1)), 1)
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
@@ -240,7 +238,7 @@ function declare_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos, 
             $(lvl.prev_pos) = $(Tp(0))
         end)
     end
-    lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
+    lvl.lvl = declare_level!(lvl.lvl, ctx, literal(Tp(0)), init)
     return lvl
 end
 

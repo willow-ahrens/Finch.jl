@@ -54,6 +54,9 @@ using Base.Meta
     test_format(vecs, name = "Tensor(SparseByteMap(Element(zero)))", key = "sm_e") do arr
         dropdefaults!(Tensor(SparseByteMap(Element(zero(eltype(arr))))), arr)
     end
+    test_format(vecs, name = "Tensor(SparseDict(Element(zero)))", key = "sh_e") do arr
+        dropdefaults!(Tensor(Sparse(Element(zero(eltype(arr))))), arr)
+    end
     test_format(vecs, name = "Tensor(SparseHash{1}(Element(zero)))", key = "sh1_e") do arr
         dropdefaults!(Tensor(SparseHash{1}(Element(zero(eltype(arr))))), arr)
     end
@@ -92,6 +95,9 @@ using Base.Meta
     test_format(mats, name = "Tensor(Dense(SparseByteMap(Element(zero))))", key = "d_sm_e") do arr
         dropdefaults!(Tensor(Dense(SparseByteMap(Element(zero(eltype(arr)))))), arr)
     end
+    test_format(mats, name = "Tensor(Dense(SparseDict(Element(zero))))", key = "d_sh_e") do arr
+        dropdefaults!(Tensor(Dense(Sparse(Element(zero(eltype(arr)))))), arr)
+    end
     test_format(mats, name = "Tensor(Dense(SparseHash{1}(Element(zero))))", key = "d_sh1_e") do arr
         dropdefaults!(Tensor(Dense(SparseHash{1}(Element(zero(eltype(arr)))))), arr)
     end
@@ -119,6 +125,9 @@ using Base.Meta
     end
     test_format(mats, name = "Tensor(SparseList(SparseHash{1}(Element(zero))))", key = "sl_sh1_e") do arr
         dropdefaults!(Tensor(SparseList(SparseHash{1}(Element(zero(eltype(arr)))))), arr)
+    end
+    test_format(mats, name = "Tensor(SparseList(SparseDict(Element(zero))))", key = "sl_sh_e") do arr
+        dropdefaults!(Tensor(SparseList(Sparse(Element(zero(eltype(arr)))))), arr)
     end
     test_format(mats, name = "Tensor(SparseList(SparseCOO{1}(Element(zero))))", key = "sl_sc1_e") do arr
         dropdefaults!(Tensor(SparseList(SparseCOO{1}(Element(zero(eltype(arr)))))), arr)

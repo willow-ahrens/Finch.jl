@@ -56,7 +56,7 @@ end
 
 table_query(tbl::DictTable{Ti, Tp}, p) where {Ti, Tp} = (p, tbl.ptr[p], tbl.ptr[p + 1])
 
-subtable_init(tbl::DictTable, (p, start, stop)) = (tbl.idx[start], tbl.idx[stop - 1], start)
+subtable_init(tbl::DictTable{Ti}, (p, start, stop)) where {Ti} = start < stop ? (tbl.idx[start], tbl.idx[stop - 1], start) : (Ti(1), Ti(0), start)
 
 subtable_next(tbl::DictTable, (p, start, stop), q) = q + 1
 
@@ -177,9 +177,7 @@ function Base.show(io::IO, lvl::SparseLevel{Ti, Tbl, Lvl}) where {Ti, Tbl, Lvl}
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(io, lvl.ptr)
-        print(io, ", ")
-        show(io, lvl.idx)
+        show(io, lvl.tbl)
     end
     print(io, ")")
 end

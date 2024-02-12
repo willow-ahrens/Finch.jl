@@ -250,14 +250,13 @@ function declare_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos,
     TI = lvl.TI
     Tp = postype(lvl)
 
-    qos = call(-, call(getindex, :($(lvl.ptr)), call(+, pos, 1)), 1)
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
         empty!($(lvl.tbl))
         empty!($(lvl.srt))
     end)
-    lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
+    lvl.lvl = declare_level!(lvl.lvl, ctx, literal(Tp(0)), init)
     return lvl
 end
 

@@ -84,6 +84,7 @@
             () -> SparseHash{1}(base()),
             () -> SparseCOO{1}(base()),
             () -> SparseRLE(base()),
+            () -> Sparse(base()),
         ]
             output = false
             for arr in [
