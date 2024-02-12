@@ -24,7 +24,7 @@ export fastfinch, safefinch, debugfinch
 export Tensor
 export SparseRLE, SparseRLELevel 
 export SingleRLE, SingleRLELevel
-export Sparse, SparseLevel
+export Sparse, SparseLevel, SparseDict
 export SparseList, SparseListLevel
 export SingleList, SingleListLevel
 export SparseHash, SparseHashLevel

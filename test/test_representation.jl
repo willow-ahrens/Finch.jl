@@ -10,9 +10,7 @@ using Base.Meta
             println(io)
             for arr in arrs
                 println(io, "array: ", arr)
-                println("hi:", name, key)
                 fbr = f(arr)
-                println("bye")
                 @test Structure(fbr) == Structure(eval(Meta.parse(repr(fbr))))
                 @test reference_isequal(fbr, arr)
                 println(io, "tensor: ", repr(fbr))
@@ -125,11 +123,11 @@ using Base.Meta
     test_format(mats, name = "Tensor(SparseList(SparseByteMap(Element(zero))))", key = "sl_sm_e") do arr
         dropdefaults!(Tensor(SparseList(SparseByteMap(Element(zero(eltype(arr)))))), arr)
     end
-    test_format(mats, name = "Tensor(SparseList(SparseHash{1}(Element(zero))))", key = "sl_sh1_e") do arr
-        dropdefaults!(Tensor(SparseList(SparseHash{1}(Element(zero(eltype(arr)))))), arr)
-    end
     test_format(mats, name = "Tensor(SparseList(SparseDict(Element(zero))))", key = "sl_sh_e") do arr
         dropdefaults!(Tensor(SparseList(Sparse(Element(zero(eltype(arr)))))), arr)
+    end
+    test_format(mats, name = "Tensor(SparseList(SparseHash{1}(Element(zero))))", key = "sl_sh1_e") do arr
+        dropdefaults!(Tensor(SparseList(SparseHash{1}(Element(zero(eltype(arr)))))), arr)
     end
     test_format(mats, name = "Tensor(SparseList(SparseCOO{1}(Element(zero))))", key = "sl_sc1_e") do arr
         dropdefaults!(Tensor(SparseList(SparseCOO{1}(Element(zero(eltype(arr)))))), arr)

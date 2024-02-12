@@ -54,7 +54,7 @@ function freeze_table!(tbl::DictTable, pos_stop)
     tbl.ptr[pos_stop + 1] - 1
 end
 
-function thaw_table!(tbl::DictTable, ctx::AbstractCompiler, pos_stop)
+function thaw_table!(tbl::DictTable, pos_stop)
     qos_stop = tbl.ptr[pos_stop + 1] - 1
     for p = pos_stop:-1:1
         tbl.ptr[p + 1] -= tbl.ptr[p]
@@ -135,19 +135,13 @@ Dense [:,1:3]
 │ ├─[3]: 40.0
 
 julia> Tensor(Sparse(Sparse(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
-ERROR: MethodError: no method matching Tensor(::SparseLevel{Int64, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}, SparseLevel{Int64, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}}, ::Matrix{Int64})
-
-Closest candidates are:
-  Tensor(!Matched::Finch.AbstractLevel, ::Any)
-   @ Finch ~/Projects/Finch.jl/src/tensors/fibers.jl:45
-  Tensor(!Matched::AbstractArray{Tv, N}, ::Tv) where {Tv, N}
-   @ Finch ~/Projects/Finch.jl/src/tensors/fibers.jl:64
-  Tensor(::Lvl) where Lvl
-   @ Finch ~/Projects/Finch.jl/src/tensors/fibers.jl:12
-
-Stacktrace:
- [1] top-level scope
-   @ none:1
+Sparse (0.0) [:,1:3]
+├─[:,1]: Sparse (0.0) [1:3]
+│ ├─[1]: 10.0
+│ ├─[2]: 30.0
+├─[:,3]: Sparse (0.0) [1:3]
+│ ├─[1]: 20.0
+│ ├─[3]: 40.0
 
 ```
 """
@@ -157,6 +151,7 @@ struct SparseLevel{Ti, Tbl, Lvl} <: AbstractLevel
     tbl::Tbl
 end
 const Sparse = SparseLevel
+const SparseDict = SparseLevel
 SparseLevel(lvl) = SparseLevel{Int}(lvl)
 SparseLevel(lvl, shape::Ti) where {Ti} = SparseLevel{Ti}(lvl, shape)
 SparseLevel{Ti}(lvl) where {Ti} = SparseLevel{Ti}(lvl, zero(Ti))
@@ -172,6 +167,9 @@ similar_level(lvl::SparseLevel, dim, tail...) = Sparse(similar_level(lvl.lvl, ta
 function postype(::Type{SparseLevel{Ti, Tbl, Lvl}}) where {Ti, Tbl, Lvl}
     return postype(Lvl)
 end
+
+Base.resize!(lvl::SparseLevel{Ti}, dims...) where {Ti} = 
+    SparseLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.tbl)
 
 function moveto(lvl::SparseLevel{Ti, Tbl, Lvl}, Tm) where {Ti, Tbl, Lvl}
     lvl_2 = moveto(lvl.lvl, Tm)
