@@ -5,6 +5,12 @@ struct DictTable{Ti, Tp, Ptr, Idx, Val, Tbl}
     tbl::Tbl
 end
 
+Base.:(==)(a::DictTable, b::DictTable) = 
+    a.ptr == b.ptr &&
+    a.idx == b.idx &&
+    a.val == b.val &&
+    a.tbl == b.tbl
+
 DictTable{Ti, Tp}() where {Ti, Tp} =
     DictTable{Ti, Tp}(Tp[1], Ti[], Tp[], Dict{Tuple{Tp, Ti}, Tp}())
 DictTable{Ti, Tp}(ptr::Ptr, idx::Idx, val::Val, tbl::Tbl) where {Ti, Tp, Ptr, Idx, Val, Tbl} =
@@ -30,7 +36,6 @@ end
 
 function assemble_table!(tbl::DictTable, pos_start, pos_stop)
     resize_if_smaller!(tbl.ptr, pos_stop + 1)
-    println("sparse", (length(tbl.ptr), pos_start, pos_stop))
     fill_range!(tbl.ptr, 0, pos_start + 1, pos_stop + 1)
 end
 
@@ -42,6 +47,7 @@ function freeze_table!(tbl::DictTable, pos_stop)
         tbl.val[q] = v
         tbl.idx[q] = i
     end
+    tbl.ptr[1] = 1
     for p = 2:pos_stop + 1
         tbl.ptr[p] += tbl.ptr[p - 1]
     end
@@ -110,7 +116,7 @@ positions in the level. The types `Ptr` and `Idx` are the types of the
 arrays used to store positions and indicies. 
 
 ```jldoctest
-julia> Fiber!(Dense(Sparse(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+julia> Tensor(Dense(Sparse(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
 ├─[:,1]: Sparse (0.0) [1:3]
 │ ├─[1]: 10.0
@@ -120,18 +126,24 @@ Dense [:,1:3]
 │ ├─[1]: 20.0
 │ ├─[3]: 40.0
 
-julia> Fiber!(Sparse(Sparse(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
-Sparse (0.0) [:,1:3]
-├─[:,1]: Sparse (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,3]: Sparse (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+julia> Tensor(Sparse(Sparse(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+ERROR: MethodError: no method matching Tensor(::SparseLevel{Int64, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}, SparseLevel{Int64, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}}, ::Matrix{Int64})
+
+Closest candidates are:
+  Tensor(!Matched::Finch.AbstractLevel, ::Any)
+   @ Finch ~/Projects/Finch.jl/src/tensors/fibers.jl:45
+  Tensor(!Matched::AbstractArray{Tv, N}, ::Tv) where {Tv, N}
+   @ Finch ~/Projects/Finch.jl/src/tensors/fibers.jl:64
+  Tensor(::Lvl) where Lvl
+   @ Finch ~/Projects/Finch.jl/src/tensors/fibers.jl:12
+
+Stacktrace:
+ [1] top-level scope
+   @ none:1
 
 ```
 """
-struct SparseLevel{Ti, Tbl, Lvl}
+struct SparseLevel{Ti, Tbl, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     tbl::Tbl
