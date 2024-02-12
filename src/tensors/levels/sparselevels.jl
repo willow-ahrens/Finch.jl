@@ -10,6 +10,10 @@ DictTable{Ti, Tp}() where {Ti, Tp} =
 DictTable{Ti, Tp}(ptr::Ptr, idx::Idx, val::Val, tbl::Tbl) where {Ti, Tp, Ptr, Idx, Val, Tbl} =
     DictTable{Ti, Tp, Ptr, Idx, Val, Tbl}(ptr, idx, val, tbl)
 
+function table_coords(tbl::DictTable{Ti, Tp}, pos) where {Ti, Tp}
+    @view tbl.idx[tbl.ptr[pos]:tbl.ptr[pos + 1] - 1]
+end
+
 function declare_table!(tbl::DictTable{Ti, Tp}, pos) where {Ti, Tp}
     resize!(tbl.ptr, pos + Tp(1))
     fill_range!(tbl.ptr, 0, pos + Tp(1), pos + Tp(1))
@@ -26,6 +30,7 @@ end
 
 function assemble_table!(tbl::DictTable, pos_start, pos_stop)
     resize_if_smaller!(tbl.ptr, pos_stop + 1)
+    println("sparse", (length(tbl.ptr), pos_start, pos_stop))
     fill_range!(tbl.ptr, 0, pos_start + 1, pos_stop + 1)
 end
 
@@ -184,7 +189,7 @@ end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseLevel}, depth)
     p = fbr.pos
-    crds = @view(fbr.lvl.idx[fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1])
+    crds = table_coords(fbr.lvl.tbl, p)
 
     print_coord(io, crd) = show(io, crd)
     get_fbr(crd) = fbr(crd)
@@ -205,8 +210,9 @@ function (fbr::SubFiber{<:SparseLevel{Ti}})(idxs...) where {Ti}
     isempty(idxs) && return fbr
     lvl = fbr.lvl
     p = fbr.pos
-    r = searchsorted(@view(lvl.idx[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end])
-    q = lvl.ptr[p] + first(r) - 1
+    crds = table_coords(lvl.tbl, p)
+    r = searchsorted(crds, idxs[end])
+    q = lvl.tbl.ptr[p] + first(r) - 1
     fbr_2 = SubFiber(lvl.lvl, q)
     length(r) == 0 ? default(fbr_2) : fbr_2(idxs[1:end-1]...)
 end
@@ -291,10 +297,9 @@ function assemble_level!(lvl::VirtualSparseLevel, ctx, pos_start, pos_stop)
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     qos_start = freshen(ctx.code, :qos_start)
     qos_stop = freshen(ctx.code, :qos_stop)
-    push!(ctx.code.preamble, quote
+    quote
         ($qos_start, $qos_stop) = assemble_table!($(lvl.tbl), $(ctx(pos_start)), $(ctx(pos_stop)))
-    end)
-    assemble_level!(lvl.lvl, ctx, value(qos_start), value(qos_stop))
+    end
 end
 
 function freeze_level!(lvl::VirtualSparseLevel, ctx::AbstractCompiler, pos_stop)

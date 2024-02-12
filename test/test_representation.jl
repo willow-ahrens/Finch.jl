@@ -10,7 +10,9 @@ using Base.Meta
             println(io)
             for arr in arrs
                 println(io, "array: ", arr)
+                println("hi:", name, key)
                 fbr = f(arr)
+                println("bye")
                 @test Structure(fbr) == Structure(eval(Meta.parse(repr(fbr))))
                 @test reference_isequal(fbr, arr)
                 println(io, "tensor: ", repr(fbr))
