@@ -335,11 +335,10 @@ end
 function thaw_level!(lvl::VirtualSparseLevel, ctx::AbstractCompiler, pos_stop)
     p = freshen(ctx.code, :p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
-    qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
         $(lvl.qos_stop) = Finch.thaw_table!($(lvl.tbl), $(ctx(pos_stop)))
     end)
-    lvl.lvl = thaw_level!(lvl.lvl, ctx, value(qos_stop))
+    lvl.lvl = thaw_level!(lvl.lvl, ctx, value(lvl.qos_stop))
     return lvl
 end
 
