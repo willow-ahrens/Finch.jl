@@ -191,6 +191,30 @@ function get_wrapper_rules(alg, depth, ctx)
             ])))(s)
             define(x, A, s_2)
         end),
+
+        # Common subexpression elimination
+        (@rule loop(~idx, ~ext, ~body) => begin
+            counts = Dict()
+            for node in PostOrderDFS(body)
+                if @capture(node, access(~tn, reader, ~idxs...))
+                    counts[node] = get(counts, node, 0) + 1
+                end
+            end
+            applied = false
+            for (node, count) in counts
+                if depth(idx) == depth(node)
+                    if @capture(node, access(~tn, reader, ~idxs...)) && count > 1
+                        var = variable(Symbol(freshen(ctx.code, tn.val), "_", join([idx.val for idx in idxs])))
+                        body = Postwalk(@rule node => var)(body)
+                        body = define(var, access(tn, reader, idxs...), body)
+                        applied = true
+                    end
+                end
+            end
+            if applied
+                loop(idx, ext, body)
+            end
+        end),
     ]
 end
 
