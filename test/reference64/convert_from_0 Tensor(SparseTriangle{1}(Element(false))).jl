@@ -6,7 +6,6 @@ begin
     res_lvl_val = res_lvl.lvl.val
     tmp_lvl = (ex.bodies[2]).body.rhs.tns.bind.lvl
     tmp_lvl_val = tmp_lvl.lvl.val
-    tmp_lvl_q = (1 - 1) * fld(tmp_lvl.shape, 1) + 1
     res_lvl_qos_stop = 0
     Finch.resize_if_smaller!(res_lvl_ptr, 1 + 1)
     Finch.fill_range!(res_lvl_ptr, 0, 1 + 1, 1 + 1)
@@ -21,7 +20,7 @@ begin
                 Finch.resize_if_smaller!(res_lvl_val, res_lvl_qos_stop)
                 Finch.fill_range!(res_lvl_val, false, res_lvl_qos, res_lvl_qos_stop)
             end
-            tmp_lvl_2_val = tmp_lvl_val[tmp_lvl_q + -1 + i_5]
+            tmp_lvl_2_val = tmp_lvl_val[-1 + 1 + i_5]
             res = (res_lvl_val[res_lvl_qos] = tmp_lvl_2_val)
             res_lvl_idx[res_lvl_qos] = i_5
             res_lvl_qos += 1

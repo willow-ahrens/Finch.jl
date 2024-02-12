@@ -18,13 +18,25 @@ function evaluate_partial(root, ctx)
         end
         )
     ]))))(root)
+
     root = Rewrite(Fixpoint(Chain([
         Fixpoint(@rule define(~a::isvariable, ~v::Or(isconstant, isvirtual), ~s) => begin
             ctx.bindings[a] = v
             s
         end),
         Postwalk(Fixpoint(Chain([
-            (@rule call(~f::isliteral, ~a::(All(Or(isvariable, isvirtual, isfoldable)))...) => virtual_call(f.val, ctx, a...)),
+            (@rule call(~f::isliteral, ~a::(All(Or(isvariable, isvirtual, isfoldable)))...) => begin
+               x = virtual_call(f.val, ctx, a...)
+               if x !== nothing
+                   finch_leaf(x)
+               end
+             end),
+            (@rule ~v::isvariable => if haskey(ctx.bindings, v) 
+                val = ctx.bindings[v]
+                if isvariable(val) || isconstant(val)
+                    val
+                end
+            end),
             (@rule call(~f::isliteral, ~a::(All(isliteral))...) => finch_leaf(getval(f)(getval.(a)...))),
             (@rule define(~a::isvariable, ~v::isconstant, ~body) => begin
                 body_2 = Postwalk(@rule a => v)(body)

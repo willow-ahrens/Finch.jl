@@ -41,7 +41,7 @@ begin
                     Finch.fill_range!(tmp_lvl_2_val, false, pos_start, pos_stop)
                 end
                 tmp_lvldirty = false
-                tmp_lvl_2_q = (tmp_lvl_qos - 1) * fld(ref_lvl_2.shape, 1) + 1
+                tmp_lvl_2_q = 1 + fld(ref_lvl_2.shape, 1) * (-1 + tmp_lvl_qos)
                 ref_lvl_2_q = ref_lvl_ptr_2[ref_lvl_q]
                 ref_lvl_2_q_stop = ref_lvl_ptr_2[ref_lvl_q + 1]
                 if ref_lvl_2_q < ref_lvl_2_q_stop
@@ -59,14 +59,14 @@ begin
                         if ref_lvl_2_i < phase_stop_3
                             ref_lvl_3_val = ref_lvl_2_val[ref_lvl_2_q]
                             tmp_lvldirty = true
-                            tmp_lvl_2_val[tmp_lvl_2_q + -1 + ref_lvl_2_i] = ref_lvl_3_val
+                            tmp_lvl_2_val[-1 + tmp_lvl_2_q + ref_lvl_2_i] = ref_lvl_3_val
                             ref_lvl_2_q += 1
                         else
                             phase_stop_5 = min(ref_lvl_2_i, phase_stop_3)
                             if ref_lvl_2_i == phase_stop_5
                                 ref_lvl_3_val = ref_lvl_2_val[ref_lvl_2_q]
                                 tmp_lvldirty = true
-                                tmp_lvl_2_val[tmp_lvl_2_q + -1 + phase_stop_5] = ref_lvl_3_val
+                                tmp_lvl_2_val[-1 + tmp_lvl_2_q + phase_stop_5] = ref_lvl_3_val
                                 ref_lvl_2_q += 1
                             end
                             break
@@ -90,7 +90,7 @@ begin
                         Finch.fill_range!(tmp_lvl_2_val, false, pos_start_2, pos_stop_2)
                     end
                     tmp_lvldirty = false
-                    tmp_lvl_2_q_2 = (tmp_lvl_qos - 1) * fld(ref_lvl_2.shape, 1) + 1
+                    tmp_lvl_2_q_2 = 1 + fld(ref_lvl_2.shape, 1) * (-1 + tmp_lvl_qos)
                     ref_lvl_2_q = ref_lvl_ptr_2[ref_lvl_q]
                     ref_lvl_2_q_stop = ref_lvl_ptr_2[ref_lvl_q + 1]
                     if ref_lvl_2_q < ref_lvl_2_q_stop
@@ -108,14 +108,14 @@ begin
                             if ref_lvl_2_i < phase_stop_10
                                 ref_lvl_3_val_3 = ref_lvl_2_val[ref_lvl_2_q]
                                 tmp_lvldirty = true
-                                tmp_lvl_2_val[tmp_lvl_2_q_2 + -1 + ref_lvl_2_i] = ref_lvl_3_val_3
+                                tmp_lvl_2_val[-1 + tmp_lvl_2_q_2 + ref_lvl_2_i] = ref_lvl_3_val_3
                                 ref_lvl_2_q += 1
                             else
                                 phase_stop_12 = min(ref_lvl_2_i, phase_stop_10)
                                 if ref_lvl_2_i == phase_stop_12
                                     ref_lvl_3_val_3 = ref_lvl_2_val[ref_lvl_2_q]
                                     tmp_lvldirty = true
-                                    tmp_lvl_2_val[tmp_lvl_2_q_2 + -1 + phase_stop_12] = ref_lvl_3_val_3
+                                    tmp_lvl_2_val[-1 + tmp_lvl_2_q_2 + phase_stop_12] = ref_lvl_3_val_3
                                     ref_lvl_2_q += 1
                                 end
                                 break
@@ -139,6 +139,6 @@ begin
     resize!(tmp_lvl_ptr, 1 + 1)
     qos = tmp_lvl_ptr[end] - 1
     resize!(tmp_lvl_idx, qos)
-    resize!(tmp_lvl_2_val, qos * fld(ref_lvl_2.shape, 1))
+    resize!(tmp_lvl_2_val, fld(ref_lvl_2.shape, 1) * qos)
     (tmp = Tensor((SparseListLevel){Int32}((SparseTriangleLevel){1, Int32}(tmp_lvl_3, ref_lvl_2.shape), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),)
 end
