@@ -83,14 +83,15 @@ subtable_get(tbl::DictTable, (p, start, stop), q) = (tbl.idx[q], tbl.val[q])
 
 function subtable_seek(tbl, subtbl, state, i, j)
     while i < j
-        (i, state) = subtable_iterate(tbl, subtbl, state)
+        state = subtable_next(tbl, subtbl, state)
+        (i, q) = subtable_get(tbl, subtbl, state)
     end
     return (i, state)
 end
 
-function subtable_seek(tbl::DictTable, (p, start, stop), q, (i, _), j)
+function subtable_seek(tbl::DictTable, (p, start, stop), q, i, j)
     q = Finch.scansearch(tbl.idx, j, q, stop)
-    return q
+    return (tbl.idx[q], q)
 end
 
 function table_register(tbl::DictTable, pos)
