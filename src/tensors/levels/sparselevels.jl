@@ -54,6 +54,14 @@ function freeze_table!(tbl::DictTable, pos_stop)
     tbl.ptr[pos_stop + 1] - 1
 end
 
+function thaw_table!(tbl::DictTable, ctx::AbstractCompiler, pos_stop)
+    qos_stop = tbl.ptr[pos_stop + 1] - 1
+    for p = pos_stop:-1:1
+        tbl.ptr[p + 1] -= tbl.ptr[p]
+    end
+    qos_stop
+end
+
 function table_length(tbl::DictTable)
     return length(tbl.ptr) - 1
 end
@@ -322,6 +330,17 @@ function freeze_level!(lvl::VirtualSparseLevel, ctx::AbstractCompiler, pos_stop)
         $qos_stop = Finch.freeze_table!($(lvl.tbl), $(ctx(pos_stop)))
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
+    return lvl
+end
+
+function thaw_level!(lvl::VirtualSparseLevel, ctx::AbstractCompiler, pos_stop)
+    p = freshen(ctx.code, :p)
+    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    qos_stop = freshen(ctx.code, :qos_stop)
+    push!(ctx.code.preamble, quote
+        $(lvl.qos_stop) = Finch.thaw_table!($(lvl.tbl), $(ctx(pos_stop)))
+    end)
+    lvl.lvl = thaw_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
 end
 
