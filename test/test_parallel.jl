@@ -304,8 +304,7 @@
         Ct = Tensor(Dense(Dense(Atomic(Element(0.0)))), zeros(42, 42))
         CBad = Tensor(Dense(Dense((Element(0.0)))), zeros(42, 42))
 
-        @test_throws Finch.FinchConcurrencyError 
-        begin 
+        @test_throws Finch.FinchConcurrencyError begin 
             @finch_code begin
                 Ct .= 0
                 for i = _
