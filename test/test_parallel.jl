@@ -302,6 +302,22 @@
         BFormat = Dense(SparseList(Element(0.0)))
         Bt = Tensor(BFormat, B)
         Ct = Tensor(Dense(Dense(Atomic(Element(0.0)))), zeros(42, 42))
+        CBad = Tensor(Dense(Dense((Element(0.0)))), zeros(42, 42))
+
+        @test_throws Finch.FinchConcurrencyError 
+        begin 
+            @finch_code begin
+                Ct .= 0
+                for i = _
+                    for j = _
+                        for k = parallel(_)
+                            CBad[i, j] += A[i, k] * B[k, j]
+                        end
+                    end
+                end
+            end
+        end 
+
 
         @repl io @finch_code begin
             Ct .= 0
