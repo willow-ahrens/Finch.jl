@@ -111,7 +111,6 @@ shallowcopy(x::T) where T = T([getfield(x, k) for k ∈ fieldnames(T)]...)
 kwfields(x::T) where T = Dict((k=>getfield(x, k) for k ∈ fieldnames(T))...)
 
 function fill_range!(arr, v, i, j)
-    @assert j <= length(arr)
     @simd for k = i:j
         arr[k] = v
     end
