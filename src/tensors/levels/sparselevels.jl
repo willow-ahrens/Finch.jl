@@ -40,7 +40,7 @@ function assemble_table!(tbl::DictTable, pos_start, pos_stop)
 end
 
 function freeze_table!(tbl::DictTable, pos_stop)
-    srt = sort(pairs(tbl.tbl))
+    srt = sort(collect(pairs(tbl.tbl)))
     resize!(tbl.idx, length(srt))
     resize!(tbl.val, length(srt))
     for (q, ((p, i), v)) in enumerate(srt)
