@@ -102,7 +102,7 @@ function labelled_children(fbr::SubFiber{<:DenseLevel})
     lvl = fbr.lvl
     pos = fbr.pos
     map(1:lvl.shape) do idx
-        LabelledTree(cartesian_label(idx), SubFiber(lvl.lvl, (pos - 1) * lvl.shape + idx))
+        LabelledTree(cartesian_label([Colon() for _ = 1:ndims(fbr) - 1]..., idx), SubFiber(lvl.lvl, (pos - 1) * lvl.shape + idx))
     end
 end
 

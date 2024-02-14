@@ -112,7 +112,7 @@ function labelled_children(fbr::SubFiber{<:SparseTriangleLevel{N}}) where {N}
     res = []
     function walk(keys, stop, n)
         if n == 0
-            push!(res, LabelledTree(cartesian_label(keys...), SubFiber(lvl.lvl, qos)))
+            push!(res, LabelledTree(cartesian_label([Colon() for _ = 1:ndims(fbr) - N]..., keys...), SubFiber(lvl.lvl, qos)))
             qos += 1
         else
             for i = 1:stop

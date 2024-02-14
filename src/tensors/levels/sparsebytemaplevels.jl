@@ -119,7 +119,7 @@ function labelled_children(fbr::SubFiber{<:SparseByteMapLevel})
     pos = fbr.pos
     pos + 1 > length(lvl.ptr) && return []
     map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
-        LabelledTree(cartesian_label(lvl.srt[qos][2]), SubFiber(lvl.lvl, qos))
+        LabelledTree(cartesian_label([Colon() for _ = 1:ndims(fbr) - 1]..., lvl.srt[qos][2]), SubFiber(lvl.lvl, qos))
     end
 end
 
