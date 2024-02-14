@@ -38,8 +38,8 @@ julia> @finch (C .= 0; for i=_; C[i] = A[i] * B[i] end);
 
 julia> C
 SparseList (0) [1:5]
-├─[2]: 24
-├─[5]: 45
+├─ [2] ⇒ 24
+└─ [5] ⇒ 45
 ```
 
 The
@@ -98,8 +98,8 @@ Finch.FinchNotation.BlockInstance{Tuple{Finch.FinchNotation.DeclareInstance{Finc
 
 julia> C = Finch.execute(prgm).C
 SparseList (0) [1:5]
-├─[2]: 24
-├─[5]: 45
+├─ [2] ⇒ 24
+└─ [5] ⇒ 45
 ```
 
 This functionality is sufficient for building finch kernels programatically. For
@@ -125,8 +125,8 @@ pointwise_sum (generic function with 1 method)
 
 julia> pointwise_sum([1, 2], [3, 4])
 Dense [1:2]
-├─[1]: 4
-├─[2]: 6
+├─ [1] ⇒ 4
+└─ [2] ⇒ 6
 
 ```
 

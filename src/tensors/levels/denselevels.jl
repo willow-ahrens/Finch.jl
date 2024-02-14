@@ -95,21 +95,16 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:DenseLeve
     display_fiber_data(io, mime, fbr, depth, 1, crds, show, get_fbr)
 end
 
-function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:DenseLevel}})
-    node.print_key(io)
-    fbr = node.fbr
-    print(io, "Dense [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
-end
+Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:DenseLevel}}) =
+    print(io, "Dense [", ":,"^(ndims(node.fbr) - 1), "1:", size(node.fbr)[end], "]")
 
 function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:DenseLevel}})
     fbr = node.fbr
     lvl = fbr.lvl
     pos = fbr.pos
-    map(1:lvl.shape) do idx
-        LabelledFiberTree(SubFiber(lvl.lvl, (pos - 1) * lvl.shape + idx)) do io
-            print(io, "[", idx, "]: ")
-        end
-    end
+    OrderedDict(map(1:lvl.shape) do idx
+        cartesian_fiber_label(idx) => LabelledFiberTree(SubFiber(lvl.lvl, (pos - 1) * lvl.shape + idx))
+    end)
 end
 
 mutable struct VirtualDenseLevel <: AbstractVirtualLevel

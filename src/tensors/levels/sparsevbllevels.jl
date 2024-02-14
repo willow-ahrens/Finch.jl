@@ -114,7 +114,7 @@ end
 function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SparseVBLLevel}})
     print(io, node.print_key...)
     fbr = node.fbr
-    print(io, "SparseVBL (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+    print(io, "SparseVBL (", default(node.fbr), ") [", ":,"^(ndims(node.fbr) - 1), "1:", size(node.fbr)[end], "]")
 end
 
 function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseVBLLevel}})
@@ -127,12 +127,11 @@ function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseVBLLe
         qos = fbr.lvl.ofs[r]
         l = fbr.lvl.ofs[r + 1] - fbr.lvl.ofs[r]
         for qos = fbr.lvl.ofs[r]:fbr.lvl.ofs[r + 1] - 1
-            push!(res, LabelledFiberTree(SubFiber(lvl.lvl, qos)) do io
-                print(io, "[", i - (fbr.lvl.ofs[r + 1] - 1) + qos , "]: ")
-            end)
+            push!(res, cartesian_fiber_label(i - (fbr.lvl.ofs[r + 1] - 1) + qos) =>
+                LabelledFiberTree(SubFiber(lvl.lvl, qos)))
         end
     end
-    res
+    OrderedDict(res)
 end
 
 @inline level_ndims(::Type{<:SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}}) where {Ti, Ptr, Idx, Ofs, Lvl} = 1 + level_ndims(Lvl)

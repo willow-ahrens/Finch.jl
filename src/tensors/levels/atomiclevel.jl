@@ -64,18 +64,14 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:AtomicLev
     display_fiber(io, mime, SubFiber(lvl.lvl, p), depth)
 end
 
-function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:AtomicLevel}})
-    node.print_key(io)
-    fbr = node.fbr
+Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:AtomicLevel}}) =
     print(io, "Atomic -> ")
-end
 
 function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:AtomicLevel}})
     fbr = node.fbr
     lvl = fbr.lvl
     pos = fbr.pos
-    [LabelledFiberTree(SubFiber(lvl.lvl, pos)) do io
-    end]
+    [LabelledFiberTree(SubFiber(lvl.lvl, pos))]
 end
 
 

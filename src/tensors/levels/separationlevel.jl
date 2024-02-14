@@ -59,18 +59,14 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:Separatio
     display_fiber(io, mime, SubFiber(fbr.lvl.val[p], 1), depth)
 end
 
-function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SeparationLevel}})
-    node.print_key(io)
-    fbr = node.fbr
+Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SeparationLevel}}) =
     print(io, "Pointer -> ")
-end
 
 function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SeparationLevel}})
     fbr = node.fbr
     lvl = fbr.lvl
     pos = fbr.pos
-    [LabelledFiberTree(SubFiber(lvl.lvl, pos)) do io
-    end]
+    [LabelledFiberTree(SubFiber(lvl.lvl, pos))]
 end
 
 @inline level_ndims(::Type{<:SeparationLevel{Val, Lvl}}) where {Val, Lvl} = level_ndims(Lvl)

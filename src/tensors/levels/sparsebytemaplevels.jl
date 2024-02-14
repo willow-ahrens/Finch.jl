@@ -100,21 +100,17 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseByt
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
-function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SparseByteMapLevel}})
-    node.print_key(io)
-    fbr = node.fbr
-    print(io, "SparseByteMap (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
-end
+Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SparseByteMapLevel}}) =
+    print(io, "SparseByteMap (", default(node.fbr), ") [", ":,"^(ndims(node.fbr) - 1), "1:", size(node.fbr)[end], "]")
 
 function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseByteMapLevel}})
     fbr = node.fbr
     lvl = fbr.lvl
     pos = fbr.pos
-    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
-        LabelledFiberTree(SubFiber(lvl.lvl, qos)) do io
-            print(io, "[", lvl.srt[qos][2], "]: ")
-        end
-    end
+    OrderedDict(map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        cartesian_fiber_label(lvl.srt[qos][2]) =>
+        LabelledFiberTree(SubFiber(lvl.lvl, qos))
+    end)
 end
 
 @inline level_ndims(::Type{<:SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}}) where {Ti, Ptr, Tbl, Srt, Lvl} = 1 + level_ndims(Lvl)

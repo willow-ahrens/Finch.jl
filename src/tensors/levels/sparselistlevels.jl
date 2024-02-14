@@ -13,22 +13,22 @@ arrays used to store positions and indicies.
 ```jldoctest
 julia> Tensor(Dense(SparseList(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─ [1]: SparseList (0.0) [1:3]
-│  ├─ [1]: 10.0
-│  └─ [2]: 30.0
-├─ [2]: SparseList (0.0) [1:3]
-└─ [3]: SparseList (0.0) [1:3]
-   ├─ [1]: 20.0
-   └─ [3]: 40.0
+├─ [1] ⇒ SparseList (0.0) [1:3]
+│        ├─ [1] ⇒ 10.0
+│        └─ [2] ⇒ 30.0
+├─ [2] ⇒ SparseList (0.0) [1:3]
+└─ [3] ⇒ SparseList (0.0) [1:3]
+         ├─ [1] ⇒ 20.0
+         └─ [3] ⇒ 40.0
 
 julia> Tensor(SparseList(SparseList(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 SparseList (0.0) [:,1:3]
-├─ [1]: SparseList (0.0) [1:3]
-│  ├─ [1]: 10.0
-│  └─ [2]: 30.0
-└─ [3]: SparseList (0.0) [1:3]
-   ├─ [1]: 20.0
-   └─ [3]: 40.0
+├─ [1] ⇒ SparseList (0.0) [1:3]
+│        ├─ [1] ⇒ 10.0
+│        └─ [2] ⇒ 30.0
+└─ [3] ⇒ SparseList (0.0) [1:3]
+         ├─ [1] ⇒ 20.0
+         └─ [3] ⇒ 40.0
 
 ```
 """
@@ -95,21 +95,17 @@ function Base.show(io::IO, lvl::SparseListLevel{Ti, Ptr, Idx, Lvl}) where {Ti, L
     print(io, ")")
 end
 
-function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SparseListLevel}})
-    node.print_key(io)
-    fbr = node.fbr
-    print(io, "SparseList (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
-end
+Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SparseListLevel}}) =
+    print(io, "SparseList (", default(node.fbr), ") [", ":,"^(ndims(node.fbr) - 1), "1:", size(node.fbr)[end], "]")
 
 function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseListLevel}})
     fbr = node.fbr
     lvl = fbr.lvl
     pos = fbr.pos
-    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
-        LabelledFiberTree(SubFiber(lvl.lvl, qos)) do io
-            print(io, "[", lvl.idx[qos], "]: ")
-        end
-    end
+    OrderedDict(map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        cartesian_fiber_label(lvl.idx[qos]) =>
+            LabelledFiberTree(SubFiber(lvl.lvl, qos))
+    end)
 end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseListLevel}, depth)
