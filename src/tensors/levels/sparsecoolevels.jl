@@ -18,21 +18,10 @@ The type `Ptr` is the type for the pointer array.
 
 ```jldoctest
 julia> Tensor(Dense(SparseCOO{1}(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
-Dense [:,1:3]
-├─[:,1]: SparseCOO (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,2]: SparseCOO (0.0) [1:3]
-├─[:,3]: SparseCOO (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+Tensor(Dense(SparseCOO{1}(Element{0.0, Float64, Int64}(…), (3,), …), 3))
 
 julia> Tensor(SparseCOO{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
-SparseCOO (0.0) [1:3,1:3]
-├─├─[1, 1]: 10.0
-├─├─[2, 1]: 30.0
-├─├─[1, 3]: 20.0
-├─├─[3, 3]: 40.0
+Tensor(SparseCOO{2}(Element{0.0, Float64, Int64}(…), (3, 3), …))
 ```
 """
 struct SparseCOOLevel{N, TI<:Tuple, Ptr, Tbl, Lvl} <: AbstractLevel
@@ -124,6 +113,23 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseCOO
     join(io, fbr.lvl.shape, ",1:") 
     print(io, "]")
     display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
+end
+
+function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SparseCOOLevel{N}}}) where {N}
+    node.print_key(io)
+    fbr = node.fbr
+    print(io, "SparseCOO{", N, "} (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+end
+
+function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseCOOLevel{N}}}) where {N}
+    fbr = node.fbr
+    lvl = fbr.lvl
+    pos = fbr.pos
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledFiberTree(SubFiber(lvl.lvl, qos)) do io
+            print(io, "[", join(map(n -> lvl.tbl[n][qos], 1:N), ", "), "]: ")
+        end
+    end
 end
 
 @inline level_ndims(::Type{<:SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}}) where {N, TI, Ptr, Tbl, Lvl} = N + level_ndims(Lvl)

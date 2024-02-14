@@ -14,12 +14,12 @@ julia> ndims(Tensor(Dense(Dense(Element(0.0)))))
 
 julia> Tensor(Dense(Dense(Element(0.0))), [1 2; 3 4])
 Dense [:,1:2]
-├─[:,1]: Dense [1:2]
-│ ├─[1]: 1.0
-│ ├─[2]: 3.0
-├─[:,2]: Dense [1:2]
-│ ├─[1]: 2.0
-│ ├─[2]: 4.0
+├─ [1]: Dense [1:2]
+│  ├─ [1]: 1.0
+│  └─ [2]: 3.0
+└─ [2]: Dense [1:2]
+   ├─ [1]: 2.0
+   └─ [2]: 4.0
 ```
 """
 struct DenseLevel{Ti, Lvl} <: AbstractLevel
@@ -93,6 +93,23 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:DenseLeve
     get_fbr(crd) = fbr(crd)
     print(io, "Dense [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
     display_fiber_data(io, mime, fbr, depth, 1, crds, show, get_fbr)
+end
+
+function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:DenseLevel}})
+    node.print_key(io)
+    fbr = node.fbr
+    print(io, "Dense [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+end
+
+function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:DenseLevel}})
+    fbr = node.fbr
+    lvl = fbr.lvl
+    pos = fbr.pos
+    map(1:lvl.shape) do idx
+        LabelledFiberTree(SubFiber(lvl.lvl, (pos - 1) * lvl.shape + idx)) do io
+            print(io, "[", idx, "]: ")
+        end
+    end
 end
 
 mutable struct VirtualDenseLevel <: AbstractVirtualLevel

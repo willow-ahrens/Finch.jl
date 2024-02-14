@@ -13,22 +13,22 @@ types of the arrays used to store positions and indicies.
 ```jldoctest
 julia> Tensor(Dense(SingleList(Element(0.0))), [10 0 0; 0 20 0; 0 0 30]) 
 Dense [:,1:3]
-├─[:,1]: SingleList (0.0) [1:3]
-│ ├─[1]: 10.0
-├─[:,2]: SingleList (0.0) [1:3]
-│ ├─[2]: 20.0
-├─[:,3]: SingleList (0.0) [1:3]
-│ ├─[3]: 30.0
+├─ [1]: SingleList (0.0) [1:3]
+│  └─ [1]: 10.0
+├─ [2]: SingleList (0.0) [1:3]
+│  └─ [2]: 20.0
+└─ [3]: SingleList (0.0) [1:3]
+   └─ [3]: 30.0
 
 julia> Tensor(Dense(SingleList(Element(0.0))), [10 0 0; 0 20 0; 0 40 30])
 ERROR: Finch.FinchProtocolError("SingleListLevels can only be updated once")
 
 julia> Tensor(SingleList(Dense(Element(0.0))), [0 0 0; 0 0 30; 0 0 30]) 
 SingleList (0.0) [:,1:3]
-├─[:,3]: Dense [1:3]
-│ ├─[1]: 0.0
-│ ├─[2]: 30.0
-│ ├─[3]: 30.0
+└─ [3]: Dense [1:3]
+   ├─ [1]: 0.0
+   ├─ [2]: 30.0
+   └─ [3]: 30.0
 
 julia> Tensor(SingleList(SingleList(Element(0.0))), [0 0 0; 0 0 30; 0 0 30]) 
 ERROR: Finch.FinchProtocolError("SingleListLevels can only be updated once")
@@ -113,6 +113,23 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SingleLis
 
     print(io, "SingleList (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
+end
+
+function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SingleListLevel}})
+    node.print_key(io)
+    fbr = node.fbr
+    print(io, "SingleList (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+end
+
+function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SingleListLevel}})
+    fbr = node.fbr
+    lvl = fbr.lvl
+    pos = fbr.pos
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledFiberTree(SubFiber(lvl.lvl, qos)) do io
+            print(io, "[", lvl.idx[qos], "]: ")
+        end
+    end
 end
 
 @inline level_ndims(::Type{<:SingleListLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = 1 + level_ndims(Lvl)

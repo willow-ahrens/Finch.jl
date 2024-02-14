@@ -10,10 +10,7 @@ access Val.
 
 ```jldoctest
 julia> Tensor(Dense(Element(0.0)), [1, 2, 3])
-Dense [1:3]
-├─[1]: 1.0
-├─[2]: 2.0
-├─[3]: 3.0
+Tensor(Dense(Element{0.0, Float64, Int64}(…), 3))
 ```
 """
 struct ElementLevel{D, Tv, Tp, Val} <: AbstractLevel
@@ -48,7 +45,6 @@ redefault!(lvl::ElementLevel{D, Tv, Tp}, init) where {D, Tv, Tp} =
     ElementLevel{init, Tv, Tp}(lvl.val)
 Base.resize!(lvl::ElementLevel) = lvl
 
-
 function Base.show(io::IO, lvl::ElementLevel{D, Tv, Tp, Val}) where {D, Tv, Tp, Val}
     print(io, "Element{")
     show(io, D)
@@ -69,6 +65,12 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:ElementLe
         return
     end
     show(io, mime, fbr.lvl.val[p])
+end
+
+function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:ElementLevel}})
+    node.print_key(io)
+    fbr = node.fbr
+    print(io, node.fbr.lvl.val[fbr.pos])
 end
 
 @inline level_ndims(::Type{<:ElementLevel}) = 0

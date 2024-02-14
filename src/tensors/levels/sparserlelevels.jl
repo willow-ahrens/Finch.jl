@@ -11,14 +11,7 @@ arrays used to store positions and endpoints.
 
 ```jldoctest
 julia> Tensor(Dense(SparseRLELevel(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
-Dense [:,1:3]
-├─[:,1]: SparseRLE (0.0) [1:3]
-│ ├─[1:1]: 10.0
-│ ├─[2:2]: 30.0
-├─[:,2]: SparseRLE (0.0) [1:3]
-├─[:,3]: SparseRLE (0.0) [1:3]
-│ ├─[1:1]: 20.0
-│ ├─[3:3]: 40.0
+Tensor(Dense(SparseRLE(Element{0.0, Float64, Int64}(…), 3, …), 3))
 ```
 """
 struct SparseRLELevel{Ti, Ptr<:AbstractVector, Left<:AbstractVector, Right<:AbstractVector, Lvl} <: AbstractLevel
@@ -107,6 +100,23 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseRLE
 
     print(io, "SparseRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
+end
+
+function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SparseRLELevel}})
+    node.print_key(io)
+    fbr = node.fbr
+    print(io, "SparseRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+end
+
+function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseRLELevel}})
+    fbr = node.fbr
+    lvl = fbr.lvl
+    pos = fbr.pos
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledFiberTree(SubFiber(lvl.lvl, qos)) do io
+            print(io, "[", lvl.left[qos], ":", lvl.right[qos], "]: ")
+        end
+    end
 end
 
 @inline level_ndims(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = 1 + level_ndims(Lvl)

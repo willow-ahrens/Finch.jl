@@ -16,20 +16,20 @@ pairs in the hash table.
 ```jldoctest
 julia> Tensor(Dense(SparseHash{1}(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─[:,1]: SparseHash (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,2]: SparseHash (0.0) [1:3]
-├─[:,3]: SparseHash (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+├─ [1]: SparseHash{1} (0.0) [1:3]
+│  ├─ [1]: 10.0
+│  └─ [2]: 30.0
+├─ [2]: SparseHash{1} (0.0) [1:3]
+└─ [3]: SparseHash{1} (0.0) [1:3]
+   ├─ [1]: 20.0
+   └─ [3]: 40.0
 
 julia> Tensor(SparseHash{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
-SparseHash (0.0) [1:3,1:3]
-├─├─[1, 1]: 10.0
-├─├─[2, 1]: 30.0
-├─├─[1, 3]: 20.0
-├─├─[3, 3]: 40.0
+SparseHash{2} (0.0) [:,1:3]
+├─ [1, 1]: 10.0
+├─ [2, 1]: 30.0
+├─ [1, 3]: 20.0
+└─ [3, 3]: 40.0
 ```
 """
 struct SparseHashLevel{N, TI<:Tuple, Ptr, Tbl, Srt, Lvl} <: AbstractLevel
@@ -116,6 +116,25 @@ function Base.show(io::IO, lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}) wher
         show(io, lvl.srt)
     end
     print(io, ")")
+end
+
+function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SparseHashLevel{N}}}) where {N}
+    node.print_key(io)
+    fbr = node.fbr
+    print(io, "SparseHash{", N, "} (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+end
+
+function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseHashLevel{N}}}) where {N}
+    fbr = node.fbr
+    lvl = fbr.lvl
+    pos = fbr.pos
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledFiberTree(SubFiber(lvl.lvl, qos)) do io
+            print(io, "[")
+            join(io, lvl.srt[qos][1][2], ", ")
+            print(io, "]: ")
+        end
+    end
 end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseHashLevel{N}}, depth) where {N}

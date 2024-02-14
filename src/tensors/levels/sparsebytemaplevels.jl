@@ -9,23 +9,10 @@ positions in the level.
 
 ```jldoctest
 julia> Tensor(Dense(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
-Dense [:,1:3]
-├─[:,1]: SparseByteMap (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,2]: SparseByteMap (0.0) [1:3]
-├─[:,3]: SparseByteMap (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+Tensor(Dense(SparseByteMap(Element{0.0, Float64, Int64}(…), 3, …), 3))
 
 julia> Tensor(SparseByteMap(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
-SparseByteMap (0.0) [:,1:3]
-├─[:,1]: SparseByteMap (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,3]: SparseByteMap (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+Tensor(SparseByteMap(SparseByteMap(Element{0.0, Float64, Int64}(…), 3, …), 3, …))
 ```
 """
 struct SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl} <: AbstractLevel
@@ -111,6 +98,23 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseByt
 
     print(io, "SparseByteMap (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
+end
+
+function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SparseByteMapLevel}})
+    node.print_key(io)
+    fbr = node.fbr
+    print(io, "SparseByteMap (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+end
+
+function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseByteMapLevel}})
+    fbr = node.fbr
+    lvl = fbr.lvl
+    pos = fbr.pos
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledFiberTree(SubFiber(lvl.lvl, qos)) do io
+            print(io, "[", lvl.srt[qos][2], "]: ")
+        end
+    end
 end
 
 @inline level_ndims(::Type{<:SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}}) where {Ti, Ptr, Tbl, Srt, Lvl} = 1 + level_ndims(Lvl)

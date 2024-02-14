@@ -11,12 +11,7 @@ type used for positions in the level.
 
 ```jldoctest
 julia> Tensor(RepeatRLE(0.0), [11, 11, 22, 22, 00, 00, 00, 33, 33])
-RepeatRLE (0.0) [1:9]
-├─[1:2]: 11.0
-├─[3:4]: 22.0
-├─[5:7]: 0.0
-├─[8:9]: 33.0
-├─[10:9]: 0.0
+Tensor(RepeatRLE{0.0}(9, …))
 
 ```
 """
@@ -107,6 +102,23 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:RepeatRLE
 
     print(io, "RepeatRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
+end
+
+function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:RepeatRLELevel}})
+    node.print_key(io)
+    fbr = node.fbr
+    print(io, "RepeatRLE [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+end
+
+function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:RepeatRLELevel}})
+    fbr = node.fbr
+    lvl = fbr.lvl
+    pos = fbr.pos
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledFiberTree(lvl.val[qos]) do io
+            print(io, "[", qos == lvl.ptr[pos] ? 1 : lvl.idx[qos - 1] + 1, ":", lvl.idx[qos], "]: ")
+        end
+    end
 end
 
 @inline level_ndims(::Type{<:RepeatRLELevel}) = 1

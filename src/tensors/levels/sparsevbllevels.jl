@@ -111,6 +111,30 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseVBL
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
+function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SparseVBLLevel}})
+    print(io, node.print_key...)
+    fbr = node.fbr
+    print(io, "SparseVBL (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+end
+
+function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseVBLLevel}})
+    fbr = node.fbr
+    lvl = fbr.lvl
+    pos = fbr.pos
+    res = []
+    for r = lvl.ptr[pos]:lvl.ptr[pos + 1] - 1
+        i = fbr.lvl.idx[r]
+        qos = fbr.lvl.ofs[r]
+        l = fbr.lvl.ofs[r + 1] - fbr.lvl.ofs[r]
+        for qos = fbr.lvl.ofs[r]:fbr.lvl.ofs[r + 1] - 1
+            push!(res, LabelledFiberTree(SubFiber(lvl.lvl, qos)) do io
+                print(io, "[", i - (fbr.lvl.ofs[r + 1] - 1) + qos , "]: ")
+            end)
+        end
+    end
+    res
+end
+
 @inline level_ndims(::Type{<:SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}}) where {Ti, Ptr, Idx, Ofs, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::SparseVBLLevel) = (lvl.shape, level_size(lvl.lvl)...)
 @inline level_axes(lvl::SparseVBLLevel) = (Base.OneTo(lvl.shape), level_axes(lvl.lvl)...)

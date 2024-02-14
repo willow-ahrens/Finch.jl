@@ -127,22 +127,22 @@ arrays used to store positions and indicies.
 ```jldoctest
 julia> Tensor(Dense(Sparse(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─[:,1]: Sparse (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,2]: Sparse (0.0) [1:3]
-├─[:,3]: Sparse (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+├─ [1]: Sparse (0.0) [1:3]
+│  ├─ [2]: 10.0
+│  └─ [2]: 30.0
+├─ [2]: Sparse (0.0) [1:3]
+└─ [3]: Sparse (0.0) [1:3]
+   ├─ [3]: 20.0
+   └─ [3]: 40.0
 
 julia> Tensor(Sparse(Sparse(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Sparse (0.0) [:,1:3]
-├─[:,1]: Sparse (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,3]: Sparse (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+├─ [3]: Sparse (0.0) [1:3]
+│  ├─ [2]: 10.0
+│  └─ [2]: 30.0
+└─ [3]: Sparse (0.0) [1:3]
+   ├─ [3]: 20.0
+   └─ [3]: 40.0
 
 ```
 """
@@ -221,6 +221,32 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseLev
 
     print(io, "Sparse (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
+end
+
+function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SparseLevel}})
+    node.print_key(io)
+    fbr = node.fbr
+    print(io, "Sparse (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+end
+
+function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseLevel}})
+    fbr = node.fbr
+    lvl = fbr.lvl
+    pos = fbr.pos
+    subtbl = table_query(lvl.tbl, pos)
+    i, stop, state = subtable_init(lvl.tbl, subtbl)
+    res = []
+    while i <= stop
+        (i, q) = subtable_get(lvl.tbl, subtbl, state)
+        push!(res, LabelledFiberTree(SubFiber(lvl.lvl, q)) do io
+            print(io, "[", i, "]: ")
+        end)
+        if i == stop
+            break
+        end
+        state = subtable_next(lvl.tbl, subtbl, state)
+    end
+    res
 end
 
 @inline level_ndims(::Type{<:SparseLevel{Ti, Tbl, Lvl}}) where {Ti, Tbl, Lvl} = 1 + level_ndims(Lvl)

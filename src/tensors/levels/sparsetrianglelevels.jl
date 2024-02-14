@@ -10,12 +10,7 @@ subfiber. Optionally, `dims` are the sizes of the last dimensions.
 
 ```jldoctest
 julia> Tensor(SparseTriangle{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
-SparseTriangle (0.0) [1:3]
-├─├─[1, 1]: 10.0
-├─├─[1, 2]: 0.0
-│ ⋮
-├─├─[2, 3]: 0.0
-├─├─[3, 3]: 40.0
+Tensor(SparseTriangle{2}(Element{0.0, Float64, Int64}(…), 3))
 ```
 """
 struct SparseTriangleLevel{N, Ti, Lvl} <: AbstractLevel
@@ -101,6 +96,35 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseTri
     display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
 end
 
+function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SparseTriangleLevel{N}}}) where {N}
+    node.print_key(io)
+    fbr = node.fbr
+    print(io, "SparseTriangle{", N, "} (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+end
+
+function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseTriangleLevel{N}}}) where {N}
+    fbr = node.fbr
+    lvl = fbr.lvl
+    pos = fbr.pos
+    qos = simplex(fbr.lvl.shape, N) * (pos - 1) + 1
+    res = []
+    function walk(keys, stop, n)
+        if n == 0
+            push!(res, LabelledFiberTree(SubFiber(lvl.lvl, qos)) do io
+                print(io, "[")
+                join(io, keys, ", ")
+                print(io, "]: ")
+            end)
+            qos += 1
+        else
+            for i = 1:stop
+                walk((keys..., i), i, n - 1)
+            end
+        end
+    end
+    walk((), fbr.lvl.shape, N)
+    res
+end
 
 mutable struct VirtualSparseTriangleLevel <: AbstractVirtualLevel
     lvl

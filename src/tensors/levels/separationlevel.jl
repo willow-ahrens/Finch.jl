@@ -8,10 +8,7 @@ Each sublevel is stored in a vector of type `Val` with `eltype(Val) = Lvl`.
 
 ```jldoctest
 julia> Tensor(Dense(Separation(Element(0.0))), [1, 2, 3])
-Dense [1:3]
-├─[1]: Pointer -> 1.0
-├─[2]: Pointer -> 2.0
-├─[3]: Pointer -> 3.0
+Tensor(Dense(Separation(…), 3))
 ```
 """
 struct SeparationLevel{Val, Lvl} <: AbstractLevel
@@ -60,6 +57,20 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:Separatio
     end
     print(io, "Pointer -> ")
     display_fiber(io, mime, SubFiber(fbr.lvl.val[p], 1), depth)
+end
+
+function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SeparationLevel}})
+    node.print_key(io)
+    fbr = node.fbr
+    print(io, "Pointer -> ")
+end
+
+function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SeparationLevel}})
+    fbr = node.fbr
+    lvl = fbr.lvl
+    pos = fbr.pos
+    [LabelledFiberTree(SubFiber(lvl.lvl, pos)) do io
+    end]
 end
 
 @inline level_ndims(::Type{<:SeparationLevel{Val, Lvl}}) where {Val, Lvl} = level_ndims(Lvl)

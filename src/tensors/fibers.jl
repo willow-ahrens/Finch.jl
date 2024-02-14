@@ -120,6 +120,15 @@ virtual_default(tns::AbstractVirtualFiber, ctx) = virtual_level_default(tns.lvl)
 postype(fbr::AbstractVirtualFiber) = postype(fbr.lvl)
 allocator(fbr::AbstractVirtualFiber) = allocator(fbr.lvl)
 
+struct LabelledFiberTree{Fbr}
+    print_key 
+    fbr::Fbr
+end
+
+function Base.show(io::IO, node::LabelledFiberTree)
+    node.print_key(io)
+    print(io, node.fbr)
+end
 
 function declare!(fbr::VirtualFiber, ctx::AbstractCompiler, init)
     lvl = declare_level!(fbr.lvl, ctx, literal(1), init)
@@ -224,7 +233,7 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Tensor)
     if get(io, :compact, false)
         print(io, "Tensor($(summary(fbr.lvl)))")
     else
-        display_fiber(io, mime, fbr, 0)
+        print_tree(io, LabelledFiberTree((io) -> nothing, SubFiber(fbr.lvl, 1)))
     end
 end
 
@@ -244,7 +253,7 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::SubFiber)
     if get(io, :compact, false)
         print(io, "SubFiber($(summary(fbr.lvl)), $(fbr.pos))")
     else
-        display_fiber(io, mime, fbr, 0)
+        print_tree(io, LabelledFiberTree((io) -> nothing, fbr))
     end
 end
 

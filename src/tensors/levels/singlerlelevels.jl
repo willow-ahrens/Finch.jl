@@ -12,7 +12,7 @@ are the types of the arrays used to store positions and endpoints.
 ```jldoctest
 julia> Tensor(SingleRLE(Element(0)), [0, 10, 0]) 
 SingleRLE (0) [1:3]
-├─[2:2]: 10
+└─ [2:2]: 10
 
 julia> Tensor(SingleRLE(Element(0)), [0, 10, 10])
 ERROR: Finch.FinchProtocolError("SingleRLELevels can only be updated once")
@@ -23,7 +23,7 @@ julia> begin
          x
        end
 SingleRLE (0) [1:10]
-├─[3:6]: 1
+└─ [3:6]: 1
 ```
 """
 struct SingleRLELevel{Ti, Ptr<:AbstractVector, Left<:AbstractVector, Right<:AbstractVector, Lvl} <: AbstractLevel
@@ -117,6 +117,23 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SingleRLE
 
     print(io, "SingleRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
+end
+
+function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SingleRLELevel}})
+    node.print_key(io)
+    fbr = node.fbr
+    print(io, "SingleRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+end
+
+function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SingleRLELevel}})
+    fbr = node.fbr
+    lvl = fbr.lvl
+    pos = fbr.pos
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledFiberTree(SubFiber(lvl.lvl, qos)) do io
+            print(io, "[", lvl.left[qos], ":", lvl.right[qos], "]: ")
+        end
+    end
 end
 
 @inline level_ndims(::Type{<:SingleRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = 1 + level_ndims(Lvl)
