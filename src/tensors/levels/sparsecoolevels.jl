@@ -29,10 +29,10 @@ Dense [:,1:3]
 
 julia> Tensor(SparseCOO{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
 SparseCOO{2} (0.0) [:,1:3]
-├─ [:, 1, 1]: 10.0
-├─ [:, 2, 1]: 30.0
-├─ [:, 1, 3]: 20.0
-└─ [:, 3, 3]: 40.0
+├─ [1, 1]: 10.0
+├─ [2, 1]: 30.0
+├─ [1, 3]: 20.0
+└─ [3, 3]: 40.0
 ```
 """
 struct SparseCOOLevel{N, TI<:Tuple, Ptr, Tbl, Lvl} <: AbstractLevel
