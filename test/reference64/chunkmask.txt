@@ -30,7 +30,7 @@ julia> @finch begin
     end
 (A = Tensor(Dense{Int64}(Dense{Int64}(Element{0.0, Float64, Int64}([1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0]), 15), 3)),)
 julia> AsArray(A)
-15×3 AsArray{Float64, 2, Tensor{DenseLevel{Int64, DenseLevel{Int64, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}}}}:
+15×3 AsArray{Float64, 2, Tensor{DenseLevel{Int64, DenseLevel{Int64, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}}, Float64, 2}}:
  1.0  0.0  0.0
  1.0  0.0  0.0
  1.0  0.0  0.0
@@ -77,7 +77,7 @@ julia> @finch begin
     end
 (A = Tensor(Dense{Int64}(Dense{Int64}(Element{0.0, Float64, Int64}([1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]), 14), 3)),)
 julia> AsArray(A)
-14×3 AsArray{Float64, 2, Tensor{DenseLevel{Int64, DenseLevel{Int64, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}}}}:
+14×3 AsArray{Float64, 2, Tensor{DenseLevel{Int64, DenseLevel{Int64, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}}, Float64, 2}}:
  1.0  0.0  0.0
  1.0  0.0  0.0
  1.0  0.0  0.0

@@ -14,11 +14,11 @@
     end
 end
 
-function Base.copyto!(dst::Tensor, src::Union{Tensor, AbstractArray})
+function Base.copyto!(dst::Tensor{Lvl, T, N}, src::Union{Tensor{Lvl2, T2, N}, AbstractArray{T3, N}}) where {Lvl, Lvl2, T, T2, T3, N}
     return copyto_helper!(dst, src)
 end
 
-function Base.copyto!(dst::Array, src::Tensor)
+function Base.copyto!(dst::Array{T, N}, src::Tensor{Lvl, T2, N}) where {T, Lvl, T2, N}
     return copyto_helper!(dst, src)
 end
 

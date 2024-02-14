@@ -1,14 +1,14 @@
-abstract type AbstractFiber{Lvl} end
+abstract type AbstractFiber{Lvl, T, N} <: AbstractArray{T, N} end
 abstract type AbstractVirtualTensor end
 abstract type AbstractVirtualFiber{Lvl} <: AbstractVirtualTensor end
 
 """
-    Tensor{Lvl} <: AbstractFiber{Lvl}
+    Tensor{Lvl, [T=level_eltype(Lvl)], [N=level_eldims(Lvl)]} <: AbstractFiber{Lvl, T, N}
 
 The multidimensional array type used by `Finch`. `Tensor` is a thin wrapper
 around the hierarchical level storage of type `Lvl`.
 """
-struct Tensor{Lvl} <: AbstractFiber{Lvl}
+struct Tensor{Lvl, T, N} <: AbstractFiber{Lvl, T, N}
     lvl::Lvl
 end
 
@@ -20,7 +20,7 @@ storage is performed, it is assumed that position 1 of `lvl` corresponds to a
 valid tensor, and `lvl` will be wrapped as-is. Call a different constructor to
 initialize the storage.
 """
-Tensor(lvl::Lvl) where {Lvl<:AbstractLevel} = Tensor{Lvl}(lvl)
+Tensor(lvl::Lvl) where {Lvl<:AbstractLevel} = Tensor{Lvl, level_eltype(Lvl), level_ndims(Lvl)}(lvl)
 
 """
     Tensor(lvl, [undef], dims...)
@@ -84,10 +84,12 @@ FinchNotation.finch_leaf(x::VirtualFiber) = virtual(x)
 
 `SubFiber` represents a tensor at position `pos` within `lvl`.
 """
-struct SubFiber{Lvl, Pos} <: AbstractFiber{Lvl}
+struct SubFiber{Lvl, Pos, T, N} <: AbstractFiber{Lvl, T, N}
     lvl::Lvl
     pos::Pos
 end
+
+SubFiber(lvl::Lvl, pos::Pos) where {Lvl, Pos} = SubFiber{Lvl, Pos, level_eltype(Lvl), level_ndims(Lvl)}(lvl, pos)
 
 mutable struct VirtualSubFiber{Lvl} <: AbstractVirtualFiber{Lvl}
     lvl::Lvl
@@ -139,11 +141,13 @@ function virtual_moveto(fbr::VirtualSubFiber, ctx::AbstractCompiler, arch)
     virtual_moveto_level(fbr.lvl, ctx, arch)
 end
 
-struct HollowSubFiber{Lvl, Pos, Dirty} <: AbstractFiber{Lvl}
+struct HollowSubFiber{Lvl, Pos, Dirty, T, N} <: AbstractFiber{Lvl, T, N}
     lvl::Lvl
     pos::Pos
     dirty::Dirty
 end
+
+HollowSubFiber(lvl::Lvl, pos::Pos, dirty::Dirty) where {Lvl, Pos, Dirty} = HollowSubFiber{Lvl, Pos, Dirty, level_eltype(Lvl), level_ndims(Lvl)}(lvl, pos, dirty)
 
 mutable struct VirtualHollowSubFiber{Lvl}
     lvl::Lvl

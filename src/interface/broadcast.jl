@@ -137,7 +137,7 @@ function pointwise_finch_expr(ex, T, ctx, idxs)
     :($src[$(idxs[1:ndims(T)]...)])
 end
 
-function Base.copyto!(out, bc::Broadcasted{<:FinchStyle})
+function Base.copyto!(out::AbstractArray, bc::Broadcasted{<:FinchStyle})
     copyto_broadcast_helper!(out, lift_broadcast(bc))
 end
 
