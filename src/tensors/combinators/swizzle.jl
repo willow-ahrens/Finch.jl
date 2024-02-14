@@ -7,6 +7,7 @@ SwizzleArray{dims}(body::Body) where {dims, Body} = SwizzleArray{dims, Body}(bod
 
 Base.ndims(arr::SwizzleArray) = ndims(typeof(arr))
 Base.ndims(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = ndims(Body)
+Base.eltype(arr::SwizzleArray) = eltype(arr.body)
 default(arr::SwizzleArray) = default(typeof(arr))
 default(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = default(Body)
 
