@@ -118,17 +118,15 @@ function Base.show(io::IO, lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}) wher
     print(io, ")")
 end
 
-Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SparseHashLevel{N}}}) where {N} =
-    print(io, "SparseHash{", N, "} (", default(node.fbr), ") [", ":,"^(ndims(node.fbr) - 1), "1:", size(node.fbr)[end], "]")
+labelled_show(io::IO, fbr::SubFiber{<:SparseHashLevel{N}}) where {N} =
+    print(io, "SparseHash{", N, "} (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
-function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseHashLevel{N}}}) where {N}
-    fbr = node.fbr
+function labelled_children(fbr::SubFiber{<:SparseHashLevel{N}}) where {N}
     lvl = fbr.lvl
     pos = fbr.pos
-    OrderedDict(map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
-        cartesian_fiber_label(lvl.srt[qos][1][2]) =>
-        LabelledFiberTree(SubFiber(lvl.lvl, qos))
-    end)
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledTree(cartesian_label(lvl.srt[qos][1][2]...), SubFiber(lvl.lvl, qos))
+    end
 end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseHashLevel{N}}, depth) where {N}

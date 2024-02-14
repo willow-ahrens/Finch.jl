@@ -120,20 +120,46 @@ virtual_default(tns::AbstractVirtualFiber, ctx) = virtual_level_default(tns.lvl)
 postype(fbr::AbstractVirtualFiber) = postype(fbr.lvl)
 allocator(fbr::AbstractVirtualFiber) = allocator(fbr.lvl)
 
-struct LabelledFiberTree{Fbr}
-    fbr::Fbr
+struct LabelledTree
+    key 
+    node
 end
 
-struct CartesianFiberLabel
+LabelledTree(node) = LabelledTree(nothing, node)
+
+function Base.show(io::IO, node::LabelledTree)
+    if node.key !== nothing
+        show(io, something(node.key))
+        print(io, ": ")
+    end
+    labelled_show(io, node.node)
+end
+labelled_show(io, node) = show(io, node)
+
+AbstractTrees.children(node::LabelledTree) = labelled_children(node.node)
+labelled_children(node) = ()
+
+struct CartesianLabel
     idxs
 end
 
-cartesian_fiber_label(args...) = CartesianFiberLabel(Any[args...])
+cartesian_label(args...) = CartesianLabel(Any[args...])
 
-function AbstractTrees.print_child_key(io::IO, key::CartesianFiberLabel)
+function Base.show(io::IO, key::CartesianLabel)
     print(io, "[")
     join(io, key.idxs, ", ")
     print(io, "]")
+end
+
+struct RangeLabel
+    start
+    stop
+end
+
+function Base.show(io::IO, key::RangeLabel)
+    print(io, key.start)
+    print(io, ":")
+    print(io, key.stop)
 end
 
 function declare!(fbr::VirtualFiber, ctx::AbstractCompiler, init)
@@ -239,7 +265,7 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Tensor)
     if get(io, :compact, false)
         print(io, "Tensor($(summary(fbr.lvl)))")
     else
-        print_tree(io, LabelledFiberTree(SubFiber(fbr.lvl, 1)))
+        print_tree(io, LabelledTree(SubFiber(fbr.lvl, 1)))
     end
 end
 
@@ -259,7 +285,7 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::SubFiber)
     if get(io, :compact, false)
         print(io, "SubFiber($(summary(fbr.lvl)), $(fbr.pos))")
     else
-        print_tree(io, LabelledFiberTree(fbr))
+        print_tree(io, LabelledTree(fbr))
     end
 end
 

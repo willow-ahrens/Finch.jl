@@ -67,8 +67,8 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:ElementLe
     show(io, mime, fbr.lvl.val[p])
 end
 
-Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:ElementLevel}}) =
-    print(io, node.fbr.lvl.val[node.fbr.pos])
+labelled_show(io::IO, fbr::SubFiber{<:ElementLevel}) =
+    print(io, fbr.lvl.val[fbr.pos])
 
 @inline level_ndims(::Type{<:ElementLevel}) = 0
 @inline level_size(::ElementLevel) = ()

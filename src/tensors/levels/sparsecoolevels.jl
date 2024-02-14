@@ -115,17 +115,15 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseCOO
     display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
 end
 
-Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SparseCOOLevel{N}}}) where {N} =
-    print(io, "SparseCOO{", N, "} (", default(node.fbr), ") [", ":,"^(ndims(node.fbr) - 1), "1:", size(node.fbr)[end], "]")
+labelled_show(io::IO, fbr::SubFiber{<:SparseCOOLevel{N}}) where {N} =
+    print(io, "SparseCOO{", N, "} (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
-function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseCOOLevel{N}}}) where {N}
-    fbr = node.fbr
+function labelled_children(fbr::SubFiber{<:SparseCOOLevel{N}}) where {N}
     lvl = fbr.lvl
     pos = fbr.pos
-    OrderedDict(map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
-        cartesian_fiber_label(map(n -> lvl.tbl[n][qos], 1:N)...) =>
-        LabelledFiberTree(SubFiber(lvl.lvl, qos))
-    end)
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledTree(cartesian_label(map(n -> lvl.tbl[n][qos], 1:N)...), SubFiber(lvl.lvl, qos))
+    end
 end
 
 @inline level_ndims(::Type{<:SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}}) where {N, TI, Ptr, Tbl, Lvl} = N + level_ndims(Lvl)

@@ -115,17 +115,16 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SingleLis
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
-Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SingleListLevel}}) =
-    print(io, "SingleList (", default(node.fbr), ") [", ":,"^(ndims(node.fbr) - 1), "1:", size(node.fbr)[end], "]")
+labelled_show(io::IO, fbr::SubFiber{<:SingleListLevel}) =
+    print(io, "SingleList (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
-function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SingleListLevel}})
-    fbr = node.fbr
+function labelled_children(fbr::SubFiber{<:SingleListLevel})
     lvl = fbr.lvl
     pos = fbr.pos
-    OrderedDict(map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
-        cartesian_fiber_label(lvl.idx[qos])
-        LabelledFiberTree(SubFiber(lvl.lvl, qos))
-    end)
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        cartesian_label(lvl.idx[qos])
+        LabelledTree(SubFiber(lvl.lvl, qos))
+    end
 end
 
 @inline level_ndims(::Type{<:SingleListLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = 1 + level_ndims(Lvl)

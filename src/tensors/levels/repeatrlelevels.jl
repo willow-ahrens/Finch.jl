@@ -104,17 +104,15 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:RepeatRLE
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
-Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:RepeatRLELevel}}) =
-    print(io, "RepeatRLE [", ":,"^(ndims(node.fbr) - 1), "1:", size(node.fbr)[end], "]")
+labelled_show(io::IO, fbr::SubFiber{<:RepeatRLELevel}) =
+    print(io, "RepeatRLE [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
-function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:RepeatRLELevel}})
-    fbr = node.fbr
+function labelled_children(fbr::SubFiber{<:RepeatRLELevel})
     lvl = fbr.lvl
     pos = fbr.pos
-    OrderedDict(map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
-        cartesian_fiber_label((qos == lvl.ptr[pos] ? 1 : lvl.idx[qos - 1] + 1):(lvl.idx[qos])) =>
-        LabelledFiberTree(lvl.val[qos])
-    end)
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledTree(cartesian_label(RangeLabel(qos == lvl.ptr[pos] ? 1 : lvl.idx[qos - 1] + 1, lvl.idx[qos])), lvl.val[qos])
+    end
 end
 
 @inline level_ndims(::Type{<:RepeatRLELevel}) = 1

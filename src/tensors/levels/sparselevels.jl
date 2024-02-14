@@ -223,11 +223,10 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseLev
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
-Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SparseLevel}}) =
-    print(io, "Sparse (", default(node.fbr), ") [", ":,"^(ndims(node.fbr) - 1), "1:", size(node.fbr)[end], "]")
+labelled_show(io::IO, fbr::SubFiber{<:SparseLevel}) =
+    print(io, "Sparse (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
-function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseLevel}})
-    fbr = node.fbr
+function labelled_children(fbr::SubFiber{<:SparseLevel})
     lvl = fbr.lvl
     pos = fbr.pos
     subtbl = table_query(lvl.tbl, pos)
@@ -235,14 +234,13 @@ function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseLevel
     res = []
     while i <= stop
         (i, q) = subtable_get(lvl.tbl, subtbl, state)
-        push!(res, cartesian_fiber_label(i) =>
-            LabelledFiberTree(SubFiber(lvl.lvl, q)))
+        push!(res, LabelledTree(cartesian_label(i), SubFiber(lvl.lvl, q)))
         if i == stop
             break
         end
         state = subtable_next(lvl.tbl, subtbl, state)
     end
-    OrderedDict(res)
+    res
 end
 
 @inline level_ndims(::Type{<:SparseLevel{Ti, Tbl, Lvl}}) where {Ti, Tbl, Lvl} = 1 + level_ndims(Lvl)

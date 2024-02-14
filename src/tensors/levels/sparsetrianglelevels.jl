@@ -96,19 +96,17 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseTri
     display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
 end
 
-Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SparseTriangleLevel{N}}}) where {N} =
-    print(io, "SparseTriangle{", N, "} (", default(node.fbr), ") [", ":,"^(ndims(node.fbr) - 1), "1:", size(node.fbr)[end], "]")
+labelled_show(io::IO, fbr::SubFiber{<:SparseTriangleLevel{N}}) where {N} =
+    print(io, "SparseTriangle{", N, "} (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
-function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseTriangleLevel{N}}}) where {N}
-    fbr = node.fbr
+function labelled_children(fbr::SubFiber{<:SparseTriangleLevel{N}}) where {N}
     lvl = fbr.lvl
     pos = fbr.pos
     qos = simplex(fbr.lvl.shape, N) * (pos - 1) + 1
     res = []
     function walk(keys, stop, n)
         if n == 0
-            push!(res, cartesian_fiber_label(keys...) =>
-                LabelledFiberTree(SubFiber(lvl.lvl, qos)))
+            push!(res, LabelledTree(cartesian_label(keys...), SubFiber(lvl.lvl, qos)))
             qos += 1
         else
             for i = 1:stop
@@ -117,7 +115,7 @@ function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseTrian
         end
     end
     walk((), fbr.lvl.shape, N)
-    OrderedDict(res)
+    res
 end
 
 mutable struct VirtualSparseTriangleLevel <: AbstractVirtualLevel

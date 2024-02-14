@@ -95,17 +95,15 @@ function Base.show(io::IO, lvl::SparseListLevel{Ti, Ptr, Idx, Lvl}) where {Ti, L
     print(io, ")")
 end
 
-Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SparseListLevel}}) =
-    print(io, "SparseList (", default(node.fbr), ") [", ":,"^(ndims(node.fbr) - 1), "1:", size(node.fbr)[end], "]")
+labelled_show(io::IO, fbr::SubFiber{<:SparseListLevel}) =
+    print(io, "SparseList (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
-function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseListLevel}})
-    fbr = node.fbr
+function labelled_children(fbr::SubFiber{<:SparseListLevel})
     lvl = fbr.lvl
     pos = fbr.pos
-    OrderedDict(map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
-        cartesian_fiber_label(lvl.idx[qos]) =>
-            LabelledFiberTree(SubFiber(lvl.lvl, qos))
-    end)
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledTree(cartesian_label(lvl.idx[qos]), SubFiber(lvl.lvl, qos))
+    end
 end
 
 function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseListLevel}, depth)

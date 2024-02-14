@@ -111,13 +111,10 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseVBL
     display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
-function Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:SparseVBLLevel}})
-    print(io, node.print_key...)
-    fbr = node.fbr
-    print(io, "SparseVBL (", default(node.fbr), ") [", ":,"^(ndims(node.fbr) - 1), "1:", size(node.fbr)[end], "]")
-end
+labelled_show(io::IO, fbr::SubFiber{<:SparseVBLLevel}) =
+    print(io, "SparseVBL (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
-function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseVBLLevel}})
+function labelled_children(fbr::SubFiber{<:SparseVBLLevel})
     fbr = node.fbr
     lvl = fbr.lvl
     pos = fbr.pos
@@ -127,11 +124,10 @@ function AbstractTrees.children(node::LabelledFiberTree{<:SubFiber{<:SparseVBLLe
         qos = fbr.lvl.ofs[r]
         l = fbr.lvl.ofs[r + 1] - fbr.lvl.ofs[r]
         for qos = fbr.lvl.ofs[r]:fbr.lvl.ofs[r + 1] - 1
-            push!(res, cartesian_fiber_label(i - (fbr.lvl.ofs[r + 1] - 1) + qos) =>
-                LabelledFiberTree(SubFiber(lvl.lvl, qos)))
+            push!(res, LabelledTree(cartesian_label(i - (fbr.lvl.ofs[r + 1] - 1) + qos), SubFiber(lvl.lvl, qos)))
         end
     end
-    OrderedDict(res)
+    res
 end
 
 @inline level_ndims(::Type{<:SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}}) where {Ti, Ptr, Idx, Ofs, Lvl} = 1 + level_ndims(Lvl)

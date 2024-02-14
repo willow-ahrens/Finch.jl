@@ -27,7 +27,7 @@ function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:PatternLe
     show(io, mime, true)
 end
 
-Base.show(io::IO, node::LabelledFiberTree{<:SubFiber{<:PatternLevel}}) =
+labelled_show(io::IO, ::SubFiber{<:PatternLevel}) =
     print(io, true)
 
 Base.resize!(lvl::PatternLevel) = lvl
