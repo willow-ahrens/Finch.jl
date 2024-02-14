@@ -137,11 +137,11 @@ declare the number of indices handled by the level:
 ```jldoctest example1
 julia> A_fbr = Tensor(SparseCOO{2}(Element(0.0)), A)
 SparseCOO{2} (0.0) [:,1:3]
-├─ [:, 2, 1]: 1.1
-├─ [:, 3, 1]: 2.2
-├─ [:, 4, 1]: 3.3
-├─ [:, 1, 3]: 4.4
-└─ [:, 3, 3]: 5.5
+├─ [2, 1]: 1.1
+├─ [3, 1]: 2.2
+├─ [4, 1]: 3.3
+├─ [1, 3]: 4.4
+└─ [3, 3]: 5.5
 ```
 
 ![COO Format Index Tree](../../assets/levels-A-sc2-e.png)
