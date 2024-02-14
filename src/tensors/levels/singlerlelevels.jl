@@ -208,7 +208,6 @@ postype(lvl::VirtualSingleRLELevel) = postype(lvl.lvl)
 function declare_level!(lvl::VirtualSingleRLELevel, ctx::AbstractCompiler, pos, init)
     Ti = lvl.Ti
     Tp = postype(lvl) 
-    qos = call(-, call(getindex, :($(lvl.ptr)), call(+, pos, 1)), 1)
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
@@ -218,7 +217,7 @@ function declare_level!(lvl::VirtualSingleRLELevel, ctx::AbstractCompiler, pos, 
             $(lvl.prev_pos) = $(Tp(0))
         end)
     end
-    lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
+    lvl.lvl = declare_level!(lvl.lvl, ctx, literal(Tp(0)), init)
     return lvl
 end
 

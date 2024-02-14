@@ -26,6 +26,7 @@ using CIndices
         for D in [
             Tensor(Dense(SparseList(Element(0)))),
             Tensor(Dense(SparseHash{1}(Element(0)))),
+            Tensor(Dense(SparseDict(Element(0)))),
             Tensor(Dense(Dense(Element(0)))),
         ]
             E = deepcopy(D)
@@ -523,7 +524,7 @@ using CIndices
         edge_matrix = Tensor(SparseList(SparseList(Element(0.0))), 254, 254)
         edge_values = fsprand(254, 254, .001)
         @finch (edge_matrix .= 0; for j=_, i=_; edge_matrix[i,j] = edge_values[i,j]; end)
-        output_matrix = Tensor(SparseHash{1}(SparseHash{1}(Element(0.0))), 254, 254)
+        output_matrix = Tensor(SparseDict(SparseDict(Element(0.0))), 254, 254)
         @finch (for v_4=_, v_3=_, v_2=_, v_5=_; output_matrix[v_2,v_5] += edge_matrix[v_5, v_4]*edge_matrix[v_2, v_3]*edge_matrix[v_3, v_4]; end)
 
         a_matrix = [1 0; 0 1]
@@ -532,7 +533,7 @@ using CIndices
         b_matrix = [0 1; 1 0]
         b_fiber = Tensor(SparseList(SparseList(Element(0.0))), 2, 2)
         copyto!(b_fiber, b_matrix)
-        output_tensor = Tensor(SparseHash{1}(SparseHash{1}(Element(0.0))), 2, 2)
+        output_tensor = Tensor(SparseDict(SparseDict(Element(0.0))), 2, 2)
 
         @finch (output_tensor .=0; for j=_,i=_,k=_; output_tensor[i,k] += a_fiber[i,j] * b_fiber[k,j]; end)
     end

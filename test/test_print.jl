@@ -6,6 +6,7 @@
     formats = [
         "list" => SparseList,
         "byte" => SparseByteMap,
+        "dict" => SparseDict,
         "hash1" => SparseHash{1},
         "coo1" => SparseCOO{1},
     ]

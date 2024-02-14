@@ -87,6 +87,7 @@ some general descriptions.
 | SingleSparseRun      | Advanced | Sparse Runs           | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
 | SingleBlock          | Advanced | Sparse Blocks         | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ⚙️     |
 | SparseBytemap        | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ❌              | ✅     |
+| SparseDict           | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ❌              | ✅️     |
 | AtomicLevel          | Modifier | No Data               | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️ |
 | SeperationLevel      | Modifier | No Data               | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️ |
 | SparseCOO            | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ✅              | ✅️    |
