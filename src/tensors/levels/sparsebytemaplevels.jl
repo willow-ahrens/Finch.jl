@@ -94,23 +94,6 @@ function Base.show(io::IO, lvl::SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl},) whe
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseByteMapLevel}, depth)
-    p = fbr.pos
-    lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "SparseBytemap(undef...)")
-        return
-    end
-
-    crds = @view(fbr.lvl.srt[fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1])
-
-    print_coord(io, (p, i)) = show(io, i)
-    get_fbr((p, i),) = fbr(i)
-
-    print(io, "SparseByteMap (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
-end
-
 labelled_show(io::IO, fbr::SubFiber{<:SparseByteMapLevel}) =
     print(io, "SparseByteMap (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 

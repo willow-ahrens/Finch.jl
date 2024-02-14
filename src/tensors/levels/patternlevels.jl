@@ -23,10 +23,6 @@ similar_level(::PatternLevel) = PatternLevel()
 
 countstored_level(lvl::PatternLevel, pos) = pos
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:PatternLevel}, depth)
-    show(io, mime, true)
-end
-
 labelled_show(io::IO, ::SubFiber{<:PatternLevel}) =
     print(io, true)
 

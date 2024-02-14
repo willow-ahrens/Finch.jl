@@ -90,27 +90,6 @@ function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}) where {T
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseVBLLevel}, depth)
-    p = fbr.pos
-    crds = []
-    lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "SparseVBL(undef...)")
-        return
-    end
-    for r in fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1
-        i = fbr.lvl.idx[r]
-        l = fbr.lvl.ofs[r + 1] - fbr.lvl.ofs[r]
-        append!(crds, (i - l + 1):i)
-    end
-
-    print_coord(io, crd) = show(io, crd)
-    get_fbr(crd) = fbr(crd)
-
-    print(io, "SparseVBL (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
-end
-
 labelled_show(io::IO, fbr::SubFiber{<:SparseVBLLevel}) =
     print(io, "SparseVBL (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 

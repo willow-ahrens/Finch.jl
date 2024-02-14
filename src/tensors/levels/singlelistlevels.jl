@@ -98,23 +98,6 @@ function Base.show(io::IO, lvl::SingleListLevel{Ti, Ptr, Idx, Lvl}) where {Ti, L
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SingleListLevel}, depth)
-    p = fbr.pos
-    lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "SparseHash(undef...)")
-        return
-    end
-
-    crds = @view(fbr.lvl.idx[fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1])
-
-    print_coord(io, crd) = show(io, crd)
-    get_fbr(crd) = fbr(crd)
-
-    print(io, "SingleList (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
-end
-
 labelled_show(io::IO, fbr::SubFiber{<:SingleListLevel}) =
     print(io, "SingleList (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 

@@ -54,17 +54,6 @@ function Base.show(io::IO, lvl::SeparationLevel{Val, Lvl}) where {Val, Lvl}
     print(io, ")")
 end 
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SeparationLevel}, depth)
-    p = fbr.pos
-    lvl = fbr.lvl
-    if p > length(lvl.val)
-        print(io, "Pointer -> undef")
-        return
-    end
-    print(io, "Pointer -> ")
-    display_fiber(io, mime, SubFiber(fbr.lvl.val[p], 1), depth)
-end
-
 labelled_show(io::IO, ::SubFiber{<:SeparationLevel}) =
     print(io, "Pointer -> ")
 

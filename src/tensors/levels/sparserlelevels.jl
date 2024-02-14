@@ -88,27 +88,6 @@ function Base.show(io::IO, lvl::SparseRLELevel{Ti, Ptr, Left, Right, Lvl}) where
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseRLELevel}, depth)
-    p = fbr.pos
-    lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "SparseRLE(undef...)")
-        return
-    end
-    left_endpoints = @view(lvl.left[lvl.ptr[p]:lvl.ptr[p + 1] - 1])
-
-    crds = []
-    for l in left_endpoints 
-        append!(crds, l)
-    end
-
-    print_coord(io, crd) = print(io, crd, ":", lvl.right[lvl.ptr[p]-1+searchsortedfirst(left_endpoints, crd)])  
-    get_fbr(crd) = fbr(crd)
-
-    print(io, "SparseRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
-end
-
 labelled_show(io::IO, fbr::SubFiber{<:SparseRLELevel}) =
     print(io, "SparseRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 

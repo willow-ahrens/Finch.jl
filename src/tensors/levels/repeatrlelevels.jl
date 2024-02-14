@@ -92,23 +92,6 @@ function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}) wh
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:RepeatRLELevel}, depth)
-    p = fbr.pos
-    lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "RepeatRLELevel(undef...)")
-        return
-    end
-
-    crds = fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1
-
-    print_coord(io, crd) = print(io, crd == fbr.lvl.ptr[p] ? 1 : fbr.lvl.idx[crd - 1] + 1, ":", fbr.lvl.idx[crd])
-    get_fbr(crd) = fbr.lvl.val[crd]
-
-    print(io, "RepeatRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
-end
-
 labelled_show(io::IO, fbr::SubFiber{<:RepeatRLELevel}) =
     print(io, "RepeatRLE [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 

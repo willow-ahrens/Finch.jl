@@ -60,16 +60,6 @@ function Base.show(io::IO, lvl::ElementLevel{D, Tv, Tp, Val}) where {D, Tv, Tp, 
     print(io, ")")
 end 
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:ElementLevel}, depth)
-    p = fbr.pos
-    lvl = fbr.lvl
-    if p > length(fbr.lvl.val)
-        show(io, mime, undef)
-        return
-    end
-    show(io, mime, fbr.lvl.val[p])
-end
-
 labelled_show(io::IO, fbr::SubFiber{<:ElementLevel}) =
     print(io, fbr.lvl.val[fbr.pos])
 

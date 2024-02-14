@@ -87,14 +87,6 @@ function Base.show(io::IO, lvl::DenseLevel{Ti}) where {Ti}
     print(io, ")")
 end 
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:DenseLevel}, depth)
-    crds = 1:fbr.lvl.shape
-
-    get_fbr(crd) = fbr(crd)
-    print(io, "Dense [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, show, get_fbr)
-end
-
 labelled_show(io::IO, fbr::SubFiber{<:DenseLevel}) =
     print(io, "Dense [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 

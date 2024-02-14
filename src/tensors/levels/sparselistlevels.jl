@@ -107,23 +107,6 @@ function labelled_children(fbr::SubFiber{<:SparseListLevel})
     end
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseListLevel}, depth)
-    p = fbr.pos
-    lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "SparseList(undef...)")
-        return
-    end
-
-    crds = @view(fbr.lvl.idx[fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1])
-
-    print_coord(io, crd) = show(io, crd)
-    get_fbr(crd) = fbr(crd)
-
-    print(io, "SparseList (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
-end
-
 @inline level_ndims(::Type{<:SparseListLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::SparseListLevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::SparseListLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))

@@ -208,23 +208,6 @@ function Base.show(io::IO, lvl::SparseLevel{Ti, Tbl, Lvl}) where {Ti, Tbl, Lvl}
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseLevel}, depth)
-    p = fbr.pos
-    lvl = fbr.lvl
-    if p + 1 > length(lvl.tbl.ptr)
-        print(io, "Sparse(undef...)")
-        return
-    end
-
-    crds = table_coords(fbr.lvl.tbl, p)
-
-    print_coord(io, crd) = show(io, crd)
-    get_fbr(crd) = fbr(crd)
-
-    print(io, "Sparse (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
-end
-
 labelled_show(io::IO, fbr::SubFiber{<:SparseLevel}) =
     print(io, "Sparse (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 

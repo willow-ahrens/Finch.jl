@@ -80,28 +80,6 @@ function Base.show(io::IO, lvl::SparseTriangleLevel{N, Ti}) where {N, Ti}
     print(io, ")")
 end 
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseTriangleLevel{N}}, depth) where {N}
-    qos = simplex(fbr.lvl.shape, N)
-    crds = 1:qos
-
-    #when n = 3, this is the qth element of [(i, j, k) for k = 1:3 for j = 1:k for i = 1:j]
-    function get_coord(q, n, k)
-        if n == 1
-            return (q,)
-        else
-            j = findfirst(j -> simplex(j, n) >= q, 1:k)
-            return (get_coord(q - simplex(j - 1, n), n - 1, j)..., j)
-        end
-    end
-
-    print_coord(io, q) = join(io, get_coord(q, N, fbr.lvl.shape), ", ")
-    get_fbr(crd) = fbr(crd)
-    print(io, "SparseTriangle (", default(fbr), ") [", ":,"^(ndims(fbr) - N), "1:")
-    join(io, fbr.lvl.shape, ",1:") 
-    print(io, "]")
-    display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
-end
-
 labelled_show(io::IO, fbr::SubFiber{<:SparseTriangleLevel{N}}) where {N} =
     print(io, "SparseTriangle{", N, "} (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 

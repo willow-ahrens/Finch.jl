@@ -107,25 +107,6 @@ function Base.show(io::IO, lvl::SparseCOOLevel{N, TI}) where {N, TI}
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseCOOLevel{N}}, depth) where {N}
-    p = fbr.pos
-    lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "SparseCOO(undef...)")
-        return
-    end
-
-    crds = fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1
-
-    print_coord(io, q) = join(io, map(n -> fbr.lvl.tbl[n][q], 1:N), ", ")
-    get_fbr(q) = fbr(map(n -> fbr.lvl.tbl[n][q], 1:N)...)
-
-    print(io, "SparseCOO (", default(fbr), ") [", ":,"^(ndims(fbr) - N), "1:")
-    join(io, fbr.lvl.shape, ",1:") 
-    print(io, "]")
-    display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
-end
-
 labelled_show(io::IO, fbr::SubFiber{<:SparseCOOLevel{N}}) where {N} =
     print(io, "SparseCOO{", N, "} (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 

@@ -305,27 +305,6 @@ end
 
 (fbr::Tensor)(idx...) = SubFiber(fbr.lvl, 1)(idx...)
 
-display_fiber(io::IO, mime::MIME"text/plain", fbr::Tensor, depth) = display_fiber(io, mime, SubFiber(fbr.lvl, 1), depth)
-function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, depth, N, crds, print_coord, get_fbr)
-    function helper(crd)
-        println(io)
-        print(io, "│ " ^ depth, "├─"^N, "[", ":,"^(ndims(fbr) - N))
-        print_coord(io, crd)
-        print(io, "]: ")
-        display_fiber(io, mime, get_fbr(crd), depth + N)
-    end
-    cap = 2
-    if length(crds) > 2cap + 1
-        foreach(helper, crds[1:cap])
-        println(io)
-        print(io, "│ " ^ depth, "│ ⋮")
-        foreach(helper, crds[end - cap + 1:end])
-    else
-        foreach(helper, crds)
-    end
-end
-display_fiber(io::IO, mime::MIME"text/plain", fbr, depth) = show(io, mime, fbr) #TODO get rid of this eventually
-
 """
     countstored(arr)
 
@@ -337,8 +316,6 @@ See also: (`nnz`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseAr
 countstored(fbr::Tensor) = countstored_level(fbr.lvl, 1)
 
 countstored(arr::Array) = length(arr)
-
-
 
 @staged function assemble!(lvl)
     contain(LowerJulia()) do ctx

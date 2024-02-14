@@ -130,23 +130,6 @@ function labelled_children(fbr::SubFiber{<:SparseHashLevel{N}}) where {N}
     end
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseHashLevel{N}}, depth) where {N}
-    p = fbr.pos
-    lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "SparseHash(undef...)")
-        return
-    end
-    crds = fbr.lvl.srt[fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1]
-
-    print_coord(io, crd) = join(io, map(n -> crd[1][2][n], 1:N), ", ")
-    get_fbr(crd) = fbr(crd[1][2]...)
-
-    print(io, "SparseHash (", default(fbr), ") [", ":,"^(ndims(fbr) - N), "1:")
-    join(io, fbr.lvl.shape, ",1:") 
-    print(io, "]")
-    display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
-end
 @inline level_ndims(::Type{<:SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}) where {N, TI, Ptr, Tbl, Srt, Lvl} = N + level_ndims(Lvl)
 @inline level_size(lvl::SparseHashLevel) = (lvl.shape..., level_size(lvl.lvl)...)
 @inline level_axes(lvl::SparseHashLevel) = (map(Base.OneTo, lvl.shape)..., level_axes(lvl.lvl)...)

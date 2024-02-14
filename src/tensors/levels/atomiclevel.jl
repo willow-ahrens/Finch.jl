@@ -53,17 +53,6 @@ function Base.show(io::IO, lvl::AtomicLevel{AVal, Lvl}) where {AVal, Lvl}
     print(io, ")")
 end 
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:AtomicLevel}, depth)
-    p = fbr.pos
-    lvl = fbr.lvl
-    if p > length(lvl.locks)
-        print(io, "Atomic -> undef")
-        return
-    end
-    print(io, "Atomic -> ")
-    display_fiber(io, mime, SubFiber(lvl.lvl, p), depth)
-end
-
 labelled_show(io::IO, ::SubFiber{<:AtomicLevel}) =
     print(io, "Atomic -> ")
 
