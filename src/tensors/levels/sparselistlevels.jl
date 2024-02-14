@@ -13,20 +13,20 @@ arrays used to store positions and indicies.
 ```jldoctest
 julia> Tensor(Dense(SparseList(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─ [1]: SparseList (0.0) [1:3]
+├─ [:, 1]: SparseList (0.0) [1:3]
 │  ├─ [1]: 10.0
 │  └─ [2]: 30.0
-├─ [2]: SparseList (0.0) [1:3]
-└─ [3]: SparseList (0.0) [1:3]
+├─ [:, 2]: SparseList (0.0) [1:3]
+└─ [:, 3]: SparseList (0.0) [1:3]
    ├─ [1]: 20.0
    └─ [3]: 40.0
 
 julia> Tensor(SparseList(SparseList(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 SparseList (0.0) [:,1:3]
-├─ [1]: SparseList (0.0) [1:3]
+├─ [:, 1]: SparseList (0.0) [1:3]
 │  ├─ [1]: 10.0
 │  └─ [2]: 30.0
-└─ [3]: SparseList (0.0) [1:3]
+└─ [:, 3]: SparseList (0.0) [1:3]
    ├─ [1]: 20.0
    └─ [3]: 40.0
 
@@ -103,7 +103,7 @@ function labelled_children(fbr::SubFiber{<:SparseListLevel})
     pos = fbr.pos
     pos + 1 > length(lvl.ptr) && return []
     map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
-        LabelledTree(cartesian_label([Colon() for _ = 1:ndims(fbr) - 1]..., lvl.idx[qos]), SubFiber(lvl.lvl, qos))
+        LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., lvl.idx[qos]), SubFiber(lvl.lvl, qos))
     end
 end
 

@@ -19,20 +19,20 @@ The type `Ptr` is the type for the pointer array.
 ```jldoctest
 julia> Tensor(Dense(SparseCOO{1}(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─ [1]: SparseCOO{1} (0.0) [1:3]
+├─ [:, 1]: SparseCOO{1} (0.0) [1:3]
 │  ├─ [1]: 10.0
 │  └─ [2]: 30.0
-├─ [2]: SparseCOO{1} (0.0) [1:3]
-└─ [3]: SparseCOO{1} (0.0) [1:3]
+├─ [:, 2]: SparseCOO{1} (0.0) [1:3]
+└─ [:, 3]: SparseCOO{1} (0.0) [1:3]
    ├─ [1]: 20.0
    └─ [3]: 40.0
 
 julia> Tensor(SparseCOO{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
 SparseCOO{2} (0.0) [:,1:3]
-├─ [1, 1]: 10.0
-├─ [2, 1]: 30.0
-├─ [1, 3]: 20.0
-└─ [3, 3]: 40.0
+├─ [:, 1, 1]: 10.0
+├─ [:, 2, 1]: 30.0
+├─ [:, 1, 3]: 20.0
+└─ [:, 3, 3]: 40.0
 ```
 """
 struct SparseCOOLevel{N, TI<:Tuple, Ptr, Tbl, Lvl} <: AbstractLevel
@@ -134,7 +134,7 @@ function labelled_children(fbr::SubFiber{<:SparseCOOLevel{N}}) where {N}
     pos = fbr.pos
     pos + 1 > length(lvl.ptr) && return []
     map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
-        LabelledTree(cartesian_label([Colon() for _ = 1:ndims(fbr) - 1]..., map(n -> lvl.tbl[n][qos], 1:N)...), SubFiber(lvl.lvl, qos))
+        LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - N]..., map(n -> lvl.tbl[n][qos], 1:N)...), SubFiber(lvl.lvl, qos))
     end
 end
 

@@ -129,20 +129,20 @@ arrays used to store positions and indicies.
 ```jldoctest
 julia> Tensor(Dense(Sparse(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─ [1]: Sparse (0.0) [1:3]
+├─ [:, 1]: Sparse (0.0) [1:3]
 │  ├─ [1]: 10.0
 │  └─ [2]: 30.0
-├─ [2]: Sparse (0.0) [1:3]
-└─ [3]: Sparse (0.0) [1:3]
+├─ [:, 2]: Sparse (0.0) [1:3]
+└─ [:, 3]: Sparse (0.0) [1:3]
    ├─ [1]: 20.0
    └─ [3]: 40.0
 
 julia> Tensor(Sparse(Sparse(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Sparse (0.0) [:,1:3]
-├─ [1]: Sparse (0.0) [1:3]
+├─ [:, 1]: Sparse (0.0) [1:3]
 │  ├─ [1]: 10.0
 │  └─ [2]: 30.0
-└─ [3]: Sparse (0.0) [1:3]
+└─ [:, 3]: Sparse (0.0) [1:3]
    ├─ [1]: 20.0
    └─ [3]: 40.0
 
@@ -237,7 +237,7 @@ function labelled_children(fbr::SubFiber{<:SparseLevel})
     res = []
     while i <= stop
         (i, q) = subtable_get(lvl.tbl, subtbl, state)
-        push!(res, LabelledTree(cartesian_label([Colon() for _ = 1:ndims(fbr) - 1]..., i), SubFiber(lvl.lvl, q)))
+        push!(res, LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., i), SubFiber(lvl.lvl, q)))
         if i == stop
             break
         end

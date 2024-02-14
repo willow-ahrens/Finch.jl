@@ -12,11 +12,11 @@ arrays used to store positions and endpoints.
 ```jldoctest
 julia> Tensor(Dense(SparseRLELevel(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─ [1]: SparseRLE (0.0) [1:3]
+├─ [:, 1]: SparseRLE (0.0) [1:3]
 │  ├─ [1:1]: 10.0
 │  └─ [2:2]: 30.0
-├─ [2]: SparseRLE (0.0) [1:3]
-└─ [3]: SparseRLE (0.0) [1:3]
+├─ [:, 2]: SparseRLE (0.0) [1:3]
+└─ [:, 3]: SparseRLE (0.0) [1:3]
    ├─ [1:1]: 20.0
    └─ [3:3]: 40.0
 ```
@@ -117,7 +117,7 @@ function labelled_children(fbr::SubFiber{<:SparseRLELevel})
     pos = fbr.pos
     pos + 1 > length(lvl.ptr) && return []
     map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
-        LabelledTree(cartesian_label([Colon() for _ = 1:ndims(fbr) - 1]..., RangeLabel(lvl.left[qos], lvl.right[qos])), SubFiber(lvl.lvl, qos))
+        LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., range_label(lvl.left[qos], lvl.right[qos])), SubFiber(lvl.lvl, qos))
     end
 end
 

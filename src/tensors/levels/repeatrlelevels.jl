@@ -117,7 +117,7 @@ function labelled_children(fbr::SubFiber{<:RepeatRLELevel})
     pos = fbr.pos
     pos + 1 > length(lvl.ptr) && return []
     map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
-        LabelledTree(cartesian_label(RangeLabel(qos == lvl.ptr[pos] ? 1 : lvl.idx[qos - 1] + 1, lvl.idx[qos])), lvl.val[qos])
+        LabelledTree(cartesian_label(range_label(qos == lvl.ptr[pos] ? 1 : lvl.idx[qos - 1] + 1, lvl.idx[qos])), lvl.val[qos])
     end
 end
 

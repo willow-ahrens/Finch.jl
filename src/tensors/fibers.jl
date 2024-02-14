@@ -156,10 +156,16 @@ struct RangeLabel
     stop
 end
 
+range_label(start = nothing, stop = nothing) = RangeLabel(start, stop)
+
 function Base.show(io::IO, key::RangeLabel)
-    print(io, key.start)
+    if key.start !== nothing
+        print(io, something(key.start))
+    end
     print(io, ":")
-    print(io, key.stop)
+    if key.stop !== nothing
+        print(io, something(key.stop))
+    end
 end
 
 function declare!(fbr::VirtualFiber, ctx::AbstractCompiler, init)

@@ -14,10 +14,10 @@ julia> ndims(Tensor(Dense(Dense(Element(0.0)))))
 
 julia> Tensor(Dense(Dense(Element(0.0))), [1 2; 3 4])
 Dense [:,1:2]
-├─ [1]: Dense [1:2]
+├─ [:, 1]: Dense [1:2]
 │  ├─ [1]: 1.0
 │  └─ [2]: 3.0
-└─ [2]: Dense [1:2]
+└─ [:, 2]: Dense [1:2]
    ├─ [1]: 2.0
    └─ [2]: 4.0
 ```
@@ -102,7 +102,7 @@ function labelled_children(fbr::SubFiber{<:DenseLevel})
     lvl = fbr.lvl
     pos = fbr.pos
     map(1:lvl.shape) do idx
-        LabelledTree(cartesian_label([Colon() for _ = 1:ndims(fbr) - 1]..., idx), SubFiber(lvl.lvl, (pos - 1) * lvl.shape + idx))
+        LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., idx), SubFiber(lvl.lvl, (pos - 1) * lvl.shape + idx))
     end
 end
 

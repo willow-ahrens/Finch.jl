@@ -125,7 +125,7 @@ function labelled_children(fbr::SubFiber{<:SparseVBLLevel})
         qos = fbr.lvl.ofs[r]
         l = fbr.lvl.ofs[r + 1] - fbr.lvl.ofs[r]
         for qos = fbr.lvl.ofs[r]:fbr.lvl.ofs[r + 1] - 1
-            push!(res, LabelledTree(cartesian_label([Colon() for _ = 1:ndims(fbr) - 1]..., i - (fbr.lvl.ofs[r + 1] - 1) + qos), SubFiber(lvl.lvl, qos)))
+            push!(res, LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., i - (fbr.lvl.ofs[r + 1] - 1) + qos), SubFiber(lvl.lvl, qos)))
         end
     end
     res
