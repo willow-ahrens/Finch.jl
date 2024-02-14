@@ -65,7 +65,8 @@ labelled_show(io::IO, ::SubFiber{<:SeparationLevel}) =
 function labelled_children(fbr::SubFiber{<:SeparationLevel})
     lvl = fbr.lvl
     pos = fbr.pos
-    [LabelledTree(SubFiber(lvl.lvl, pos))]
+    pos > length(lvl.val) && return []
+    [LabelledTree(SubFiber(lvl.val[pos], 1))]
 end
 
 @inline level_ndims(::Type{<:SeparationLevel{Val, Lvl}}) where {Val, Lvl} = level_ndims(Lvl)

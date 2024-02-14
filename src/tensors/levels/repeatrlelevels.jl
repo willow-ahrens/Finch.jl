@@ -11,7 +11,12 @@ type used for positions in the level.
 
 ```jldoctest
 julia> Tensor(RepeatRLE(0.0), [11, 11, 22, 22, 00, 00, 00, 33, 33])
-Tensor(RepeatRLE{0.0}(9, …))
+RepeatRLE [1:9]
+├─ [1:2]: 11.0
+├─ [3:4]: 22.0
+├─ [5:7]: 0.0
+├─ [8:9]: 33.0
+└─ [10:9]: 0.0
 
 ```
 """
@@ -110,6 +115,7 @@ labelled_show(io::IO, fbr::SubFiber{<:RepeatRLELevel}) =
 function labelled_children(fbr::SubFiber{<:RepeatRLELevel})
     lvl = fbr.lvl
     pos = fbr.pos
+    pos + 1 > length(lvl.ptr) && return []
     map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
         LabelledTree(cartesian_label(RangeLabel(qos == lvl.ptr[pos] ? 1 : lvl.idx[qos - 1] + 1, lvl.idx[qos])), lvl.val[qos])
     end

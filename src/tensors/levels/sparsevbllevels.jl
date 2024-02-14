@@ -118,6 +118,7 @@ function labelled_children(fbr::SubFiber{<:SparseVBLLevel})
     fbr = node.fbr
     lvl = fbr.lvl
     pos = fbr.pos
+    pos + 1 > length(lvl.ptr) && return []
     res = []
     for r = lvl.ptr[pos]:lvl.ptr[pos + 1] - 1
         i = fbr.lvl.idx[r]

@@ -9,10 +9,21 @@ positions in the level.
 
 ```jldoctest
 julia> Tensor(Dense(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
-Tensor(Dense(SparseByteMap(Element{0.0, Float64, Int64}(…), 3, …), 3))
+Dense [:,1:3]
+├─ [1]: SparseByteMap (0.0) [1:3]
+│  ├─ [1]: 10.0
+│  └─ [2]: 30.0
+├─ [2]: SparseByteMap (0.0) [1:3]
+└─ [3]: SparseByteMap (0.0) [1:3]
+   ├─ [1]: 0.0
+   └─ [3]: 0.0
 
 julia> Tensor(SparseByteMap(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
-Tensor(SparseByteMap(SparseByteMap(Element{0.0, Float64, Int64}(…), 3, …), 3, …))
+SparseByteMap (0.0) [:,1:3]
+├─ [1]: SparseByteMap (0.0) [1:3]
+│  ├─ [1]: 10.0
+│  └─ [2]: 30.0
+└─ [3]: SparseByteMap (0.0) [1:3]
 ```
 """
 struct SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl} <: AbstractLevel
@@ -106,6 +117,7 @@ labelled_show(io::IO, fbr::SubFiber{<:SparseByteMapLevel}) =
 function labelled_children(fbr::SubFiber{<:SparseByteMapLevel})
     lvl = fbr.lvl
     pos = fbr.pos
+    pos + 1 > length(lvl.ptr) && return []
     map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
         LabelledTree(cartesian_label(lvl.srt[qos][2]), SubFiber(lvl.lvl, qos))
     end

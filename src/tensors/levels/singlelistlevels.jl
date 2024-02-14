@@ -14,18 +14,18 @@ types of the arrays used to store positions and indicies.
 julia> Tensor(Dense(SingleList(Element(0.0))), [10 0 0; 0 20 0; 0 0 30]) 
 Dense [:,1:3]
 ├─ [1]: SingleList (0.0) [1:3]
-│  └─ [1]: 10.0
+│  └─ 10.0
 ├─ [2]: SingleList (0.0) [1:3]
-│  └─ [2]: 20.0
+│  └─ 20.0
 └─ [3]: SingleList (0.0) [1:3]
-   └─ [3]: 30.0
+   └─ 30.0
 
 julia> Tensor(Dense(SingleList(Element(0.0))), [10 0 0; 0 20 0; 0 40 30])
 ERROR: Finch.FinchProtocolError("SingleListLevels can only be updated once")
 
 julia> Tensor(SingleList(Dense(Element(0.0))), [0 0 0; 0 0 30; 0 0 30]) 
 SingleList (0.0) [:,1:3]
-└─ [3]: Dense [1:3]
+└─ Dense [1:3]
    ├─ [1]: 0.0
    ├─ [2]: 30.0
    └─ [3]: 30.0
@@ -121,6 +121,7 @@ labelled_show(io::IO, fbr::SubFiber{<:SingleListLevel}) =
 function labelled_children(fbr::SubFiber{<:SingleListLevel})
     lvl = fbr.lvl
     pos = fbr.pos
+    pos + 1 > length(lvl.ptr) && return []
     map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
         cartesian_label(lvl.idx[qos])
         LabelledTree(SubFiber(lvl.lvl, qos))

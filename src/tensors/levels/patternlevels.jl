@@ -8,9 +8,9 @@ are stored by other fibers. See [`pattern!`](@ref) for usage examples.
 ```jldoctest
 julia> Tensor(Dense(Pattern()), 3)
 Dense [1:3]
-├─ [1] ⇒ true
-├─ [2] ⇒ true
-└─ [3] ⇒ true
+├─ [1]: true
+├─ [2]: true
+└─ [3]: true
 ```
 """
 struct PatternLevel{Tp} <: AbstractLevel end
@@ -63,19 +63,19 @@ original tensor unusable when modified.
 ```jldoctest
 julia> A = Tensor(SparseList(Element(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
 SparseList (0.0) [1:10]
-├─ [1] ⇒ 2.0
-├─ [3] ⇒ 3.0
-├─ [5] ⇒ 4.0
-├─ [7] ⇒ 5.0
-└─ [9] ⇒ 6.0
+├─ [1]: 2.0
+├─ [3]: 3.0
+├─ [5]: 4.0
+├─ [7]: 5.0
+└─ [9]: 6.0
 
 julia> pattern!(A)
 SparseList (false) [1:10]
-├─ [1] ⇒ true
-├─ [3] ⇒ true
-├─ [5] ⇒ true
-├─ [7] ⇒ true
-└─ [9] ⇒ true
+├─ [1]: true
+├─ [3]: true
+├─ [5]: true
+├─ [7]: true
+└─ [9]: true
 ```
 """
 pattern!(fbr::Tensor) = Tensor(pattern!(fbr.lvl))

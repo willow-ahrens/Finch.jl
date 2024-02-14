@@ -73,6 +73,8 @@ function moveto(tbl::DictTable, arch)
     )
 end
 
+table_isdefined(tbl::DictTable{Ti, Tp}, p) where {Ti, Tp} = p + 1 <= length(tbl.ptr)
+
 table_query(tbl::DictTable{Ti, Tp}, p) where {Ti, Tp} = (p, tbl.ptr[p], tbl.ptr[p + 1])
 
 subtable_init(tbl::DictTable{Ti}, (p, start, stop)) where {Ti} = start < stop ? (tbl.idx[start], tbl.idx[stop - 1], start) : (Ti(1), Ti(0), start)
@@ -128,20 +130,20 @@ arrays used to store positions and indicies.
 julia> Tensor(Dense(Sparse(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
 ├─ [1]: Sparse (0.0) [1:3]
-│  ├─ [2]: 10.0
+│  ├─ [1]: 10.0
 │  └─ [2]: 30.0
 ├─ [2]: Sparse (0.0) [1:3]
 └─ [3]: Sparse (0.0) [1:3]
-   ├─ [3]: 20.0
+   ├─ [1]: 20.0
    └─ [3]: 40.0
 
 julia> Tensor(Sparse(Sparse(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Sparse (0.0) [:,1:3]
-├─ [3]: Sparse (0.0) [1:3]
-│  ├─ [2]: 10.0
+├─ [1]: Sparse (0.0) [1:3]
+│  ├─ [1]: 10.0
 │  └─ [2]: 30.0
 └─ [3]: Sparse (0.0) [1:3]
-   ├─ [3]: 20.0
+   ├─ [1]: 20.0
    └─ [3]: 40.0
 
 ```
@@ -229,6 +231,7 @@ labelled_show(io::IO, fbr::SubFiber{<:SparseLevel}) =
 function labelled_children(fbr::SubFiber{<:SparseLevel})
     lvl = fbr.lvl
     pos = fbr.pos
+    table_isdefined(lvl.tbl, pos) || return []
     subtbl = table_query(lvl.tbl, pos)
     i, stop, state = subtable_init(lvl.tbl, subtbl)
     res = []

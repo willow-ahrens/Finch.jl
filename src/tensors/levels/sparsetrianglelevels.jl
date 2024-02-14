@@ -10,7 +10,13 @@ subfiber. Optionally, `dims` are the sizes of the last dimensions.
 
 ```jldoctest
 julia> Tensor(SparseTriangle{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
-Tensor(SparseTriangle{2}(Element{0.0, Float64, Int64}(…), 3))
+SparseTriangle{2} (0.0) [:,1:3]
+├─ [1, 1]: 10.0
+├─ [2, 1]: 0.0
+├─ [2, 2]: 0.0
+├─ [3, 1]: 20.0
+├─ [3, 2]: 0.0
+└─ [3, 3]: 40.0
 ```
 """
 struct SparseTriangleLevel{N, Ti, Lvl} <: AbstractLevel

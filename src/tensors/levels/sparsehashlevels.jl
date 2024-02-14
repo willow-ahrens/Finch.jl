@@ -16,20 +16,20 @@ pairs in the hash table.
 ```jldoctest
 julia> Tensor(Dense(SparseHash{1}(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─ [1] ⇒ SparseHash{1} (0.0) [1:3]
-│        ├─ [(1,)] ⇒ 10.0
-│        └─ [(2,)] ⇒ 30.0
-├─ [2] ⇒ SparseHash{1} (0.0) [1:3]
-└─ [3] ⇒ SparseHash{1} (0.0) [1:3]
-         ├─ [(1,)] ⇒ 20.0
-         └─ [(3,)] ⇒ 40.0
+├─ [1]: SparseHash{1} (0.0) [1:3]
+│  ├─ [1]: 10.0
+│  └─ [2]: 30.0
+├─ [2]: SparseHash{1} (0.0) [1:3]
+└─ [3]: SparseHash{1} (0.0) [1:3]
+   ├─ [1]: 20.0
+   └─ [3]: 40.0
 
 julia> Tensor(SparseHash{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
 SparseHash{2} (0.0) [:,1:3]
-├─ [(1, 1)] ⇒ 10.0
-├─ [(2, 1)] ⇒ 30.0
-├─ [(1, 3)] ⇒ 20.0
-└─ [(3, 3)] ⇒ 40.0
+├─ [1, 1]: 10.0
+├─ [2, 1]: 30.0
+├─ [1, 3]: 20.0
+└─ [3, 3]: 40.0
 ```
 """
 struct SparseHashLevel{N, TI<:Tuple, Ptr, Tbl, Srt, Lvl} <: AbstractLevel
@@ -124,6 +124,7 @@ labelled_show(io::IO, fbr::SubFiber{<:SparseHashLevel{N}}) where {N} =
 function labelled_children(fbr::SubFiber{<:SparseHashLevel{N}}) where {N}
     lvl = fbr.lvl
     pos = fbr.pos
+    pos + 1 > length(lvl.ptr) && return []
     map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
         LabelledTree(cartesian_label(lvl.srt[qos][1][2]...), SubFiber(lvl.lvl, qos))
     end
