@@ -708,15 +708,6 @@
         
         fbr = dropdefaults!(Tensor(Dense(Separation(SparseList(Element(0))))), arr)
 
-        Tensor(Dense(Separation(SparseList(Element(0)))))
-        display(@finch_code begin
-            fbr .= 0
-            for j = _, i = _
-                fbr[i, j] = arr[i, j]
-            end
-        end)
-
-
         # sublvl = Tensor(Dense(Element(0)), [])
         # col1 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 1])
         # col2 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 2])
