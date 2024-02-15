@@ -73,6 +73,8 @@ function moveto(tbl::DictTable, arch)
     )
 end
 
+table_isdefined(tbl::DictTable{Ti, Tp}, p) where {Ti, Tp} = p + 1 <= length(tbl.ptr)
+
 table_query(tbl::DictTable{Ti, Tp}, p) where {Ti, Tp} = (p, tbl.ptr[p], tbl.ptr[p + 1])
 
 subtable_init(tbl::DictTable{Ti}, (p, start, stop)) where {Ti} = start < stop ? (tbl.idx[start], tbl.idx[stop - 1], start) : (Ti(1), Ti(0), start)
@@ -127,22 +129,22 @@ arrays used to store positions and indicies.
 ```jldoctest
 julia> Tensor(Dense(Sparse(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─[:,1]: Sparse (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,2]: Sparse (0.0) [1:3]
-├─[:,3]: Sparse (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+├─ [:, 1]: Sparse (0.0) [1:3]
+│  ├─ [1]: 10.0
+│  └─ [2]: 30.0
+├─ [:, 2]: Sparse (0.0) [1:3]
+└─ [:, 3]: Sparse (0.0) [1:3]
+   ├─ [1]: 20.0
+   └─ [3]: 40.0
 
 julia> Tensor(Sparse(Sparse(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Sparse (0.0) [:,1:3]
-├─[:,1]: Sparse (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,3]: Sparse (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+├─ [:, 1]: Sparse (0.0) [1:3]
+│  ├─ [1]: 10.0
+│  └─ [2]: 30.0
+└─ [:, 3]: Sparse (0.0) [1:3]
+   ├─ [1]: 20.0
+   └─ [3]: 40.0
 
 ```
 """
@@ -206,21 +208,25 @@ function Base.show(io::IO, lvl::SparseLevel{Ti, Tbl, Lvl}) where {Ti, Tbl, Lvl}
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseLevel}, depth)
-    p = fbr.pos
+labelled_show(io::IO, fbr::SubFiber{<:SparseLevel}) =
+    print(io, "Sparse (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+
+function labelled_children(fbr::SubFiber{<:SparseLevel})
     lvl = fbr.lvl
-    if p + 1 > length(lvl.tbl.ptr)
-        print(io, "Sparse(undef...)")
-        return
+    pos = fbr.pos
+    table_isdefined(lvl.tbl, pos) || return []
+    subtbl = table_query(lvl.tbl, pos)
+    i, stop, state = subtable_init(lvl.tbl, subtbl)
+    res = []
+    while i <= stop
+        (i, q) = subtable_get(lvl.tbl, subtbl, state)
+        push!(res, LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., i), SubFiber(lvl.lvl, q)))
+        if i == stop
+            break
+        end
+        state = subtable_next(lvl.tbl, subtbl, state)
     end
-
-    crds = table_coords(fbr.lvl.tbl, p)
-
-    print_coord(io, crd) = show(io, crd)
-    get_fbr(crd) = fbr(crd)
-
-    print(io, "Sparse (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
+    res
 end
 
 @inline level_ndims(::Type{<:SparseLevel{Ti, Tbl, Lvl}}) where {Ti, Tbl, Lvl} = 1 + level_ndims(Lvl)

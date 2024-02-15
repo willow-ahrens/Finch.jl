@@ -90,25 +90,24 @@ function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}) where {T
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseVBLLevel}, depth)
-    p = fbr.pos
-    crds = []
+labelled_show(io::IO, fbr::SubFiber{<:SparseVBLLevel}) =
+    print(io, "SparseVBL (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+
+function labelled_children(fbr::SubFiber{<:SparseVBLLevel})
+    fbr = node.fbr
     lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "SparseVBL(undef...)")
-        return
-    end
-    for r in fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1
+    pos = fbr.pos
+    pos + 1 > length(lvl.ptr) && return []
+    res = []
+    for r = lvl.ptr[pos]:lvl.ptr[pos + 1] - 1
         i = fbr.lvl.idx[r]
+        qos = fbr.lvl.ofs[r]
         l = fbr.lvl.ofs[r + 1] - fbr.lvl.ofs[r]
-        append!(crds, (i - l + 1):i)
+        for qos = fbr.lvl.ofs[r]:fbr.lvl.ofs[r + 1] - 1
+            push!(res, LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., i - (fbr.lvl.ofs[r + 1] - 1) + qos), SubFiber(lvl.lvl, qos)))
+        end
     end
-
-    print_coord(io, crd) = show(io, crd)
-    get_fbr(crd) = fbr(crd)
-
-    print(io, "SparseVBL (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
+    res
 end
 
 @inline level_ndims(::Type{<:SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}}) where {Ti, Ptr, Idx, Ofs, Lvl} = 1 + level_ndims(Lvl)

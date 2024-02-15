@@ -12,13 +12,13 @@ arrays used to store positions and endpoints.
 ```jldoctest
 julia> Tensor(Dense(SparseRLELevel(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─[:,1]: SparseRLE (0.0) [1:3]
-│ ├─[1:1]: 10.0
-│ ├─[2:2]: 30.0
-├─[:,2]: SparseRLE (0.0) [1:3]
-├─[:,3]: SparseRLE (0.0) [1:3]
-│ ├─[1:1]: 20.0
-│ ├─[3:3]: 40.0
+├─ [:, 1]: SparseRLE (0.0) [1:3]
+│  ├─ [1:1]: 10.0
+│  └─ [2:2]: 30.0
+├─ [:, 2]: SparseRLE (0.0) [1:3]
+└─ [:, 3]: SparseRLE (0.0) [1:3]
+   ├─ [1:1]: 20.0
+   └─ [3:3]: 40.0
 ```
 """
 struct SparseRLELevel{Ti, Ptr<:AbstractVector, Left<:AbstractVector, Right<:AbstractVector, Lvl} <: AbstractLevel
@@ -88,25 +88,16 @@ function Base.show(io::IO, lvl::SparseRLELevel{Ti, Ptr, Left, Right, Lvl}) where
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseRLELevel}, depth)
-    p = fbr.pos
+labelled_show(io::IO, fbr::SubFiber{<:SparseRLELevel}) =
+    print(io, "SparseRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+
+function labelled_children(fbr::SubFiber{<:SparseRLELevel})
     lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "SparseRLE(undef...)")
-        return
+    pos = fbr.pos
+    pos + 1 > length(lvl.ptr) && return []
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., range_label(lvl.left[qos], lvl.right[qos])), SubFiber(lvl.lvl, qos))
     end
-    left_endpoints = @view(lvl.left[lvl.ptr[p]:lvl.ptr[p + 1] - 1])
-
-    crds = []
-    for l in left_endpoints 
-        append!(crds, l)
-    end
-
-    print_coord(io, crd) = print(io, crd, ":", lvl.right[lvl.ptr[p]-1+searchsortedfirst(left_endpoints, crd)])  
-    get_fbr(crd) = fbr(crd)
-
-    print(io, "SparseRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
 @inline level_ndims(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = 1 + level_ndims(Lvl)

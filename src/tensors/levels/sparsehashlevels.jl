@@ -16,20 +16,20 @@ pairs in the hash table.
 ```jldoctest
 julia> Tensor(Dense(SparseHash{1}(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─[:,1]: SparseHash (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,2]: SparseHash (0.0) [1:3]
-├─[:,3]: SparseHash (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+├─ [:, 1]: SparseHash{1} (0.0) [1:3]
+│  ├─ [1]: 10.0
+│  └─ [2]: 30.0
+├─ [:, 2]: SparseHash{1} (0.0) [1:3]
+└─ [:, 3]: SparseHash{1} (0.0) [1:3]
+   ├─ [1]: 20.0
+   └─ [3]: 40.0
 
 julia> Tensor(SparseHash{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
-SparseHash (0.0) [1:3,1:3]
-├─├─[1, 1]: 10.0
-├─├─[2, 1]: 30.0
-├─├─[1, 3]: 20.0
-├─├─[3, 3]: 40.0
+SparseHash{2} (0.0) [:,1:3]
+├─ [1, 1]: 10.0
+├─ [2, 1]: 30.0
+├─ [1, 3]: 20.0
+└─ [3, 3]: 40.0
 ```
 """
 struct SparseHashLevel{N, TI<:Tuple, Ptr, Tbl, Srt, Lvl} <: AbstractLevel
@@ -118,23 +118,18 @@ function Base.show(io::IO, lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}) wher
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseHashLevel{N}}, depth) where {N}
-    p = fbr.pos
+labelled_show(io::IO, fbr::SubFiber{<:SparseHashLevel{N}}) where {N} =
+    print(io, "SparseHash{", N, "} (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+
+function labelled_children(fbr::SubFiber{<:SparseHashLevel{N}}) where {N}
     lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "SparseHash(undef...)")
-        return
+    pos = fbr.pos
+    pos + 1 > length(lvl.ptr) && return []
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - N]..., lvl.srt[qos][1][2]...), SubFiber(lvl.lvl, qos))
     end
-    crds = fbr.lvl.srt[fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1]
-
-    print_coord(io, crd) = join(io, map(n -> crd[1][2][n], 1:N), ", ")
-    get_fbr(crd) = fbr(crd[1][2]...)
-
-    print(io, "SparseHash (", default(fbr), ") [", ":,"^(ndims(fbr) - N), "1:")
-    join(io, fbr.lvl.shape, ",1:") 
-    print(io, "]")
-    display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
 end
+
 @inline level_ndims(::Type{<:SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}) where {N, TI, Ptr, Tbl, Srt, Lvl} = N + level_ndims(Lvl)
 @inline level_size(lvl::SparseHashLevel) = (lvl.shape..., level_size(lvl.lvl)...)
 @inline level_axes(lvl::SparseHashLevel) = (map(Base.OneTo, lvl.shape)..., level_axes(lvl.lvl)...)
