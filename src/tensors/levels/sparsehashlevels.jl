@@ -260,11 +260,12 @@ function thaw_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos)
     Tp = postype(lvl)
     p = freshen(ctx.code, lvl.ex, :_p)
     push!(ctx.code.preamble, quote
+        $(lvl.qos_stop) = $(lvl.ptr)[$(ctx(pos)) + 1] - 1
+        $(lvl.qos_fill) = $(lvl.qos_stop)
         for $p = $(ctx(pos)) + 1:-1:2
             $(lvl.ptr)[$p] -= $(lvl.ptr)[$p - 1]
         end
         $(lvl.ptr)[1] = 1
-        $(lvl.qos_fill) = length($(lvl.tbl))
     end)
     lvl.lvl = thaw_level!(lvl.lvl, ctx, value(lvl.qos_fill, Tp))
     return lvl
@@ -284,7 +285,7 @@ hashkeycmp(((pos, idx), qos),) = (pos, reverse(idx)...)
 function freeze_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos_stop)
     p = freshen(ctx.code, :p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
-    qos_stop = freshen(ctx.code, :qos_stop)
+    qos_stop = lvl.qos_stop
     push!(ctx.code.preamble, quote
         resize!($(lvl.srt), length($(lvl.tbl)))
         copyto!($(lvl.srt), pairs($(lvl.tbl)))
