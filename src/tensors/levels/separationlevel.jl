@@ -7,7 +7,7 @@ own memory space.
 Each sublevel is stored in a vector of type `Val` with `eltype(Val) = Lvl`. 
 
 ```jldoctest
-julia> print_tree(Tensor(Dense(Separation(Element(0.0))), [1, 2, 3]))
+julia> Tensor(Dense(Separation(Element(0.0))), [1, 2, 3])
 ERROR: UndefVarError: `print_tree` not defined
 Stacktrace:
  [1] top-level scope
