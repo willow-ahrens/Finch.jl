@@ -85,12 +85,12 @@ begin
         end
     end
     x_lvl_ptr[1 + 1] += (x_lvl_qos - 0) - 1
+    resize!(x_lvl_ptr, 1 + 1)
     for p = 1:1
         x_lvl_ptr[p + 1] += x_lvl_ptr[p]
     end
-    resize!(x_lvl_ptr, 1 + 1)
-    qos = x_lvl_ptr[end] - 1
-    resize!(x_lvl_idx, qos)
-    resize!(x_lvl_val, qos)
+    qos_stop = x_lvl_ptr[1 + 1] - 1
+    resize!(x_lvl_idx, qos_stop)
+    resize!(x_lvl_val, qos_stop)
     (x = Tensor((SparseListLevel){Int32}(x_lvl_2, A_lvl.shape, x_lvl_ptr, x_lvl_idx)),)
 end

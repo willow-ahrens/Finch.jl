@@ -173,7 +173,10 @@ begin
                 end
             end
         end
-        sort!(view(w_lvl_srt, 1:w_lvl_qos_fill))
+        resize!(w_lvl_ptr, 1 + 1)
+        resize!(w_lvl_tbl, 1 * A_lvl_2.shape)
+        resize!(w_lvl_srt, w_lvl_qos_fill)
+        sort!(w_lvl_srt)
         w_lvl_p_prev = 0
         for w_lvl_r_2 = 1:w_lvl_qos_fill
             w_lvl_p_2 = first(w_lvl_srt[w_lvl_r_2])
@@ -184,6 +187,8 @@ begin
             w_lvl_p_prev = w_lvl_p_2
         end
         w_lvl_ptr[w_lvl_p_prev + 1] = w_lvl_qos_fill + 1
+        w_lvl_qos_stop = w_lvl_qos_fill
+        resize!(w_lvl_val, A_lvl_2.shape)
         B_lvl_2_qos = B_lvl_2_qos_fill + 1
         B_lvl_2_prev_pos < B_lvl_q || throw(FinchProtocolError("SparseListLevels cannot be updated multiple times"))
         w_lvl_r_3 = w_lvl_ptr[1]
@@ -238,13 +243,12 @@ begin
         B_lvl_ptr[B_lvl_q + 1] += (B_lvl_2_qos - B_lvl_2_qos_fill) - 1
         B_lvl_2_qos_fill = B_lvl_2_qos - 1
     end
+    resize!(B_lvl_ptr, A_lvl.shape + 1)
     for p = 1:A_lvl.shape
         B_lvl_ptr[p + 1] += B_lvl_ptr[p]
     end
-    qos = 1 * A_lvl.shape
-    resize!(B_lvl_ptr, qos + 1)
-    qos_2 = B_lvl_ptr[end] - 1
-    resize!(B_lvl_idx, qos_2)
-    resize!(B_lvl_2_val, qos_2)
+    qos_stop = B_lvl_ptr[A_lvl.shape + 1] - 1
+    resize!(B_lvl_idx, qos_stop)
+    resize!(B_lvl_2_val, qos_stop)
     (B = Tensor((DenseLevel){Int32}((SparseListLevel){Int32}(B_lvl_3, A_lvl_2.shape, B_lvl_ptr, B_lvl_idx), A_lvl.shape)),)
 end

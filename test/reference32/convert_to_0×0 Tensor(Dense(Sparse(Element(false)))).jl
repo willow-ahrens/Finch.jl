@@ -126,9 +126,7 @@ begin
             end
         end
     end
-    Finch.freeze_table!(tmp_lvl_tbl, ref_lvl.shape)
-    qos_2 = 1 * ref_lvl.shape
-    qos_3 = Finch.trim_table!(tmp_lvl_tbl, qos_2)
-    resize!(tmp_lvl_2_val, qos_3)
+    qos_stop_2 = Finch.freeze_table!(tmp_lvl_tbl, ref_lvl.shape)
+    resize!(tmp_lvl_2_val, qos_stop_2)
     (tmp = Tensor((DenseLevel){Int32}((SparseLevel){Int32}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_tbl), ref_lvl.shape)),)
 end
