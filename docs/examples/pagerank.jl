@@ -17,6 +17,7 @@ function pagerank(edges; nsteps=20, damp = 0.85)
                 scaled_edges[i, j] = edges[i, j] / out_degree[j]
             end
         end
+        return scaled_edges
     end
     r = Tensor(Dense(Element(0.0)), n)
     @finch (r .= 0.0; for j=_; r[j] = 1.0/n end; return r)

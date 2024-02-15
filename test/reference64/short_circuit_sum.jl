@@ -105,5 +105,7 @@ begin
             end
         end
     end
-    (c = (Scalar){0, Int64}(c_val), s = (ShortCircuitScalar){false, Bool, true}(s_val))
+    c.val = c_val
+    s.val = s_val
+    nothing
 end

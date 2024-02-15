@@ -305,6 +305,7 @@ using CIndices
             for j = _, i = _
                 A[i, j] = B[i, j]
             end
+            return A
         end)
         C = Tensor(Dense(SparseList(Element(0.0))))
         D = Tensor(Dense(SparseList(Element(0.0))), fsprand(5, 5, 0.5))

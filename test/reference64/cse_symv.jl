@@ -1,6 +1,5 @@
 begin
     y_lvl = (ex.body.body.bodies[1]).lhs.tns.bind.lvl
-    y_lvl_2 = y_lvl.lvl
     y_lvl_val = y_lvl.lvl.val
     A_lvl = ((ex.body.body.bodies[1]).rhs.args[1]).tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
@@ -28,5 +27,5 @@ begin
         end
     end
     resize!(y_lvl_val, y_lvl.shape)
-    (y = Tensor((DenseLevel){Int64}(y_lvl_2, y_lvl.shape)),)
+    nothing
 end

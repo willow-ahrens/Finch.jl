@@ -245,7 +245,7 @@ function finch_parse_yieldbind(ex)
             return filter(arg_2 -> arg_2 isa Symbol, collect(args))
         end
     elseif ex isa Expr
-        return mapreduce(finch_parse_yieldbind, (x, y) -> something(x, y, Some(nothing)), ex.args)
+        return mapreduce(finch_parse_yieldbind, (x, y) -> something(x, y, Some(nothing)), ex.args, init = nothing)
     end
 end
 

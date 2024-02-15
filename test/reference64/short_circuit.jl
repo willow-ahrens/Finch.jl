@@ -54,5 +54,6 @@ begin
             i = phase_stop_2 + 1
         end
     end
-    (s = (ShortCircuitScalar){false, Bool, true}(s_val),)
+    s.val = s_val
+    nothing
 end
