@@ -8,10 +8,13 @@ Each sublevel is stored in a vector of type `Val` with `eltype(Val) = Lvl`.
 
 ```jldoctest
 julia> Tensor(Dense(Separation(Element(0.0))), [1, 2, 3])
-ERROR: UndefVarError: `print_tree` not defined
-Stacktrace:
- [1] top-level scope
-   @ none:1
+Dense [1:3]
+├─ [1]: Pointer ->
+│  └─ 1.0
+├─ [2]: Pointer ->
+│  └─ 2.0
+└─ [3]: Pointer ->
+   └─ 3.0
 ```
 """
 struct SeparationLevel{Val, Lvl} <: AbstractLevel
@@ -120,19 +123,21 @@ end
 function assemble_level!(lvl::VirtualSeparationLevel, ctx, pos_start, pos_stop)
     pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
     pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
-    idx = freshen(ctx.code, :idx)
+    pos = freshen(ctx.code, :pos)
     sym = freshen(ctx.code, :pointer_to_lvl)
     push!(ctx.code.preamble, quote
         Finch.resize_if_smaller!($(lvl.ex).val, $(ctx(pos_stop)))
-        for $idx in $(ctx(pos_start)):$(ctx(pos_stop))
+        for $pos in $(ctx(pos_start)):$(ctx(pos_stop))
             $sym = similar_level($(lvl.ex).lvl)
             $(contain(ctx) do ctx_2
                 lvl_2 = virtualize(sym, lvl.Lvl, ctx_2.code, sym)
                 lvl_2 = declare_level!(lvl_2, ctx_2, literal(0), literal(virtual_level_default(lvl_2)))
                 lvl_2 = virtual_level_resize!(lvl_2, ctx_2, virtual_level_size(lvl.lvl, ctx_2)...)
                 push!(ctx_2.code.preamble, assemble_level!(lvl_2, ctx_2, literal(1), literal(1)))
-                lvl_2 = freeze_level!(lvl_2, ctx_2, literal(1))
-                :($(lvl.ex).val[$idx] = $(ctx_2(lvl_2)))
+                contain(ctx_2) do ctx_3
+                    lvl_2 = freeze_level!(lvl_2, ctx_3, literal(1))
+                    :($(lvl.ex).val[$(ctx_3(pos))] = $(ctx_3(lvl_2)))
+                end
             end)
         end
     end)
@@ -143,15 +148,17 @@ supports_reassembly(::VirtualSeparationLevel) = true
 function reassemble_level!(lvl::VirtualSeparationLevel, ctx, pos_start, pos_stop)
     pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
     pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
-    idx = freshen(ctx.code, :idx)
+    pos = freshen(ctx.code, :pos)
     push!(ctx.code.preamble, quote
         for $idx in $(ctx(pos_start)):$(ctx(pos_stop))
             $(contain(ctx) do ctx_2
                 lvl_2 = virtualize(:($(lvl.ex).val[$idx]), lvl.Lvl, ctx_2.code, sym)
                 push!(ctx_2.code.preamble, assemble_level!(lvl_2, ctx_2, literal(1), literal(1)))
                 lvl_2 = declare_level!(lvl_2, ctx_2, literal(1), init)
-                lvl_2 = freeze_level!(lvl_2, ctx, literal(1))
-                :($(lvl.ex).val[$idx] = $(ctx_2(lvl_2)))
+                contain(ctx_2) do ctx_3
+                    lvl_2 = freeze_level!(lvl_2, ctx_3, literal(1))
+                    :($(lvl.ex).val[$(ctx_3(pos))] = $(ctx_3(lvl_2)))
+                end
             end)
         end
     end)
@@ -192,8 +199,12 @@ function instantiate(fbr::VirtualSubFiber{VirtualSeparationLevel}, ctx, mode::Up
             lvl_2 = thaw_level!(lvl_2, ctx, literal(1))
             push!(ctx.code.preamble, assemble_level!(lvl_2, ctx, literal(1), literal(1)))
             res = instantiate(VirtualSubFiber(lvl_2, literal(1)), ctx, mode, protos)
-            lvl_2 = freeze_level!(lvl_2, ctx, literal(1))
-            push!(ctx.code.epilogue, :($(lvl.ex).val[$(ctx(pos))] = $(ctx(lvl_2))))
+            push!(ctx.code.epilogue, 
+                contain(ctx) do ctx_2
+                    lvl_2 = freeze_level!(lvl_2, ctx_2, literal(1))
+                    :($(lvl.ex).val[$(ctx_2(pos))] = $(ctx_2(lvl_2)))
+                end
+            )
             res
         end
     )
@@ -209,9 +220,13 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSeparationLevel}, ctx, mo
             lvl_2 = thaw_level!(lvl_2, ctx, literal(1))
             push!(ctx.code.preamble, assemble_level!(lvl_2, ctx, literal(1), literal(1)))
             res = instantiate(VirtualHollowSubFiber(lvl_2, literal(1), fbr.dirty), ctx, mode, protos)
-            lvl_2 = freeze_level!(lvl_2, ctx, literal(1))
-            push!(ctx.code.epilogue, :($(lvl.ex).val[$(ctx(pos))] = $(ctx(lvl_2))))
+            push!(ctx.code.epilogue, 
+                contain(ctx) do ctx_2
+                    lvl_2 = freeze_level!(lvl_2, ctx_2, literal(1))
+                    :($(lvl.ex).val[$(ctx_2(pos))] = $(ctx_2(lvl_2)))
+                end
+            )
             res
-        end
-    )
-end
+            end
+        )
+    end
