@@ -29,7 +29,7 @@ quote
         end
     Finch.resize_if_smaller!(y_lvl_2_val, y_lvl.shape)
     Finch.fill_range!(y_lvl_2_val, 0.0, 1, y_lvl.shape)
-    val = x_lvl_val
+    resize!(x_lvl_val, x_lvl.shape)
     x_lvl_val = moveto(x_lvl_val, CPU(Threads.nthreads()))
     locksArray = y_lvl_locks
     y_lvl_locks = moveto(y_lvl_locks, CPU(Threads.nthreads()))
@@ -50,11 +50,8 @@ quote
                 end
             end
         end
-    qos = 1 * x_lvl.shape
-    resize!(val, qos)
-    qos_2 = 1 * y_lvl.shape
-    resize!(locksArray, qos_2)
-    resize!(val_2, qos_2)
+    resize!(locksArray, y_lvl.shape)
+    resize!(val_2, y_lvl.shape)
     (x = Tensor((DenseLevel){Int64}(x_lvl_2, x_lvl.shape)), y = Tensor((DenseLevel){Int64}((AtomicLevel){Vector{Base.Threads.SpinLock}, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}(y_lvl_3, locksArray), y_lvl.shape)))
 end
 julia> @finch begin
