@@ -58,5 +58,6 @@ begin
             tmp_lvl_val = val_3
         end
     resize!(val_2, input_lvl_2.shape * input_lvl.shape)
-    (output = Tensor((DenseLevel){Int64}((DenseLevel){Int64}(output_lvl_3, input_lvl_2.shape), input_lvl.shape)),)
+    return (output = Tensor((DenseLevel){Int64}((DenseLevel){Int64}(output_lvl_3, input_lvl_2.shape), input_lvl.shape)),)
+    nothing
 end
