@@ -148,8 +148,8 @@ function reassemble_level!(lvl::VirtualSeparationLevel, ctx, pos_start, pos_stop
         for $idx in $(ctx(pos_start)):$(ctx(pos_stop))
             $(contain(ctx) do ctx_2
                 lvl_2 = virtualize(:($(lvl.ex).val[$idx]), lvl.Lvl, ctx_2.code, sym)
-                declare_level!(lvl_2, ctx_2, literal(1), init)
-                push!(ctx_2.code.preamble, assemble_level!(lvl_2, ctx, literal(1), literal(1)))
+                push!(ctx_2.code.preamble, assemble_level!(lvl_2, ctx_2, literal(1), literal(1)))
+                lvl_2 = declare_level!(lvl_2, ctx_2, literal(1), init)
                 lvl_2 = freeze_level!(lvl_2, ctx, literal(1))
                 :($(lvl.ex).val[$idx] = $(ctx_2(lvl_2)))
             end)
@@ -189,10 +189,11 @@ function instantiate(fbr::VirtualSubFiber{VirtualSeparationLevel}, ctx, mode::Up
     return body = Thunk(
         body = (ctx) -> begin
             lvl_2 = virtualize(:($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, ctx.code, sym)
-            thaw_level!(lvl_2, ctx, literal(1))
+            lvl_2 = thaw_level!(lvl_2, ctx, literal(1))
             push!(ctx.code.preamble, assemble_level!(lvl_2, ctx, literal(1), literal(1)))
             res = instantiate(VirtualSubFiber(lvl_2, literal(1)), ctx, mode, protos)
-            freeze_level!(lvl, ctx, literal(1))
+            lvl_2 = freeze_level!(lvl_2, ctx, literal(1))
+            push!(ctx.code.epilogue, :($(lvl.ex).val[$(ctx(pos))] = $(ctx(lvl_2))))
             res
         end
     )
@@ -205,10 +206,11 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSeparationLevel}, ctx, mo
     return body = Thunk(
         body = (ctx) -> begin
             lvl_2 = virtualize(:($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, ctx.code, sym)
-            thaw_level!(lvl_2, ctx, literal(1))
+            lvl_2 = thaw_level!(lvl_2, ctx, literal(1))
             push!(ctx.code.preamble, assemble_level!(lvl_2, ctx, literal(1), literal(1)))
             res = instantiate(VirtualHollowSubFiber(lvl_2, literal(1), fbr.dirty), ctx, mode, protos)
-            freeze_level!(lvl, ctx, literal(1))
+            lvl_2 = freeze_level!(lvl_2, ctx, literal(1))
+            push!(ctx.code.epilogue, :($(lvl.ex).val[$(ctx(pos))] = $(ctx(lvl_2))))
             res
         end
     )
