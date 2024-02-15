@@ -257,10 +257,6 @@ function thaw!(fbr::VirtualFiber, ctx::AbstractCompiler)
     return VirtualFiber(thaw_level!(fbr.lvl, ctx, literal(1)))
 end
 
-function trim!(fbr::VirtualFiber, ctx)
-    VirtualFiber(trim_level!(fbr.lvl, ctx, literal(1)))
-end
-
 supports_reassembly(lvl) = false
 
 function Base.show(io::IO, fbr::Tensor)

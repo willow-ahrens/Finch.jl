@@ -190,15 +190,14 @@ begin
             end
         end
     end
+    resize!(tmp_lvl_ptr, ref_lvl.shape + 1)
     for p = 2:ref_lvl.shape + 1
         tmp_lvl_ptr[p] += tmp_lvl_ptr[p - 1]
     end
-    qos = 1 * ref_lvl.shape
-    resize!(tmp_lvl_ptr, qos + 1)
-    ros = tmp_lvl_ptr[end] - 1
-    resize!(tmp_lvl_idx, ros)
-    resize!(tmp_lvl_ofs, ros + 1)
-    qos_2 = tmp_lvl_ofs[end] - 1
-    resize!(tmp_lvl_2_val, qos_2)
+    ros_stop = tmp_lvl_ptr[ref_lvl.shape + 1] - 1
+    resize!(tmp_lvl_idx, ros_stop)
+    resize!(tmp_lvl_ofs, ros_stop + 1)
+    qos_stop = tmp_lvl_ofs[ros_stop + 1] - 1
+    resize!(tmp_lvl_2_val, qos_stop)
     (tmp = Tensor((DenseLevel){Int64}((SparseVBLLevel){Int64}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr, tmp_lvl_idx, tmp_lvl_ofs), ref_lvl.shape)),)
 end

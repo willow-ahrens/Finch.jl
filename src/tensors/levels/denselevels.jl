@@ -149,15 +149,6 @@ function declare_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos, init
     return lvl
 end
 
-function trim_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
-    qos = freshen(ctx.code, :qos)
-    push!(ctx.code.preamble, quote
-        $qos = $(ctx(pos)) * $(ctx(lvl.shape))
-    end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos))
-    return lvl
-end
-
 function assemble_level!(lvl::VirtualDenseLevel, ctx, pos_start, pos_stop)
     qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), lvl.shape), 1)
     qos_stop = call(*, pos_stop, lvl.shape)

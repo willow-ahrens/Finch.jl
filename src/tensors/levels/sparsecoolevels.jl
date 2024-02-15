@@ -223,21 +223,6 @@ function declare_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos, 
     return lvl
 end
 
-function trim_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos)
-    Tp = postype(lvl)
-    qos = freshen(ctx.code, :qos)
-
-    push!(ctx.code.preamble, quote
-        resize!($(lvl.ptr), $(ctx(pos)) + 1)
-        $qos = $(lvl.ptr)[end] - $(Tp(1))
-        $(Expr(:block, map(1:lvl.N) do n
-            :(resize!($(lvl.tbl[n]), $qos))
-        end...))
-    end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
-    return lvl
-end
-
 function assemble_level!(lvl::VirtualSparseCOOLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
@@ -252,10 +237,14 @@ function freeze_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos_st
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
+        resize!($(lvl.ptr), $pos_stop + 1)
         for $p = 2:($pos_stop + 1)
             $(lvl.ptr)[$p] += $(lvl.ptr)[$p - 1]
         end
         $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
+        $(Expr(:block, map(1:lvl.N) do n
+            :(resize!($(lvl.tbl[n]), $qos_stop))
+        end...))
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl

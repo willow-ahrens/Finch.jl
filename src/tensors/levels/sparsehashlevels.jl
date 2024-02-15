@@ -255,19 +255,6 @@ function declare_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos,
     return lvl
 end
 
-function trim_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos)
-    TI = lvl.TI
-    Tp = postype(lvl)
-    qos = freshen(ctx.code, :qos)
-    push!(ctx.code.preamble, quote
-        resize!($(lvl.ptr), $(ctx(pos)) + 1)
-        $qos = $(lvl.ptr)[end] - $(Tp(1))
-        resize!($(lvl.srt), $qos)
-    end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
-    return lvl
-end
-
 function thaw_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos)
     TI = lvl.TI
     Tp = postype(lvl)
@@ -302,6 +289,7 @@ function freeze_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos_s
         resize!($(lvl.srt), length($(lvl.tbl)))
         copyto!($(lvl.srt), pairs($(lvl.tbl)))
         sort!($(lvl.srt), by=$hashkeycmp)
+        resize!($(lvl.ptr), $pos_stop + 1)
         for $p = 2:($pos_stop + 1)
             $(lvl.ptr)[$p] += $(lvl.ptr)[$p - 1]
         end

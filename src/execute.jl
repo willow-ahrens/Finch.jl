@@ -110,8 +110,7 @@ function lower_global(prgm, ctx)
                     :((; $(map(getresults(prgm)) do tns
                         @assert tns.kind === variable
                         name = tns.name
-                        tns = trim!(resolve(tns, ctx_2), ctx_3)
-                        Expr(:kw, name, ctx_3(tns))
+                        Expr(:kw, name, ctx_3(resolve(tns, ctx_2)))
                     end...), ))
                 end
                 res

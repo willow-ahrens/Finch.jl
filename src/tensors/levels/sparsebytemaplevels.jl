@@ -155,7 +155,6 @@ function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}}, ctx,
         $ptr = $ex.ptr
         $tbl = $ex.tbl
         $srt = $ex.srt
-        #TODO this line is not strictly correct unless the tensor is trimmed.
         $qos_stop = $qos_fill = length($sym.srt)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
@@ -250,17 +249,6 @@ function thaw_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, pos)
     return lvl
 end
 
-function trim_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, pos)
-    ros = freshen(ctx.code, :ros)
-    push!(ctx.code.preamble, quote
-        resize!($(lvl.ptr), $(ctx(pos)) + 1)
-        resize!($(lvl.tbl), $(ctx(pos)) * $(ctx(lvl.shape)))
-        resize!($(lvl.srt), $(lvl.qos_fill))
-    end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, call(*, pos, lvl.shape))
-    return lvl
-end
-
 function assemble_level!(lvl::VirtualSparseByteMapLevel, ctx, pos_start, pos_stop)
     Ti = lvl.Ti
     Tp = postype(lvl)
@@ -289,7 +277,10 @@ function freeze_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, po
     Ti = lvl.Ti
     Tp = postype(lvl)
     push!(ctx.code.preamble, quote
-        sort!(view($(lvl.srt), 1:$(lvl.qos_fill)))
+        resize!($(lvl.ptr), $(ctx(pos_stop)) + 1)
+        resize!($(lvl.tbl), $(ctx(pos_stop)) * $(ctx(lvl.shape)))
+        resize!($(lvl.srt), $(lvl.qos_fill))
+        sort!($(lvl.srt))
         $p_prev = $(Tp(0))
         for $r = 1:$(lvl.qos_fill)
             $p = first($(lvl.srt)[$r])

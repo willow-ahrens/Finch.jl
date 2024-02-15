@@ -7,14 +7,11 @@ own memory space.
 Each sublevel is stored in a vector of type `Val` with `eltype(Val) = Lvl`. 
 
 ```jldoctest
-julia> Tensor(Dense(Separation(Element(0.0))), [1, 2, 3])
-Dense [1:3]
-├─ [1]: Pointer ->
-│  └─ 1.0
-├─ [2]: Pointer ->
-│  └─ 2.0
-└─ [3]: Pointer ->
-   └─ 3.0
+julia> print_tree(Tensor(Dense(Separation(Element(0.0))), [1, 2, 3]))
+ERROR: UndefVarError: `print_tree` not defined
+Stacktrace:
+ [1] top-level scope
+   @ none:1
 ```
 """
 struct SeparationLevel{Val, Lvl} <: AbstractLevel
@@ -167,21 +164,6 @@ end
 
 function thaw_level!(lvl::VirtualSeparationLevel, ctx::AbstractCompiler, pos)
     return lvl
-end
-
-function trim_level!(lvl::VirtualSeparationLevel, ctx::AbstractCompiler, pos)
-    idx = freshen(ctx.code, :idx)
-    sym = freshen(ctx.code, :pointer_to_lvl)
-    
-    push!(ctx.code.preamble, quote
-        for $idx in 1:$(ctx(pos))
-            $(contain(ctx) do ctx_2
-                lvl_2 = virtualize(:($(lvl.ex).val[$idx]), lvl.Lvl, ctx_2.code, sym)
-                trim_level!(lvl_2, ctx_2, literal(1))
-            end)
-        end
-    end)
-    lvl
 end
 
 function instantiate(fbr::VirtualSubFiber{VirtualSeparationLevel}, ctx, mode::Reader, protos)

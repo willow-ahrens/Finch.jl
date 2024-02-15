@@ -190,21 +190,20 @@ begin
         end
     end
     tmp_lvl_ptr[1 + 1] += (tmp_lvl_qos - 0) - 1
+    resize!(tmp_lvl_ptr, 1 + 1)
     for p = 1:1
         tmp_lvl_ptr[p + 1] += tmp_lvl_ptr[p]
     end
     qos_stop = tmp_lvl_ptr[1 + 1] - 1
+    resize!(tmp_lvl_left, qos_stop)
+    resize!(tmp_lvl_right, qos_stop)
+    resize!(tmp_lvl_ptr_2, qos_stop + 1)
     for p_2 = 1:qos_stop
         tmp_lvl_ptr_2[p_2 + 1] += tmp_lvl_ptr_2[p_2]
     end
-    resize!(tmp_lvl_ptr, 1 + 1)
-    qos = tmp_lvl_ptr[end] - 1
-    resize!(tmp_lvl_left, qos)
-    resize!(tmp_lvl_right, qos)
-    resize!(tmp_lvl_ptr_2, qos + 1)
-    qos_2 = tmp_lvl_ptr_2[end] - 1
-    resize!(tmp_lvl_left_2, qos_2)
-    resize!(tmp_lvl_right_2, qos_2)
-    resize!(tmp_lvl_2_val, qos_2)
+    qos_stop_2 = tmp_lvl_ptr_2[qos_stop + 1] - 1
+    resize!(tmp_lvl_left_2, qos_stop_2)
+    resize!(tmp_lvl_right_2, qos_stop_2)
+    resize!(tmp_lvl_2_val, qos_stop_2)
     (tmp = Tensor((SparseRLELevel){Int64}((SparseRLELevel){Int64}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr_2, tmp_lvl_left_2, tmp_lvl_right_2), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_left, tmp_lvl_right)),)
 end

@@ -109,8 +109,6 @@ thaw_level!(lvl::VirtualPatternLevel, ctx, pos) = lvl
 assemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote end
 reassemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote end
 
-trim_level!(lvl::VirtualPatternLevel, ctx::AbstractCompiler, pos) = lvl
-
 instantiate(::VirtualSubFiber{VirtualPatternLevel}, ctx, mode::Reader, protos) = Fill(true)
 
 function instantiate(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx, mode::Updater, protos)

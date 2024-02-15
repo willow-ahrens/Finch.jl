@@ -156,6 +156,10 @@ function reassemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
 end
 
 function freeze_level!(lvl::VirtualAtomicLevel, ctx, pos)
+    idx = freshen(ctx.code, :idx)
+    push!(ctx.code.preamble, quote
+        resize!($(lvl.locks), $(ctx(pos)))
+    end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, pos)
     return lvl
 end
@@ -163,17 +167,6 @@ end
 function thaw_level!(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, pos)
     lvl.lvl = thaw_level!(lvl.lvl, ctx, pos)
     return lvl
-end
-
-function trim_level!(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, pos)
-    # FIXME: Deallocate atomics?
-    posV = ctx(pos)
-    idx = freshen(ctx.code, :idx)
-    push!(ctx.code.preamble, quote
-              resize!($(lvl.locks), $posV)
-          end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, pos)
-    lvl
 end
 
 function virtual_moveto_level(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, arch)
