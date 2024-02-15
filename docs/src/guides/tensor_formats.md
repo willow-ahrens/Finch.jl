@@ -13,9 +13,9 @@ For example, to construct an empty sparse matrix:
 ```jldoctest example1; setup=:(using Finch)
 julia> A_fbr = Tensor(Dense(SparseList(Element(0.0))), 4, 3)
 Dense [:,1:3]
-├─[:,1]: SparseList (0.0) [1:4]
-├─[:,2]: SparseList (0.0) [1:4]
-├─[:,3]: SparseList (0.0) [1:4]
+├─ [:, 1]: SparseList (0.0) [1:4]
+├─ [:, 2]: SparseList (0.0) [1:4]
+└─ [:, 3]: SparseList (0.0) [1:4]
 ```
 
 To initialize a sparse matrix with some values:
@@ -30,14 +30,14 @@ julia> A = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
 
 julia> A_fbr = Tensor(Dense(SparseList(Element(0.0))), A)
 Dense [:,1:3]
-├─[:,1]: SparseList (0.0) [1:4]
-│ ├─[2]: 1.1
-│ ├─[3]: 2.2
-│ ├─[4]: 3.3
-├─[:,2]: SparseList (0.0) [1:4]
-├─[:,3]: SparseList (0.0) [1:4]
-│ ├─[1]: 4.4
-│ ├─[3]: 5.5
+├─ [:, 1]: SparseList (0.0) [1:4]
+│  ├─ [2]: 1.1
+│  ├─ [3]: 2.2
+│  └─ [4]: 3.3
+├─ [:, 2]: SparseList (0.0) [1:4]
+└─ [:, 3]: SparseList (0.0) [1:4]
+   ├─ [1]: 4.4
+   └─ [3]: 5.5
 ```
 
 
@@ -87,6 +87,9 @@ some general descriptions.
 | SingleSparseRun      | Advanced | Sparse Runs           | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
 | SingleBlock          | Advanced | Sparse Blocks         | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ⚙️     |
 | SparseBytemap        | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ❌              | ✅     |
+| SparseDict           | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ❌              | ✅️     |
+| AtomicLevel          | Modifier | No Data               | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️ |
+| SeperationLevel      | Modifier | No Data               | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️ |
 | SparseCOO            | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ✅              | ✅️    |
 | SparseHash           | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ✅              | 🕸️   |
 
@@ -109,6 +112,11 @@ order.
 Contains levels which are more specialized, and geared
 towards bulk updates. These levels may be more efficient in certain cases, but are
 also more restrictive about access orders and intended for more advanced usage.
+#### Modifier Group
+Contains levels which are also more specialized, but not towards a sparsity pattern. 
+These levels modify other levels in a variety of ways, but don't store novel sparsity patterns.
+Typically, they modify how levels are stored or attach data to levels to support the utilization
+of various hardware features.
 #### Legacy Group
 Contains levels which are not recommended for new code, but
 are included for compatibility with older code.
@@ -123,6 +131,7 @@ are included for compatibility with older code.
 | **Sparse Runs**    | Levels which store runs of repeated non-fill values. |
 | **Sparse Blocks**  | Levels which store Blocks of repeated non-fill values. |
 | **Dense Runs**     | Levels which store runs of repeated values, and no compile-time zero annihilation. |
+| **No Data**        | Levels which don't store data but which alter the storage pattern or attach additional meta-data. |
 
 Note that the `Single` sparse levels store a single instance of each nonzero, run, or block. These are useful with a parent level to represent IDs.
 
@@ -180,8 +189,15 @@ SparseRLELevel
 SparseVBLLevel
 ```
 
+## Modifier Levels
+```@docs
+SeparationLevel
+```
+
 ## Legacy Levels
 ```@docs
 SparseCOOLevel
 SparseHashLevel
 ```
+
+

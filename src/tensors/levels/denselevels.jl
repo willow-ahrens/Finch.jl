@@ -14,12 +14,12 @@ julia> ndims(Tensor(Dense(Dense(Element(0.0)))))
 
 julia> Tensor(Dense(Dense(Element(0.0))), [1 2; 3 4])
 Dense [:,1:2]
-├─[:,1]: Dense [1:2]
-│ ├─[1]: 1.0
-│ ├─[2]: 3.0
-├─[:,2]: Dense [1:2]
-│ ├─[1]: 2.0
-│ ├─[2]: 4.0
+├─ [:, 1]: Dense [1:2]
+│  ├─ [1]: 1.0
+│  └─ [2]: 3.0
+└─ [:, 2]: Dense [1:2]
+   ├─ [1]: 2.0
+   └─ [2]: 4.0
 ```
 """
 struct DenseLevel{Ti, Lvl} <: AbstractLevel
@@ -87,12 +87,15 @@ function Base.show(io::IO, lvl::DenseLevel{Ti}) where {Ti}
     print(io, ")")
 end 
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:DenseLevel}, depth)
-    crds = 1:fbr.lvl.shape
+labelled_show(io::IO, fbr::SubFiber{<:DenseLevel}) =
+    print(io, "Dense [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
-    get_fbr(crd) = fbr(crd)
-    print(io, "Dense [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, show, get_fbr)
+function labelled_children(fbr::SubFiber{<:DenseLevel})
+    lvl = fbr.lvl
+    pos = fbr.pos
+    map(1:lvl.shape) do idx
+        LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., idx), SubFiber(lvl.lvl, (pos - 1) * lvl.shape + idx))
+    end
 end
 
 mutable struct VirtualDenseLevel <: AbstractVirtualLevel
@@ -143,15 +146,6 @@ postype(lvl::VirtualDenseLevel) = postype(lvl.lvl)
 
 function declare_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos, init)
     lvl.lvl = declare_level!(lvl.lvl, ctx, call(*, pos, lvl.shape), init)
-    return lvl
-end
-
-function trim_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
-    qos = freshen(ctx.code, :qos)
-    push!(ctx.code.preamble, quote
-        $qos = $(ctx(pos)) * $(ctx(lvl.shape))
-    end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos))
     return lvl
 end
 

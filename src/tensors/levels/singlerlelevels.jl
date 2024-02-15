@@ -12,7 +12,7 @@ are the types of the arrays used to store positions and endpoints.
 ```jldoctest
 julia> Tensor(SingleRLE(Element(0)), [0, 10, 0]) 
 SingleRLE (0) [1:3]
-├─[2:2]: 10
+└─ [2:2]: 10
 
 julia> Tensor(SingleRLE(Element(0)), [0, 10, 10])
 ERROR: Finch.FinchProtocolError("SingleRLELevels can only be updated once")
@@ -23,10 +23,10 @@ julia> begin
          x
        end
 SingleRLE (0) [1:10]
-├─[3:6]: 1
+└─ [3:6]: 1
 ```
 """
-struct SingleRLELevel{Ti, Ptr, Left, Right, Lvl} <: AbstractLevel
+struct SingleRLELevel{Ti, Ptr<:AbstractVector, Left<:AbstractVector, Right<:AbstractVector, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     ptr::Ptr
@@ -36,7 +36,7 @@ end
 
 const SingleRLE = SingleRLELevel
 SingleRLELevel(lvl::Lvl) where {Lvl} = SingleRLELevel{Int}(lvl)
-SingleRLELevel(lvl, shape::Ti) where {Ti} = SingleRLELevel{Ti}(lvl, shape)
+SingleRLELevel(lvl, shape::Ti, args...) where {Ti} = SingleRLELevel{Ti}(lvl, shape, args...)
 SingleRLELevel{Ti}(lvl) where {Ti} = SingleRLELevel{Ti}(lvl, zero(Ti))
 SingleRLELevel{Ti}(lvl, shape) where {Ti} = SingleRLELevel{Ti}(lvl, shape, postype(lvl)[1], Ti[], Ti[])
 
@@ -52,7 +52,7 @@ function memtype(::Type{SingleRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, P
 end
 
 function postype(::Type{SingleRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl}
-    return Ptr 
+    return postype(Lvl) 
 end
 
 function moveto(lvl::SingleRLELevel{Ti, Ptr, Left, Right, Lvl}, Tm) where {Ti, Ptr, Left, Right, Lvl}
@@ -98,21 +98,16 @@ function Base.show(io::IO, lvl::SingleRLELevel{Ti, Ptr, Left, Right, Lvl}) where
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SingleRLELevel}, depth)
-    p = fbr.pos
+labelled_show(io::IO, fbr::SubFiber{<:SingleRLELevel}) =
+    print(io, "SingleRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+
+function labelled_children(fbr::SubFiber{<:SingleRLELevel})
     lvl = fbr.lvl
-    left_endpoints = @view(lvl.left[lvl.ptr[p]:lvl.ptr[p + 1] - 1])
-
-    crds = []
-    for l in left_endpoints 
-        append!(crds, l)
+    pos = fbr.pos
+    pos + 1 > length(lvl.ptr) && return []
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., range_label(lvl.left[qos], lvl.right[qos])), SubFiber(lvl.lvl, qos))
     end
-
-    print_coord(io, crd) = print(io, crd, ":", lvl.right[lvl.ptr[p]-1+searchsortedfirst(left_endpoints, crd)])  
-    get_fbr(crd) = fbr(crd)
-
-    print(io, "SingleRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
 @inline level_ndims(::Type{<:SingleRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = 1 + level_ndims(Lvl)
@@ -204,7 +199,6 @@ postype(lvl::VirtualSingleRLELevel) = postype(lvl.lvl)
 function declare_level!(lvl::VirtualSingleRLELevel, ctx::AbstractCompiler, pos, init)
     Ti = lvl.Ti
     Tp = postype(lvl) 
-    qos = call(-, call(getindex, :($(lvl.ptr)), call(+, pos, 1)), 1)
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
@@ -214,20 +208,7 @@ function declare_level!(lvl::VirtualSingleRLELevel, ctx::AbstractCompiler, pos, 
             $(lvl.prev_pos) = $(Tp(0))
         end)
     end
-    lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
-    return lvl
-end
-
-function trim_level!(lvl::VirtualSingleRLELevel, ctx::AbstractCompiler, pos)
-    Tp = postype(lvl) 
-    qos = freshen(ctx.code, :qos)
-    push!(ctx.code.preamble, quote
-        resize!($(lvl.ptr), $(ctx(pos)) + 1)
-        $qos = $(lvl.ptr)[end] - $(Tp(1))
-        resize!($(lvl.left), $qos)
-        resize!($(lvl.right), $qos)
-    end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
+    lvl.lvl = declare_level!(lvl.lvl, ctx, literal(Tp(0)), init)
     return lvl
 end
 
@@ -245,10 +226,13 @@ function freeze_level!(lvl::VirtualSingleRLELevel, ctx::AbstractCompiler, pos_st
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
+        resize!($(lvl.ptr), $pos_stop + 1)
         for $p = 1:($pos_stop)
            $(lvl.ptr)[$p + 1] += $(lvl.ptr)[$p]
         end
         $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
+        resize!($(lvl.left), $qos_stop)
+        resize!($(lvl.right), $qos_stop)
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl

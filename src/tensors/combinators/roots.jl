@@ -20,7 +20,6 @@ end
 declare!(tns::FinchNode, ctx::AbstractCompiler, init) = declare!(resolve(tns, ctx), ctx, init)
 thaw!(tns::FinchNode, ctx::AbstractCompiler) = thaw!(resolve(tns, ctx), ctx)
 freeze!(tns::FinchNode, ctx::AbstractCompiler) = freeze!(resolve(tns, ctx), ctx)
-trim!(tns::FinchNode, ctx::AbstractCompiler) = trim!(resolve(tns, ctx), ctx)
 
 function unfurl(tns::FinchNode, ctx, ext, mode, protos...)
     unfurl(resolve(tns, ctx), ctx, ext, mode, protos...)

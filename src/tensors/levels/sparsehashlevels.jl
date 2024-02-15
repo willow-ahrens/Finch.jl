@@ -16,20 +16,20 @@ pairs in the hash table.
 ```jldoctest
 julia> Tensor(Dense(SparseHash{1}(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─[:,1]: SparseHash (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,2]: SparseHash (0.0) [1:3]
-├─[:,3]: SparseHash (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+├─ [:, 1]: SparseHash{1} (0.0) [1:3]
+│  ├─ [1]: 10.0
+│  └─ [2]: 30.0
+├─ [:, 2]: SparseHash{1} (0.0) [1:3]
+└─ [:, 3]: SparseHash{1} (0.0) [1:3]
+   ├─ [1]: 20.0
+   └─ [3]: 40.0
 
 julia> Tensor(SparseHash{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
-SparseHash (0.0) [1:3,1:3]
-├─├─[1, 1]: 10.0
-├─├─[2, 1]: 30.0
-├─├─[1, 3]: 20.0
-├─├─[3, 3]: 40.0
+SparseHash{2} (0.0) [:,1:3]
+├─ [1, 1]: 10.0
+├─ [2, 1]: 30.0
+├─ [1, 3]: 20.0
+└─ [3, 3]: 40.0
 ```
 """
 struct SparseHashLevel{N, TI<:Tuple, Ptr, Tbl, Srt, Lvl} <: AbstractLevel
@@ -118,23 +118,18 @@ function Base.show(io::IO, lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}) wher
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseHashLevel{N}}, depth) where {N}
-    p = fbr.pos
+labelled_show(io::IO, fbr::SubFiber{<:SparseHashLevel{N}}) where {N} =
+    print(io, "SparseHash{", N, "} (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+
+function labelled_children(fbr::SubFiber{<:SparseHashLevel{N}}) where {N}
     lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "SparseHash(undef...)")
-        return
+    pos = fbr.pos
+    pos + 1 > length(lvl.ptr) && return []
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - N]..., lvl.srt[qos][1][2]...), SubFiber(lvl.lvl, qos))
     end
-    crds = fbr.lvl.srt[fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1]
-
-    print_coord(io, crd) = join(io, map(n -> crd[1][2][n], 1:N), ", ")
-    get_fbr(crd) = fbr(crd[1][2]...)
-
-    print(io, "SparseHash (", default(fbr), ") [", ":,"^(ndims(fbr) - N), "1:")
-    join(io, fbr.lvl.shape, ",1:") 
-    print(io, "]")
-    display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
 end
+
 @inline level_ndims(::Type{<:SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}) where {N, TI, Ptr, Tbl, Srt, Lvl} = N + level_ndims(Lvl)
 @inline level_size(lvl::SparseHashLevel) = (lvl.shape..., level_size(lvl.lvl)...)
 @inline level_axes(lvl::SparseHashLevel) = (map(Base.OneTo, lvl.shape)..., level_axes(lvl.lvl)...)
@@ -250,27 +245,13 @@ function declare_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos,
     TI = lvl.TI
     Tp = postype(lvl)
 
-    qos = call(-, call(getindex, :($(lvl.ptr)), call(+, pos, 1)), 1)
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
         empty!($(lvl.tbl))
         empty!($(lvl.srt))
     end)
-    lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
-    return lvl
-end
-
-function trim_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos)
-    TI = lvl.TI
-    Tp = postype(lvl)
-    qos = freshen(ctx.code, :qos)
-    push!(ctx.code.preamble, quote
-        resize!($(lvl.ptr), $(ctx(pos)) + 1)
-        $qos = $(lvl.ptr)[end] - $(Tp(1))
-        resize!($(lvl.srt), $qos)
-    end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
+    lvl.lvl = declare_level!(lvl.lvl, ctx, literal(Tp(0)), init)
     return lvl
 end
 
@@ -279,11 +260,12 @@ function thaw_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos)
     Tp = postype(lvl)
     p = freshen(ctx.code, lvl.ex, :_p)
     push!(ctx.code.preamble, quote
+        $(lvl.qos_stop) = $(lvl.ptr)[$(ctx(pos)) + 1] - 1
+        $(lvl.qos_fill) = $(lvl.qos_stop)
         for $p = $(ctx(pos)) + 1:-1:2
             $(lvl.ptr)[$p] -= $(lvl.ptr)[$p - 1]
         end
         $(lvl.ptr)[1] = 1
-        $(lvl.qos_fill) = length($(lvl.tbl))
     end)
     lvl.lvl = thaw_level!(lvl.lvl, ctx, value(lvl.qos_fill, Tp))
     return lvl
@@ -303,11 +285,12 @@ hashkeycmp(((pos, idx), qos),) = (pos, reverse(idx)...)
 function freeze_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos_stop)
     p = freshen(ctx.code, :p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
-    qos_stop = freshen(ctx.code, :qos_stop)
+    qos_stop = lvl.qos_stop
     push!(ctx.code.preamble, quote
         resize!($(lvl.srt), length($(lvl.tbl)))
         copyto!($(lvl.srt), pairs($(lvl.tbl)))
         sort!($(lvl.srt), by=$hashkeycmp)
+        resize!($(lvl.ptr), $pos_stop + 1)
         for $p = 2:($pos_stop + 1)
             $(lvl.ptr)[$p] += $(lvl.ptr)[$p - 1]
         end

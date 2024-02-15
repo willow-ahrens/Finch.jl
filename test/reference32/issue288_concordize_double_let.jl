@@ -16,46 +16,36 @@ begin
     A_mode1_stop == C_mode1_stop || throw(DimensionMismatch("mismatched dimension limits ($(A_mode1_stop) != $(C_mode1_stop))"))
     C_mode2_stop == X_mode2_stop || throw(DimensionMismatch("mismatched dimension limits ($(C_mode2_stop) != $(X_mode2_stop))"))
     C_mode3_stop == A_mode3_stop || throw(DimensionMismatch("mismatched dimension limits ($(C_mode3_stop) != $(A_mode3_stop))"))
-    sugar_4 = size(A)
-    A_mode1_stop = sugar_4[1]
-    A_mode3_stop = sugar_4[3]
-    C_mode3_stop == A_mode3_stop || throw(DimensionMismatch("mismatched dimension limits ($(C_mode3_stop) != $(A_mode3_stop))"))
-    sugar_5 = size(C)
-    C_mode1_stop = sugar_5[1]
-    C_mode3_stop = sugar_5[3]
+    sugar_4 = size(C)
+    C_mode1_stop = sugar_4[1]
+    C_mode3_stop = sugar_4[3]
     A_mode1_stop == C_mode1_stop || throw(DimensionMismatch("mismatched dimension limits ($(A_mode1_stop) != $(C_mode1_stop))"))
     for k_6 = 1:C_mode3_stop
-        sugar_8 = size(A)
-        A_mode1_stop = sugar_8[1]
-        A_mode2_stop = sugar_8[2]
-        sugar_9 = size(C)
-        C_mode2_stop = sugar_9[2]
-        C_mode3_stop = sugar_9[3]
+        sugar_5 = size(A)
+        A_mode1_stop = sugar_5[1]
+        A_mode2_stop = sugar_5[2]
+        sugar_7 = size(C)
+        C_mode2_stop = sugar_7[2]
+        C_mode3_stop = sugar_7[3]
         for j_5 = 1:C_mode2_stop
-            sugar_12 = size(C)
-            C_mode2_stop = sugar_12[2]
-            C_mode3_stop = sugar_12[3]
+            sugar_10 = size(C)
+            C_mode2_stop = sugar_10[2]
+            C_mode3_stop = sugar_10[3]
             for i_9 = 1:A_mode1_stop
-                sugar_15 = size(C)
-                C_mode2_stop = sugar_15[2]
-                C_mode3_stop = sugar_15[3]
+                sugar_13 = size(C)
+                C_mode2_stop = sugar_13[2]
+                C_mode3_stop = sugar_13[3]
                 val = X[i_9, j_5]
                 for l_6 = 1:A_mode2_stop
+                    sugar_15 = size(A)
+                    A_mode1_stop = sugar_15[1]
+                    A_mode2_stop = sugar_15[2]
                     val_2 = A[i_9, l_6, k_6]
-                    phase_stop = min(i_9, (l_6 + 0) + -1)
+                    phase_stop = min(i_9, l_6 + -1)
                     if phase_stop >= i_9
-                        for s_7 = i_9:phase_stop
+                        for s_5 = i_9:phase_stop
                             C[i_9, j_5, k_6] = val_2 * val + C[i_9, j_5, k_6]
-                        end
-                    end
-                    sugar_19 = size(A)
-                    A_mode1_stop = sugar_19[1]
-                    A_mode2_stop = sugar_19[2]
-                    val_3 = A[i_9, l_6, k_6]
-                    phase_stop_3 = min((l_6 + 0) + -1, i_9)
-                    if phase_stop_3 >= i_9
-                        for s_12 = i_9:phase_stop_3
-                            C[i_9, j_5, k_6] = val * val_3 + C[i_9, j_5, k_6]
+                            C[i_9, j_5, k_6] = val * val_2 + C[i_9, j_5, k_6]
                         end
                     end
                 end

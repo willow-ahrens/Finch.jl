@@ -265,7 +265,7 @@ quote
             while true
                 A_lvl_2_i = A_lvl_idx[A_lvl_2_q]
                 if A_lvl_2_i < phase_stop
-                    for i_6 = i:A_lvl_2_i - 1
+                    for i_6 = i:-1 + A_lvl_2_i
                         val = B[i_6, j_4]
                         C_val = f(0.0, val) + C_val
                     end
@@ -280,7 +280,7 @@ quote
                 else
                     phase_stop_3 = min(A_lvl_2_i, phase_stop)
                     if A_lvl_2_i == phase_stop_3
-                        for i_8 = i:phase_stop_3 - 1
+                        for i_8 = i:-1 + phase_stop_3
                             val = B[i_8, j_4]
                             C_val = C_val + f(0.0, val)
                         end

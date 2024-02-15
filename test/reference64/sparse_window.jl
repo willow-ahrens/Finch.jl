@@ -42,7 +42,7 @@ begin
                 A_lvl_q += 1
             else
                 phase_stop_3 = min(phase_stop, -1 + A_lvl_i)
-                if A_lvl_i == phase_stop_3 + 1
+                if A_lvl_i == 1 + phase_stop_3
                     A_lvl_2_val = A_lvl_val[A_lvl_q]
                     if C_lvl_qos > C_lvl_qos_stop
                         C_lvl_qos_stop = max(C_lvl_qos_stop << 1, 1)
@@ -60,12 +60,12 @@ begin
         end
     end
     C_lvl_ptr[1 + 1] += (C_lvl_qos - 0) - 1
+    resize!(C_lvl_ptr, 1 + 1)
     for p = 1:1
         C_lvl_ptr[p + 1] += C_lvl_ptr[p]
     end
-    resize!(C_lvl_ptr, 1 + 1)
-    qos = C_lvl_ptr[end] - 1
-    resize!(C_lvl_idx, qos)
-    resize!(C_lvl_val, qos)
-    (C = Tensor((SparseListLevel){Int64}(C_lvl_2, 4 + -1, C_lvl_ptr, C_lvl_idx)),)
+    qos_stop = C_lvl_ptr[1 + 1] - 1
+    resize!(C_lvl_idx, qos_stop)
+    resize!(C_lvl_val, qos_stop)
+    (C = Tensor((SparseListLevel){Int64}(C_lvl_2, 3, C_lvl_ptr, C_lvl_idx)),)
 end

@@ -1,7 +1,7 @@
 @kwdef mutable struct LowerJulia <: AbstractCompiler
     code = JuliaContext()
     algebra = DefaultAlgebra()
-    bindings::Dict{Any, Any} = Dict()
+    bindings::Dict{FinchNode, FinchNode} = Dict{FinchNode, FinchNode}()
     mode = fastfinch
     modes::Dict{Any, Any} = Dict()
     scope = Set()
@@ -11,7 +11,7 @@
 end
 
 function contain(f, ctx::LowerJulia; bindings = ctx.bindings, kwargs...)
-    contain(ctx.code, kwargs...) do code_2
+    contain(ctx.code; kwargs...) do code_2
         f(LowerJulia(code_2, ctx.algebra, bindings, ctx.mode, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules))
     end
 end
@@ -142,21 +142,26 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
     elseif root.kind === access
         return lower_access(ctx, root, resolve(root.tns, ctx))
     elseif root.kind === call
-        if root.op == literal(and)
-            if isempty(root.args)
-                return true
+        root = simplify(root, ctx)
+        if root.kind === call 
+            if root.op == literal(and)
+                if isempty(root.args)
+                    return true
+                else
+                    reduce((x, y) -> :($x && $y), map(ctx, root.args)) #TODO This could be better. should be able to handle empty case
+                end
+            elseif root.op == literal(or)
+                if isempty(root.args)
+                    return false
+                else
+                    reduce((x, y) -> :($x || $y), map(ctx, root.args))
+                end
             else
-                reduce((x, y) -> :($x && $y), map(ctx, root.args)) #TODO This could be better. should be able to handle empty case
+                :($(ctx(root.op))($(map(ctx, root.args)...)))
             end
-        elseif root.op == literal(or)
-            if isempty(root.args)
-                return false
-            else
-                reduce((x, y) -> :($x || $y), map(ctx, root.args))
-            end
-        else
-            :($(ctx(root.op))($(map(ctx, root.args)...)))
-        end
+         else 
+           return ctx(root) 
+         end
     elseif root.kind === cached
         return ctx(root.arg)
     elseif root.kind === loop
@@ -192,7 +197,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
             :(return (; $(map(root.args) do tns
                 @assert tns.kind === variable
                 name = tns.name
-                tns = trim!(resolve(tns, ctx), ctx_2)
+                tns = resolve(tns, ctx)
                 Expr(:kw, name, ctx_2(tns))
             end...), ))
         end

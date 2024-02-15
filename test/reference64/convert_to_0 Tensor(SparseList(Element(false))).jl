@@ -59,12 +59,12 @@ begin
         end
     end
     tmp_lvl_ptr[1 + 1] += (tmp_lvl_qos - 0) - 1
+    resize!(tmp_lvl_ptr, 1 + 1)
     for p = 1:1
         tmp_lvl_ptr[p + 1] += tmp_lvl_ptr[p]
     end
-    resize!(tmp_lvl_ptr, 1 + 1)
-    qos = tmp_lvl_ptr[end] - 1
-    resize!(tmp_lvl_idx, qos)
-    resize!(tmp_lvl_val, qos)
+    qos_stop = tmp_lvl_ptr[1 + 1] - 1
+    resize!(tmp_lvl_idx, qos_stop)
+    resize!(tmp_lvl_val, qos_stop)
     (tmp = Tensor((SparseListLevel){Int64}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),)
 end

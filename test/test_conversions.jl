@@ -81,9 +81,11 @@
             () -> SparseList(base()),
             () -> SparseVBL(base()),
             () -> SparseByteMap(base()),
+            () -> SparseDict(base()),
             () -> SparseHash{1}(base()),
             () -> SparseCOO{1}(base()),
             () -> SparseRLE(base()),
+            () -> Sparse(base()),
         ]
             output = false
             for arr in [
@@ -264,6 +266,7 @@
     for fmt in [
         Tensor(SparseHash{2}(Element(0.0)))
         Tensor(Dense(SparseHash{1}(Element(0.0))))
+        Tensor(Dense(SparseDict(Element(0.0))))
         Tensor(Dense(SparseByteMap(Element(0.0))))
     ]
         arr_1 = fsprand(10, 10, 0.5)

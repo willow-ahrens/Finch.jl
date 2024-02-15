@@ -1,7 +1,7 @@
 function spgemm_inner(A, B)
     z = default(A) * default(B) + false
     C = Tensor(Dense(SparseList(Element(z))))
-    w = Tensor(SparseHash{2}(Element(z)))
+    w = Tensor(SparseDict(SparseDict(Element(z))))
     AT = Tensor(Dense(SparseList(Element(z))))
     @finch mode=fastfinch (w .= 0; for k=_, i=_; w[k, i] = A[i, k] end; return w)
     @finch mode=fastfinch (AT .= 0; for i=_, k=_; AT[k, i] = w[k, i] end; return AT)
@@ -12,7 +12,7 @@ end
 function spgemm_outer(A, B)
     z = default(A) * default(B) + false
     C = Tensor(Dense(SparseList(Element(z))))
-    w = Tensor(SparseHash{2}(Element(z)))
+    w = Tensor(SparseDict(SparseDict(Element(z))))
     BT = Tensor(Dense(SparseList(Element(z))))
     @finch mode=fastfinch (w .= 0; for j=_, k=_; w[j, k] = B[k, j] end; return w)
     @finch (BT .= 0; for k=_, j=_; BT[j, k] = w[j, k] end; return BT)

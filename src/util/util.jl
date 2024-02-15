@@ -353,7 +353,9 @@ function (ctx::PropagateCopies)(ex)
         body_2 = body
         while true
             ctx_2 = copy(ctx)
-            body_2 = ctx(body)
+            ctx_3 = copy(ctx)
+            body_2 = ctx_3(body)
+            merge!(ctx, ctx_3)
             ctx_2 == ctx && break
         end
         return Expr(:for, Expr(:def, Expr(:(=), i, ext), id), body_2)
@@ -518,9 +520,9 @@ end
 return the first value of `v` greater than or equal to `x`, within the range
 `lo:hi`. Return `hi+1` if all values are less than `x`.
 """
-Base.@propagate_inbounds function scansearch(v, x, lo::T, hi::T)::T where T<:Integer
-    u = T(1)
-    stop = min(hi, lo + T(32))
+Base.@propagate_inbounds function scansearch(v, x, lo::T1, hi::T2) where {T1<:Integer, T2<:Integer} # TODO types for `lo` and `hi` #406
+    u = T1(1)
+    stop = min(hi, lo + T1(32))
     while lo + u < stop && v[lo] < x
         lo += u
     end

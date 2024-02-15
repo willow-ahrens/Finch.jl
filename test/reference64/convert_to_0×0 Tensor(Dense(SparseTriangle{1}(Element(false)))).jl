@@ -29,7 +29,7 @@ begin
             ref_lvl_i = ref_lvl_idx[ref_lvl_q]
             if ref_lvl_i < phase_stop
                 tmp_lvl_q = (1 - 1) * ref_lvl.shape + ref_lvl_i
-                tmp_lvl_2_q = (tmp_lvl_q - 1) * fld(ref_lvl_2.shape, 1) + 1
+                tmp_lvl_2_q = 1 + fld(ref_lvl_2.shape, 1) * (-1 + tmp_lvl_q)
                 ref_lvl_2_q = ref_lvl_ptr_2[ref_lvl_q]
                 ref_lvl_2_q_stop = ref_lvl_ptr_2[ref_lvl_q + 1]
                 if ref_lvl_2_q < ref_lvl_2_q_stop
@@ -46,13 +46,13 @@ begin
                         ref_lvl_2_i = ref_lvl_idx_2[ref_lvl_2_q]
                         if ref_lvl_2_i < phase_stop_3
                             ref_lvl_3_val = ref_lvl_2_val[ref_lvl_2_q]
-                            tmp_lvl_2_val[tmp_lvl_2_q + -1 + ref_lvl_2_i] = ref_lvl_3_val
+                            tmp_lvl_2_val[-1 + tmp_lvl_2_q + ref_lvl_2_i] = ref_lvl_3_val
                             ref_lvl_2_q += 1
                         else
                             phase_stop_5 = min(ref_lvl_2_i, phase_stop_3)
                             if ref_lvl_2_i == phase_stop_5
                                 ref_lvl_3_val = ref_lvl_2_val[ref_lvl_2_q]
-                                tmp_lvl_2_val[tmp_lvl_2_q + -1 + phase_stop_5] = ref_lvl_3_val
+                                tmp_lvl_2_val[-1 + tmp_lvl_2_q + phase_stop_5] = ref_lvl_3_val
                                 ref_lvl_2_q += 1
                             end
                             break
@@ -64,7 +64,7 @@ begin
                 phase_stop_9 = min(ref_lvl_i, phase_stop)
                 if ref_lvl_i == phase_stop_9
                     tmp_lvl_q = (1 - 1) * ref_lvl.shape + phase_stop_9
-                    tmp_lvl_2_q_2 = (tmp_lvl_q - 1) * fld(ref_lvl_2.shape, 1) + 1
+                    tmp_lvl_2_q_2 = 1 + fld(ref_lvl_2.shape, 1) * (-1 + tmp_lvl_q)
                     ref_lvl_2_q = ref_lvl_ptr_2[ref_lvl_q]
                     ref_lvl_2_q_stop = ref_lvl_ptr_2[ref_lvl_q + 1]
                     if ref_lvl_2_q < ref_lvl_2_q_stop
@@ -81,13 +81,13 @@ begin
                             ref_lvl_2_i = ref_lvl_idx_2[ref_lvl_2_q]
                             if ref_lvl_2_i < phase_stop_10
                                 ref_lvl_3_val_3 = ref_lvl_2_val[ref_lvl_2_q]
-                                tmp_lvl_2_val[tmp_lvl_2_q_2 + -1 + ref_lvl_2_i] = ref_lvl_3_val_3
+                                tmp_lvl_2_val[-1 + tmp_lvl_2_q_2 + ref_lvl_2_i] = ref_lvl_3_val_3
                                 ref_lvl_2_q += 1
                             else
                                 phase_stop_12 = min(ref_lvl_2_i, phase_stop_10)
                                 if ref_lvl_2_i == phase_stop_12
                                     ref_lvl_3_val_3 = ref_lvl_2_val[ref_lvl_2_q]
-                                    tmp_lvl_2_val[tmp_lvl_2_q_2 + -1 + phase_stop_12] = ref_lvl_3_val_3
+                                    tmp_lvl_2_val[-1 + tmp_lvl_2_q_2 + phase_stop_12] = ref_lvl_3_val_3
                                     ref_lvl_2_q += 1
                                 end
                                 break
@@ -100,7 +100,6 @@ begin
             end
         end
     end
-    qos = 1 * ref_lvl.shape
-    resize!(tmp_lvl_2_val, qos * fld(ref_lvl_2.shape, 1))
+    resize!(tmp_lvl_2_val, fld(ref_lvl_2.shape, 1) * ref_lvl.shape)
     (tmp = Tensor((DenseLevel){Int64}((SparseTriangleLevel){1, Int64}(tmp_lvl_3, ref_lvl_2.shape), ref_lvl.shape)),)
 end

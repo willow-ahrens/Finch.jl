@@ -141,7 +141,11 @@ begin
             end
         end
     end
-    sort!(view(fmt_lvl_srt, 1:fmt_lvl_2_qos_fill))
+    pos_stop = fmt_lvl.shape
+    resize!(fmt_lvl_ptr, pos_stop + 1)
+    resize!(fmt_lvl_tbl, pos_stop * fmt_lvl_2.shape)
+    resize!(fmt_lvl_srt, fmt_lvl_2_qos_fill)
+    sort!(fmt_lvl_srt)
     fmt_lvl_2_p_prev = 0
     for fmt_lvl_2_r = 1:fmt_lvl_2_qos_fill
         fmt_lvl_2_p_2 = first(fmt_lvl_srt[fmt_lvl_2_r])
@@ -151,11 +155,7 @@ begin
         end
         fmt_lvl_2_p_prev = fmt_lvl_2_p_2
     end
-    fmt_lvl_ptr[fmt_lvl_2_p_2 + 1] = fmt_lvl_2_qos_fill + 1
-    qos = 1 * fmt_lvl.shape
-    resize!(fmt_lvl_ptr, qos + 1)
-    resize!(fmt_lvl_tbl, qos * fmt_lvl_2.shape)
-    resize!(fmt_lvl_srt, fmt_lvl_2_qos_fill)
-    resize!(fmt_lvl_2_val, qos * fmt_lvl_2.shape)
+    fmt_lvl_ptr[fmt_lvl_2_p_prev + 1] = fmt_lvl_2_qos_fill + 1
+    resize!(fmt_lvl_2_val, fmt_lvl_2.shape * pos_stop)
     (fmt = Tensor((DenseLevel){Int64}((SparseByteMapLevel){Int64}(fmt_lvl_3, fmt_lvl_2.shape, fmt_lvl_ptr, fmt_lvl_tbl, fmt_lvl_srt), fmt_lvl.shape)),)
 end

@@ -30,7 +30,8 @@ end
     freeze!(tns, ctx)
 
 Freeze the update-only virtual tensor `tns` in the context `ctx` and return it.
-Afterwards, the tensor is read-only.
+This may involve trimming any excess overallocated memory.  Afterwards, the
+tensor is read-only.
 """
 function freeze! end
 
@@ -41,13 +42,6 @@ Thaw the read-only virtual tensor `tns` in the context `ctx` and return it. Afte
 the tensor is update-only.
 """
 thaw!(tns, ctx) = throw(FinchProtocolError("cannot modify $(typeof(tns)) in place (forgot to declare with .= ?)"))
-
-"""
-    trim!(tns, ctx)
-
-Before returning a tensor from the finch program, trim any excess overallocated memory.
-"""
-trim!(tns, ctx) = tns
 
 """
     getresults(prgm)

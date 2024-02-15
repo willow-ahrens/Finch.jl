@@ -26,6 +26,7 @@ using CIndices
         for D in [
             Tensor(Dense(SparseList(Element(0)))),
             Tensor(Dense(SparseHash{1}(Element(0)))),
+            Tensor(Dense(SparseDict(Element(0)))),
             Tensor(Dense(Dense(Element(0)))),
         ]
             E = deepcopy(D)
@@ -177,9 +178,9 @@ using CIndices
     let 
         m = 4; n = 3; ptr_c = [0, 3, 3, 5]; idx_c = [1, 2, 3, 0, 2]; val_c = [1.1, 2.2, 3.3, 4.4, 5.5];
 
-        ptr_jl = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Int}}, pointer(ptr_c)), length(ptr_c); own = false)
-        idx_jl = unsafe_wrap(Array, reinterpret(Ptr{CIndex{Int}}, pointer(idx_c)), length(idx_c); own = false)
-        A = Tensor(Dense(SparseList{CIndex{Int}}(Element{0.0, Float64, CIndex{Int}}(val_c), m, ptr_jl, idx_jl), n))
+        ptr_jl = OffByOneVector(ptr_c)
+        idx_jl = OffByOneVector(idx_c)
+        A = Tensor(Dense(SparseList{Int}(Element{0.0, Float64, Int}(val_c), m, ptr_jl, idx_jl), n))
 
         @test A == [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
     end
@@ -524,7 +525,7 @@ using CIndices
         edge_matrix = Tensor(SparseList(SparseList(Element(0.0))), 254, 254)
         edge_values = fsprand(254, 254, .001)
         @finch (edge_matrix .= 0; for j=_, i=_; edge_matrix[i,j] = edge_values[i,j]; end)
-        output_matrix = Tensor(SparseHash{1}(SparseHash{1}(Element(0.0))), 254, 254)
+        output_matrix = Tensor(SparseDict(SparseDict(Element(0.0))), 254, 254)
         @finch (for v_4=_, v_3=_, v_2=_, v_5=_; output_matrix[v_2,v_5] += edge_matrix[v_5, v_4]*edge_matrix[v_2, v_3]*edge_matrix[v_3, v_4]; end)
 
         a_matrix = [1 0; 0 1]
@@ -533,7 +534,7 @@ using CIndices
         b_matrix = [0 1; 1 0]
         b_fiber = Tensor(SparseList(SparseList(Element(0.0))), 2, 2)
         copyto!(b_fiber, b_matrix)
-        output_tensor = Tensor(SparseHash{1}(SparseHash{1}(Element(0.0))), 2, 2)
+        output_tensor = Tensor(SparseDict(SparseDict(Element(0.0))), 2, 2)
 
         @finch (output_tensor .=0; for j=_,i=_,k=_; output_tensor[i,k] += a_fiber[i,j] * b_fiber[k,j]; end; return output_tensor)
     end
@@ -594,5 +595,38 @@ using CIndices
         c = Scalar(0)
         @finch let a=1, b=2; c[] += a + b end
         @test c[] == 3
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/387
+
+    A = zeros(2, 4, 3)
+    A[1,:,:] = [0.0 0.0 4.4; 1.1 0.0 0.0; 0.0 0.0 0.0; 3.3 0.0 0.0]
+    A[2,:,:] = [1.0 0.0 0.0; 0.0 0.0 0.0; 0.0 1.0 0.0; 3.3 0.0 0.0]
+
+    permutation = (3, 1, 2)
+
+    new_shape_1 = size(permutedims(A, permutation))
+
+    t = Tensor(Dense(SparseList(SparseList(Element(0.0)))), A)
+    st = swizzle(t, permutation...)
+    # materialize swizzle
+    new_shape_2 = size(Tensor(Dense(SparseList(SparseList(Element(0.0)))), st))
+
+    @test new_shape_1 == new_shape_2
+
+    @test swizzle(swizzle(zeros(3, 3, 3), 3, 1, 2), 3, 2, 1) isa Finch.SwizzleArray{(2, 1, 3), <:Array}
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/134
+    let
+        A = Tensor(Dense(Dense(Element(0.0))), rand(3, 3))
+        x = Tensor(Dense(Element(0.0)), rand(3))
+        y = Tensor(Dense(Element(0.0)), rand(3))
+
+        check_output("cse_symv.jl", @finch_code begin
+            for i=_, j=_
+                y[i] += A[i, j] * x[j]
+                y[j] += A[i, j] * x[i]
+            end
+        end)
     end
 end

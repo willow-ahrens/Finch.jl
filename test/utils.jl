@@ -46,10 +46,20 @@ isstructequal(a::T, b::T) where {T <: Dense} =
     a.shape == b.shape &&
     isstructequal(a.lvl, b.lvl)
 
+isstructequal(a::T, b::T) where {T <: Atomic} =
+    typeof(a.locks) == typeof(b.locks) &&
+    isstructequal(a.lvl, b.lvl)
+# Temporary hack to deal with SpinLock allocate undefined references.
+
 isstructequal(a::T, b::T) where {T <: SparseList} =
     a.shape == b.shape &&
     a.ptr == b.ptr &&
     a.idx == b.idx &&
+    isstructequal(a.lvl, b.lvl)
+
+isstructequal(a::T, b::T) where {T <: Sparse} =
+    a.shape == b.shape &&
+    a.tbl == b.tbl &&
     isstructequal(a.lvl, b.lvl)
 
 isstructequal(a::T, b::T) where {T <: SparseCOO} =

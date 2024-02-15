@@ -1,8 +1,9 @@
 julia> X = Tensor(SparseList(Element(0.0)), [1.0, 0.0, 0.0, 3.0, 0.0, 2.0, 0.0])
 SparseList (0.0) [1:7]
-├─[1]: 1.0
-├─[4]: 3.0
-├─[6]: 2.0
+├─ [1]: 1.0
+├─ [4]: 3.0
+└─ [6]: 2.0
+
 julia> x_min = Scalar(Inf)
 Scalar{Inf, Float64}(Inf)
 julia> x_max = Scalar(-Inf)
@@ -50,7 +51,7 @@ quote
         while true
             X_lvl_i = X_lvl_idx[X_lvl_q]
             if X_lvl_i < phase_stop
-                cond = 0 < -i + X_lvl_i
+                cond = 1 <= -i + X_lvl_i
                 if cond
                     x_min_val = min(0.0, x_min_val)
                     x_max_val = max(0.0, x_max_val)
@@ -65,7 +66,7 @@ quote
             else
                 phase_stop_3 = min(X_lvl_i, phase_stop)
                 if X_lvl_i == phase_stop_3
-                    cond_2 = 0 < -i + phase_stop_3
+                    cond_2 = 1 <= -i + phase_stop_3
                     if cond_2
                         x_min_val = min(0.0, x_min_val)
                         x_max_val = max(0.0, x_max_val)
@@ -77,7 +78,7 @@ quote
                     x_var_val = X_lvl_2_val * X_lvl_2_val + x_var_val
                     X_lvl_q += 1
                 else
-                    cond_3 = 0 < 1 + -i + phase_stop_3
+                    cond_3 = 1 <= 1 + -i + phase_stop_3
                     if cond_3
                         x_min_val = min(0.0, x_min_val)
                         x_max_val = max(0.0, x_max_val)
@@ -91,7 +92,7 @@ quote
     phase_start_3 = max(1, 1 + X_lvl_i1)
     phase_stop_4 = X_lvl.shape
     if phase_stop_4 >= phase_start_3
-        cond_4 = 0 < 1 + -phase_start_3 + phase_stop_4
+        cond_4 = 1 <= 1 + -phase_start_3 + phase_stop_4
         if cond_4
             x_min_val = min(0.0, x_min_val)
             x_max_val = max(0.0, x_max_val)

@@ -53,7 +53,7 @@ quote
                 end
                 while true
                     y_lvl_i = y_lvl_idx[y_lvl_q]
-                    if y_lvl_i < phase_stop_2 - 1
+                    if y_lvl_i < -1 + phase_stop_2
                         y_lvl_2_val = y_lvl_val[y_lvl_q]
                         if z_lvl_qos > z_lvl_qos_stop
                             z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
@@ -87,7 +87,7 @@ quote
                 end
                 y_lvl_i = y_lvl_idx[y_lvl_q]
                 if y_lvl_i < phase_stop_2
-                    for i_11 = phase_stop_2:y_lvl_i - 1
+                    for i_11 = phase_stop_2:-1 + y_lvl_i
                         if z_lvl_qos > z_lvl_qos_stop
                             z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
                             Finch.resize_if_smaller!(z_lvl_idx, z_lvl_qos_stop)
@@ -110,9 +110,9 @@ quote
                     z_lvl_qos += 1
                     y_lvl_q += 1
                 else
-                    phase_stop_6 = min(y_lvl_i, phase_stop_2)
+                    phase_stop_6 = min(phase_stop_2, y_lvl_i)
                     if y_lvl_i == phase_stop_6
-                        for i_13 = phase_stop_2:phase_stop_6 - 1
+                        for i_13 = phase_stop_2:-1 + phase_stop_6
                             if z_lvl_qos > z_lvl_qos_stop
                                 z_lvl_qos_stop = max(z_lvl_qos_stop << 1, 1)
                                 Finch.resize_if_smaller!(z_lvl_idx, z_lvl_qos_stop)
@@ -161,7 +161,7 @@ quote
                 while i <= phase_stop_2
                     y_lvl_i = y_lvl_idx[y_lvl_q]
                     x_lvl_i2 = x_lvl_idx[x_lvl_q]
-                    phase_stop_7 = min(x_lvl_i2, y_lvl_i, phase_stop_2)
+                    phase_stop_7 = min(x_lvl_i2, phase_stop_2, y_lvl_i)
                     if y_lvl_i == phase_stop_7 && x_lvl_i2 == phase_stop_7
                         x_lvl_2_val = x_lvl_val[x_lvl_q]
                         y_lvl_2_val = y_lvl_val[y_lvl_q]
@@ -309,13 +309,13 @@ quote
         end
     end
     z_lvl_ptr[1 + 1] += (z_lvl_qos - 0) - 1
+    resize!(z_lvl_ptr, 1 + 1)
     for p = 1:1
         z_lvl_ptr[p + 1] += z_lvl_ptr[p]
     end
-    resize!(z_lvl_ptr, 1 + 1)
-    qos = z_lvl_ptr[end] - 1
-    resize!(z_lvl_idx, qos)
-    resize!(z_lvl_val, qos)
+    qos_stop = z_lvl_ptr[1 + 1] - 1
+    resize!(z_lvl_idx, qos_stop)
+    resize!(z_lvl_val, qos_stop)
     (z = Tensor((SparseListLevel){Int64}(z_lvl_2, y_lvl.shape, z_lvl_ptr, z_lvl_idx)),)
 end
 julia> @finch begin

@@ -35,7 +35,7 @@ begin
         while true
             tmp_lvl_i = tmp_lvl_idx[tmp_lvl_q]
             if tmp_lvl_i < phase_stop
-                tmp_lvl_2_q = (tmp_lvl_q - 1) * fld(tmp_lvl_2.shape, 1) + 1
+                tmp_lvl_2_q = 1 + fld(tmp_lvl_2.shape, 1) * (tmp_lvl_q + -1)
                 if res_lvl_qos > res_lvl_qos_stop
                     res_lvl_qos_stop = max(res_lvl_qos_stop << 1, 1)
                     Finch.resize_if_smaller!(res_lvl_idx, res_lvl_qos_stop)
@@ -54,7 +54,7 @@ begin
                             Finch.resize_if_smaller!(res_lvl_2_val, res_lvl_2_qos_stop)
                             Finch.fill_range!(res_lvl_2_val, false, res_lvl_2_qos, res_lvl_2_qos_stop)
                         end
-                        tmp_lvl_3_val = tmp_lvl_2_val[tmp_lvl_2_q + -1 + i_5]
+                        tmp_lvl_3_val = tmp_lvl_2_val[-1 + tmp_lvl_2_q + i_5]
                         res = (res_lvl_2_val[res_lvl_2_qos] = tmp_lvl_3_val)
                         res_lvldirty = true
                         res_lvl_idx_2[res_lvl_2_qos] = i_5
@@ -72,7 +72,7 @@ begin
             else
                 phase_stop_5 = min(tmp_lvl_i, phase_stop)
                 if tmp_lvl_i == phase_stop_5
-                    tmp_lvl_2_q = (tmp_lvl_q - 1) * fld(tmp_lvl_2.shape, 1) + 1
+                    tmp_lvl_2_q = 1 + fld(tmp_lvl_2.shape, 1) * (tmp_lvl_q + -1)
                     if res_lvl_qos > res_lvl_qos_stop
                         res_lvl_qos_stop = max(res_lvl_qos_stop << 1, 1)
                         Finch.resize_if_smaller!(res_lvl_idx, res_lvl_qos_stop)
@@ -91,7 +91,7 @@ begin
                                 Finch.resize_if_smaller!(res_lvl_2_val, res_lvl_2_qos_stop)
                                 Finch.fill_range!(res_lvl_2_val, false, res_lvl_2_qos_2, res_lvl_2_qos_stop)
                             end
-                            tmp_lvl_3_val_2 = tmp_lvl_2_val[tmp_lvl_2_q + -1 + i_8]
+                            tmp_lvl_3_val_2 = tmp_lvl_2_val[-1 + tmp_lvl_2_q + i_8]
                             res_lvl_2_val[res_lvl_2_qos_2] = tmp_lvl_3_val_2
                             res_lvldirty = true
                             res_lvl_idx_2[res_lvl_2_qos_2] = i_8
@@ -112,19 +112,18 @@ begin
         end
     end
     res_lvl_ptr[1 + 1] += (res_lvl_qos - 0) - 1
+    resize!(res_lvl_ptr, 1 + 1)
     for p = 1:1
         res_lvl_ptr[p + 1] += res_lvl_ptr[p]
     end
     qos_stop = res_lvl_ptr[1 + 1] - 1
+    resize!(res_lvl_idx, qos_stop)
+    resize!(res_lvl_ptr_2, qos_stop + 1)
     for p_2 = 1:qos_stop
         res_lvl_ptr_2[p_2 + 1] += res_lvl_ptr_2[p_2]
     end
-    resize!(res_lvl_ptr, 1 + 1)
-    qos = res_lvl_ptr[end] - 1
-    resize!(res_lvl_idx, qos)
-    resize!(res_lvl_ptr_2, qos + 1)
-    qos_2 = res_lvl_ptr_2[end] - 1
-    resize!(res_lvl_idx_2, qos_2)
-    resize!(res_lvl_2_val, qos_2)
+    qos_stop_2 = res_lvl_ptr_2[qos_stop + 1] - 1
+    resize!(res_lvl_idx_2, qos_stop_2)
+    resize!(res_lvl_2_val, qos_stop_2)
     (res = Tensor((SparseListLevel){Int64}((SparseListLevel){Int64}(res_lvl_3, tmp_lvl_2.shape, res_lvl_ptr_2, res_lvl_idx_2), tmp_lvl.shape, res_lvl_ptr, res_lvl_idx)),)
 end

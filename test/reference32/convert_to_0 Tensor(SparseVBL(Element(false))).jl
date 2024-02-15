@@ -81,14 +81,14 @@ begin
         end
     end
     tmp_lvl_ptr[1 + 1] = tmp_lvl_ros - 0
+    resize!(tmp_lvl_ptr, 1 + 1)
     for p = 2:1 + 1
         tmp_lvl_ptr[p] += tmp_lvl_ptr[p - 1]
     end
-    resize!(tmp_lvl_ptr, 1 + 1)
-    ros = tmp_lvl_ptr[end] - 1
-    resize!(tmp_lvl_idx, ros)
-    resize!(tmp_lvl_ofs, ros + 1)
-    qos = tmp_lvl_ofs[end] - 1
-    resize!(tmp_lvl_val, qos)
+    ros_stop = tmp_lvl_ptr[1 + 1] - 1
+    resize!(tmp_lvl_idx, ros_stop)
+    resize!(tmp_lvl_ofs, ros_stop + 1)
+    qos_stop = tmp_lvl_ofs[ros_stop + 1] - 1
+    resize!(tmp_lvl_val, qos_stop)
     (tmp = Tensor((SparseVBLLevel){Int32}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx, tmp_lvl_ofs)),)
 end

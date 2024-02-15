@@ -195,10 +195,16 @@ begin
         end
     end
     tmp_lvl_ptr[1 + 1] += (tmp_lvl_qos - 0) - 1
+    resize!(tmp_lvl_ptr, 1 + 1)
     for p = 1:1
         tmp_lvl_ptr[p + 1] += tmp_lvl_ptr[p]
     end
-    sort!(view(tmp_lvl_srt, 1:tmp_lvl_2_qos_fill))
+    qos_stop = tmp_lvl_ptr[1 + 1] - 1
+    resize!(tmp_lvl_idx, qos_stop)
+    resize!(tmp_lvl_ptr_2, qos_stop + 1)
+    resize!(tmp_lvl_tbl, qos_stop * ref_lvl_2.shape)
+    resize!(tmp_lvl_srt, tmp_lvl_2_qos_fill)
+    sort!(tmp_lvl_srt)
     tmp_lvl_2_p_prev = 0
     for tmp_lvl_2_r_2 = 1:tmp_lvl_2_qos_fill
         tmp_lvl_2_p_2 = first(tmp_lvl_srt[tmp_lvl_2_r_2])
@@ -208,13 +214,7 @@ begin
         end
         tmp_lvl_2_p_prev = tmp_lvl_2_p_2
     end
-    tmp_lvl_ptr_2[tmp_lvl_2_p_2 + 1] = tmp_lvl_2_qos_fill + 1
-    resize!(tmp_lvl_ptr, 1 + 1)
-    qos = tmp_lvl_ptr[end] - 1
-    resize!(tmp_lvl_idx, qos)
-    resize!(tmp_lvl_ptr_2, qos + 1)
-    resize!(tmp_lvl_tbl, qos * ref_lvl_2.shape)
-    resize!(tmp_lvl_srt, tmp_lvl_2_qos_fill)
-    resize!(tmp_lvl_2_val, qos * ref_lvl_2.shape)
+    tmp_lvl_ptr_2[tmp_lvl_2_p_prev + 1] = tmp_lvl_2_qos_fill + 1
+    resize!(tmp_lvl_2_val, ref_lvl_2.shape * qos_stop)
     (tmp = Tensor((SparseListLevel){Int32}((SparseByteMapLevel){Int32}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr_2, tmp_lvl_tbl, tmp_lvl_srt), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),)
 end

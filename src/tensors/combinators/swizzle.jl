@@ -7,6 +7,7 @@ SwizzleArray{dims}(body::Body) where {dims, Body} = SwizzleArray{dims, Body}(bod
 
 Base.ndims(arr::SwizzleArray) = ndims(typeof(arr))
 Base.ndims(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = ndims(Body)
+Base.eltype(arr::SwizzleArray) = eltype(arr.body)
 default(arr::SwizzleArray) = default(typeof(arr))
 default(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = default(Body)
 
@@ -41,6 +42,8 @@ function virtualize(ex, ::Type{SwizzleArray{dims, Body}}, ctx) where {dims, Body
 end
 
 swizzle(body, dims::Int...) = SwizzleArray(body, dims)
+swizzle(body::SwizzleArray{dims}, dims_2::Int...) where {dims} = SwizzleArray(body.body, ntuple(n-> dims[dims_2[n]], ndims(body)))
+
 function virtual_call(::typeof(swizzle), ctx, body, dims...)
     @assert All(isliteral)(dims)
     VirtualSwizzleArray(body, map(dim -> dim.val, collect(dims)))
