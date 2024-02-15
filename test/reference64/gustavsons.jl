@@ -187,6 +187,7 @@ begin
             w_lvl_p_prev = w_lvl_p_2
         end
         w_lvl_ptr[w_lvl_p_prev + 1] = w_lvl_qos_fill + 1
+        w_lvl_qos_stop = w_lvl_qos_fill
         resize!(w_lvl_val, A_lvl_2.shape)
         B_lvl_2_qos = B_lvl_2_qos_fill + 1
         B_lvl_2_prev_pos < B_lvl_q || throw(FinchProtocolError("SparseListLevels cannot be updated multiple times"))

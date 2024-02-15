@@ -291,6 +291,7 @@ function freeze_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, po
             $p_prev = $p
         end
         $(lvl.ptr)[$p_prev + 1] = $(lvl.qos_fill) + 1
+        $(lvl.qos_stop) = $(lvl.qos_fill)
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, call(*, pos_stop, lvl.shape))
     return lvl
