@@ -29,6 +29,7 @@ end
 Base.parent(vec::PlusOneVector{T}) where {T} = vec.data
 Base.size(vec::PlusOneVector{T}) where {T} = size(vec.data)
 Base.axes(vec::PlusOneVector{T}) where {T} = axes(vec.data)
+Base.resize!(vec::PlusOneVector{T}, dim) where {T} = resize!(vec.data, dim)
 
 function moveto(vec::PlusOneVector{T}, device) where {T}
     data = moveto(vec.data, device)
@@ -72,6 +73,7 @@ end
 Base.parent(vec::MinusEpsVector{T}) where {T} = vec.data
 Base.size(vec::MinusEpsVector{T}) where {T} = size(vec.data)
 Base.axes(vec::MinusEpsVector{T}) where {T} = axes(vec.data)
+Base.resize!(vec::MinusEpsVector{T}, dim) where {T} = resize!(vec.data, dim)
 
 function moveto(vec::MinusEpsVector{T}, device) where {T}
     data = moveto(vec.data, device)
@@ -82,7 +84,7 @@ struct PlusEpsVector{T, S} <: AbstractVector{T}
     data::AbstractVector{S}
 end
 
-PlusEpsVector(data::AbstractVector{T}) where {T} = PlusEpsVector{Limit{T}, S}(data)
+PlusEpsVector(data::AbstractVector{T}) where {T} = PlusEpsVector{Limit{T}, T}(data)
 
 @propagate_inbounds function Base.getindex(vec::PlusEpsVector{T},
                                            index::Int) where {T}
@@ -115,6 +117,7 @@ end
 Base.parent(vec::PlusEpsVector{T}) where {T} = vec.data
 Base.size(vec::PlusEpsVector{T}) where {T} = size(vec.data)
 Base.axes(vec::PlusEpsVector{T}) where {T} = axes(vec.data)
+Base.resize!(vec::PlusEpsVector{T}, dim) where {T} = resize!(vec.data, dim)
 
 function moveto(vec::PlusEpsVector{T}, device) where {T}
     data = moveto(vec.data, device)
@@ -155,8 +158,8 @@ end
     return nothing
 end
 
-Base.parent(vec::FillVector{X}) where {X} = X
-Base.size(vec::FillVector{X}) where {X} = ()
-Base.axes(vec::FillVector{X}) where {X} = ()
+Base.size(vec::FillVector) = ()
+Base.axes(vec::FillVector) = ()
+Base.resize!(vec::FillVector) = nothing
 
 moveto(vec::FillVector, device) = vec
