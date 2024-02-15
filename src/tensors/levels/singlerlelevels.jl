@@ -212,19 +212,6 @@ function declare_level!(lvl::VirtualSingleRLELevel, ctx::AbstractCompiler, pos, 
     return lvl
 end
 
-function trim_level!(lvl::VirtualSingleRLELevel, ctx::AbstractCompiler, pos)
-    Tp = postype(lvl) 
-    qos = freshen(ctx.code, :qos)
-    push!(ctx.code.preamble, quote
-        resize!($(lvl.ptr), $(ctx(pos)) + 1)
-        $qos = $(lvl.ptr)[end] - $(Tp(1))
-        resize!($(lvl.left), $qos)
-        resize!($(lvl.right), $qos)
-    end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
-    return lvl
-end
-
 function assemble_level!(lvl::VirtualSingleRLELevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
@@ -239,10 +226,13 @@ function freeze_level!(lvl::VirtualSingleRLELevel, ctx::AbstractCompiler, pos_st
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
+        resize!($(lvl.ptr), $pos_stop + 1)
         for $p = 1:($pos_stop)
            $(lvl.ptr)[$p + 1] += $(lvl.ptr)[$p]
         end
         $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
+        resize!($(lvl.left), $qos_stop)
+        resize!($(lvl.right), $qos_stop)
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl

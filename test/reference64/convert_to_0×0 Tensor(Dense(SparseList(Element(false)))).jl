@@ -147,13 +147,12 @@ begin
             end
         end
     end
+    resize!(tmp_lvl_ptr, ref_lvl.shape + 1)
     for p = 1:ref_lvl.shape
         tmp_lvl_ptr[p + 1] += tmp_lvl_ptr[p]
     end
-    qos = 1 * ref_lvl.shape
-    resize!(tmp_lvl_ptr, qos + 1)
-    qos_2 = tmp_lvl_ptr[end] - 1
-    resize!(tmp_lvl_idx, qos_2)
-    resize!(tmp_lvl_2_val, qos_2)
+    qos_stop = tmp_lvl_ptr[ref_lvl.shape + 1] - 1
+    resize!(tmp_lvl_idx, qos_stop)
+    resize!(tmp_lvl_2_val, qos_stop)
     (tmp = Tensor((DenseLevel){Int64}((SparseListLevel){Int64}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr, tmp_lvl_idx), ref_lvl.shape)),)
 end

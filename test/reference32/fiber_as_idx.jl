@@ -57,7 +57,6 @@ begin
             break
         end
     end
-    qos = 1 * A_lvl.shape
-    resize!(B_lvl_val, qos)
+    resize!(B_lvl_val, A_lvl.shape)
     (B = Tensor((DenseLevel){Int32}(B_lvl_2, A_lvl.shape)),)
 end

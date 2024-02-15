@@ -71,12 +71,11 @@ begin
     resize!(tmp_lvl_srt, length(tmp_lvl_tbl))
     copyto!(tmp_lvl_srt, pairs(tmp_lvl_tbl))
     sort!(tmp_lvl_srt, by = hashkeycmp)
+    resize!(tmp_lvl_ptr, 1 + 1)
     for p = 2:1 + 1
         tmp_lvl_ptr[p] += tmp_lvl_ptr[p - 1]
     end
-    resize!(tmp_lvl_ptr, 1 + 1)
-    qos = tmp_lvl_ptr[end] - 1
-    resize!(tmp_lvl_srt, qos)
-    resize!(tmp_lvl_val, qos)
+    qos_stop = tmp_lvl_ptr[1 + 1] - 1
+    resize!(tmp_lvl_val, qos_stop)
     (tmp = Tensor((SparseHashLevel){1, Tuple{Int64}}(tmp_lvl_2, (ref_lvl.shape,), tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt)),)
 end

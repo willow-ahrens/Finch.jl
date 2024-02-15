@@ -95,10 +95,8 @@ quote
         end
     end
     qos_stop_4 = Finch.freeze_table!(B_lvl_tbl, 1)
-    Finch.freeze_table!(B_lvl_tbl_2, qos_stop_4)
-    qos_3 = Finch.trim_table!(B_lvl_tbl, 1)
-    qos_4 = Finch.trim_table!(B_lvl_tbl_2, qos_3)
-    resize!(B_lvl_2_val, qos_4)
+    qos_stop_5 = Finch.freeze_table!(B_lvl_tbl_2, qos_stop_4)
+    resize!(B_lvl_2_val, qos_stop_5)
     (B = Tensor((SparseLevel){Int32}((SparseLevel){Int32}(B_lvl_3, A_lvl.shape, B_lvl_tbl_2), A_lvl_2.shape, B_lvl_tbl)),)
 end
 julia> @finch mode = fastfinch begin

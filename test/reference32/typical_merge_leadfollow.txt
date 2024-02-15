@@ -309,13 +309,13 @@ quote
         end
     end
     z_lvl_ptr[1 + 1] += (z_lvl_qos - 0) - 1
+    resize!(z_lvl_ptr, 1 + 1)
     for p = 1:1
         z_lvl_ptr[p + 1] += z_lvl_ptr[p]
     end
-    resize!(z_lvl_ptr, 1 + 1)
-    qos = z_lvl_ptr[end] - 1
-    resize!(z_lvl_idx, qos)
-    resize!(z_lvl_val, qos)
+    qos_stop = z_lvl_ptr[1 + 1] - 1
+    resize!(z_lvl_idx, qos_stop)
+    resize!(z_lvl_val, qos_stop)
     (z = Tensor((SparseListLevel){Int32}(z_lvl_2, y_lvl.shape, z_lvl_ptr, z_lvl_idx)),)
 end
 julia> @finch begin
