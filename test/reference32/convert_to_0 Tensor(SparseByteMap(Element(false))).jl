@@ -94,5 +94,6 @@ begin
     end
     tmp_lvl_ptr[tmp_lvl_p_prev + 1] = tmp_lvl_qos_fill + 1
     resize!(tmp_lvl_val, ref_lvl.shape)
-    (tmp = Tensor((SparseByteMapLevel){Int32}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt)),)
+    return (tmp = Tensor((SparseByteMapLevel){Int32}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt)),)
+    nothing
 end

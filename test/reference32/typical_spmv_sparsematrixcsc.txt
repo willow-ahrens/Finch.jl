@@ -22,6 +22,7 @@ julia> @finch_code begin
                 y[i] += A[i, j] * x[j]
             end
         end
+        return y
     end
 quote
     y = (ex.bodies[1]).tns.bind
@@ -69,7 +70,8 @@ quote
             end
         end
     end
-    (y = y,)
+    return (y = y,)
+    nothing
 end
 julia> @finch begin
         y .= 0
@@ -78,6 +80,7 @@ julia> @finch begin
                 y[i] += A[i, j] * x[j]
             end
         end
+        return y
     end
 (y = [9.899999999999999, 1.1, 15.400000000000002, 16.5],)
 

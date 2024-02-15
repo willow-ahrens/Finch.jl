@@ -3,6 +3,7 @@ julia> @finch_code begin
         for i = _
             z[i] = x[i] + y[i]
         end
+        return z
     end
 quote
     z_lvl = (ex.bodies[1]).tns.bind.lvl
@@ -179,13 +180,15 @@ quote
     qos_stop = z_lvl_ptr[1 + 1] - 1
     resize!(z_lvl_idx, qos_stop)
     resize!(z_lvl_val, qos_stop)
-    (z = Tensor((SparseListLevel){Int32}(z_lvl_2, y_lvl.shape, z_lvl_ptr, z_lvl_idx)),)
+    return (z = Tensor((SparseListLevel){Int32}(z_lvl_2, y_lvl.shape, z_lvl_ptr, z_lvl_idx)),)
+    nothing
 end
 julia> @finch begin
         z .= 0
         for i = _
             z[i] = x[i] + y[i]
         end
+        return z
     end
 (z = Tensor(SparseList{Int32}(Element{0.0, Float64, Int32}([2.0, 1.0, 3.0, 5.0, 5.0, 1.0, 6.0]), 10, [1, 8], [1, 2, 3, 5, 7, 8, 9])),)
 

@@ -29,6 +29,7 @@ julia> @finch_code begin
                 y[i] += A[i, j] * x[j]
             end
         end
+        return y
     end
 quote
     y_lvl = (ex.bodies[1]).tns.bind.lvl
@@ -81,7 +82,8 @@ quote
         end
     end
     resize!(y_lvl_val, A_lvl_2.shape)
-    (y = Tensor((DenseLevel){Int32}(y_lvl_2, A_lvl_2.shape)),)
+    return (y = Tensor((DenseLevel){Int32}(y_lvl_2, A_lvl_2.shape)),)
+    nothing
 end
 julia> @finch begin
         y .= 0
@@ -90,6 +92,7 @@ julia> @finch begin
                 y[i] += A[i, j] * x[j]
             end
         end
+        return y
     end
 (y = Tensor(Dense{Int32}(Element{0.0, Float64, Int32}([9.899999999999999, 1.1, 15.400000000000002, 16.5]), 4)),)
 

@@ -24,7 +24,6 @@ julia> @finch_code for i = _
     end
 quote
     B_lvl = ex.body.lhs.tns.bind.lvl
-    B_lvl_2 = B_lvl.lvl
     B_lvl_val = B_lvl.lvl.val
     A_lvl = ex.body.rhs.tns.bind.lvl
     A_lvl_ptr = A_lvl.ptr
@@ -63,10 +62,10 @@ quote
         end
     end
     resize!(B_lvl_val, B_lvl.shape)
-    (B = Tensor((DenseLevel){Int32}(B_lvl_2, B_lvl.shape)),)
+    nothing
 end
 julia> @finch for i = _
         B[i] += A[i]
     end
-(B = Tensor(Dense{Int32}(Element{0.0, Float64, Int32}([3.1, 1.1, 4.1, 1.1, 5.1, 1.1, 6.1, 1.1, 7.1, 1.1]), 10)),)
+nothing
 

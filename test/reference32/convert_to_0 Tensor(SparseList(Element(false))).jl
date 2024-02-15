@@ -66,5 +66,6 @@ begin
     qos_stop = tmp_lvl_ptr[1 + 1] - 1
     resize!(tmp_lvl_idx, qos_stop)
     resize!(tmp_lvl_val, qos_stop)
-    (tmp = Tensor((SparseListLevel){Int32}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),)
+    return (tmp = Tensor((SparseListLevel){Int32}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),)
+    nothing
 end

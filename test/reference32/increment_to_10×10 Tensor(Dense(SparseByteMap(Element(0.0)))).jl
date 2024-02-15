@@ -5,7 +5,6 @@ begin
     fmt_lvl_tbl = fmt_lvl.lvl.tbl
     fmt_lvl_srt = fmt_lvl.lvl.srt
     fmt_lvl_2_qos_stop = (fmt_lvl_2_qos_fill = length(fmt_lvl_2.srt))
-    fmt_lvl_3 = fmt_lvl_2.lvl
     fmt_lvl_2_val = fmt_lvl_2.lvl.val
     arr_2_lvl = ex.body.body.rhs.tns.bind.lvl
     arr_2_lvl_ptr = ex.body.body.rhs.tns.bind.lvl.ptr
@@ -157,5 +156,5 @@ begin
     end
     fmt_lvl_ptr[fmt_lvl_2_p_prev + 1] = fmt_lvl_2_qos_fill + 1
     resize!(fmt_lvl_2_val, fmt_lvl_2.shape * pos_stop)
-    (fmt = Tensor((DenseLevel){Int32}((SparseByteMapLevel){Int32}(fmt_lvl_3, fmt_lvl_2.shape, fmt_lvl_ptr, fmt_lvl_tbl, fmt_lvl_srt), fmt_lvl.shape)),)
+    nothing
 end

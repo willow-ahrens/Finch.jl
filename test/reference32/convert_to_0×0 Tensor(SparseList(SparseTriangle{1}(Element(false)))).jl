@@ -140,5 +140,6 @@ begin
     qos_stop = tmp_lvl_ptr[1 + 1] - 1
     resize!(tmp_lvl_idx, qos_stop)
     resize!(tmp_lvl_2_val, fld(ref_lvl_2.shape, 1) * qos_stop)
-    (tmp = Tensor((SparseListLevel){Int32}((SparseTriangleLevel){1, Int32}(tmp_lvl_3, ref_lvl_2.shape), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),)
+    return (tmp = Tensor((SparseListLevel){Int32}((SparseTriangleLevel){1, Int32}(tmp_lvl_3, ref_lvl_2.shape), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),)
+    nothing
 end

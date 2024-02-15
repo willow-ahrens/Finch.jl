@@ -176,5 +176,6 @@ begin
     end
     tmp_lvl_ptr[tmp_lvl_2_p_prev + 1] = tmp_lvl_2_qos_fill + 1
     resize!(tmp_lvl_2_val, ref_lvl_2.shape * pos_stop)
-    (tmp = Tensor((DenseLevel){Int32}((SparseByteMapLevel){Int32}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt), ref_lvl.shape)),)
+    return (tmp = Tensor((DenseLevel){Int32}((SparseByteMapLevel){Int32}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt), ref_lvl.shape)),)
+    nothing
 end

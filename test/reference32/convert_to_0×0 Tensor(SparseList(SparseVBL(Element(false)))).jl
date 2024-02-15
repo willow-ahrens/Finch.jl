@@ -234,5 +234,6 @@ begin
     resize!(tmp_lvl_ofs, ros_stop + 1)
     qos_stop_2 = tmp_lvl_ofs[ros_stop + 1] - 1
     resize!(tmp_lvl_2_val, qos_stop_2)
-    (tmp = Tensor((SparseListLevel){Int32}((SparseVBLLevel){Int32}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr_2, tmp_lvl_idx_2, tmp_lvl_ofs), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),)
+    return (tmp = Tensor((SparseListLevel){Int32}((SparseVBLLevel){Int32}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr_2, tmp_lvl_idx_2, tmp_lvl_ofs), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),)
+    nothing
 end

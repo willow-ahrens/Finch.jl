@@ -5,6 +5,7 @@ julia> @finch_code begin
                 y[j] += x[i] * A[walk(i), j]
             end
         end
+        return y
     end
 quote
     y_lvl = (ex.bodies[1]).tns.bind.lvl
@@ -70,7 +71,8 @@ quote
             end
         end
     resize!(val, A_lvl.shape)
-    (y = Tensor((DenseLevel){Int32}(y_lvl_2, A_lvl.shape)),)
+    return (y = Tensor((DenseLevel){Int32}(y_lvl_2, A_lvl.shape)),)
+    nothing
 end
 julia> @finch begin
         y .= 0
@@ -79,6 +81,7 @@ julia> @finch begin
                 y[j] += x[i] * A[walk(i), j]
             end
         end
+        return y
     end
 (y = Tensor(Dense{Int32}(Element{0.0, Float64, Int32}([4.0, 6.0]), 2)),)
 

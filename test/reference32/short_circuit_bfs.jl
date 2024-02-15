@@ -2,8 +2,8 @@ begin
     x_lvl = (ex.bodies[1]).tns.bind.lvl
     x_lvl_ptr = x_lvl.ptr
     x_lvl_idx = x_lvl.idx
-    x_lvl_2 = x_lvl.lvl
     x_lvl_val = x_lvl.lvl.val
+    t = ((ex.bodies[2]).body.bodies[1]).tns.bind
     A_lvl = (((ex.bodies[2]).body.bodies[2]).body.rhs.args[1]).tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_ptr = A_lvl_2.ptr
@@ -75,6 +75,7 @@ begin
                 i = phase_stop_2 + 1
             end
         end
+        t.val = t_val
         if t_dirty
             x_lvldirty = true
             x_lvl_val[x_lvl_qos] = t_val
@@ -92,5 +93,5 @@ begin
     qos_stop = x_lvl_ptr[1 + 1] - 1
     resize!(x_lvl_idx, qos_stop)
     resize!(x_lvl_val, qos_stop)
-    (x = Tensor((SparseListLevel){Int32}(x_lvl_2, A_lvl.shape, x_lvl_ptr, x_lvl_idx)),)
+    nothing
 end

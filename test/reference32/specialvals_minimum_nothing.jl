@@ -34,5 +34,6 @@ begin
             end
         end
     end
-    (x = (Scalar){Inf, Float64}(x_val),)
+    x.val = x_val
+    nothing
 end

@@ -2,7 +2,6 @@ begin
     fmt_lvl = ex.body.body.lhs.tns.bind.lvl
     fmt_lvl_2 = fmt_lvl.lvl
     fmt_lvl_tbl = fmt_lvl_2.tbl
-    fmt_lvl_3 = fmt_lvl_2.lvl
     fmt_lvl_2_val = fmt_lvl_2.lvl.val
     arr_2_lvl = ex.body.body.rhs.tns.bind.lvl
     arr_2_lvl_ptr = ex.body.body.rhs.tns.bind.lvl.ptr
@@ -127,5 +126,5 @@ begin
     end
     qos_stop = Finch.freeze_table!(fmt_lvl_tbl, fmt_lvl.shape)
     resize!(fmt_lvl_2_val, qos_stop)
-    (fmt = Tensor((DenseLevel){Int32}((SparseLevel){Int32}(fmt_lvl_3, fmt_lvl_2.shape, fmt_lvl_tbl), fmt_lvl.shape)),)
+    nothing
 end

@@ -128,5 +128,6 @@ begin
     end
     qos_stop_2 = Finch.freeze_table!(tmp_lvl_tbl, ref_lvl.shape)
     resize!(tmp_lvl_2_val, qos_stop_2)
-    (tmp = Tensor((DenseLevel){Int32}((SparseLevel){Int32}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_tbl), ref_lvl.shape)),)
+    return (tmp = Tensor((DenseLevel){Int32}((SparseLevel){Int32}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_tbl), ref_lvl.shape)),)
+    nothing
 end
