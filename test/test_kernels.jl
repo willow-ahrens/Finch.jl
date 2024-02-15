@@ -48,7 +48,7 @@
         a = Scalar{0.0}()
         b = Scalar{0.0}()
 
-        @finch begin
+        res = @finch begin
             C .= 0
             d .= 0
             for i = _

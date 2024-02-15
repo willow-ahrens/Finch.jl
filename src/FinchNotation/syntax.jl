@@ -239,11 +239,23 @@ function finch_parse_yieldbind(ex)
     elseif @capture ex :macrocall(~args)
         return nothing
     elseif @capture ex :return(~arg)
-        return arg isa Symbol ? [arg] : []
-    elseif @capture ex :return(:tuple(~args...))
-        return filter(arg => arg isa Symbol, collect(args))
+        if arg isa Symbol
+            return [arg]
+        elseif @capture arg :tuple(~args...)
+            return filter(arg_2 -> arg_2 isa Symbol, collect(args))
+        end
     elseif ex isa Expr
         return mapreduce(finch_parse_yieldbind, (x, y) -> something(x, y, Some(nothing)), ex.args)
+    end
+end
+
+function finch_parse_default_yieldbind(ex)
+    if @capture ex :block(~args...)
+        return mapreduce(finch_parse_yieldbind, vcat, args)
+    elseif @capture ex :(.=)(~tns, ~init)
+        if tns isa Symbol
+            return [tns]
+        end
     end
 end
 
