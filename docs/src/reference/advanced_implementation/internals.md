@@ -98,7 +98,7 @@ julia> C = Finch.execute(prgm).C
 ERROR: type Nothing has no field C
 Stacktrace:
  [1] getproperty(x::Nothing, f::Symbol)
-   @ Base ./Base.jl:37
+   @ Base ./Base.jl:33
  [2] top-level scope
    @ none:1
 ```
