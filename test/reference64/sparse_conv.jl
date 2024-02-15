@@ -154,5 +154,6 @@ begin
     qos_stop = C_lvl_ptr[1 + 1] - 1
     resize!(C_lvl_idx, qos_stop)
     resize!(C_lvl_val, qos_stop)
-    (C = Tensor((SparseListLevel){Int64}(C_lvl_2, A_lvl.shape, C_lvl_ptr, C_lvl_idx)),)
+    return (C = Tensor((SparseListLevel){Int64}(C_lvl_2, A_lvl.shape, C_lvl_ptr, C_lvl_idx)),)
+    nothing
 end

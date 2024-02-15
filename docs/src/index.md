@@ -79,7 +79,8 @@ quote
             s_val = val + s_val
         end
     end
-    (s = (Scalar){0, Int64}(s_val),)
+    s.val = s_val
+    nothing
 end
 ```
 

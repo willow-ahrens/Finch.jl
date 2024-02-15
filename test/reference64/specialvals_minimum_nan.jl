@@ -58,5 +58,6 @@ begin
             x_val = min(NaN, x_val)
         end
     end
-    (x = (Scalar){Inf, Float64}(x_val),)
+    x.val = x_val
+    nothing
 end

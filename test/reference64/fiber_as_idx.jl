@@ -58,5 +58,6 @@ begin
         end
     end
     resize!(B_lvl_val, A_lvl.shape)
-    (B = Tensor((DenseLevel){Int64}(B_lvl_2, A_lvl.shape)),)
+    return (B = Tensor((DenseLevel){Int64}(B_lvl_2, A_lvl.shape)),)
+    nothing
 end

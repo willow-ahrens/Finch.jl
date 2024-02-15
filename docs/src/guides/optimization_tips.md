@@ -24,7 +24,7 @@ s = Scalar(0.0)
 
 # output
 
-(s = Scalar{0.0, Float64}(16.5),)
+
 ```
 
 We can investigate the generated code with `@finch_code`.  This code iterates
@@ -76,7 +76,8 @@ quote
             end
         end
     end
-    (s = (Scalar){0.0, Float64}(s_val),)
+    s.val = s_val
+    nothing
 end
 ```
 
@@ -139,7 +140,8 @@ quote
             end
         end
     end
-    (s = (Scalar){0.0, Float64}(s_val),)
+    s.val = s_val
+    nothing
 end
 ```
 
@@ -316,7 +318,9 @@ quote
             end
         end
     end
-    (C = (Scalar){0.0, Float64}(C_val),)
+    C.val = C_val
+    return (C = C,)
+    nothing
 end
 
 ```

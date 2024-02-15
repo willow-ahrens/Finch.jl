@@ -199,5 +199,6 @@ begin
     resize!(tmp_lvl_left, qos_stop_2)
     resize!(tmp_lvl_right, qos_stop_2)
     resize!(tmp_lvl_2_val, qos_stop_2)
-    (tmp = Tensor((SparseListLevel){Int64}((SparseRLELevel){Int64}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr_2, tmp_lvl_left, tmp_lvl_right), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),)
+    return (tmp = Tensor((SparseListLevel){Int64}((SparseRLELevel){Int64}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr_2, tmp_lvl_left, tmp_lvl_right), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),)
+    nothing
 end

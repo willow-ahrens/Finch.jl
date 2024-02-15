@@ -27,5 +27,5 @@ Scalar{0, Int64}(0)
 julia> @finch for k = _, j = _, i = _
         C[] += A[i, j, k]
     end
-(C = Scalar{0, Int64}(264),)
+nothing
 

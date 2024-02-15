@@ -122,5 +122,7 @@ begin
             end
         end
     end
-    (B = (Scalar){0.0, Float64}(B_val),)
+    B.val = B_val
+    return (B = B,)
+    nothing
 end

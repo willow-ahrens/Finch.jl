@@ -158,5 +158,6 @@ begin
     resize!(tmp_lvl_tbl1, qos_stop)
     resize!(tmp_lvl_tbl2, qos_stop)
     resize!(tmp_lvl_val, qos_stop)
-    (tmp = Tensor((SparseCOOLevel){2, Tuple{Int64, Int64}}(tmp_lvl_2, (ref_lvl_2.shape, ref_lvl.shape), tmp_lvl_ptr, (tmp_lvl_tbl1, tmp_lvl_tbl2))),)
+    return (tmp = Tensor((SparseCOOLevel){2, Tuple{Int64, Int64}}(tmp_lvl_2, (ref_lvl_2.shape, ref_lvl.shape), tmp_lvl_ptr, (tmp_lvl_tbl1, tmp_lvl_tbl2))),)
+    nothing
 end
