@@ -191,7 +191,7 @@ SparseVBLLevel
 
 ## Modifier Levels
 ```@docs
-SeparationLevel
+SeparateLevel
 ```
 
 ## Legacy Levels
