@@ -27,7 +27,6 @@ begin
             y_lvl_val[y_lvl_q_2] = A_lvl_3_val * x_lvl_2_val + y_lvl_val[y_lvl_q_2]
         end
     end
-    qos = 1 * y_lvl.shape
-    resize!(y_lvl_val, qos)
+    resize!(y_lvl_val, y_lvl.shape)
     (y = Tensor((DenseLevel){Int32}(y_lvl_2, y_lvl.shape)),)
 end

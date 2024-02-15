@@ -115,16 +115,14 @@ function declare_level!(lvl::VirtualElementLevel, ctx, pos, init)
     lvl
 end
 
-freeze_level!(lvl::VirtualElementLevel, ctx, pos) = lvl
-
-thaw_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, pos) = lvl
-
-function trim_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, pos)
+function freeze_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, pos)
     push!(ctx.code.preamble, quote
         resize!($(lvl.val), $(ctx(pos)))
     end)
     return lvl
 end
+
+thaw_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, pos) = lvl
 
 function assemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
     pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))

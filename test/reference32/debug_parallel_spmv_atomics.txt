@@ -80,9 +80,8 @@ quote
                 end
             end
         end
-    qos = 1 * A_lvl.shape
-    resize!(locksArray, qos)
-    resize!(val, qos)
+    resize!(locksArray, A_lvl.shape)
+    resize!(val, A_lvl.shape)
     (y = Tensor((DenseLevel){Int32}((AtomicLevel){Vector{Base.Threads.SpinLock}, ElementLevel{0.0, Float64, Int32, Vector{Float64}}}(y_lvl_3, locksArray), A_lvl.shape)),)
 end
 julia> @finch begin

@@ -664,129 +664,125 @@
     end
     
 
-      @testset "Tensor(Dense(Atomic(Dense(Element(0)))))" begin
-          io = IOBuffer()
-          arr = [0.0 2.0 2.0 0.0 3.0 3.0;
-              1.0 0.0 7.0 1.0 0.0 0.0;
-              0.0 0.0 0.0 0.0 0.0 9.0]
-          
-          println(io, "Tensor(Dense(Atomic(Dense(Element(0))))):")
-          
-          fbr = dropdefaults!(Tensor(Dense(Atomic(Dense(Element(0))))), arr)
+    @testset "Tensor(Dense(Atomic(Dense(Element(0)))))" begin
+        io = IOBuffer()
+        arr = [0.0 2.0 2.0 0.0 3.0 3.0;
+            1.0 0.0 7.0 1.0 0.0 0.0;
+            0.0 0.0 0.0 0.0 0.0 9.0]
+        
+        fbr = dropdefaults!(Tensor(Dense(Atomic(Dense(Element(0))))), arr)
 
-          # sublvl = Tensor(Dense(Element(0)), [])
-          # col1 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 1])
-          # col2 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 2])
-          # col3 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 3])
-          # col4 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 4])
-          # col5 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 5])
-          # col6 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 6])
-          # vals = [col1, col2, col3, col4, col5, col6]
-          
-          
-          println(io, "initialized tensor: ", fbr)
-          @test Structure(fbr) == Structure(Tensor(Dense(Atomic(fbr.lvl.lvl.lvl, fbr.lvl.lvl.locks), 6)))
-          @test Structure(fbr) == Structure(Tensor(Dense(Atomic{Vector{Base.Threads.SpinLock}, typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.lvl, fbr.lvl.lvl.locks), 6)))
+        # sublvl = Tensor(Dense(Element(0)), [])
+        # col1 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 1])
+        # col2 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 2])
+        # col3 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 3])
+        # col4 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 4])
+        # col5 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 5])
+        # col6 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 6])
+        # vals = [col1, col2, col3, col4, col5, col6]
+        
+        
+        println(io, "initialized tensor: ", fbr)
+        @test Structure(fbr) == Structure(Tensor(Dense(Atomic(fbr.lvl.lvl.lvl, fbr.lvl.lvl.locks), 6)))
+        @test Structure(fbr) == Structure(Tensor(Dense(Atomic{Vector{Base.Threads.SpinLock}, typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.lvl, fbr.lvl.lvl.locks), 6)))
 
-          fbr = Tensor(Dense(Atomic(Dense(Element(0), 3)), 6))
-          println(io, "sized tensor: ", fbr)
-          @test Structure(fbr) == Structure(Tensor(Dense(Atomic(Dense(Element(0), 3)), 6)))
+        fbr = Tensor(Dense(Atomic(Dense(Element(0), 3)), 6))
+        println(io, "sized tensor: ", fbr)
+        @test Structure(fbr) == Structure(Tensor(Dense(Atomic(Dense(Element(0), 3)), 6)))
 
 
-          fbr = Tensor(Dense(Atomic(Dense(Element(0)))))
-          println(io, "empty tensor: ", fbr)
-          @test Structure(fbr) == Structure(Tensor(Dense(Atomic(Dense(Element(0))))))
+        fbr = Tensor(Dense(Atomic(Dense(Element(0)))))
+        println(io, "empty tensor: ", fbr)
+        @test Structure(fbr) == Structure(Tensor(Dense(Atomic(Dense(Element(0))))))
 
-          @test check_output("format_constructors_d_a_d_e.txt", String(take!(io)))
-      end
-
-    @testset "Tensor(Dense(Separation(SparseList(Element(0)))))" begin
-          io = IOBuffer()
-          arr = [0.0 2.0 2.0 0.0 3.0 3.0;
-              1.0 0.0 7.0 1.0 0.0 0.0;
-              0.0 0.0 0.0 0.0 0.0 9.0]
-          
-          println(io, "Tensor(Dense(Separation(SparseList(Element(0))))):")
-          
-          fbr = dropdefaults!(Tensor(Dense(Separation(SparseList(Element(0))))), arr)
-
-          # sublvl = Tensor(Dense(Element(0)), [])
-          # col1 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 1])
-          # col2 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 2])
-          # col3 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 3])
-          # col4 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 4])
-          # col5 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 5])
-          # col6 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 6])
-          # vals = [col1, col2, col3, col4, col5, col6]
-          
-          
-          println(io, "initialized tensor: ", fbr)
-          @test Structure(fbr) == Structure(Tensor(Dense(Separation(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
-          @test Structure(fbr) == Structure(Tensor(Dense(Separation{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
-
-          fbr = Tensor(Dense(Separation(SparseList(Element(0), 3)), 6))
-          println(io, "sized tensor: ", fbr)
-          @test Structure(fbr) == Structure(Tensor(Dense(Separation(SparseList(Element(0), 3)), 6)))
-
-
-          fbr = Tensor(Dense(Separation(SparseList(Element(0)))))
-          println(io, "empty tensor: ", fbr)
-          @test Structure(fbr) == Structure(Tensor(Dense(Separation(SparseList(Element(0))))))
-
-          @test check_output("format_constructors_d_p_sl_e.txt", String(take!(io)))
+        @test check_output("format_constructors_d_a_d_e.txt", String(take!(io)))
     end
 
-        @testset "Tensor(SparseList(Separation(Dense(Element(0)))))" begin
-          io = IOBuffer()
-          arr = [0.0 2.0 2.0 0.0 3.0 3.0;
-              1.0 0.0 7.0 1.0 0.0 0.0;
-              0.0 0.0 0.0 0.0 0.0 9.0]
-          
-          println(io, "Tensor(SparseList(Separation(Dense(Element(0))))):")
-          
-          fbr = dropdefaults!(Tensor(SparseList(Separation(Dense(Element(0))))), arr)
-          
-          println(io, "initialized tensor: ", fbr)
-          @test Structure(fbr) == Structure(Tensor(SparseList(Separation(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6, fbr.lvl.ptr, fbr.lvl.idx)))
-          @test Structure(fbr) == Structure(Tensor(SparseList(Separation{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6, fbr.lvl.ptr, fbr.lvl.idx)))
+    @testset "Tensor(Dense(Separation(SparseList(Element(0)))))" begin
+        io = IOBuffer()
+        arr = [0.0 2.0 2.0 0.0 3.0 3.0;
+            1.0 0.0 7.0 1.0 0.0 0.0;
+            0.0 0.0 0.0 0.0 0.0 9.0]
+        
+        println(io, "Tensor(Dense(Separation(SparseList(Element(0))))):")
+        
+        fbr = dropdefaults!(Tensor(Dense(Separation(SparseList(Element(0))))), arr)
 
-          fbr = Tensor(SparseList(Separation(Dense(Element(0), 3)), 6))
-          println(io, "sized tensor: ", fbr)
-          @test Structure(fbr) == Structure(Tensor(SparseList(Separation(Dense(Element(0), 3)), 6)))
+        # sublvl = Tensor(Dense(Element(0)), [])
+        # col1 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 1])
+        # col2 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 2])
+        # col3 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 3])
+        # col4 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 4])
+        # col5 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 5])
+        # col6 = dropdefaults!(Tensor((Dense(Element(0)))), arr[:, 6])
+        # vals = [col1, col2, col3, col4, col5, col6]
+        
+        println(io, "initialized tensor: ", fbr)
+        @test Structure(fbr) == Structure(Tensor(Dense(Separation(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
+        @test Structure(fbr) == Structure(Tensor(Dense(Separation{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6)))
+
+        fbr = Tensor(Dense(Separation(SparseList(Element(0), 3)), 6))
+        println(io, "sized tensor: ", fbr)
+        @test Structure(fbr) == Structure(Tensor(Dense(Separation(SparseList(Element(0), 3)), 6)))
+
+        fbr = Tensor(Dense(Separation(SparseList(Element(0)))))
+        println(io, "empty tensor: ", fbr)
+        @test Structure(fbr) == Structure(Tensor(Dense(Separation(SparseList(Element(0))))))
+
+        @test check_output("format_constructors_d_p_sl_e.txt", String(take!(io)))
+    end
+
+    @testset "Tensor(SparseList(Separation(Dense(Element(0)))))" begin
+        io = IOBuffer()
+        arr = [0.0 2.0 2.0 0.0 3.0 3.0;
+            1.0 0.0 7.0 1.0 0.0 0.0;
+            0.0 0.0 0.0 0.0 0.0 9.0]
+        
+        println(io, "Tensor(SparseList(Separation(Dense(Element(0))))):")
+        
+        fbr = dropdefaults!(Tensor(SparseList(Separation(Dense(Element(0))))), arr)
+        
+        println(io, "initialized tensor: ", fbr)
+        @test Structure(fbr) == Structure(Tensor(SparseList(Separation(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6, fbr.lvl.ptr, fbr.lvl.idx)))
+        @test Structure(fbr) == Structure(Tensor(SparseList(Separation{typeof(fbr.lvl.lvl.val), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.val, fbr.lvl.lvl.lvl), 6, fbr.lvl.ptr, fbr.lvl.idx)))
+
+        fbr = Tensor(SparseList(Separation(Dense(Element(0), 3)), 6))
+        println(io, "sized tensor: ", fbr)
+        @test Structure(fbr) == Structure(Tensor(SparseList(Separation(Dense(Element(0), 3)), 6)))
 
 
-          fbr = Tensor(SparseList(Separation(Dense(Element(0)))))
-          println(io, "empty tensor: ", fbr)
-          @test Structure(fbr) == Structure(Tensor(SparseList(Separation(Dense(Element(0))))))
+        fbr = Tensor(SparseList(Separation(Dense(Element(0)))))
+        println(io, "empty tensor: ", fbr)
+        @test Structure(fbr) == Structure(Tensor(SparseList(Separation(Dense(Element(0))))))
 
-          @test check_output("format_constructors_sl_p_d_e.txt", String(take!(io)))
-        end
+        @test check_output("format_constructors_sl_p_d_e.txt", String(take!(io)))
+    end
 
-        @testset "Tensor(SparseList(Atomic(Dense(Element(0)))))" begin
-            io = IOBuffer()
-            arr = [0.0 2.0 2.0 0.0 3.0 3.0;
-                1.0 0.0 7.0 1.0 0.0 0.0;
-                0.0 0.0 0.0 0.0 0.0 9.0]
-            
-            println(io, "Tensor(SparseList(Atomic(Dense(Element(0))))):")
-            
-            fbr = dropdefaults!(Tensor(SparseList(Atomic(Dense(Element(0))))), arr)
-            
-            println(io, "initialized tensor: ", fbr)
-            @test Structure(fbr) == Structure(Tensor(SparseList(Atomic(fbr.lvl.lvl.lvl, fbr.lvl.lvl.locks), 6, fbr.lvl.ptr, fbr.lvl.idx)))
-            @test Structure(fbr) == Structure(Tensor(SparseList(Atomic{typeof(fbr.lvl.lvl.locks), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.lvl, fbr.lvl.lvl.locks), 6, fbr.lvl.ptr, fbr.lvl.idx)))
-  
-            fbr = Tensor(SparseList(Atomic(Dense(Element(0), 3)), 6))
-            println(io, "sized tensor: ", fbr)
-            @test Structure(fbr) == Structure(Tensor(SparseList(Atomic(Dense(Element(0), 3)), 6)))
-  
-  
-            fbr = Tensor(SparseList(Atomic(Dense(Element(0)))))
-            println(io, "empty tensor: ", fbr)
-            @test Structure(fbr) == Structure(Tensor(SparseList(Atomic(Dense(Element(0))))))
-  
-            @test check_output("format_constructors_sl_a_d_e.txt", String(take!(io)))
-          end
+    @testset "Tensor(SparseList(Atomic(Dense(Element(0)))))" begin
+        io = IOBuffer()
+        arr = [0.0 2.0 2.0 0.0 3.0 3.0;
+            1.0 0.0 7.0 1.0 0.0 0.0;
+            0.0 0.0 0.0 0.0 0.0 9.0]
+        
+        println(io, "Tensor(SparseList(Atomic(Dense(Element(0))))):")
+        
+        fbr = dropdefaults!(Tensor(SparseList(Atomic(Dense(Element(0))))), arr)
+        
+        println(io, "initialized tensor: ", fbr)
+        @test Structure(fbr) == Structure(Tensor(SparseList(Atomic(fbr.lvl.lvl.lvl, fbr.lvl.lvl.locks), 6, fbr.lvl.ptr, fbr.lvl.idx)))
+        @test Structure(fbr) == Structure(Tensor(SparseList(Atomic{typeof(fbr.lvl.lvl.locks), typeof(fbr.lvl.lvl.lvl)}(fbr.lvl.lvl.lvl, fbr.lvl.lvl.locks), 6, fbr.lvl.ptr, fbr.lvl.idx)))
+
+        fbr = Tensor(SparseList(Atomic(Dense(Element(0), 3)), 6))
+        println(io, "sized tensor: ", fbr)
+        @test Structure(fbr) == Structure(Tensor(SparseList(Atomic(Dense(Element(0), 3)), 6)))
+
+
+        fbr = Tensor(SparseList(Atomic(Dense(Element(0)))))
+        println(io, "empty tensor: ", fbr)
+        @test Structure(fbr) == Structure(Tensor(SparseList(Atomic(Dense(Element(0))))))
+
+        @test check_output("format_constructors_sl_a_d_e.txt", String(take!(io)))
+    end
 
     @testset "Tensor(SparseList(Separation(SparseList(Element(0)))))" begin
           io = IOBuffer()

@@ -328,7 +328,6 @@ level_default
 declare!
 instantiate
 freeze!
-trim!
 thaw!
 unfurl
 ```

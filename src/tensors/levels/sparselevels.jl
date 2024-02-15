@@ -27,13 +27,6 @@ function declare_table!(tbl::DictTable{Ti, Tp}, pos) where {Ti, Tp}
     return Tp(0)
 end
 
-function trim_table!(tbl::DictTable, pos)
-    resize!(tbl.ptr, pos + 1)
-    qos = tbl.ptr[end] - 1
-    resize!(tbl.idx, qos)
-    return qos
-end
-
 function assemble_table!(tbl::DictTable, pos_start, pos_stop)
     resize_if_smaller!(tbl.ptr, pos_stop + 1)
     fill_range!(tbl.ptr, 0, pos_start + 1, pos_stop + 1)
@@ -47,6 +40,7 @@ function freeze_table!(tbl::DictTable, pos_stop)
         tbl.val[q] = v
         tbl.idx[q] = i
     end
+    resize!(tbl.ptr, pos_stop + 1)
     tbl.ptr[1] = 1
     for p = 2:pos_stop + 1
         tbl.ptr[p] += tbl.ptr[p - 1]
@@ -310,16 +304,6 @@ function declare_level!(lvl::VirtualSparseLevel, ctx::AbstractCompiler, pos, ini
         $(lvl.qos_stop) = 0
     end)
     lvl.lvl = declare_level!(lvl.lvl, ctx, value(qos, Tp), init)
-    return lvl
-end
-
-function trim_level!(lvl::VirtualSparseLevel, ctx::AbstractCompiler, pos)
-    qos = freshen(ctx.code, :qos)
-    Tp = postype(lvl)
-    push!(ctx.code.preamble, quote
-        $qos = Finch.trim_table!($(lvl.tbl), $(ctx(pos)))
-    end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
     return lvl
 end
 

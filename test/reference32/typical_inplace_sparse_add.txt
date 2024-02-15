@@ -62,8 +62,7 @@ quote
             end
         end
     end
-    qos = 1 * B_lvl.shape
-    resize!(B_lvl_val, qos)
+    resize!(B_lvl_val, B_lvl.shape)
     (B = Tensor((DenseLevel){Int32}(B_lvl_2, B_lvl.shape)),)
 end
 julia> @finch for i = _

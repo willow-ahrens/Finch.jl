@@ -241,22 +241,6 @@ function declare_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos, 
     return lvl
 end
 
-function trim_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos)
-    Tp = postype(lvl)
-    Ti = lvl.Ti
-    ros = freshen(ctx.code, :ros)
-    qos = freshen(ctx.code, :qos)
-    push!(ctx.code.preamble, quote
-        resize!($(lvl.ptr), $(ctx(pos)) + 1)
-        $ros = $(lvl.ptr)[end] - $(Tp(1))
-        resize!($(lvl.idx), $ros)
-        resize!($(lvl.ofs), $ros + 1)
-        $qos = $(lvl.ofs)[end] - $(Tp(1))
-    end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
-    return lvl
-end
-
 function assemble_level!(lvl::VirtualSparseVBLLevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
@@ -268,13 +252,19 @@ end
 
 function freeze_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos_stop)
     p = freshen(ctx.code, :p)
+    Tp = postype(lvl)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    ros_stop = freshen(ctx.code, :ros_stop)
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
+        resize!($(lvl.ptr), $pos_stop + 1)
         for $p = 2:($pos_stop + 1)
             $(lvl.ptr)[$p] += $(lvl.ptr)[$p - 1]
         end
-        $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
+        $ros_stop = $(lvl.ptr)[$pos_stop + 1] - 1
+        resize!($(lvl.idx), $ros_stop)
+        resize!($(lvl.ofs), $ros_stop + 1)
+        $qos_stop = $(lvl.ofs)[$ros_stop + 1] - $(Tp(1))
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl

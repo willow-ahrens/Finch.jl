@@ -155,12 +155,11 @@ begin
     resize!(fmt_lvl_srt, length(fmt_lvl_tbl))
     copyto!(fmt_lvl_srt, pairs(fmt_lvl_tbl))
     sort!(fmt_lvl_srt, by = hashkeycmp)
+    resize!(fmt_lvl_ptr, 1 + 1)
     for p = 2:1 + 1
         fmt_lvl_ptr[p] += fmt_lvl_ptr[p - 1]
     end
-    resize!(fmt_lvl_ptr, 1 + 1)
-    qos = fmt_lvl_ptr[end] - 1
-    resize!(fmt_lvl_srt, qos)
-    resize!(fmt_lvl_val, qos)
+    qos_stop = fmt_lvl_ptr[1 + 1] - 1
+    resize!(fmt_lvl_val, qos_stop)
     (fmt = Tensor((SparseHashLevel){2, Tuple{Int64, Int64}}(fmt_lvl_2, (fmt_lvl.shape[1], fmt_lvl.shape[2]), fmt_lvl_ptr, fmt_lvl_tbl, fmt_lvl_srt)),)
 end

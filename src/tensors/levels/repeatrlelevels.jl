@@ -219,17 +219,6 @@ function declare_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, mode,
     return lvl
 end
 
-function trim_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, pos)
-    qos = freshen(ctx.code, :qos)
-    push!(ctx.code.preamble, quote
-        resize!($(lvl.ptr), $(ctx(pos)) + 1)
-        $qos = $(lvl.ptr)[end] - $(lvl.Tp(1))
-        resize!($(lvl.idx), $qos)
-        resize!($(lvl.val), $qos)
-    end)
-    return lvl
-end
-
 function assemble_level!(lvl::VirtualRepeatRLELevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_stop, pos_stop))
@@ -245,17 +234,18 @@ function freeze_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, pos_st
     p = freshen(ctx.code, :p)
     pos_stop = ctx(cache!(ctx, :p_stop, pos_stop))
     qos_stop = lvl.qos_stop
-    ros_fill = lvl.ros_fill
     qos_fill = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
+        resize!($(lvl.ptr), $pos_stop + 1)
         for $p = 2:($pos_stop + 1)
             $(lvl.ptr)[$p] += $(lvl.ptr)[$p - 1]
         end
         $qos_fill = $(lvl.ptr)[$pos_stop + 1] - 1
-        Finch.resize_if_smaller!($(lvl.idx), $qos_fill)
+        resize!($(lvl.idx), $qos_fill)
         Finch.fill_range!($(lvl.idx), $(ctx(lvl.shape)), $qos_stop + 1, $qos_fill)
-        Finch.resize_if_smaller!($(lvl.val), $qos_fill)
+        resize!($(lvl.val), $qos_fill)
         Finch.fill_range!($(lvl.val), $(lvl.D), $qos_stop + 1, $qos_fill)
+        $qos_stop = $qos_fill
     end)
     return lvl
 end
