@@ -10,22 +10,20 @@ positions in the level.
 ```jldoctest
 julia> Tensor(Dense(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─[:,1]: SparseByteMap (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,2]: SparseByteMap (0.0) [1:3]
-├─[:,3]: SparseByteMap (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+├─ [:, 1]: SparseByteMap (0.0) [1:3]
+│  ├─ [1]: 10.0
+│  └─ [2]: 30.0
+├─ [:, 2]: SparseByteMap (0.0) [1:3]
+└─ [:, 3]: SparseByteMap (0.0) [1:3]
+   ├─ [1]: 0.0
+   └─ [3]: 0.0
 
 julia> Tensor(SparseByteMap(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 SparseByteMap (0.0) [:,1:3]
-├─[:,1]: SparseByteMap (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,3]: SparseByteMap (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+├─ [:, 1]: SparseByteMap (0.0) [1:3]
+│  ├─ [1]: 10.0
+│  └─ [2]: 30.0
+└─ [:, 3]: SparseByteMap (0.0) [1:3]
 ```
 """
 struct SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl} <: AbstractLevel
@@ -96,21 +94,16 @@ function Base.show(io::IO, lvl::SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl},) whe
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseByteMapLevel}, depth)
-    p = fbr.pos
+labelled_show(io::IO, fbr::SubFiber{<:SparseByteMapLevel}) =
+    print(io, "SparseByteMap (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+
+function labelled_children(fbr::SubFiber{<:SparseByteMapLevel})
     lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "SparseBytemap(undef...)")
-        return
+    pos = fbr.pos
+    pos + 1 > length(lvl.ptr) && return []
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., lvl.srt[qos][2]), SubFiber(lvl.lvl, qos))
     end
-
-    crds = @view(fbr.lvl.srt[fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1])
-
-    print_coord(io, (p, i)) = show(io, i)
-    get_fbr((p, i),) = fbr(i)
-
-    print(io, "SparseByteMap (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
 @inline level_ndims(::Type{<:SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}}) where {Ti, Ptr, Tbl, Srt, Lvl} = 1 + level_ndims(Lvl)

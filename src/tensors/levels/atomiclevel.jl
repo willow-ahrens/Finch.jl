@@ -53,16 +53,15 @@ function Base.show(io::IO, lvl::AtomicLevel{AVal, Lvl}) where {AVal, Lvl}
     print(io, ")")
 end 
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:AtomicLevel}, depth)
-    p = fbr.pos
-    lvl = fbr.lvl
-    if p > length(lvl.locks)
-        print(io, "Atomic -> undef")
-        return
-    end
+labelled_show(io::IO, ::SubFiber{<:AtomicLevel}) =
     print(io, "Atomic -> ")
-    display_fiber(io, mime, SubFiber(lvl.lvl, p), depth)
+
+function labelled_children(fbr::SubFiber{<:AtomicLevel})
+    lvl = fbr.lvl
+    pos = fbr.pos
+    [LabelledTree(SubFiber(lvl.lvl, pos))]
 end
+
 
 @inline level_ndims(::Type{<:AtomicLevel{AVal, Lvl}}) where {AVal, Lvl} = level_ndims(Lvl)
 @inline level_size(lvl::AtomicLevel{AVal, Lvl}) where {AVal, Lvl} = level_size(lvl.lvl)

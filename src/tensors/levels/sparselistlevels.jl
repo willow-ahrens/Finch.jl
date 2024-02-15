@@ -13,22 +13,22 @@ arrays used to store positions and indicies.
 ```jldoctest
 julia> Tensor(Dense(SparseList(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─[:,1]: SparseList (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,2]: SparseList (0.0) [1:3]
-├─[:,3]: SparseList (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+├─ [:, 1]: SparseList (0.0) [1:3]
+│  ├─ [1]: 10.0
+│  └─ [2]: 30.0
+├─ [:, 2]: SparseList (0.0) [1:3]
+└─ [:, 3]: SparseList (0.0) [1:3]
+   ├─ [1]: 20.0
+   └─ [3]: 40.0
 
 julia> Tensor(SparseList(SparseList(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 SparseList (0.0) [:,1:3]
-├─[:,1]: SparseList (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,3]: SparseList (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+├─ [:, 1]: SparseList (0.0) [1:3]
+│  ├─ [1]: 10.0
+│  └─ [2]: 30.0
+└─ [:, 3]: SparseList (0.0) [1:3]
+   ├─ [1]: 20.0
+   └─ [3]: 40.0
 
 ```
 """
@@ -95,21 +95,16 @@ function Base.show(io::IO, lvl::SparseListLevel{Ti, Ptr, Idx, Lvl}) where {Ti, L
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseListLevel}, depth)
-    p = fbr.pos
+labelled_show(io::IO, fbr::SubFiber{<:SparseListLevel}) =
+    print(io, "SparseList (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+
+function labelled_children(fbr::SubFiber{<:SparseListLevel})
     lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "SparseList(undef...)")
-        return
+    pos = fbr.pos
+    pos + 1 > length(lvl.ptr) && return []
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., lvl.idx[qos]), SubFiber(lvl.lvl, qos))
     end
-
-    crds = @view(fbr.lvl.idx[fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1])
-
-    print_coord(io, crd) = show(io, crd)
-    get_fbr(crd) = fbr(crd)
-
-    print(io, "SparseList (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
 @inline level_ndims(::Type{<:SparseListLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = 1 + level_ndims(Lvl)

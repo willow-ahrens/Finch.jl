@@ -89,14 +89,14 @@ julia> idx_jl = reinterpret(CIndex{Int}, idx_c)
  3
 julia> A = Tensor(Dense(SparseList{CIndex{Int}}(Element{0.0, Float64, CIndex{Int}}(val_c), m, ptr_jl, idx_jl), n))
 Dense [:,1:3]
-├─[:,1]: SparseList (0.0) [1:CIndex{Int64}(4)]
-│ ├─[CIndex{Int64}(2)]: 1.1
-│ ├─[CIndex{Int64}(3)]: 2.2
-│ ├─[CIndex{Int64}(4)]: 3.3
-├─[:,2]: SparseList (0.0) [1:CIndex{Int64}(4)]
-├─[:,3]: SparseList (0.0) [1:CIndex{Int64}(4)]
-│ ├─[CIndex{Int64}(1)]: 4.4
-│ ├─[CIndex{Int64}(3)]: 5.5
+├─ [:, 1]: SparseList (0.0) [1:CIndex{Int64}(4)]
+│  ├─ [CIndex{Int64}(2)]: 1.1
+│  ├─ [CIndex{Int64}(3)]: 2.2
+│  └─ [CIndex{Int64}(4)]: 3.3
+├─ [:, 2]: SparseList (0.0) [1:CIndex{Int64}(4)]
+└─ [:, 3]: SparseList (0.0) [1:CIndex{Int64}(4)]
+   ├─ [CIndex{Int64}(1)]: 4.4
+   └─ [CIndex{Int64}(3)]: 5.5
 ```
 
 We can also convert between representations by copying to or from `CIndex` fibers.

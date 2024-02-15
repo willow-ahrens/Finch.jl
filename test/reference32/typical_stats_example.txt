@@ -1,8 +1,9 @@
 julia> X = Tensor(SparseList(Element(0.0)), [1.0, 0.0, 0.0, 3.0, 0.0, 2.0, 0.0])
 SparseList (0.0) [1:7]
-├─[1]: 1.0
-├─[4]: 3.0
-├─[6]: 2.0
+├─ [1]: 1.0
+├─ [4]: 3.0
+└─ [6]: 2.0
+
 julia> x_min = Scalar(Inf)
 Scalar{Inf, Float64}(Inf)
 julia> x_max = Scalar(-Inf)

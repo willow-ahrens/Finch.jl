@@ -9,9 +9,12 @@ Each sublevel is stored in a vector of type `Val` with `eltype(Val) = Lvl`.
 ```jldoctest
 julia> Tensor(Dense(Separation(Element(0.0))), [1, 2, 3])
 Dense [1:3]
-├─[1]: Pointer -> 1.0
-├─[2]: Pointer -> 2.0
-├─[3]: Pointer -> 3.0
+├─ [1]: Pointer ->
+│  └─ 1.0
+├─ [2]: Pointer ->
+│  └─ 2.0
+└─ [3]: Pointer ->
+   └─ 3.0
 ```
 """
 struct SeparationLevel{Val, Lvl} <: AbstractLevel
@@ -51,15 +54,14 @@ function Base.show(io::IO, lvl::SeparationLevel{Val, Lvl}) where {Val, Lvl}
     print(io, ")")
 end 
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SeparationLevel}, depth)
-    p = fbr.pos
-    lvl = fbr.lvl
-    if p > length(lvl.val)
-        print(io, "Pointer -> undef")
-        return
-    end
+labelled_show(io::IO, ::SubFiber{<:SeparationLevel}) =
     print(io, "Pointer -> ")
-    display_fiber(io, mime, SubFiber(fbr.lvl.val[p], 1), depth)
+
+function labelled_children(fbr::SubFiber{<:SeparationLevel})
+    lvl = fbr.lvl
+    pos = fbr.pos
+    pos > length(lvl.val) && return []
+    [LabelledTree(SubFiber(lvl.val[pos], 1))]
 end
 
 @inline level_ndims(::Type{<:SeparationLevel{Val, Lvl}}) where {Val, Lvl} = level_ndims(Lvl)

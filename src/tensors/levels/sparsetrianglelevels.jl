@@ -10,12 +10,13 @@ subfiber. Optionally, `dims` are the sizes of the last dimensions.
 
 ```jldoctest
 julia> Tensor(SparseTriangle{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
-SparseTriangle (0.0) [1:3]
-├─├─[1, 1]: 10.0
-├─├─[1, 2]: 0.0
-│ ⋮
-├─├─[2, 3]: 0.0
-├─├─[3, 3]: 40.0
+SparseTriangle{2} (0.0) [:,1:3]
+├─ [1, 1]: 10.0
+├─ [2, 1]: 0.0
+├─ [2, 2]: 0.0
+├─ [3, 1]: 20.0
+├─ [3, 2]: 0.0
+└─ [3, 3]: 40.0
 ```
 """
 struct SparseTriangleLevel{N, Ti, Lvl} <: AbstractLevel
@@ -79,28 +80,27 @@ function Base.show(io::IO, lvl::SparseTriangleLevel{N, Ti}) where {N, Ti}
     print(io, ")")
 end 
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseTriangleLevel{N}}, depth) where {N}
-    qos = simplex(fbr.lvl.shape, N)
-    crds = 1:qos
+labelled_show(io::IO, fbr::SubFiber{<:SparseTriangleLevel{N}}) where {N} =
+    print(io, "SparseTriangle{", N, "} (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
-    #when n = 3, this is the qth element of [(i, j, k) for k = 1:3 for j = 1:k for i = 1:j]
-    function get_coord(q, n, k)
-        if n == 1
-            return (q,)
+function labelled_children(fbr::SubFiber{<:SparseTriangleLevel{N}}) where {N}
+    lvl = fbr.lvl
+    pos = fbr.pos
+    qos = simplex(fbr.lvl.shape, N) * (pos - 1) + 1
+    res = []
+    function walk(keys, stop, n)
+        if n == 0
+            push!(res, LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - N]..., keys...), SubFiber(lvl.lvl, qos)))
+            qos += 1
         else
-            j = findfirst(j -> simplex(j, n) >= q, 1:k)
-            return (get_coord(q - simplex(j - 1, n), n - 1, j)..., j)
+            for i = 1:stop
+                walk((keys..., i), i, n - 1)
+            end
         end
     end
-
-    print_coord(io, q) = join(io, get_coord(q, N, fbr.lvl.shape), ", ")
-    get_fbr(crd) = fbr(crd)
-    print(io, "SparseTriangle (", default(fbr), ") [", ":,"^(ndims(fbr) - N), "1:")
-    join(io, fbr.lvl.shape, ",1:") 
-    print(io, "]")
-    display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
+    walk((), fbr.lvl.shape, N)
+    res
 end
-
 
 mutable struct VirtualSparseTriangleLevel <: AbstractVirtualLevel
     lvl

@@ -12,7 +12,7 @@ are the types of the arrays used to store positions and endpoints.
 ```jldoctest
 julia> Tensor(SingleRLE(Element(0)), [0, 10, 0]) 
 SingleRLE (0) [1:3]
-├─[2:2]: 10
+└─ [2:2]: 10
 
 julia> Tensor(SingleRLE(Element(0)), [0, 10, 10])
 ERROR: Finch.FinchProtocolError("SingleRLELevels can only be updated once")
@@ -23,7 +23,7 @@ julia> begin
          x
        end
 SingleRLE (0) [1:10]
-├─[3:6]: 1
+└─ [3:6]: 1
 ```
 """
 struct SingleRLELevel{Ti, Ptr<:AbstractVector, Left<:AbstractVector, Right<:AbstractVector, Lvl} <: AbstractLevel
@@ -98,25 +98,16 @@ function Base.show(io::IO, lvl::SingleRLELevel{Ti, Ptr, Left, Right, Lvl}) where
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SingleRLELevel}, depth)
-    p = fbr.pos
+labelled_show(io::IO, fbr::SubFiber{<:SingleRLELevel}) =
+    print(io, "SingleRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+
+function labelled_children(fbr::SubFiber{<:SingleRLELevel})
     lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "SingleRLE(undef...)")
-        return
+    pos = fbr.pos
+    pos + 1 > length(lvl.ptr) && return []
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., range_label(lvl.left[qos], lvl.right[qos])), SubFiber(lvl.lvl, qos))
     end
-    left_endpoints = @view(lvl.left[lvl.ptr[p]:lvl.ptr[p + 1] - 1])
-
-    crds = []
-    for l in left_endpoints 
-        append!(crds, l)
-    end
-
-    print_coord(io, crd) = print(io, crd, ":", lvl.right[lvl.ptr[p]-1+searchsortedfirst(left_endpoints, crd)])  
-    get_fbr(crd) = fbr(crd)
-
-    print(io, "SingleRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
 @inline level_ndims(::Type{<:SingleRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = 1 + level_ndims(Lvl)
