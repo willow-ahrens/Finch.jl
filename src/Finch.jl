@@ -35,7 +35,7 @@ export SparseVBL, SparseVBLLevel
 export Dense, DenseLevel
 export RepeatRLE, RepeatRLELevel
 export Element, ElementLevel
-export Separation, SeparationLevel
+export Separate, SeparateLevel
 export Atomic, AtomicLevel
 export Pattern, PatternLevel
 export Scalar, SparseScalar, ShortCircuitScalar, SparseShortCircuitScalar
@@ -43,7 +43,7 @@ export walk, gallop, follow, extrude, laminate
 export Tensor, pattern!, dropdefaults, dropdefaults!, redefault!
 export diagmask, lotrimask, uptrimask, bandmask
 export scale, product, offset, permissive, protocolize, swizzle, toeplitz, window
-export OffByOneVector
+export PlusOneVector
 
 export choose, minby, maxby, overwrite, initwrite, d
 
@@ -65,6 +65,7 @@ end
 
 include("util/util.jl")
 include("util/limits.jl")
+include("util/vectors.jl")
 
 include("environment.jl")
 include("FinchNotation/FinchNotation.jl")
@@ -105,7 +106,6 @@ include("looplets/fills.jl")
 include("tensors/scalars.jl")
 include("tensors/levels/abstractlevel.jl")
 include("tensors/fibers.jl")
-include("tensors/vectors.jl")
 include("tensors/levels/sparserlelevels.jl")
 include("tensors/levels/singlerlelevels.jl")
 include("tensors/levels/sparselistlevels.jl")
@@ -118,8 +118,8 @@ include("tensors/levels/sparsevbllevels.jl")
 include("tensors/levels/denselevels.jl")
 include("tensors/levels/repeatrlelevels.jl")
 include("tensors/levels/elementlevels.jl")
-include("tensors/levels/separationlevel.jl")
-include("tensors/levels/atomiclevel.jl")
+include("tensors/levels/separatelevels.jl")
+include("tensors/levels/atomiclevels.jl")
 include("tensors/levels/patternlevels.jl")
 include("tensors/levels/sparsetrianglelevels.jl")
 include("tensors/masks.jl")

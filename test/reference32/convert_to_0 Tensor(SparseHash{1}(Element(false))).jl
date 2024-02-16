@@ -77,6 +77,10 @@ begin
     end
     tmp_lvl_qos_stop = tmp_lvl_ptr[1 + 1] - 1
     resize!(tmp_lvl_val, tmp_lvl_qos_stop)
+<<<<<<< HEAD
     return (tmp = Tensor((SparseHashLevel){1, Tuple{Int32}}(tmp_lvl_2, (ref_lvl.shape,), tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt)),)
     nothing
+=======
+    (tmp = Tensor((SparseHashLevel){1, Tuple{Int32}}(tmp_lvl_2, (ref_lvl.shape,), tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt)),)
+>>>>>>> origin/main
 end

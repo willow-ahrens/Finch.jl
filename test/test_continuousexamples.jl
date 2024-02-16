@@ -1,6 +1,26 @@
 @testset "continuous examples" begin
     @info "Testing Continuous Finch Examples"
 
+    @testset "openclosed + openclosed" begin
+        A_left = [1.1, 6.6, 9.9]
+        A_right = [3.3, 7.7, 11.11]
+        A_val = [1, 2, 3]
+        A = Tensor(SparseRLE{Float64}(Element(0, A_val), 12.0, [1, 4], Finch.PlusEpsVector(A_left), A_right))
+        B_left = [2.2, 5.5, 8.8]
+        B_right = [3.3, 8.8, 9.9]
+        B_val = [1, 1, 2]
+        B = Tensor(SparseRLE{Float64}(Element(0, B_val), 12.0, [1, 4], Finch.PlusEpsVector(B_left), B_right))
+        C = Tensor(SparseRLE{Float64}(Element(0), 12.0, [1], Finch.PlusEpsVector(Float64[]), Float64[]))
+        @finch begin
+            C .= 0
+            for i = _
+                C[i] += A[i] + B[i]
+            end
+        end
+        C_ref = Tensor(SparseRLE{Float64}(Element(0, [1, 2, 1, 3, 1, 2, 3]), 12.0, [1, 8], Finch.PlusEpsVector([1.1, 2.2, 5.5, 6.6, 7.7, 8.8, 9.9]), [2.2, 3.3, 6.6, 7.7, 8.8, 9.9, 11.11]))
+        @test Structure(C) == Structure(C_ref)
+    end
+
     @testset "2D Box Search" begin
         # Load 2d Points 
         point = [Pinpoints2D[i,:] .+ 1e7 for i in 1:size(Pinpoints2D,1)]
