@@ -879,10 +879,10 @@
         @test check_output("format_constructors_sl_a_e.txt", String(take!(io)))
     end
 
-    @testset "OffByOneVector" begin
+    @testset "PlusOneVector" begin
         # test off-by-one
         v = Vector([1, 0, 2, 3])
-        obov = OffByOneVector(v)
+        obov = PlusOneVector(v)
         @test obov == v .+ 1
         @test obov.data == v
 
@@ -893,8 +893,8 @@
                 (3, 3),  # shape
                 Vector([1, 4]),  # ptr
                 (
-                    OffByOneVector(Vector([0, 0, 2])),
-                    OffByOneVector(Vector([0, 2, 2])),
+                    PlusOneVector(Vector([0, 0, 2])),
+                    PlusOneVector(Vector([0, 2, 2])),
                 ),  # off-by-one indices
             )
         )

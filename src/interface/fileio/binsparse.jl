@@ -245,7 +245,7 @@ bspread_format_lookup = OrderedDict(
 
 bspwrite_format_lookup = OrderedDict(v => k for (k, v) in bspread_format_lookup)
 
-#indices_zero_to_one(vec::Vector{Ti}) where {Ti} = OffByOneVector(vec)
+#indices_zero_to_one(vec::Vector{Ti}) where {Ti} = PlusOneVector(vec)
 indices_zero_to_one(vec::Vector) = vec .+ one(eltype(vec))
 indices_one_to_zero(vec::Vector) = vec .- one(eltype(vec))
 
