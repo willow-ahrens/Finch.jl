@@ -159,9 +159,5 @@ begin
     end
     fmt_lvl_qos_stop = fmt_lvl_ptr[1 + 1] - 1
     resize!(fmt_lvl_val, fmt_lvl_qos_stop)
-<<<<<<< HEAD
     nothing
-=======
-    (fmt = Tensor((SparseHashLevel){2, Tuple{Int64, Int64}}(fmt_lvl_2, (fmt_lvl.shape[1], fmt_lvl.shape[2]), fmt_lvl_ptr, fmt_lvl_tbl, fmt_lvl_srt)),)
->>>>>>> origin/main
 end
