@@ -1,11 +1,11 @@
 begin
-    tmp_lvl = (ex.bodies[1]).tns.bind.lvl
-    tmp_lvl_ptr = (ex.bodies[1]).tns.bind.lvl.ptr
-    tmp_lvl_tbl1 = (ex.bodies[1]).tns.bind.lvl.tbl[1]
-    tmp_lvl_tbl2 = (ex.bodies[1]).tns.bind.lvl.tbl[2]
+    tmp_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
+    tmp_lvl_ptr = ((ex.bodies[1]).bodies[1]).tns.bind.lvl.ptr
+    tmp_lvl_tbl1 = ((ex.bodies[1]).bodies[1]).tns.bind.lvl.tbl[1]
+    tmp_lvl_tbl2 = ((ex.bodies[1]).bodies[1]).tns.bind.lvl.tbl[2]
     tmp_lvl_2 = tmp_lvl.lvl
     tmp_lvl_val = tmp_lvl.lvl.val
-    ref_lvl = (ex.bodies[2]).body.body.rhs.tns.bind.lvl
+    ref_lvl = ((ex.bodies[1]).bodies[2]).body.body.rhs.tns.bind.lvl
     ref_lvl_ptr = ref_lvl.ptr
     ref_lvl_idx = ref_lvl.idx
     ref_lvl_2 = ref_lvl.lvl
@@ -158,6 +158,6 @@ begin
     resize!(tmp_lvl_tbl1, qos_stop)
     resize!(tmp_lvl_tbl2, qos_stop)
     resize!(tmp_lvl_val, qos_stop)
-    return (tmp = Tensor((SparseCOOLevel){2, Tuple{Int64, Int64}}(tmp_lvl_2, (ref_lvl_2.shape, ref_lvl.shape), tmp_lvl_ptr, (tmp_lvl_tbl1, tmp_lvl_tbl2))),)
-    nothing
+    result = something(nothing, (tmp = Tensor((SparseCOOLevel){2, Tuple{Int64, Int64}}(tmp_lvl_2, (ref_lvl_2.shape, ref_lvl.shape), tmp_lvl_ptr, (tmp_lvl_tbl1, tmp_lvl_tbl2))),))
+    result
 end

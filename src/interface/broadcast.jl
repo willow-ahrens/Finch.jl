@@ -152,7 +152,6 @@ end
                 $(Expr(:for, exts, quote
                     out[$(idxs...)] = $pw_ex
                 end))
-                return out
             end
             out
         end

@@ -251,11 +251,11 @@ end
 
 function finch_parse_default_yieldbind(ex)
     if @capture ex :block(~args...)
-        return mapreduce(finch_parse_yieldbind, vcat, args)
-    elseif @capture ex :(.=)(~tns, ~init)
-        if tns isa Symbol
-            return [tns]
-        end
+        return mapreduce(finch_parse_default_yieldbind, vcat, args)
+    elseif (@capture ex :(.=)(~tns, ~init)) && tns isa Symbol
+        return [tns]
+    else
+        return []
     end
 end
 

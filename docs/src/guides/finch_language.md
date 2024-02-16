@@ -61,7 +61,6 @@ has four scopes, each of which is numbered to the left of the statements it cont
 1   2   4   y[i] += A[i, j] * t[]
 1   2   end
 1   end
-1   return y
 end
 ```
 

@@ -85,7 +85,7 @@ SUITE["indices"] = BenchmarkGroup()
 
 function spmv32(A, x)
     y = Tensor(Dense{Int32}(Element{0.0, Float64, Int32}()))
-    @finch (y .= 0; for i=_, j=_; y[i] += A[j, i] * x[j] end; return y)
+    @finch (y .= 0; for i=_, j=_; y[i] += A[j, i] * x[j] end)
     return y
 end
 
@@ -99,7 +99,7 @@ end
 
 function spmv64(A, x)
     y = Tensor(Dense{Int64}(Element{0.0, Float64, Int64}()))
-    @finch (y .= 0; for i=_, j=_; y[i] += A[j, i] * x[j] end; return y)
+    @finch (y .= 0; for i=_, j=_; y[i] += A[j, i] * x[j] end)
     return y
 end
 

@@ -18,7 +18,6 @@ println("serial")
                 y[j] += A[walk(i), j] * x[i]
             end
         end
-        return y
     end
 end
 
@@ -33,6 +32,5 @@ println("parallel")
                 y[j] += A[walk(i), j] * x[i]
             end
         end
-        return y
     end
 end

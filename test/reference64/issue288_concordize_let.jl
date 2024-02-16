@@ -1,7 +1,7 @@
 begin
-    X = ex.body.body.body.rhs.tns.bind
-    A = ex.body.body.body.body.body.rhs.tns.bind
-    C = ex.body.body.body.body.body.body.body.lhs.tns.bind
+    X = (ex.bodies[1]).body.body.body.rhs.tns.bind
+    A = (ex.bodies[1]).body.body.body.body.body.rhs.tns.bind
+    C = (ex.bodies[1]).body.body.body.body.body.body.body.lhs.tns.bind
     sugar_1 = size(X)
     X_mode1_stop = sugar_1[1]
     X_mode2_stop = sugar_1[2]
@@ -47,5 +47,6 @@ begin
             end
         end
     end
-    nothing
+    result = something(nothing, ())
+    result
 end

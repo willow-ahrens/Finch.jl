@@ -1,11 +1,11 @@
 begin
-    s = ex.body.lhs.tns.bind
+    s = (ex.bodies[1]).body.lhs.tns.bind
     s_val = s.val
-    x_lvl = (ex.body.rhs.args[1]).tns.bind.lvl
+    x_lvl = ((ex.bodies[1]).body.rhs.args[1]).tns.bind.lvl
     x_lvl_ptr = x_lvl.ptr
     x_lvl_idx = x_lvl.idx
     x_lvl_val = x_lvl.lvl.val
-    y_lvl = (ex.body.rhs.args[2]).tns.bind.lvl
+    y_lvl = ((ex.bodies[1]).body.rhs.args[2]).tns.bind.lvl
     y_lvl_ptr = y_lvl.ptr
     y_lvl_idx = y_lvl.idx
     y_lvl_val = y_lvl.lvl.val
@@ -54,6 +54,7 @@ begin
             i = phase_stop_2 + 1
         end
     end
+    result = something(nothing, ())
     s.val = s_val
-    nothing
+    result
 end

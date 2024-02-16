@@ -33,7 +33,6 @@ y = zeros(5)
     for i=_, j=_
         y[i] += A[i, j]
     end
-    return y
 end
 ```
 
@@ -54,7 +53,6 @@ s = Scalar(0.0)
     for i=_, j=_
         s[] += A[i, j]
     end
-    return s
 end
 ```
 
@@ -63,9 +61,9 @@ code is dense):
 ```jldoctest example1; setup=:(using Finch; A = rand(5, 5); s = Scalar(0))
 julia> @finch_code for i=_, j=_ ; s[] += A[i, j] end
 quote
-    s = ex.body.body.lhs.tns.bind
+    s = (ex.bodies[1]).body.body.lhs.tns.bind
     s_val = s.val
-    A = ex.body.body.rhs.tns.bind
+    A = (ex.bodies[1]).body.body.rhs.tns.bind
     sugar_1 = size(A)
     A_mode1_stop = sugar_1[1]
     A_mode2_stop = sugar_1[2]
@@ -79,8 +77,9 @@ quote
             s_val = val + s_val
         end
     end
+    result = something(nothing, ())
     s.val = s_val
-    nothing
+    result
 end
 ```
 

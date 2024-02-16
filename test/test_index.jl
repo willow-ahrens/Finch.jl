@@ -4,32 +4,32 @@
     A = Tensor(SparseList(Element(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
     B = Scalar{0.0}()
 
-    @test check_output("sieve_hl_cond.jl", @finch_code (B .= 0; for j=_; if j == 1 B[] += A[j] end end; return B))
-    @finch (B .= 0; for j=_; if j == 1 B[] += A[j] end end; return B)
+    @test check_output("sieve_hl_cond.jl", @finch_code (B .= 0; for j=_; if j == 1 B[] += A[j] end end))
+    @finch (B .= 0; for j=_; if j == 1 B[] += A[j] end end)
 
     @test B() == 2.0
 
-    @finch (B .= 0; for j=_; if j == 2 B[] += A[j] end end; return B)
+    @finch (B .= 0; for j=_; if j == 2 B[] += A[j] end end)
 
     @test B() == 0.0
 
     @test check_output("sieve_hl_select.jl", @finch_code (for j=_; if diagmask[j, 3] B[] += A[j] end end))
 
-    @finch (B .= 0; for j=_; if diagmask[j, 3] B[] += A[j] end end; return B)
+    @finch (B .= 0; for j=_; if diagmask[j, 3] B[] += A[j] end end)
 
     @test B() == 3.0
 
-    @finch (B .= 0; for j=_; if diagmask[j, 4] B[] += A[j] end end; return B)
+    @finch (B .= 0; for j=_; if diagmask[j, 4] B[] += A[j] end end)
 
     @test B() == 0.0
 
     @test check_output("gather_hl.jl", @finch_code (B[] += A[5]))
 
-    @finch (B .= 0; B[] += A[5]; return B)
+    @finch (B .= 0; B[] += A[5])
 
     @test B() == 4.0
 
-    @finch (B .= 0; B[] += A[6]; return B)
+    @finch (B .= 0; B[] += A[6])
 
     @test B() == 0.0
 
@@ -52,13 +52,13 @@
     A_ref = sprand(10, 0.5); B_ref = sprand(10, 0.5); C_ref = vcat(A_ref, B_ref)
     A = Tensor(SparseVector{Float64, Int64}(A_ref)); B = Tensor(SparseVector{Float64, Int64}(B_ref)); C = Tensor(SparseList{Int64}(Element(0.0)), 20)
     @test check_output("concat_offset_permit.jl", @finch_code (C .= 0; for i=_; C[i] = coalesce(A[~i], B[~(i - 10)]) end))
-    @finch (C .= 0; for i=_; C[i] = coalesce(A[~i], B[~(i - 10)]) end; return C)
+    @finch (C .= 0; for i=_; C[i] = coalesce(A[~i], B[~(i - 10)]) end)
     @test reference_isequal(C, C_ref)
 
     F = Tensor(Int64[1,1,1,1,1])
 
-    @test check_output("sparse_conv.jl", @finch_code (C .= 0; for i=_, j=_; C[i] += (A[i] != 0) * coalesce(A[j - i + 3], 0) * F[j] end; return C))
-    @finch (C .= 0; for i=_, j=_; C[i] += (A[i] != 0) * coalesce(A[j - i + 3], 0) * F[j] end; return C)
+    @test check_output("sparse_conv.jl", @finch_code (C .= 0; for i=_, j=_; C[i] += (A[i] != 0) * coalesce(A[j - i + 3], 0) * F[j] end))
+    @finch (C .= 0; for i=_, j=_; C[i] += (A[i] != 0) * coalesce(A[j - i + 3], 0) * F[j] end)
     C_ref = zeros(10)
     for i = 1:10
         if A_ref[i] != 0
@@ -72,12 +72,12 @@
     end
     @test reference_isequal(C, C_ref)
 
-    @test check_output("sparse_window.jl", @finch_code (C .= 0; for i=_; C[i] = A[(2:4)[i]] end; return C))
-    @finch (C .= 0; for i=_; C[i] = A[(2:4)[i]] end; return C)
+    @test check_output("sparse_window.jl", @finch_code (C .= 0; for i=_; C[i] = A[(2:4)[i]] end))
+    @finch (C .= 0; for i=_; C[i] = A[(2:4)[i]] end)
     @test reference_isequal(C, [A(2), A(3), A(4)])
 
     I = 2:4
-    @finch (C .= 0; for i=_; C[i] = I[i] end; return C)
+    @finch (C .= 0; for i=_; C[i] = I[i] end)
     @test reference_isequal(C, [2, 3, 4])
 
     y = Array{Any}(undef, 4)
@@ -163,7 +163,6 @@
                     end
                 end
             end
-            return x
         end
 
         @test x[] == (24 + 1)*24/2
@@ -190,7 +189,6 @@
                     end
                 end
             end
-            return x
         end
 
         @test x[] == (24 + 1)*24/2

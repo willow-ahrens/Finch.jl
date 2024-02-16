@@ -45,6 +45,10 @@ function evaluate_partial(root, ctx)
                     define(a, v, body_2)
                 end
             end),
+            (@rule block(~a) => a),
+            (@rule block(~a1..., block(~b...), ~a2...) => block(a1..., b..., a2...)),
+            (@rule block(~a1..., define(~b, ~v, ~c), yieldbind(~d...), ~a2...) => 
+                block(a1..., define(b, v, block(c, yieldbind(d...))), a2...)),
         ])))
     ])))(root)
 end

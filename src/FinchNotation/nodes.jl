@@ -170,7 +170,9 @@ block
 """
     yieldbind(args...)
 
-Finch AST statement that terminates the program, returning the values of variables `args...`.
+Finch AST statement that sets the result of the program to the values of
+variables `args...`. Subsequent statements will not affect the result of the
+program.
 """
 yieldbind
 

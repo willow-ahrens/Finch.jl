@@ -3,19 +3,18 @@ julia> @finch_code begin
         for i = _
             z[i] = x[gallop(i)] + y[i]
         end
-        return z
     end
 quote
-    z_lvl = (ex.bodies[1]).tns.bind.lvl
+    z_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     z_lvl_ptr = z_lvl.ptr
     z_lvl_idx = z_lvl.idx
     z_lvl_2 = z_lvl.lvl
     z_lvl_val = z_lvl.lvl.val
-    x_lvl = ((ex.bodies[2]).body.rhs.args[1]).tns.bind.lvl
+    x_lvl = (((ex.bodies[1]).bodies[2]).body.rhs.args[1]).tns.bind.lvl
     x_lvl_ptr = x_lvl.ptr
     x_lvl_idx = x_lvl.idx
     x_lvl_val = x_lvl.lvl.val
-    y_lvl = ((ex.bodies[2]).body.rhs.args[2]).tns.bind.lvl
+    y_lvl = (((ex.bodies[1]).bodies[2]).body.rhs.args[2]).tns.bind.lvl
     y_lvl_ptr = y_lvl.ptr
     y_lvl_idx = y_lvl.idx
     y_lvl_val = y_lvl.lvl.val
@@ -317,15 +316,14 @@ quote
     qos_stop = z_lvl_ptr[1 + 1] - 1
     resize!(z_lvl_idx, qos_stop)
     resize!(z_lvl_val, qos_stop)
-    return (z = Tensor((SparseListLevel){Int64}(z_lvl_2, y_lvl.shape, z_lvl_ptr, z_lvl_idx)),)
-    nothing
+    result = something(nothing, (z = Tensor((SparseListLevel){Int64}(z_lvl_2, y_lvl.shape, z_lvl_ptr, z_lvl_idx)),))
+    result
 end
 julia> @finch begin
         z .= 0
         for i = _
             z[i] = x[gallop(i)] + y[i]
         end
-        return z
     end
 (z = Tensor(SparseList{Int64}(Element{0.0, Float64, Int64}([1.0, 2.0, 6.0]), 10, [1, 4], [0, 1, 9])),)
 

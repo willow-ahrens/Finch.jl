@@ -93,6 +93,7 @@ function lower_global(prgm, ctx)
     prgm = evaluate_partial(prgm, ctx)
     code = contain(ctx) do ctx_2
         quote
+            $(ctx.result) = nothing
             $(begin
                 prgm = wrapperize(prgm, ctx_2)
                 prgm = enforce_lifecycles(prgm)
@@ -105,7 +106,7 @@ function lower_global(prgm, ctx)
                     ctx_3(prgm)
                 end
             end)
-            nothing
+            $(ctx.result)
         end
     end
 end
@@ -137,7 +138,7 @@ Finch programs are composed using the following syntax:
  - `arr[inds...] <<min>>= ex`: a incrementing array expression with a custom operator, e.g. `<<min>>` is the minimum operator.
  - `for i = _ body end`: a loop over the index `i`, where `_` is computed from array access with `i` in `body`.
  - `if cond body end`: a conditional branch that executes only iterations where `cond` is true.
- - `return (tnss...,)`: at global scope, exit the program and return the tensors `tnss` with their new dimensions.
+ - `return (tnss...,)`: at global scope, exit the program and return the tensors `tnss` with their new dimensions. By default, any tensor declared in global scope is returned.
 
 Symbols are used to represent variables, and their values are taken from the environment. Loops introduce
 index variables into the scope of their bodies.
@@ -161,11 +162,19 @@ macro finch(opts_ex...)
     length(opts_ex) >= 1 || throw(ArgumentError("Expected at least one argument to @finch(opts..., ex)"))
     (opts, ex) = (opts_ex[1:end-1], opts_ex[end])
     prgm = FinchNotation.finch_parse_instance(ex)
+    prgm = :(
+        $(FinchNotation.block_instance)(
+            $prgm,
+            $(FinchNotation.yieldbind_instance)(
+                $(map(FinchNotation.variable_instance, FinchNotation.finch_parse_default_yieldbind(ex))...)
+            )
+        )
+    )
     res = esc(:res)
     thunk = quote
         res = $execute($prgm, (;$(map(esc, opts)...),))
     end
-    for tns in something(FinchNotation.finch_parse_yieldbind(ex), [])
+    for tns in something(FinchNotation.finch_parse_yieldbind(ex), FinchNotation.finch_parse_default_yieldbind(ex))
         push!(thunk.args, quote
             $(esc(tns)) = res[$(QuoteNode(tns))]
         end)
@@ -187,6 +196,14 @@ macro finch_code(opts_ex...)
     length(opts_ex) >= 1 || throw(ArgumentError("Expected at least one argument to @finch(opts..., ex)"))
     (opts, ex) = (opts_ex[1:end-1], opts_ex[end])
     prgm = FinchNotation.finch_parse_instance(ex)
+    prgm = :(
+        $(FinchNotation.block_instance)(
+            $prgm,
+            $(FinchNotation.yieldbind_instance)(
+                $(map(FinchNotation.variable_instance, FinchNotation.finch_parse_default_yieldbind(ex))...)
+            )
+        )
+    )
     return quote
         $execute_code(:ex, typeof($prgm); $(map(esc, opts)...)) |> pretty |> dataflow |> unresolve |> unquote_literals
     end

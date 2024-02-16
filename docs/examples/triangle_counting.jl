@@ -15,7 +15,6 @@ function tricount(edges)
         for j=_, i=_
             L[i,j] = lotrimask[i,j+1] * edges[i,j]
         end
-        return L
     end
 
     triangles = Scalar(0)

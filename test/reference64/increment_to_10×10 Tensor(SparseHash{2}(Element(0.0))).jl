@@ -1,13 +1,13 @@
 begin
-    fmt_lvl = ex.body.body.lhs.tns.bind.lvl
-    fmt_lvl_ptr = ex.body.body.lhs.tns.bind.lvl.ptr
-    fmt_lvl_tbl = ex.body.body.lhs.tns.bind.lvl.tbl
-    fmt_lvl_srt = ex.body.body.lhs.tns.bind.lvl.srt
+    fmt_lvl = (ex.bodies[1]).body.body.lhs.tns.bind.lvl
+    fmt_lvl_ptr = (ex.bodies[1]).body.body.lhs.tns.bind.lvl.ptr
+    fmt_lvl_tbl = (ex.bodies[1]).body.body.lhs.tns.bind.lvl.tbl
+    fmt_lvl_srt = (ex.bodies[1]).body.body.lhs.tns.bind.lvl.srt
     fmt_lvl_val = fmt_lvl.lvl.val
-    arr_2_lvl = ex.body.body.rhs.tns.bind.lvl
-    arr_2_lvl_ptr = ex.body.body.rhs.tns.bind.lvl.ptr
-    arr_2_lvl_tbl1 = ex.body.body.rhs.tns.bind.lvl.tbl[1]
-    arr_2_lvl_tbl2 = ex.body.body.rhs.tns.bind.lvl.tbl[2]
+    arr_2_lvl = (ex.bodies[1]).body.body.rhs.tns.bind.lvl
+    arr_2_lvl_ptr = (ex.bodies[1]).body.body.rhs.tns.bind.lvl.ptr
+    arr_2_lvl_tbl1 = (ex.bodies[1]).body.body.rhs.tns.bind.lvl.tbl[1]
+    arr_2_lvl_tbl2 = (ex.bodies[1]).body.body.rhs.tns.bind.lvl.tbl[2]
     arr_2_lvl_val = arr_2_lvl.lvl.val
     arr_2_lvl.shape[1] == fmt_lvl.shape[1] || throw(DimensionMismatch("mismatched dimension limits ($(arr_2_lvl.shape[1]) != $(fmt_lvl.shape[1]))"))
     arr_2_lvl.shape[2] == fmt_lvl.shape[2] || throw(DimensionMismatch("mismatched dimension limits ($(arr_2_lvl.shape[2]) != $(fmt_lvl.shape[2]))"))
@@ -150,6 +150,7 @@ begin
             end
         end
     end
+    result = something(nothing, ())
     resize!(fmt_lvl_srt, length(fmt_lvl_tbl))
     copyto!(fmt_lvl_srt, pairs(fmt_lvl_tbl))
     sort!(fmt_lvl_srt, by = hashkeycmp)
@@ -159,5 +160,5 @@ begin
     end
     fmt_lvl_qos_stop = fmt_lvl_ptr[1 + 1] - 1
     resize!(fmt_lvl_val, fmt_lvl_qos_stop)
-    nothing
+    result
 end

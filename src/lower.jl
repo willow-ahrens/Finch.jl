@@ -1,5 +1,6 @@
 @kwdef mutable struct LowerJulia <: AbstractCompiler
     code = JuliaContext()
+    result = freshen(code, :result)
     algebra = DefaultAlgebra()
     bindings::Dict{FinchNode, FinchNode} = Dict{FinchNode, FinchNode}()
     mode = fastfinch
@@ -12,7 +13,7 @@ end
 
 function contain(f, ctx::LowerJulia; bindings = ctx.bindings, kwargs...)
     contain(ctx.code; kwargs...) do code_2
-        f(LowerJulia(code_2, ctx.algebra, bindings, ctx.mode, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules))
+        f(LowerJulia(code_2, ctx.result, ctx.algebra, bindings, ctx.mode, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules))
     end
 end
 
@@ -194,12 +195,12 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         return ctx(ctx.bindings[root])
     elseif root.kind === yieldbind
         contain(ctx) do ctx_2
-            :(return (; $(map(root.args) do tns
+            :($(ctx.result) = something($(ctx.result), (; $(map(root.args) do tns
                 @assert tns.kind === variable
                 name = tns.name
                 tns = resolve(tns, ctx)
                 Expr(:kw, name, ctx_2(tns))
-            end...), ))
+            end...), )))
         end
     else
         error("unimplemented ($root)")

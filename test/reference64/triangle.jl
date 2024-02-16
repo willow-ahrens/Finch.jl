@@ -1,6 +1,6 @@
 begin
-    B = (ex.bodies[1]).tns.bind
-    A_lvl = ((ex.bodies[2]).body.body.body.rhs.args[1]).tns.bind.lvl
+    B = ((ex.bodies[1]).bodies[1]).tns.bind
+    A_lvl = (((ex.bodies[1]).bodies[2]).body.body.body.rhs.args[1]).tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
@@ -123,6 +123,6 @@ begin
         end
     end
     B.val = B_val
-    return (B = B,)
-    nothing
+    result = something(nothing, (B = B,))
+    result
 end

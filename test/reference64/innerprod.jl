@@ -1,11 +1,11 @@
 begin
-    B_lvl = (ex.bodies[1]).tns.bind.lvl
+    B_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     B_lvl_2 = B_lvl.lvl
     B_lvl_ptr = B_lvl_2.ptr
     B_lvl_idx = B_lvl_2.idx
     B_lvl_3 = B_lvl_2.lvl
     B_lvl_2_val = B_lvl_2.lvl.val
-    A_lvl = ((ex.bodies[2]).body.body.body.rhs.args[1]).tns.bind.lvl
+    A_lvl = (((ex.bodies[1]).bodies[2]).body.body.body.rhs.args[1]).tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
@@ -88,6 +88,6 @@ begin
     qos_stop = B_lvl_ptr[A_lvl.shape + 1] - 1
     resize!(B_lvl_idx, qos_stop)
     resize!(B_lvl_2_val, qos_stop)
-    return (B = Tensor((DenseLevel){Int64}((SparseListLevel){Int64}(B_lvl_3, A_lvl.shape, B_lvl_ptr, B_lvl_idx), A_lvl.shape)),)
-    nothing
+    result = something(nothing, (B = Tensor((DenseLevel){Int64}((SparseListLevel){Int64}(B_lvl_3, A_lvl.shape, B_lvl_ptr, B_lvl_idx), A_lvl.shape)),))
+    result
 end

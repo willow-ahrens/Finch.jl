@@ -60,7 +60,6 @@ eval(@finch_kernel function spmv(y, A, x)
     for j = _, i = _
         y[i] += A[i, j] * x[j]
     end
-    return y
 end)
 ````
 

@@ -33,7 +33,6 @@ function bellmanford(edges, source=1)
                     end
                 end
             end
-            return active
         end
 
         if !any(active)

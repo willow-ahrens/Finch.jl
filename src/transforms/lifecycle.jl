@@ -14,9 +14,19 @@ function open_scope(prgm, ctx::LifecycleVisitor)
     close_scope(prgm, ctx_2)
 end
 
+function getmodified(node::FinchNode)
+    if node.kind === block
+        return unique(mapreduce(getmodified, vcat, node.bodies, init=[]))
+    elseif node.kind === declare || node.kind === thaw
+        return [node.tns]
+    else
+        return []
+    end
+end
+
 function close_scope(prgm, ctx::LifecycleVisitor)
     prgm = ctx(prgm)
-    for tns in getresults(prgm)
+    for tns in getmodified(prgm)
         if ctx.modes[tns] !== reader
             prgm = block(prgm, freeze(tns))
         end

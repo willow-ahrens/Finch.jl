@@ -24,7 +24,7 @@ s = Scalar(0.0)
 
 # output
 
-
+NamedTuple()
 ```
 
 We can investigate the generated code with `@finch_code`.  This code iterates
@@ -37,9 +37,9 @@ this takes `O(n + nnz)` time.
 # output
 
 quote
-    s = ex.body.body.lhs.tns.bind
+    s = (ex.bodies[1]).body.body.lhs.tns.bind
     s_val = s.val
-    A_lvl = ex.body.body.rhs.tns.bind.lvl
+    A_lvl = (ex.bodies[1]).body.body.rhs.tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
@@ -76,8 +76,9 @@ quote
             end
         end
     end
+    result = something(nothing, ())
     s.val = s_val
-    nothing
+    result
 end
 ```
 
@@ -98,9 +99,9 @@ Note the double for loop in the following code
 # output
 
 quote
-    s = ex.body.body.lhs.tns.bind
+    s = (ex.bodies[1]).body.body.lhs.tns.bind
     s_val = s.val
-    A_lvl = ex.body.body.rhs.tns.bind.lvl
+    A_lvl = (ex.bodies[1]).body.body.rhs.tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
@@ -140,8 +141,9 @@ quote
             end
         end
     end
+    result = something(nothing, ())
     s.val = s_val
-    nothing
+    result
 end
 ```
 
@@ -233,13 +235,13 @@ Checking the generated code, we see that this code is indeed densifying (notice 
 # output
 
 quote
-    C = (ex.bodies[1]).tns.bind
-    A_lvl = ((ex.bodies[2]).body.body.rhs.args[1]).tns.bind.lvl
+    C = ((ex.bodies[1]).bodies[1]).tns.bind
+    A_lvl = (((ex.bodies[1]).bodies[2]).body.body.rhs.args[1]).tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
     A_lvl_2_val = A_lvl_2.lvl.val
-    B = ((ex.bodies[2]).body.body.rhs.args[2]).tns.bind
+    B = (((ex.bodies[1]).bodies[2]).body.body.rhs.args[2]).tns.bind
     sugar_1 = size(B)
     B_mode1_stop = sugar_1[1]
     B_mode2_stop = sugar_1[2]
@@ -319,8 +321,9 @@ quote
         end
     end
     C.val = C_val
-    return (C = C,)
-    nothing
+    result = something(nothing, (C = C,))
+    result = something(result, (C = C,))
+    result
 end
 
 ```

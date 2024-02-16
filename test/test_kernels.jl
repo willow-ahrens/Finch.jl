@@ -12,10 +12,10 @@
         B = Tensor(Dense(SparseList(Element(0.0))), m, m)
 
         if !seen
-            check_output("innerprod.jl", @finch_code (B .= 0; for j=_, i=_, k=_; B[i, j] += A[k, i] * A[k, j] end; return B))
+            check_output("innerprod.jl", @finch_code (B .= 0; for j=_, i=_, k=_; B[i, j] += A[k, i] * A[k, j] end))
             seen = true
         end
-        @finch (B .= 0; for j=_, i=_, k=_; B[i, j] += A[k, i] * A[k, j] end; return B)
+        @finch (B .= 0; for j=_, i=_, k=_; B[i, j] += A[k, i] * A[k, j] end)
         @test B == B_ref
     end
 
@@ -27,10 +27,10 @@
             A = Tensor(A_ref)
             B = Finch.Scalar{0.0}()
             if !seen
-                check_output("triangle.jl", @finch_code (B .= 0; for i=_, j=_, k=_; B[] += A[k, i] * A[j, i] * A[k, j] end; return B))
+                check_output("triangle.jl", @finch_code (B .= 0; for i=_, j=_, k=_; B[] += A[k, i] * A[j, i] * A[k, j] end))
                 seen = true
             end
-            @finch (B .= 0; for i=_, j=_, k=_; B[] += A[k, i] * A[j, i] * A[k, j] end; return B)
+            @finch (B .= 0; for i=_, j=_, k=_; B[] += A[k, i] * A[j, i] * A[k, j] end)
             @test B() ≈ sum(A_ref .* (A_ref * transpose(A_ref)))
         end
     end
@@ -48,7 +48,7 @@
         a = Scalar{0.0}()
         b = Scalar{0.0}()
 
-        res = @finch begin
+        @finch begin
             C .= 0
             d .= 0
             for i = _
@@ -59,7 +59,6 @@
                 C[i] = a[] - b[]
                 d[] += a[] * b[]
             end
-            return (C, d)
         end
 
         @test C == A_ref .- B_ref
@@ -83,7 +82,6 @@
                         for k=_, i=_; w[i] += A[i, k] * A[k, j] end
                         for i=_ B[i, j] = w[i] end
                     end
-                    return B
                 end
                 check_output("gustavsons.jl", code)
                 seen = true
@@ -95,7 +93,6 @@
                     for k=_, i=_ w[i] += A[i, k] * A[k, j] end
                     for i=_ B[i, j] = w[i] end
                 end
-                return B
             end
             B_ref = A_ref * A_ref
             @test B == B_ref

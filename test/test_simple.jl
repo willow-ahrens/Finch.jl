@@ -10,7 +10,6 @@
         for i = _
             x[i] = y[i]
         end
-        return x
     end
 
     @finch begin
@@ -18,7 +17,6 @@
         for i = _
             z[i] = x[i]
         end
-        return z
     end
 
 

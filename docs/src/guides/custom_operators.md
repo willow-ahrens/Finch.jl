@@ -33,7 +33,7 @@ u = Tensor(SparseList(Element(1)), [3, 1, 6, 1, 9, 1, 4, 1, 8, 1])
 v = Tensor(SparseList(Element(1)), [1, 2, 3, 1, 1, 1, 1, 4, 1, 1])
 w = Tensor(SparseList(Element(1)))
 
-@finch MyAlgebra() (w .= 1; for i=_; w[i] = gcd(u[i], v[i]) end; return w)
+@finch MyAlgebra() (w .= 1; for i=_; w[i] = gcd(u[i], v[i]) end)
 ```
 
 ## A Few Convenient Functions

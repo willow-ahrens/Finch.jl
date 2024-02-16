@@ -9,7 +9,6 @@
             $(Expr(:for, exts, quote
                 dst[$(idxs...)] = src[$(idxs...)]
             end))
-            return dst
         end
         return dst
     end
@@ -67,7 +66,6 @@ dropdefaults!(dst::Tensor, src) = dropdefaults_helper!(dst, src)
                     dst[$(idxs...)] = tmp[]
                 end
             end))
-            return dst
         end
         return dst
     end
