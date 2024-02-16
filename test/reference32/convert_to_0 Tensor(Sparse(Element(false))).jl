@@ -1,9 +1,9 @@
 begin
-    tmp_lvl = (ex.bodies[1]).tns.bind.lvl
+    tmp_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     tmp_lvl_tbl = tmp_lvl.tbl
     tmp_lvl_2 = tmp_lvl.lvl
     tmp_lvl_val = tmp_lvl.lvl.val
-    ref_lvl = (ex.bodies[2]).body.rhs.tns.bind.lvl
+    ref_lvl = ((ex.bodies[1]).bodies[2]).body.rhs.tns.bind.lvl
     ref_lvl_ptr = ref_lvl.ptr
     ref_lvl_idx = ref_lvl.idx
     ref_lvl_val = ref_lvl.lvl.val
@@ -54,6 +54,6 @@ begin
     end
     qos_stop_2 = Finch.freeze_table!(tmp_lvl_tbl, 1)
     resize!(tmp_lvl_val, qos_stop_2)
-    return (tmp = Tensor((SparseLevel){Int32}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_tbl)),)
-    nothing
+    result = something(nothing, (tmp = Tensor((SparseLevel){Int32}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_tbl)),))
+    result
 end

@@ -1,12 +1,12 @@
 begin
-    output_lvl = (ex.bodies[1]).tns.bind.lvl
+    output_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     output_lvl_2 = output_lvl.lvl
     output_lvl_3 = output_lvl_2.lvl
     output_lvl_2_val = output_lvl_2.lvl.val
-    cpu = ((ex.bodies[2]).ext.args[2]).bind
-    tmp_lvl = ((ex.bodies[2]).body.bodies[1]).tns.bind.lvl
+    cpu = (((ex.bodies[1]).bodies[2]).ext.args[2]).bind
+    tmp_lvl = (((ex.bodies[1]).bodies[2]).body.bodies[1]).tns.bind.lvl
     tmp_lvl_val = tmp_lvl.lvl.val
-    input_lvl = (((ex.bodies[2]).body.bodies[2]).body.rhs.args[1]).tns.bind.lvl
+    input_lvl = ((((ex.bodies[1]).bodies[2]).body.bodies[2]).body.rhs.args[1]).tns.bind.lvl
     input_lvl_2 = input_lvl.lvl
     input_lvl_2_val = input_lvl_2.lvl.val
     1 == 2 || throw(DimensionMismatch("mismatched dimension limits ($(1) != $(2))"))
@@ -58,6 +58,6 @@ begin
             tmp_lvl_val = val_3
         end
     resize!(val_2, input_lvl_2.shape * input_lvl.shape)
-    return (output = Tensor((DenseLevel){Int32}((DenseLevel){Int32}(output_lvl_3, input_lvl_2.shape), input_lvl.shape)),)
-    nothing
+    result = something(nothing, (output = Tensor((DenseLevel){Int32}((DenseLevel){Int32}(output_lvl_3, input_lvl_2.shape), input_lvl.shape)),))
+    result
 end

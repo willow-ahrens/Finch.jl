@@ -1,7 +1,7 @@
 begin
-    B = ex.lhs.tns.bind
+    B = (ex.bodies[1]).lhs.tns.bind
     B_val = B.val
-    A_lvl = ex.rhs.tns.bind.lvl
+    A_lvl = (ex.bodies[1]).rhs.tns.bind.lvl
     A_lvl_ptr = A_lvl.ptr
     A_lvl_idx = A_lvl.idx
     A_lvl_val = A_lvl.lvl.val
@@ -34,6 +34,7 @@ begin
             end
         end
     end
+    result = something(nothing, ())
     B.val = B_val
-    nothing
+    result
 end

@@ -7,13 +7,14 @@ julia> @finch_code begin
         end
     end
 quote
-    y_lvl = (ex.bodies[1]).tns.bind.lvl
+    y_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
     y_lvl_locks = y_lvl.lvl.locks
+    y_lvl_3 = y_lvl_2.lvl
     y_lvl_2_val = y_lvl_2.lvl.val
-    x_lvl = ((ex.bodies[2]).body.body.rhs.args[1]).tns.bind.lvl
+    x_lvl = (((ex.bodies[1]).bodies[2]).body.body.rhs.args[1]).tns.bind.lvl
     x_lvl_val = x_lvl.lvl.val
-    A_lvl = ((ex.bodies[2]).body.body.rhs.args[2]).tns.bind.lvl
+    A_lvl = (((ex.bodies[1]).bodies[2]).body.body.rhs.args[2]).tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
@@ -81,7 +82,8 @@ quote
         end
     resize!(locksArray, A_lvl.shape)
     resize!(val, A_lvl.shape)
-    nothing
+    result = something(nothing, (y = Tensor((DenseLevel){Int32}((AtomicLevel){Vector{Base.Threads.SpinLock}, ElementLevel{0.0, Float64, Int32, Vector{Float64}}}(y_lvl_3, locksArray), A_lvl.shape)),))
+    result
 end
 julia> @finch begin
         y .= 0
@@ -91,5 +93,5 @@ julia> @finch begin
             end
         end
     end
-nothing
+(y = Tensor(Dense{Int32}(Atomic([Base.Threads.SpinLock(0), Base.Threads.SpinLock(0)], Element{0.0, Float64, Int32}([4.0, 6.0])), 2)),)
 

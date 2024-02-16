@@ -1,7 +1,7 @@
 begin
-    X = ex.body.body.body.rhs.tns.bind
-    A = (ex.body.body.body.body.body.bodies[1]).rhs.tns.bind
-    C = (ex.body.body.body.body.body.bodies[1]).body.body.lhs.tns.bind
+    X = (ex.bodies[1]).body.body.body.rhs.tns.bind
+    A = ((ex.bodies[1]).body.body.body.body.body.bodies[1]).rhs.tns.bind
+    C = ((ex.bodies[1]).body.body.body.body.body.bodies[1]).body.body.lhs.tns.bind
     sugar_1 = size(X)
     X_mode1_stop = sugar_1[1]
     X_mode2_stop = sugar_1[2]
@@ -37,20 +37,32 @@ begin
                 C_mode3_stop = sugar_13[3]
                 val = X[i_9, j_5]
                 for l_6 = 1:A_mode2_stop
-                    sugar_15 = size(A)
-                    A_mode1_stop = sugar_15[1]
-                    A_mode2_stop = sugar_15[2]
-                    val_2 = A[i_9, l_6, k_6]
+                    sugar_14 = size(A)
+                    A_mode1_stop = sugar_14[1]
+                    A_mode2_stop = sugar_14[2]
                     phase_stop = min(i_9, l_6 + -1)
                     if phase_stop >= i_9
-                        for s_5 = i_9:phase_stop
+                        for s_4 = i_9:phase_stop
+                            sugar_15 = size(A)
+                            A_mode1_stop = sugar_15[1]
+                            A_mode2_stop = sugar_15[2]
+                            val_2 = A[i_9, l_6, k_6]
                             C[i_9, j_5, k_6] = val_2 * val + C[i_9, j_5, k_6]
                             C[i_9, j_5, k_6] = val * val_2 + C[i_9, j_5, k_6]
+                        end
+                    end
+                    phase_start_2 = max(l_6, i_9)
+                    if i_9 >= phase_start_2
+                        for s_7 = phase_start_2:i_9
+                            sugar_16 = size(A)
+                            A_mode1_stop = sugar_16[1]
+                            A_mode2_stop = sugar_16[2]
                         end
                     end
                 end
             end
         end
     end
-    nothing
+    result = something(nothing, ())
+    result
 end

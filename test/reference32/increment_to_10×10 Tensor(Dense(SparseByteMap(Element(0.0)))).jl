@@ -1,15 +1,15 @@
 begin
-    fmt_lvl = ex.body.body.lhs.tns.bind.lvl
+    fmt_lvl = (ex.bodies[1]).body.body.lhs.tns.bind.lvl
     fmt_lvl_2 = fmt_lvl.lvl
     fmt_lvl_ptr = fmt_lvl.lvl.ptr
     fmt_lvl_tbl = fmt_lvl.lvl.tbl
     fmt_lvl_srt = fmt_lvl.lvl.srt
     fmt_lvl_2_qos_stop = (fmt_lvl_2_qos_fill = length(fmt_lvl_2.srt))
     fmt_lvl_2_val = fmt_lvl_2.lvl.val
-    arr_2_lvl = ex.body.body.rhs.tns.bind.lvl
-    arr_2_lvl_ptr = ex.body.body.rhs.tns.bind.lvl.ptr
-    arr_2_lvl_tbl1 = ex.body.body.rhs.tns.bind.lvl.tbl[1]
-    arr_2_lvl_tbl2 = ex.body.body.rhs.tns.bind.lvl.tbl[2]
+    arr_2_lvl = (ex.bodies[1]).body.body.rhs.tns.bind.lvl
+    arr_2_lvl_ptr = (ex.bodies[1]).body.body.rhs.tns.bind.lvl.ptr
+    arr_2_lvl_tbl1 = (ex.bodies[1]).body.body.rhs.tns.bind.lvl.tbl[1]
+    arr_2_lvl_tbl2 = (ex.bodies[1]).body.body.rhs.tns.bind.lvl.tbl[2]
     arr_2_lvl_val = arr_2_lvl.lvl.val
     arr_2_lvl.shape[1] == fmt_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(arr_2_lvl.shape[1]) != $(fmt_lvl_2.shape))"))
     arr_2_lvl.shape[2] == fmt_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(arr_2_lvl.shape[2]) != $(fmt_lvl.shape))"))
@@ -140,6 +140,7 @@ begin
             end
         end
     end
+    result = something(nothing, ())
     pos_stop = fmt_lvl.shape
     resize!(fmt_lvl_ptr, pos_stop + 1)
     resize!(fmt_lvl_tbl, pos_stop * fmt_lvl_2.shape)
@@ -156,5 +157,5 @@ begin
     end
     fmt_lvl_ptr[fmt_lvl_2_p_prev + 1] = fmt_lvl_2_qos_fill + 1
     resize!(fmt_lvl_2_val, fmt_lvl_2.shape * pos_stop)
-    nothing
+    result
 end

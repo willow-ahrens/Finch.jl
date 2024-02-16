@@ -1,15 +1,15 @@
 begin
-    x_lvl = ex.body.rhs.tns.bind.lvl
+    x_lvl = (ex.bodies[1]).body.rhs.tns.bind.lvl
     x_lvl_ptr = x_lvl.ptr
     x_lvl_idx = x_lvl.idx
     x_lvl_val = x_lvl.lvl.val
-    s = (ex.body.body.bodies[1]).lhs.tns.bind
+    s = ((ex.bodies[1]).body.body.bodies[1]).lhs.tns.bind
     s_val = s.val
-    y_lvl = ((ex.body.body.bodies[1]).rhs.args[2]).tns.bind.lvl
+    y_lvl = (((ex.bodies[1]).body.body.bodies[1]).rhs.args[2]).tns.bind.lvl
     y_lvl_ptr = y_lvl.ptr
     y_lvl_idx = y_lvl.idx
     y_lvl_val = y_lvl.lvl.val
-    c = (ex.body.body.bodies[2]).lhs.tns.bind
+    c = ((ex.bodies[1]).body.body.bodies[2]).lhs.tns.bind
     c_val = c.val
     y_lvl.shape == x_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(y_lvl.shape) != $(x_lvl.shape))"))
     x_lvl_q = x_lvl_ptr[1]
@@ -105,7 +105,8 @@ begin
             end
         end
     end
+    result = something(nothing, ())
     c.val = c_val
     s.val = s_val
-    nothing
+    result
 end
