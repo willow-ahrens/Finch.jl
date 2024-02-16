@@ -17,7 +17,7 @@
                 C[i] += A[i] + B[i]
             end
         end
-        C_ref = Tensor(SparseRLE{Float64}(Element{0, Int64, Int64}([1, 2, 1, 3, 1, 2, 3]), 12.0, [1, 8], Finch.PlusEpsVector([1.1, 2.2, 5.5, 6.6, 7.7, 8.8, 9.9]), [2.2, 3.3, 6.6, 7.7, 8.8, 9.9, 11.11]))
+        C_ref = Tensor(SparseRLE{Float64}(Element(0, [1, 2, 1, 3, 1, 2, 3]), 12.0, [1, 8], Finch.PlusEpsVector([1.1, 2.2, 5.5, 6.6, 7.7, 8.8, 9.9]), [2.2, 3.3, 6.6, 7.7, 8.8, 9.9, 11.11]))
         @test Structure(C) == Structure(C_ref)
     end
 
