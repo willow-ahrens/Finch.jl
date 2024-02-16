@@ -5,15 +5,14 @@ julia> @finch_code begin
                 y[j] += x[i] * A[walk(i), j]
             end
         end
-        return y
     end
 quote
-    y_lvl = (ex.bodies[1]).tns.bind.lvl
+    y_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
     y_lvl_val = y_lvl.lvl.val
-    x_lvl = ((ex.bodies[2]).body.body.rhs.args[1]).tns.bind.lvl
+    x_lvl = (((ex.bodies[1]).bodies[2]).body.body.rhs.args[1]).tns.bind.lvl
     x_lvl_val = x_lvl.lvl.val
-    A_lvl = ((ex.bodies[2]).body.body.rhs.args[2]).tns.bind.lvl
+    A_lvl = (((ex.bodies[1]).bodies[2]).body.body.rhs.args[2]).tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
@@ -71,8 +70,8 @@ quote
             end
         end
     resize!(val, A_lvl.shape)
-    return (y = Tensor((DenseLevel){Int64}(y_lvl_2, A_lvl.shape)),)
-    nothing
+    result = something(nothing, (y = Tensor((DenseLevel){Int64}(y_lvl_2, A_lvl.shape)),))
+    result
 end
 julia> @finch begin
         y .= 0
@@ -81,7 +80,6 @@ julia> @finch begin
                 y[j] += x[i] * A[walk(i), j]
             end
         end
-        return y
     end
 (y = Tensor(Dense{Int64}(Element{0.0, Float64, Int64}([4.0, 6.0]), 2)),)
 
