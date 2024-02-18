@@ -160,7 +160,6 @@ begin
             end
         end
     end
-    result = something(nothing, (tmp = Tensor((DenseLevel){Int64}((SparseByteMapLevel){Int64}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt), ref_lvl.shape)),))
     pos_stop = ref_lvl.shape
     resize!(tmp_lvl_ptr, pos_stop + 1)
     resize!(tmp_lvl_tbl, pos_stop * ref_lvl_2.shape)
@@ -177,5 +176,6 @@ begin
     end
     tmp_lvl_ptr[tmp_lvl_2_p_prev + 1] = tmp_lvl_2_qos_fill + 1
     resize!(tmp_lvl_2_val, ref_lvl_2.shape * pos_stop)
+    result = something(nothing, (tmp = Tensor((DenseLevel){Int64}((SparseByteMapLevel){Int64}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt), ref_lvl.shape)),))
     result
 end

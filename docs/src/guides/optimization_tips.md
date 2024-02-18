@@ -320,9 +320,9 @@ quote
             end
         end
     end
+    C.val = C_val
     result = something(nothing, (C = C,))
     result = something(result, (C = C,))
-    C.val = C_val
     result
 end
 

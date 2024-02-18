@@ -80,8 +80,8 @@ quote
             end
         end
     end
-    result = something(nothing, (y = Tensor((DenseLevel){Int64}(y_lvl_2, A_lvl_2.shape)),))
     resize!(y_lvl_val, A_lvl_2.shape)
+    result = something(nothing, (y = Tensor((DenseLevel){Int64}(y_lvl_2, A_lvl_2.shape)),))
     result
 end
 julia> @finch begin

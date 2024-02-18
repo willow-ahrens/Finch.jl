@@ -153,7 +153,6 @@ begin
             end
         end
     end
-    result = something(nothing, (tmp = Tensor((DenseLevel){Int64}((SparseHashLevel){1, Tuple{Int64}}(tmp_lvl_3, (ref_lvl_2.shape,), tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt), ref_lvl.shape)),))
     resize!(tmp_lvl_srt, length(tmp_lvl_tbl))
     copyto!(tmp_lvl_srt, pairs(tmp_lvl_tbl))
     sort!(tmp_lvl_srt, by = hashkeycmp)
@@ -163,5 +162,6 @@ begin
     end
     tmp_lvl_2_qos_stop = tmp_lvl_ptr[ref_lvl.shape + 1] - 1
     resize!(tmp_lvl_2_val, tmp_lvl_2_qos_stop)
+    result = something(nothing, (tmp = Tensor((DenseLevel){Int64}((SparseHashLevel){1, Tuple{Int64}}(tmp_lvl_3, (ref_lvl_2.shape,), tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt), ref_lvl.shape)),))
     result
 end
