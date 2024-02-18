@@ -21,17 +21,18 @@ julia> @finch_code mode = fastfinch begin
         end
     end
 quote
-    B_lvl = (ex.bodies[1]).tns.bind.lvl
+    B_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     B_lvl_tbl = B_lvl.tbl
     B_lvl_2 = B_lvl.lvl
     B_lvl_tbl_2 = B_lvl_2.tbl
     B_lvl_3 = B_lvl_2.lvl
     B_lvl_2_val = B_lvl_2.lvl.val
-    A_lvl = (ex.bodies[2]).body.body.rhs.tns.bind.lvl
+    A_lvl = ((ex.bodies[1]).bodies[2]).body.body.rhs.tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
     A_lvl_2_val = A_lvl_2.lvl.val
+    result = nothing
     qos = Finch.declare_table!(B_lvl_tbl, 1)
     B_lvl_qos_stop = 0
     Finch.declare_table!(B_lvl_tbl_2, qos)
@@ -97,7 +98,8 @@ quote
     qos_stop_4 = Finch.freeze_table!(B_lvl_tbl, 1)
     qos_stop_5 = Finch.freeze_table!(B_lvl_tbl_2, qos_stop_4)
     resize!(B_lvl_2_val, qos_stop_5)
-    (B = Tensor((SparseLevel){Int32}((SparseLevel){Int32}(B_lvl_3, A_lvl.shape, B_lvl_tbl_2), A_lvl_2.shape, B_lvl_tbl)),)
+    result = (B = Tensor((SparseLevel){Int32}((SparseLevel){Int32}(B_lvl_3, A_lvl.shape, B_lvl_tbl_2), A_lvl_2.shape, B_lvl_tbl)),)
+    result
 end
 julia> @finch mode = fastfinch begin
         B .= 0

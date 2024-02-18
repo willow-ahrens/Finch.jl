@@ -1,14 +1,15 @@
 begin
-    tmp_lvl = (ex.bodies[1]).tns.bind.lvl
+    tmp_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     tmp_lvl_ptr = tmp_lvl.ptr
     tmp_lvl_idx = tmp_lvl.idx
     tmp_lvl_ofs = tmp_lvl.ofs
     tmp_lvl_2 = tmp_lvl.lvl
     tmp_lvl_val = tmp_lvl.lvl.val
-    ref_lvl = (ex.bodies[2]).body.rhs.tns.bind.lvl
+    ref_lvl = ((ex.bodies[1]).bodies[2]).body.rhs.tns.bind.lvl
     ref_lvl_ptr = ref_lvl.ptr
     ref_lvl_idx = ref_lvl.idx
     ref_lvl_val = ref_lvl.lvl.val
+    result = nothing
     tmp_lvl_qos_stop = 0
     tmp_lvl_ros_stop = 0
     Finch.resize_if_smaller!(tmp_lvl_ofs, 1)
@@ -90,5 +91,6 @@ begin
     resize!(tmp_lvl_ofs, ros_stop + 1)
     qos_stop = tmp_lvl_ofs[ros_stop + 1] - 1
     resize!(tmp_lvl_val, qos_stop)
-    (tmp = Tensor((SparseVBLLevel){Int32}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx, tmp_lvl_ofs)),)
+    result = (tmp = Tensor((SparseVBLLevel){Int32}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx, tmp_lvl_ofs)),)
+    result
 end

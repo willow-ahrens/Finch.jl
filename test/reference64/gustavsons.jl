@@ -1,22 +1,23 @@
 begin
-    B_lvl = (ex.bodies[1]).tns.bind.lvl
+    B_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     B_lvl_2 = B_lvl.lvl
     B_lvl_ptr = B_lvl_2.ptr
     B_lvl_idx = B_lvl_2.idx
     B_lvl_3 = B_lvl_2.lvl
     B_lvl_2_val = B_lvl_2.lvl.val
-    w_lvl = ((ex.bodies[2]).body.bodies[1]).tns.bind.lvl
-    w_lvl_ptr = ((ex.bodies[2]).body.bodies[1]).tns.bind.lvl.ptr
-    w_lvl_tbl = ((ex.bodies[2]).body.bodies[1]).tns.bind.lvl.tbl
-    w_lvl_srt = ((ex.bodies[2]).body.bodies[1]).tns.bind.lvl.srt
+    w_lvl = (((ex.bodies[1]).bodies[2]).body.bodies[1]).tns.bind.lvl
+    w_lvl_ptr = (((ex.bodies[1]).bodies[2]).body.bodies[1]).tns.bind.lvl.ptr
+    w_lvl_tbl = (((ex.bodies[1]).bodies[2]).body.bodies[1]).tns.bind.lvl.tbl
+    w_lvl_srt = (((ex.bodies[1]).bodies[2]).body.bodies[1]).tns.bind.lvl.srt
     w_lvl_qos_stop = (w_lvl_qos_fill = length(w_lvl.srt))
     w_lvl_val = w_lvl.lvl.val
-    A_lvl = (((ex.bodies[2]).body.bodies[2]).body.body.rhs.args[1]).tns.bind.lvl
+    A_lvl = ((((ex.bodies[1]).bodies[2]).body.bodies[2]).body.body.rhs.args[1]).tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
     A_lvl_2_val = A_lvl_2.lvl.val
     A_lvl_2.shape == A_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl_2.shape) != $(A_lvl.shape))"))
+    result = nothing
     B_lvl_2_qos_fill = 0
     B_lvl_2_qos_stop = 0
     B_lvl_2_prev_pos = 0
@@ -250,5 +251,6 @@ begin
     qos_stop = B_lvl_ptr[A_lvl.shape + 1] - 1
     resize!(B_lvl_idx, qos_stop)
     resize!(B_lvl_2_val, qos_stop)
-    (B = Tensor((DenseLevel){Int64}((SparseListLevel){Int64}(B_lvl_3, A_lvl_2.shape, B_lvl_ptr, B_lvl_idx), A_lvl.shape)),)
+    result = (B = Tensor((DenseLevel){Int64}((SparseListLevel){Int64}(B_lvl_3, A_lvl_2.shape, B_lvl_ptr, B_lvl_idx), A_lvl.shape)),)
+    result
 end

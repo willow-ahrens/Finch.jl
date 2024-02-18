@@ -9,14 +9,15 @@ julia> @finch_code begin
         end
     end
 quote
-    x_lvl = (ex.bodies[1]).tns.bind.lvl
+    x_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     x_lvl_2 = x_lvl.lvl
     x_lvl_val = x_lvl.lvl.val
-    y_lvl = (ex.bodies[3]).tns.bind.lvl
+    y_lvl = ((ex.bodies[1]).bodies[3]).tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
     y_lvl_locks = y_lvl.lvl.locks
     y_lvl_3 = y_lvl_2.lvl
     y_lvl_2_val = y_lvl_2.lvl.val
+    result = nothing
     Finch.resize_if_smaller!(x_lvl_val, x_lvl.shape)
     Finch.fill_range!(x_lvl_val, 0, 1, x_lvl.shape)
     for j_7 = 1:x_lvl.shape
@@ -52,7 +53,8 @@ quote
         end
     resize!(locksArray, y_lvl.shape)
     resize!(val_2, y_lvl.shape)
-    (x = Tensor((DenseLevel){Int64}(x_lvl_2, x_lvl.shape)), y = Tensor((DenseLevel){Int64}((AtomicLevel){Vector{Base.Threads.SpinLock}, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}(y_lvl_3, locksArray), y_lvl.shape)))
+    result = (x = Tensor((DenseLevel){Int64}(x_lvl_2, x_lvl.shape)), y = Tensor((DenseLevel){Int64}((AtomicLevel){Vector{Base.Threads.SpinLock}, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}(y_lvl_3, locksArray), y_lvl.shape)))
+    result
 end
 julia> @finch begin
         x .= 0

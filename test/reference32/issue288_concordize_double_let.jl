@@ -1,7 +1,7 @@
 begin
-    X = ex.body.body.body.rhs.tns.bind
-    A = (ex.body.body.body.body.body.bodies[1]).rhs.tns.bind
-    C = (ex.body.body.body.body.body.bodies[1]).body.body.lhs.tns.bind
+    X = (ex.bodies[1]).body.body.body.rhs.tns.bind
+    A = ((ex.bodies[1]).body.body.body.body.body.bodies[1]).rhs.tns.bind
+    C = ((ex.bodies[1]).body.body.body.body.body.bodies[1]).body.body.lhs.tns.bind
     sugar_1 = size(X)
     X_mode1_stop = sugar_1[1]
     X_mode2_stop = sugar_1[2]
@@ -20,6 +20,7 @@ begin
     C_mode1_stop = sugar_4[1]
     C_mode3_stop = sugar_4[3]
     A_mode1_stop == C_mode1_stop || throw(DimensionMismatch("mismatched dimension limits ($(A_mode1_stop) != $(C_mode1_stop))"))
+    result = nothing
     for k_6 = 1:C_mode3_stop
         sugar_5 = size(A)
         A_mode1_stop = sugar_5[1]
@@ -52,5 +53,6 @@ begin
             end
         end
     end
-    (C = C,)
+    result = ()
+    result
 end

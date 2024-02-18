@@ -9,7 +9,6 @@ after simplification so one can expect constants to be folded.
 """
 function get_wrapper_rules(alg, depth, ctx)
     return [
-#        (@rule access(~A, ~m, ~i...) => access(unwrap(A), m, i...)),
         (@rule access(~A, ~m, ~i1..., call(~proto::isliteral, ~j), ~i2...) => if isprotocol(proto.val)
             protos = ([nothing for _ in i1]..., proto.val, [nothing for _ in i2]...)
             access(call(protocolize, A, protos...), m, i1..., j, i2...)
@@ -164,12 +163,12 @@ function get_wrapper_rules(alg, depth, ctx)
         end),
         (@rule call(offset, call(swizzle, ~A, ~sigma...), ~delta...) =>
             call(swizzle, call(offset, A, delta[invperm(getval.(sigma))]...), sigma...)),
-        (@rule access(~A, ~m, ~i1..., access(call(extent, ~start, ~stop), reader, ~k), ~i2...) => begin
+        (@rule access(~A, ~m, ~i1..., call(call(extent, ~start, ~stop), ~k), ~i2...) => begin
             A_2 = call(window, A, [nothing for _ in i1]..., call(extent, start, stop), [nothing for _ in i2]...)
             A_3 = call(offset, A_2, [0 for _ in i1]..., call(-, start, 1), [0 for _ in i2]...)
             access(A_3, m, i1..., k, i2...)
         end),
-        (@rule access(~A, ~m, ~i1..., access(~I::isvirtual, reader, ~k), ~i2...) => if I.val isa Extent
+        (@rule access(~A, ~m, ~i1..., call(~I::isvirtual, ~k), ~i2...) => if I.val isa Extent
             A_2 = call(window, A, [nothing for _ in i1]..., I, [nothing for _ in i2]...)
             A_3 = call(offset, A_2, [0 for _ in i1]..., call(-, getstart(I), 1), [0 for _ in i2]...)
             access(A_3, m, i1..., k, i2...)
@@ -181,16 +180,6 @@ function get_wrapper_rules(alg, depth, ctx)
             call(swizzle, A, sigma_1[getval.(sigma_2)]...)),
         (@rule access(call(swizzle, ~A, ~sigma...), ~m, ~i...) =>
             access(A, m, i[invperm(getval.(sigma))]...)),
-        (@rule define(~x, call(swizzle, ~A, ~sigma...), ~s) => begin
-            x_2 = variable(freshen(ctx.code, x))
-            s_2 = Rewrite(Prewalk(Chain([
-                (@rule access(x, ~m, ~i...) => access(call(swizzle, x, sigma...), m, i...)),
-                (@rule declare(x, ~i) => declare(x, ~i)),
-                (@rule freeze(x) => freeze(x)),
-                (@rule thaw(x) => thaw(x)),
-            ])))(s)
-            define(x, A, s_2)
-        end),
 
         # Common subexpression elimination
         (@rule loop(~idx, ~ext, ~body) => begin
@@ -243,9 +232,58 @@ semantics of the wrapper.
 """
 function wrapperize(root, ctx::AbstractCompiler)
     depth = depth_calculator(root)
-    root = unevaluate_partial(root, ctx)
+    root = unwrap_roots(root, ctx)
     root = Rewrite(Fixpoint(Chain([
         Postwalk(Fixpoint(Chain(get_wrapper_rules(ctx.algebra, depth, ctx))))
     ])))(root)
     evaluate_partial(root, ctx)
+end
+
+function unwrap(ctx, x, var)
+    if x isa FinchNode && isvirtual(x)
+        finch_leaf(unwrap(ctx, x.val, var))
+    else
+        if var != x
+            ctx.bindings[var] = finch_leaf(x)
+        end
+        var
+    end
+end
+
+function unwrap_roots(root, ctx)
+    #display(root)
+    #display(ctx.bindings)
+    tnss = unique(filter(!isnothing, map(PostOrderDFS(root)) do node
+        if @capture(node, access(~A, ~m, ~i...))
+            if getroot(A) === nothing
+                @info "Hi" (A)
+            end
+            getroot(A)
+        elseif @capture(node, declare(~A, ~i))
+            A
+        elseif @capture(node, freeze(~A))
+            A
+        elseif @capture(node, thaw(~A))
+            A
+        end 
+    end))
+    root = Rewrite(Postwalk(@rule access(~A, ~m, ~i...) => access(unwrap(ctx, A, getroot(A)), m, i...)))(root)
+    for tns in tnss
+        @assert isvariable(tns)
+        @assert haskey(ctx.bindings, tns) "root tensor variable $tns is not defined as a global binding"
+        val = ctx.bindings[tns]
+        val_2 = unwrap(ctx, val, tns)
+        if val_2 != tns
+            #@info "Unwrapping" tns val val_2
+            root = Rewrite(Postwalk(@rule tns => val_2))(root)
+            root = Rewrite(Postwalk(Chain([
+                (@rule declare(val_2, ~i) => declare(tns, i)),
+                (@rule freeze(val_2) => freeze(tns)),
+                (@rule thaw(val_2) => thaw(tns)),
+            ])))(root)
+        end
+    end
+    #display(root)
+    #display(ctx.bindings)
+    root
 end

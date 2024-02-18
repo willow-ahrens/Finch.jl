@@ -1,16 +1,16 @@
 begin
-    fmt_lvl = ex.body.body.lhs.tns.bind.lvl
+    fmt_lvl = (ex.bodies[1]).body.body.lhs.tns.bind.lvl
     fmt_lvl_2 = fmt_lvl.lvl
     fmt_lvl_tbl = fmt_lvl_2.tbl
-    fmt_lvl_3 = fmt_lvl_2.lvl
     fmt_lvl_2_val = fmt_lvl_2.lvl.val
-    arr_2_lvl = ex.body.body.rhs.tns.bind.lvl
-    arr_2_lvl_ptr = ex.body.body.rhs.tns.bind.lvl.ptr
-    arr_2_lvl_tbl1 = ex.body.body.rhs.tns.bind.lvl.tbl[1]
-    arr_2_lvl_tbl2 = ex.body.body.rhs.tns.bind.lvl.tbl[2]
+    arr_2_lvl = (ex.bodies[1]).body.body.rhs.tns.bind.lvl
+    arr_2_lvl_ptr = (ex.bodies[1]).body.body.rhs.tns.bind.lvl.ptr
+    arr_2_lvl_tbl1 = (ex.bodies[1]).body.body.rhs.tns.bind.lvl.tbl[1]
+    arr_2_lvl_tbl2 = (ex.bodies[1]).body.body.rhs.tns.bind.lvl.tbl[2]
     arr_2_lvl_val = arr_2_lvl.lvl.val
     arr_2_lvl.shape[1] == fmt_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(arr_2_lvl.shape[1]) != $(fmt_lvl_2.shape))"))
     arr_2_lvl.shape[2] == fmt_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(arr_2_lvl.shape[2]) != $(fmt_lvl.shape))"))
+    result = nothing
     fmt_lvl_qos_stop = Finch.thaw_table!(fmt_lvl_tbl, fmt_lvl.shape)
     arr_2_lvl_q = arr_2_lvl_ptr[1]
     arr_2_lvl_q_stop = arr_2_lvl_ptr[1 + 1]
@@ -125,7 +125,8 @@ begin
             end
         end
     end
+    result = ()
     qos_stop = Finch.freeze_table!(fmt_lvl_tbl, fmt_lvl.shape)
     resize!(fmt_lvl_2_val, qos_stop)
-    (fmt = Tensor((DenseLevel){Int32}((SparseLevel){Int32}(fmt_lvl_3, fmt_lvl_2.shape, fmt_lvl_tbl), fmt_lvl.shape)),)
+    result
 end

@@ -43,7 +43,7 @@ function virtual_call(::typeof(window), ctx, body, delta...)
     VirtualWindowedArray(body, delta)
 end
 
-virtual_uncall(arr::VirtualWindowedArray) = call(window, arr.body, arr.delta...)
+unwrap(ctx, arr::VirtualWindowedArray, var) = call(window, unwrap(ctx, arr.body, var), arr.delta...)
 
 lower(tns::VirtualWindowedArray, ctx::AbstractCompiler, ::DefaultStyle) = :(WindowedArray($(ctx(tns.body)), $(tns.dims)))
 

@@ -51,6 +51,7 @@ let
         for j = _, i = _
             y[i] += A[i, j] * x[j]
         end
+        return y
     end
     eval(def)
 end

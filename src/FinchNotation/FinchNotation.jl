@@ -19,6 +19,7 @@ module FinchNotation
     export block
     export protocol
     export sieve
+    export yieldbind
     export FinchNode
 
     export follow
@@ -29,7 +30,7 @@ module FinchNotation
     export defaultread
     export defaultupdate
 
-    export @f, @finch_program, @finch_program_instance
+    export @finch_program, @finch_program_instance
 
     export isliteral, isvalue, isconstant, isvirtual, isvariable, isindex
 

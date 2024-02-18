@@ -43,20 +43,6 @@ the tensor is update-only.
 """
 thaw!(tns, ctx) = throw(FinchProtocolError("cannot modify $(typeof(tns)) in place (forgot to declare with .= ?)"))
 
-"""
-    getresults(prgm)
-
-Return an iterator over the properly modified tensors in a finch program
-"""
-function getresults(node::FinchNode)
-    if node.kind === block
-        return unique(mapreduce(getresults, vcat, node.bodies, init=[]))
-    elseif node.kind === declare || node.kind === thaw
-        return [node.tns]
-    else
-        return []
-    end
-end
 
 """
     getunbound(stmt)

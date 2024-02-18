@@ -1,15 +1,16 @@
 begin
-    tmp_lvl = (ex.bodies[1]).tns.bind.lvl
+    tmp_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     tmp_lvl_2 = tmp_lvl.lvl
     tmp_lvl_3 = tmp_lvl_2.lvl
     tmp_lvl_2_val = tmp_lvl_2.lvl.val
-    ref_lvl = (ex.bodies[2]).body.body.rhs.tns.bind.lvl
+    ref_lvl = ((ex.bodies[1]).bodies[2]).body.body.rhs.tns.bind.lvl
     ref_lvl_ptr = ref_lvl.ptr
     ref_lvl_idx = ref_lvl.idx
     ref_lvl_2 = ref_lvl.lvl
     ref_lvl_ptr_2 = ref_lvl_2.ptr
     ref_lvl_idx_2 = ref_lvl_2.idx
     ref_lvl_2_val = ref_lvl_2.lvl.val
+    result = nothing
     pos_stop = fld(ref_lvl_2.shape, 1) * ref_lvl.shape
     Finch.resize_if_smaller!(tmp_lvl_2_val, pos_stop)
     Finch.fill_range!(tmp_lvl_2_val, false, 1, pos_stop)
@@ -101,5 +102,6 @@ begin
         end
     end
     resize!(tmp_lvl_2_val, fld(ref_lvl_2.shape, 1) * ref_lvl.shape)
-    (tmp = Tensor((DenseLevel){Int64}((SparseTriangleLevel){1, Int64}(tmp_lvl_3, ref_lvl_2.shape), ref_lvl.shape)),)
+    result = (tmp = Tensor((DenseLevel){Int64}((SparseTriangleLevel){1, Int64}(tmp_lvl_3, ref_lvl_2.shape), ref_lvl.shape)),)
+    result
 end

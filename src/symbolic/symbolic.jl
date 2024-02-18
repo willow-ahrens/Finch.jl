@@ -26,10 +26,10 @@ SparseList (0.0) [1:5]
 ├─ [2]: 1.1
 └─ [4]: 4.4
 
-julia> x = Scalar(0.0); @finch for i=_; x[] <<choose(0.0)>>= a[i] end;
+julia> x = Scalar(0.0); @finch for i=_; x[] <<choose(1.1)>>= a[i] end;
 
 julia> x[]
-1.1
+0.0
 ```
 """
 choose(d) = Chooser{d}()

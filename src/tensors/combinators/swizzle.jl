@@ -15,7 +15,7 @@ Base.size(arr::SwizzleArray{dims}) where {dims} = map(n->size(arr.body)[n], dims
 
 Base.show(io::IO, ex::SwizzleArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::SwizzleArray{dims}) where {dims}
-	print(io, "SwizzleArray($(ex.body), $dims)")
+	print(io, "SwizzleArray($(ex.body), $(dims)")
 end
 
 #Base.getindex(arr::SwizzleArray, i...) = ...
@@ -48,9 +48,9 @@ function virtual_call(::typeof(swizzle), ctx, body, dims...)
     @assert All(isliteral)(dims)
     VirtualSwizzleArray(body, map(dim -> dim.val, collect(dims)))
 end
-virtual_uncall(arr::VirtualSwizzleArray) = call(swizzle, arr.body, arr.dims...)
+unwrap(ctx, arr::VirtualSwizzleArray, var) = call(swizzle, unwrap(ctx, arr.body, var), arr.dims...)
 
-lower(tns::VirtualSwizzleArray, ctx::AbstractCompiler, ::DefaultStyle) = :(SwizzleArray($(ctx(tns.body)), $(tns.dims)))
+lower(tns::VirtualSwizzleArray, ctx::AbstractCompiler, ::DefaultStyle) = :(SwizzleArray($(ctx(tns.body)), $((tns.dims...,))))
 
 function virtual_default(arr::VirtualSwizzleArray, ctx::AbstractCompiler)
     virtual_default(arr.body, ctx)

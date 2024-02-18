@@ -1,13 +1,14 @@
 begin
-    C_lvl = (ex.bodies[1]).tns.bind.lvl
+    C_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     C_lvl_ptr = C_lvl.ptr
     C_lvl_idx = C_lvl.idx
     C_lvl_2 = C_lvl.lvl
     C_lvl_val = C_lvl.lvl.val
-    A_lvl = (ex.bodies[2]).body.rhs.tns.bind.lvl
+    A_lvl = ((ex.bodies[1]).bodies[2]).body.rhs.tns.bind.lvl
     A_lvl_ptr = A_lvl.ptr
     A_lvl_idx = A_lvl.idx
     A_lvl_val = A_lvl.lvl.val
+    result = nothing
     C_lvl_qos_stop = 0
     Finch.resize_if_smaller!(C_lvl_ptr, 1 + 1)
     Finch.fill_range!(C_lvl_ptr, 0, 1 + 1, 1 + 1)
@@ -67,5 +68,6 @@ begin
     qos_stop = C_lvl_ptr[1 + 1] - 1
     resize!(C_lvl_idx, qos_stop)
     resize!(C_lvl_val, qos_stop)
-    (C = Tensor((SparseListLevel){Int64}(C_lvl_2, 3, C_lvl_ptr, C_lvl_idx)),)
+    result = (C = Tensor((SparseListLevel){Int64}(C_lvl_2, 3, C_lvl_ptr, C_lvl_idx)),)
+    result
 end

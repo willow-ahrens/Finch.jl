@@ -212,7 +212,7 @@ striplines(ex) = ex
 
 Run dead code elimination and constant propagation. `ex` is the target Julia expression.
 """
-dataflow(ex) = ex |> striplines |> desugar |> propagate_copies |> mark_dead |> prune_dead |> resugar
+dataflow(ex) = (ex |> striplines |> desugar |> propagate_copies |> mark_dead |> prune_dead |> resugar)
 
 isassign(x) = x in Set([:+=, :*=, :&=, :|=, :(=)])
 incs = Dict(:+= => :+, :-= => :-, :*= => :*, :&= => :&, :|= => :|)
@@ -320,7 +320,7 @@ function (ctx::PropagateCopies)(ex)
         return Expr(:macrocall, f, ln, map(ctx, args)...)
     elseif @capture ex :block(~args...)
         return Expr(:block, map(ctx, args)...)
-    elseif @capture(ex, (~f)(~args...)) && f in (:ref, :call, :., :curly, :string, :kw, :parameters, :tuple)
+    elseif @capture(ex, (~f)(~args...)) && f in (:ref, :call, :., :curly, :string, :kw, :parameters, :tuple, :return)
         return Expr(f, map(ctx, args)...)
     elseif (@capture ex (~f)(~cond, ~body)) && f in [:&&, :||]
         cond = ctx(cond)
@@ -404,7 +404,7 @@ function (ctx::MarkDead)(ex, res)
             push!(ctx.refs, ex)
         end
         ex
-    elseif !isexpr(ex) || ex.head == :break
+    elseif !isexpr(ex) || ex.head === :break
         ex
     elseif @capture ex :macrocall(~f, ~ln, ~args...)
         return Expr(:macrocall, f, ln, reverse(map((arg)->ctx(arg, res), reverse(args)))...)
@@ -415,8 +415,9 @@ function (ctx::MarkDead)(ex, res)
             res = false
         end
         return Expr(:block, reverse(args_2)...)
-    elseif @capture(ex, (~head)(~args...)) && head in (:ref, :call, :., :curly, :string, :kw, :parameters, :tuple)
-        res |= head == :call && !ispure(args[1])
+    elseif @capture(ex, (~head)(~args...)) && head in (:ref, :call, :., :curly, :string, :kw, :parameters, :tuple, :return)
+        res |= head === :call && !ispure(args[1])
+        res |= head === :return
         return Expr(head, reverse(map((arg)->ctx(arg, res), reverse(args)))...)
     elseif (@capture ex (~f)(~cond, ~body)) && f in [:&&, :||]
         ctx_2 = branch(ctx)

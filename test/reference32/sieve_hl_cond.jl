@@ -1,9 +1,10 @@
 begin
-    B = (ex.bodies[1]).tns.bind
-    A_lvl = (ex.bodies[2]).body.body.rhs.tns.bind.lvl
+    B = ((ex.bodies[1]).bodies[1]).tns.bind
+    A_lvl = ((ex.bodies[1]).bodies[2]).body.body.rhs.tns.bind.lvl
     A_lvl_ptr = A_lvl.ptr
     A_lvl_idx = A_lvl.idx
     A_lvl_val = A_lvl.lvl.val
+    result = nothing
     B_val = 0
     A_lvl_q = A_lvl_ptr[1]
     A_lvl_q_stop = A_lvl_ptr[1 + 1]
@@ -35,5 +36,7 @@ begin
             end
         end
     end
-    (B = (Scalar){0.0, Float64}(B_val),)
+    B.val = B_val
+    result = (B = B,)
+    result
 end
