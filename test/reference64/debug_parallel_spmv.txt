@@ -18,6 +18,7 @@ quote
     A_lvl_idx = A_lvl_2.idx
     A_lvl_2_val = A_lvl_2.lvl.val
     A_lvl_2.shape == x_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl_2.shape) != $(x_lvl.shape))"))
+    result = nothing
     Finch.resize_if_smaller!(y_lvl_val, A_lvl.shape)
     Finch.fill_range!(y_lvl_val, 0.0, 1, A_lvl.shape)
     val = y_lvl_val
@@ -70,7 +71,7 @@ quote
             end
         end
     resize!(val, A_lvl.shape)
-    result = something(nothing, (y = Tensor((DenseLevel){Int64}(y_lvl_2, A_lvl.shape)),))
+    result = (y = Tensor((DenseLevel){Int64}(y_lvl_2, A_lvl.shape)),)
     result
 end
 julia> @finch begin

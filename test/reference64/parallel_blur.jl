@@ -17,6 +17,7 @@ begin
     input_lvl_2.shape == input_lvl_2.shape + -1 || throw(DimensionMismatch("mismatched dimension limits ($(input_lvl_2.shape) != $(input_lvl_2.shape + -1))"))
     1 == 1 || throw(DimensionMismatch("mismatched dimension limits ($(1) != $(1))"))
     y_stop = input_lvl.shape
+    result = nothing
     pos_stop = input_lvl_2.shape * input_lvl.shape
     Finch.resize_if_smaller!(output_lvl_2_val, pos_stop)
     Finch.fill_range!(output_lvl_2_val, 0.0, 1, pos_stop)
@@ -58,6 +59,6 @@ begin
             tmp_lvl_val = val_3
         end
     resize!(val_2, input_lvl_2.shape * input_lvl.shape)
-    result = something(nothing, (output = Tensor((DenseLevel){Int64}((DenseLevel){Int64}(output_lvl_3, input_lvl_2.shape), input_lvl.shape)),))
+    result = (output = Tensor((DenseLevel){Int64}((DenseLevel){Int64}(output_lvl_3, input_lvl_2.shape), input_lvl.shape)),)
     result
 end
