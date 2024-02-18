@@ -61,16 +61,3 @@ function virtual_call(::typeof(default), ctx, a)
     end
 end
 
-
-virtual_uncall(x) = nothing
-
-function unevaluate_partial(root, ctx)
-    tnss = unique(filter(!isnothing, map(node->if @capture(node, access(~A, ~m, ~i...)) getroot(A) end, PostOrderDFS(root))))
-    for tns in tnss
-        if haskey(ctx.bindings, tns)
-            root = define(tns, ctx.bindings[tns], root)
-            delete!(ctx.bindings, tns)
-        end
-    end
-    Rewrite(Fixpoint(Postwalk(@rule ~x::isvirtual => virtual_uncall(x.val))))(root)
-end

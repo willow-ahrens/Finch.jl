@@ -195,6 +195,7 @@ begin
         end
     end
     tmp_lvl_ptr[1 + 1] += (tmp_lvl_qos - 0) - 1
+    result = something(nothing, (tmp = Tensor((SparseListLevel){Int64}((SparseByteMapLevel){Int64}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr_2, tmp_lvl_tbl, tmp_lvl_srt), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),))
     resize!(tmp_lvl_ptr, 1 + 1)
     for p = 1:1
         tmp_lvl_ptr[p + 1] += tmp_lvl_ptr[p]
@@ -216,6 +217,5 @@ begin
     end
     tmp_lvl_ptr_2[tmp_lvl_2_p_prev + 1] = tmp_lvl_2_qos_fill + 1
     resize!(tmp_lvl_2_val, ref_lvl_2.shape * qos_stop)
-    result = something(nothing, (tmp = Tensor((SparseListLevel){Int64}((SparseByteMapLevel){Int64}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr_2, tmp_lvl_tbl, tmp_lvl_srt), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),))
     result
 end

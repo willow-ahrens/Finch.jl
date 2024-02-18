@@ -87,6 +87,7 @@ begin
         end
     end
     x_lvl_ptr[1 + 1] += (x_lvl_qos - 0) - 1
+    result = something(nothing, (x = Tensor((SparseListLevel){Int64}(x_lvl_2, A_lvl.shape, x_lvl_ptr, x_lvl_idx)),))
     resize!(x_lvl_ptr, 1 + 1)
     for p = 1:1
         x_lvl_ptr[p + 1] += x_lvl_ptr[p]
@@ -94,6 +95,5 @@ begin
     qos_stop = x_lvl_ptr[1 + 1] - 1
     resize!(x_lvl_idx, qos_stop)
     resize!(x_lvl_val, qos_stop)
-    result = something(nothing, (x = Tensor((SparseListLevel){Int64}(x_lvl_2, A_lvl.shape, x_lvl_ptr, x_lvl_idx)),))
     result
 end

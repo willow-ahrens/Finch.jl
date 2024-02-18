@@ -64,6 +64,7 @@ begin
         end
     end
     tmp_lvl_ptr[1 + 1] += (tmp_lvl_qos - 0) - 1
+    result = something(nothing, (tmp = Tensor((SparseRLELevel){Int64}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_left, tmp_lvl_right)),))
     resize!(tmp_lvl_ptr, 1 + 1)
     for p = 1:1
         tmp_lvl_ptr[p + 1] += tmp_lvl_ptr[p]
@@ -72,6 +73,5 @@ begin
     resize!(tmp_lvl_left, qos_stop)
     resize!(tmp_lvl_right, qos_stop)
     resize!(tmp_lvl_val, qos_stop)
-    result = something(nothing, (tmp = Tensor((SparseRLELevel){Int64}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_left, tmp_lvl_right)),))
     result
 end

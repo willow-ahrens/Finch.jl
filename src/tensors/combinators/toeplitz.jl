@@ -49,7 +49,7 @@ function virtual_call(::typeof(toeplitz), ctx, body, dim)
     VirtualToeplitzArray(body, dim.val)
 end
 
-virtual_uncall(arr::VirtualToeplitzArray) = call(toeplitz, arr.body, arr.dim)
+unwrap(ctx, arr::VirtualToeplitzArray, var) = call(toeplitz, unwrap(ctx, arr.body, var), arr.dim)
 
 lower(tns::VirtualToeplitzArray, ctx::AbstractCompiler, ::DefaultStyle) = :(ToeplitzArray($(ctx(tns.body)), $(tns.dim)))
 

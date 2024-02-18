@@ -374,6 +374,7 @@ begin
         end
     end
     C_lvl_ptr[1 + 1] += (C_lvl_qos - 0) - 1
+    result = something(nothing, (C = Tensor((SparseListLevel){Int64}(C_lvl_2, C_lvl.shape, C_lvl_ptr, C_lvl_idx)),))
     resize!(C_lvl_ptr, 1 + 1)
     for p = 1:1
         C_lvl_ptr[p + 1] += C_lvl_ptr[p]
@@ -381,6 +382,5 @@ begin
     qos_stop = C_lvl_ptr[1 + 1] - 1
     resize!(C_lvl_idx, qos_stop)
     resize!(C_lvl_val, qos_stop)
-    result = something(nothing, (C = Tensor((SparseListLevel){Int64}(C_lvl_2, C_lvl.shape, C_lvl_ptr, C_lvl_idx)),))
     result
 end

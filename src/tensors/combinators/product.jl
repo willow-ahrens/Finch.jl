@@ -46,7 +46,7 @@ function virtual_call(::typeof(products), ctx, body, dim)
     VirtualProductArray(body, dim.val)
 end
 
-virtual_uncall(arr::VirtualProductArray) = call(products, arr.body, arr.dim)
+unwrap(ctx, arr::VirtualProductArray, var) = call(products, unwrap(ctx, arr.body, var), arr.dim)
 
 lower(tns::VirtualProductArray, ctx::AbstractCompiler, ::DefaultStyle) = :(ProductArray($(ctx(tns.body)), $(tns.dim)))
 

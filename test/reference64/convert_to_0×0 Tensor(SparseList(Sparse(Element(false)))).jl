@@ -154,6 +154,7 @@ begin
         end
     end
     tmp_lvl_ptr[1 + 1] += (tmp_lvl_qos - 0) - 1
+    result = something(nothing, (tmp = Tensor((SparseListLevel){Int64}((SparseLevel){Int64}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_tbl), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),))
     resize!(tmp_lvl_ptr, 1 + 1)
     for p = 1:1
         tmp_lvl_ptr[p + 1] += tmp_lvl_ptr[p]
@@ -162,6 +163,5 @@ begin
     resize!(tmp_lvl_idx, qos_stop_3)
     qos_stop_4 = Finch.freeze_table!(tmp_lvl_tbl, qos_stop_3)
     resize!(tmp_lvl_2_val, qos_stop_4)
-    result = something(nothing, (tmp = Tensor((SparseListLevel){Int64}((SparseLevel){Int64}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_tbl), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),))
     result
 end

@@ -56,9 +56,6 @@ function virtual_call(::typeof(realextent), ctx, start, stop)
     end
 end
 
-virtual_uncall(ext::Extent) = call(extent, ext.start, ext.stop)
-virtual_uncall(ext::ContinuousExtent) = call(realextent, ext.start, ext.stop)
-
 FinchNotation.finch_leaf(x::Extent) = virtual(x)
 FinchNotation.finch_leaf(x::ContinuousExtent) = virtual(x)
 
@@ -146,8 +143,6 @@ function virtual_call(::typeof(parallel), ctx, ext, device)
         ParallelDimension(ext.val, device)
     end
 end
-
-virtual_uncall(ext::ParallelDimension) = call(parallel, ext.ext, ext.device)
 
 FinchNotation.finch_leaf(x::ParallelDimension) = virtual(x)
 

@@ -196,9 +196,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
     elseif root.kind === yieldbind
         contain(ctx) do ctx_2
             :($(ctx.result) = something($(ctx.result), (; $(map(root.args) do tns
-                @assert tns.kind === variable
-                name = tns.name
-                tns = resolve(tns, ctx)
+                name = getroot(tns).name
                 Expr(:kw, name, ctx_2(tns))
             end...), )))
         end

@@ -38,7 +38,7 @@ scale(body, scale...) = ScaleArray(body, scale)
 function virtual_call(::typeof(scale), ctx, body, scale...)
     VirtualScaleArray(body, scale)
 end
-virtual_uncall(arr::VirtualScaleArray) = call(scale, arr.body, arr.scale...)
+unwrap(arr::VirtualScaleArray) = call(scale, unwrap(ctx, arr.body, var), arr.scale...)
 
 lower(tns::VirtualScaleArray, ctx::AbstractCompiler, ::DefaultStyle) = :(ScaleArray($(ctx(tns.body)), $(ctx(tns.scale))))
 

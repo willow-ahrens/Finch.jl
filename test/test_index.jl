@@ -72,8 +72,8 @@
     end
     @test reference_isequal(C, C_ref)
 
-    @test check_output("sparse_window.jl", @finch_code (C .= 0; for i=_; C[i] = A[(2:4)[i]] end))
-    @finch (C .= 0; for i=_; C[i] = A[(2:4)[i]] end)
+    @test check_output("sparse_window.jl", @finch_code (C .= 0; for i=_; C[i] = A[(2:4)(i)] end))
+    @finch (C .= 0; for i=_; C[i] = A[(2:4)(i)] end)
     @test reference_isequal(C, [A(2), A(3), A(4)])
 
     I = 2:4
@@ -96,10 +96,10 @@
 
     y = Array{Any}(undef, 4)
 
+    z = Finch.permissive(x, true)
+
     @finch begin
-        let z = Finch.permissive(x, true)
-            for i = _; y[i] := z[i] end
-        end
+        for i = _; y[i] := z[i] end
     end
 
     @test isequal(y, [0.0, 0.0, missing, missing])
