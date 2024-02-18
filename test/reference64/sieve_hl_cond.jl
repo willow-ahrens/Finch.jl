@@ -35,7 +35,7 @@ begin
             end
         end
     end
-    result = something(nothing, (B = B,))
     B.val = B_val
+    result = something(nothing, (B = B,))
     result
 end

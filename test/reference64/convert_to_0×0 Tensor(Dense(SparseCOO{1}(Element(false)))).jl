@@ -159,7 +159,6 @@ begin
             end
         end
     end
-    result = something(nothing, (tmp = Tensor((DenseLevel){Int64}((SparseCOOLevel){1, Tuple{Int64}}(tmp_lvl_3, (ref_lvl_2.shape,), tmp_lvl_ptr, (tmp_lvl_tbl1,)), ref_lvl.shape)),))
     resize!(tmp_lvl_ptr, ref_lvl.shape + 1)
     for p = 2:ref_lvl.shape + 1
         tmp_lvl_ptr[p] += tmp_lvl_ptr[p - 1]
@@ -167,5 +166,6 @@ begin
     qos_stop = tmp_lvl_ptr[ref_lvl.shape + 1] - 1
     resize!(tmp_lvl_tbl1, qos_stop)
     resize!(tmp_lvl_2_val, qos_stop)
+    result = something(nothing, (tmp = Tensor((DenseLevel){Int64}((SparseCOOLevel){1, Tuple{Int64}}(tmp_lvl_3, (ref_lvl_2.shape,), tmp_lvl_ptr, (tmp_lvl_tbl1,)), ref_lvl.shape)),))
     result
 end

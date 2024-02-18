@@ -97,7 +97,7 @@ begin
             end
         end
     end
-    result = something(nothing, (tmp = Tensor((SparseTriangleLevel){2, Int64}(tmp_lvl_2, ref_lvl.shape)),))
     resize!(tmp_lvl_val, fld(ref_lvl.shape * (1 + ref_lvl.shape), 2))
+    result = something(nothing, (tmp = Tensor((SparseTriangleLevel){2, Int64}(tmp_lvl_2, ref_lvl.shape)),))
     result
 end

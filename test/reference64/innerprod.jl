@@ -81,7 +81,6 @@ begin
         B_lvl_ptr[B_lvl_q + 1] += (B_lvl_2_qos - B_lvl_2_qos_fill) - 1
         B_lvl_2_qos_fill = B_lvl_2_qos - 1
     end
-    result = something(nothing, (B = Tensor((DenseLevel){Int64}((SparseListLevel){Int64}(B_lvl_3, A_lvl.shape, B_lvl_ptr, B_lvl_idx), A_lvl.shape)),))
     resize!(B_lvl_ptr, A_lvl.shape + 1)
     for p = 1:A_lvl.shape
         B_lvl_ptr[p + 1] += B_lvl_ptr[p]
@@ -89,5 +88,6 @@ begin
     qos_stop = B_lvl_ptr[A_lvl.shape + 1] - 1
     resize!(B_lvl_idx, qos_stop)
     resize!(B_lvl_2_val, qos_stop)
+    result = something(nothing, (B = Tensor((DenseLevel){Int64}((SparseListLevel){Int64}(B_lvl_3, A_lvl.shape, B_lvl_ptr, B_lvl_idx), A_lvl.shape)),))
     result
 end
