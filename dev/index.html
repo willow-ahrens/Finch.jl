@@ -17,13 +17,14 @@ s = Scalar(0.0)
     end
 end</code></pre><p>You can call <a href="guides/calling_finch/#Finch.@finch_code"><code>@finch_code</code></a> to see the generated code (since <code>A</code> is dense, the code is dense):</p><pre><code class="language-julia-repl hljs">julia&gt; @finch_code for i=_, j=_ ; s[] += A[i, j] end
 quote
-    s = ex.body.body.lhs.tns.bind
+    s = (ex.bodies[1]).body.body.lhs.tns.bind
     s_val = s.val
-    A = ex.body.body.rhs.tns.bind
+    A = (ex.bodies[1]).body.body.rhs.tns.bind
     sugar_1 = size(A)
     A_mode1_stop = sugar_1[1]
     A_mode2_stop = sugar_1[2]
     @warn &quot;Performance Warning: non-concordant traversal of A[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)&quot;
+    result = nothing
     for i_3 = 1:A_mode1_stop
         for j_3 = 1:A_mode2_stop
             sugar_3 = size(A)
@@ -33,5 +34,7 @@ quote
             s_val = val + s_val
         end
     end
-    (s = (Scalar){0, Int64}(s_val),)
-end</code></pre><p>We&#39;re working on adding more documentation, for now take a look at the <a href="https://github.com/willow-ahrens/Finch.jl/blob/main/docs/examples">examples</a>!</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="guides/calling_finch/">Calling Finch »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.1 on <span class="colophon-date" title="Friday 16 February 2024 00:37">Friday 16 February 2024</span>. Using Julia version 1.10.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+    result = ()
+    s.val = s_val
+    result
+end</code></pre><p>We&#39;re working on adding more documentation, for now take a look at the <a href="https://github.com/willow-ahrens/Finch.jl/blob/main/docs/examples">examples</a>!</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="guides/calling_finch/">Calling Finch »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.1 on <span class="colophon-date" title="Sunday 18 February 2024 16:19">Sunday 18 February 2024</span>. Using Julia version 1.10.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
