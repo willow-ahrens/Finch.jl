@@ -93,6 +93,7 @@ function lower_global(prgm, ctx)
     prgm = evaluate_partial(prgm, ctx)
     code = contain(ctx) do ctx_2
         quote
+            $(ctx.needs_return) = true
             $(ctx.result) = nothing
             $(begin
                 prgm = wrapperize(prgm, ctx_2)

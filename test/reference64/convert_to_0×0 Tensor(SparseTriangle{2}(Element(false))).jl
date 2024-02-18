@@ -9,6 +9,7 @@ begin
     ref_lvl_ptr_2 = ref_lvl_2.ptr
     ref_lvl_idx_2 = ref_lvl_2.idx
     ref_lvl_2_val = ref_lvl_2.lvl.val
+    result = nothing
     pos_stop = fld(ref_lvl.shape * (1 + ref_lvl.shape), 2)
     Finch.resize_if_smaller!(tmp_lvl_val, pos_stop)
     Finch.fill_range!(tmp_lvl_val, false, 1, pos_stop)
@@ -98,6 +99,6 @@ begin
         end
     end
     resize!(tmp_lvl_val, fld(ref_lvl.shape * (1 + ref_lvl.shape), 2))
-    result = something(nothing, (tmp = Tensor((SparseTriangleLevel){2, Int64}(tmp_lvl_2, ref_lvl.shape)),))
+    result = (tmp = Tensor((SparseTriangleLevel){2, Int64}(tmp_lvl_2, ref_lvl.shape)),)
     result
 end

@@ -44,6 +44,7 @@ quote
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
     A_lvl_2_val = A_lvl_2.lvl.val
+    result = nothing
     for j_3 = 1:A_lvl.shape
         A_lvl_q = (1 - 1) * A_lvl.shape + j_3
         A_lvl_2_q = A_lvl_ptr[A_lvl_q]
@@ -76,7 +77,7 @@ quote
             end
         end
     end
-    result = something(nothing, ())
+    result = ()
     s.val = s_val
     result
 end
@@ -107,6 +108,7 @@ quote
     A_lvl_idx = A_lvl_2.idx
     A_lvl_2_val = A_lvl_2.lvl.val
     @warn "Performance Warning: non-concordant traversal of A[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)"
+    result = nothing
     for i_3 = 1:A_lvl_2.shape
         for j_3 = 1:A_lvl.shape
             A_lvl_q = (1 - 1) * A_lvl.shape + j_3
@@ -141,7 +143,7 @@ quote
             end
         end
     end
-    result = something(nothing, ())
+    result = ()
     s.val = s_val
     result
 end
@@ -247,6 +249,8 @@ quote
     B_mode2_stop = sugar_1[2]
     B_mode1_stop == A_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(B_mode1_stop) != $(A_lvl_2.shape))"))
     B_mode2_stop == A_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(B_mode2_stop) != $(A_lvl.shape))"))
+    needs_return = true
+    result = nothing
     C_val = 0
     for j_4 = 1:B_mode2_stop
         sugar_2 = size(B)
@@ -321,8 +325,11 @@ quote
         end
     end
     C.val = C_val
-    result = something(nothing, (C = C,))
-    result = something(result, (C = C,))
+    result = (C = C,)
+    needs_return = false
+    if needs_return
+        result = (C = C,)
+    end
     result
 end
 

@@ -15,6 +15,7 @@ begin
     y_lvl_idx = y_lvl.idx
     y_lvl_val = y_lvl.lvl.val
     y_lvl.shape == A_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(y_lvl.shape) != $(A_lvl_2.shape))"))
+    result = nothing
     x_lvl_qos_stop = 0
     Finch.resize_if_smaller!(x_lvl_ptr, 1 + 1)
     Finch.fill_range!(x_lvl_ptr, 0, 1 + 1, 1 + 1)
@@ -94,6 +95,6 @@ begin
     qos_stop = x_lvl_ptr[1 + 1] - 1
     resize!(x_lvl_idx, qos_stop)
     resize!(x_lvl_val, qos_stop)
-    result = something(nothing, (x = Tensor((SparseListLevel){Int64}(x_lvl_2, A_lvl.shape, x_lvl_ptr, x_lvl_idx)),))
+    result = (x = Tensor((SparseListLevel){Int64}(x_lvl_2, A_lvl.shape, x_lvl_ptr, x_lvl_idx)),)
     result
 end

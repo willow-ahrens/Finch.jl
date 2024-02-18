@@ -12,6 +12,7 @@ begin
     ref_lvl_ptr_2 = ref_lvl_2.ptr
     ref_lvl_idx_2 = ref_lvl_2.idx
     ref_lvl_2_val = ref_lvl_2.lvl.val
+    result = nothing
     tmp_lvl_qos_stop = 0
     Finch.resize_if_smaller!(tmp_lvl_ptr, 1 + 1)
     Finch.fill_range!(tmp_lvl_ptr, 0, 1 + 1, 1 + 1)
@@ -140,6 +141,6 @@ begin
     qos_stop = tmp_lvl_ptr[1 + 1] - 1
     resize!(tmp_lvl_idx, qos_stop)
     resize!(tmp_lvl_2_val, fld(ref_lvl_2.shape, 1) * qos_stop)
-    result = something(nothing, (tmp = Tensor((SparseListLevel){Int64}((SparseTriangleLevel){1, Int64}(tmp_lvl_3, ref_lvl_2.shape), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),))
+    result = (tmp = Tensor((SparseListLevel){Int64}((SparseTriangleLevel){1, Int64}(tmp_lvl_3, ref_lvl_2.shape), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),)
     result
 end

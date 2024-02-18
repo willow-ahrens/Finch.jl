@@ -12,6 +12,7 @@ begin
     arr_2_lvl_val = arr_2_lvl.lvl.val
     arr_2_lvl.shape[1] == fmt_lvl_2.shape[1] || throw(DimensionMismatch("mismatched dimension limits ($(arr_2_lvl.shape[1]) != $(fmt_lvl_2.shape[1]))"))
     arr_2_lvl.shape[2] == fmt_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(arr_2_lvl.shape[2]) != $(fmt_lvl.shape))"))
+    result = nothing
     fmt_lvl_2_qos_stop = fmt_lvl_ptr[fmt_lvl.shape + 1] - 1
     fmt_lvl_2_qos_fill = fmt_lvl_2_qos_stop
     for fmt_lvl_2_p = fmt_lvl.shape + 1:-1:2
@@ -153,7 +154,7 @@ begin
             end
         end
     end
-    result = something(nothing, ())
+    result = ()
     resize!(fmt_lvl_srt, length(fmt_lvl_tbl))
     copyto!(fmt_lvl_srt, pairs(fmt_lvl_tbl))
     sort!(fmt_lvl_srt, by = hashkeycmp)
