@@ -12,6 +12,7 @@ begin
     ref_lvl_ptr_2 = ref_lvl_2.ptr
     ref_lvl_idx_2 = ref_lvl_2.idx
     ref_lvl_2_val = ref_lvl_2.lvl.val
+    result = nothing
     tmp_lvl_qos_fill = 0
     tmp_lvl_qos_stop = 0
     empty!(tmp_lvl_tbl)
@@ -158,6 +159,6 @@ begin
     end
     tmp_lvl_qos_stop = tmp_lvl_ptr[1 + 1] - 1
     resize!(tmp_lvl_val, tmp_lvl_qos_stop)
-    result = something(nothing, (tmp = Tensor((SparseHashLevel){2, Tuple{Int32, Int32}}(tmp_lvl_2, (ref_lvl_2.shape, ref_lvl.shape), tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt)),))
+    result = (tmp = Tensor((SparseHashLevel){2, Tuple{Int32, Int32}}(tmp_lvl_2, (ref_lvl_2.shape, ref_lvl.shape), tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt)),)
     result
 end

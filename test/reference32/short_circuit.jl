@@ -10,6 +10,7 @@ begin
     y_lvl_idx = y_lvl.idx
     y_lvl_val = y_lvl.lvl.val
     y_lvl.shape == x_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(y_lvl.shape) != $(x_lvl.shape))"))
+    result = nothing
     y_lvl_q = y_lvl_ptr[1]
     y_lvl_q_stop = y_lvl_ptr[1 + 1]
     if y_lvl_q < y_lvl_q_stop
@@ -54,7 +55,7 @@ begin
             i = phase_stop_2 + 1
         end
     end
-    result = something(nothing, ())
+    result = ()
     s.val = s_val
     result
 end

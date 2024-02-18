@@ -13,6 +13,7 @@ begin
     ref_lvl_ptr_2 = ref_lvl_2.ptr
     ref_lvl_idx_2 = ref_lvl_2.idx
     ref_lvl_2_val = ref_lvl_2.lvl.val
+    result = nothing
     tmp_lvl_qos_stop_2 = 0
     Finch.declare_table!(tmp_lvl_tbl, 0)
     tmp_lvl_qos_stop = 0
@@ -162,6 +163,6 @@ begin
     resize!(tmp_lvl_idx, qos_stop_3)
     qos_stop_4 = Finch.freeze_table!(tmp_lvl_tbl, qos_stop_3)
     resize!(tmp_lvl_2_val, qos_stop_4)
-    result = something(nothing, (tmp = Tensor((SparseListLevel){Int32}((SparseLevel){Int32}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_tbl), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),))
+    result = (tmp = Tensor((SparseListLevel){Int32}((SparseLevel){Int32}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_tbl), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),)
     result
 end

@@ -4,6 +4,7 @@ begin
     A_lvl_ptr = A_lvl.ptr
     A_lvl_idx = A_lvl.idx
     A_lvl_val = A_lvl.lvl.val
+    result = nothing
     B_val = 0
     A_lvl_q = A_lvl_ptr[1]
     A_lvl_q_stop = A_lvl_ptr[1 + 1]
@@ -36,6 +37,6 @@ begin
         end
     end
     B.val = B_val
-    result = something(nothing, (B = B,))
+    result = (B = B,)
     result
 end

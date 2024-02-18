@@ -42,6 +42,7 @@ quote
     x_lvl = (((ex.bodies[1]).bodies[2]).body.body.rhs.args[2]).tns.bind.lvl
     x_lvl_val = x_lvl.lvl.val
     x_lvl.shape == A_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(x_lvl.shape) != $(A_lvl.shape))"))
+    result = nothing
     Finch.resize_if_smaller!(y_lvl_val, A_lvl_2.shape)
     Finch.fill_range!(y_lvl_val, 0.0, 1, A_lvl_2.shape)
     for j_4 = 1:x_lvl.shape
@@ -81,7 +82,7 @@ quote
         end
     end
     resize!(y_lvl_val, A_lvl_2.shape)
-    result = something(nothing, (y = Tensor((DenseLevel){Int32}(y_lvl_2, A_lvl_2.shape)),))
+    result = (y = Tensor((DenseLevel){Int32}(y_lvl_2, A_lvl_2.shape)),)
     result
 end
 julia> @finch begin

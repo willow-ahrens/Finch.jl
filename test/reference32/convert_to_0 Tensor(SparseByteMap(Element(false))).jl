@@ -10,6 +10,7 @@ begin
     ref_lvl_ptr = ref_lvl.ptr
     ref_lvl_idx = ref_lvl.idx
     ref_lvl_val = ref_lvl.lvl.val
+    result = nothing
     for tmp_lvl_r = 1:tmp_lvl_qos_fill
         tmp_lvl_p = first(tmp_lvl_srt[tmp_lvl_r])
         tmp_lvl_ptr[tmp_lvl_p] = 0
@@ -94,6 +95,6 @@ begin
     end
     tmp_lvl_ptr[tmp_lvl_p_prev + 1] = tmp_lvl_qos_fill + 1
     resize!(tmp_lvl_val, ref_lvl.shape)
-    result = something(nothing, (tmp = Tensor((SparseByteMapLevel){Int32}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt)),))
+    result = (tmp = Tensor((SparseByteMapLevel){Int32}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt)),)
     result
 end
