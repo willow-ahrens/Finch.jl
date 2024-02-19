@@ -283,9 +283,9 @@
 
     let
         io = IOBuffer()
-        A = fsprand(42, 42, 0.1)
-        B = fsprand(42, 42, 0.1)
-        CR = Tensor(Dense(Dense(Element(0.0))), zeros(42, 42))
+        A = fsprand(Int64, 42, 42, 0.9)
+        B = fsprand(Int64, 42, 42, 0.9)
+        CR = Tensor(Dense(Dense(Element(0))), zeros(42, 42))
         @repl io @finch begin
             CR .= 0
             for i = _
@@ -297,12 +297,12 @@
             end
         end
 
-        AFormat = SparseList(Dense(Element(0.0)))
+        AFormat = SparseList(Dense(Element(0)))
         At = Tensor(AFormat, A)
-        BFormat = Dense(SparseList(Element(0.0)))
+        BFormat = Dense(SparseList(Element(0)))
         Bt = Tensor(BFormat, B)
-        Ct = Tensor(Dense(Dense(Atomic(Element(0.0)))), zeros(42, 42))
-        CBad = Tensor(Dense(Dense((Element(0.0)))), zeros(42, 42))
+        Ct = Tensor(Dense(Dense(Atomic(Element(0)))), zeros(42, 42))
+        CBad = Tensor(Dense(Dense((Element(0)))), zeros(42, 42))
 
 #=         @test_throws Finch.FinchConcurrencyError begin 
             @finch_code begin
