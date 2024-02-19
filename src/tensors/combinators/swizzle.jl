@@ -41,6 +41,14 @@ function virtualize(ex, ::Type{SwizzleArray{dims, Body}}, ctx) where {dims, Body
     VirtualSwizzleArray(virtualize(:($ex.body), Body, ctx), dims)
 end
 
+"""
+    swizzle(tns, dims)
+
+Create a `SwizzleArray` to transpose any tensor `tns` such that
+```
+    swizzle(tns, dims)[i...] == tns[i[dims]]
+```
+"""
 swizzle(body, dims::Int...) = SwizzleArray(body, dims)
 swizzle(body::SwizzleArray{dims}, dims_2::Int...) where {dims} = SwizzleArray(body.body, ntuple(n-> dims[dims_2[n]], ndims(body)))
 

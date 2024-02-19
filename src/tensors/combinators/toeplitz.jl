@@ -43,6 +43,15 @@ function virtualize(ex, ::Type{ToeplitzArray{dim, Body}}, ctx) where {dim, Body}
     VirtualToeplitzArray(virtualize(:($ex.body), Body, ctx), dim)
 end
 
+"""
+    toeplitz(tns, dim)
+
+Create a `ToeplitzArray` such that
+```
+    Toeplitz(tns, dim)[i...] == tns[i[1:dim-1]..., i[dim] + i[dim + 1], i[dim + 2:end]...]
+```
+The ToplitzArray can be thought of as adding a dimension that shifts another dimension of the original tensor.
+"""
 toeplitz(body, dim) = ToeplitzArray(body, dim)
 function virtual_call(::typeof(toeplitz), ctx, body, dim)
     @assert isliteral(dim)
