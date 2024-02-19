@@ -334,3 +334,13 @@ quote
 end
 
 ```
+
+## Type Stability
+
+Julia code runs fastest when the compiler can [infer the
+types](https://docs.julialang.org/en/v1/manual/performance-tips/#Write-%22type-stable%22-functions)
+of all intermediate values.  Finch does not check that the generated code is
+type-stable. In situations where tensors have nonuniform index or element types,
+or the computation itself might involve multiple types, one should check that
+the output of `@finch_kernel` code is type-stable with
+[`@code_warntype`](https://docs.julialang.org/en/v1/stdlib/InteractiveUtils/#InteractiveUtils.@code_warntype).
