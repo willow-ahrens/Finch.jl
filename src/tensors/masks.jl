@@ -168,6 +168,51 @@ function instantiate(arr::BandMask, ctx, mode, subprotos, ::typeof(defaultread),
     )
 end
 
+struct SplitMask
+    P::Int
+end
+
+Base.show(io::IO, ex::SplitMask) = Base.show(io, MIME"text/plain"(), ex)
+function Base.show(io::IO, mime::MIME"text/plain", ex::SplitMask)
+    print(io, "splitmask(", ex.P, ")")
+end
+
+struct VirtualSplitMask
+    P
+end
+
+function virtualize(ex, ::Type{SplitMask}, ctx)
+    return VirtualSplitMask(value(:($ex.P), Int))
+end
+
+FinchNotation.finch_leaf(x::VirtualSplitMask) = virtual(x)
+Finch.virtual_size(arr::VirtualSplitMask, ctx) = (dimless, Extent(literal(1), arr.P))
+
+function instantiate(arr::VirtualSplitMask, ctx, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
+    Unfurled(
+        arr = arr,
+        body = Furlable(
+            body = (ctx, ext) -> Lookup(
+                body = (ctx, i) -> Furlable(
+                    body = (ctx, ext_2) -> begin
+                        Sequence([
+                            Phase(
+                                stop = (ctx, ext) -> call(+, call(-, getstart(ext_2), 1), call(fld, call(*, measure(ext_2), call(-, i, 1)), arr.P)),
+                                body = (ctx, ext) -> Run(body=Fill(false))
+                            ),
+                            Phase(
+                                stop = (ctx, ext) -> call(+, call(-, getstart(ext_2), 1), call(fld, call(*, measure(ext_2), i), arr.P)),
+                                body = (ctx, ext) -> Run(body=Fill(true)),
+                            ),
+                            Phase(body = (ctx, ext) -> Run(body=Fill(false)))
+                        ])
+                    end
+                )
+            )
+        )
+    )
+end
+
 struct ChunkMask{Dim}
     b::Int
     dim::Dim
