@@ -628,4 +628,10 @@ using CIndices
             end
         end)
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/397
+    let
+        A = AsArray(swizzle(Tensor(Dense(Dense(Element(0.0))), [1 2 3; 4 5 6; 7 8 9]), 2, 1))
+        check_output("print_swizzle_as_array.txt", sprint(show, MIME"text/plain"(), A))
+    end
 end

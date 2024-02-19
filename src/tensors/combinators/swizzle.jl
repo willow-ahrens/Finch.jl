@@ -7,15 +7,36 @@ SwizzleArray{dims}(body::Body) where {dims, Body} = SwizzleArray{dims, Body}(bod
 
 Base.ndims(arr::SwizzleArray) = ndims(typeof(arr))
 Base.ndims(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = ndims(Body)
-Base.eltype(arr::SwizzleArray) = eltype(arr.body)
+Base.eltype(arr::SwizzleArray) = eltype(typeof(arr.body))
+Base.eltype(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = eltype(Body)
 default(arr::SwizzleArray) = default(typeof(arr))
 default(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = default(Body)
+
+function Base.getindex(arr::SwizzleArray{perm}, inds...) where {perm}
+    inds_2 = Base.to_indices(arr, inds)
+    perm_2 = collect(invperm(perm))
+    res = getindex(arr.body, inds_2[perm_2]...)
+    perm_3 = sortperm(filter(n -> ndims(inds_2[n]) > 0, perm_2))
+    if issorted(perm_3)
+        return res
+    else 
+        return swizzle(res, perm_3...)
+    end
+end
+
+function Base.setindex!(arr::SwizzleArray{perm}, v, inds...) where {perm}
+    inds_2 = Base.to_indices(arr, inds)
+    perm_2 = collect(invperm(perm))
+    res = setindex!(arr.body, v, inds_2[perm_2]...)
+    arr
+end
+
 
 Base.size(arr::SwizzleArray{dims}) where {dims} = map(n->size(arr.body)[n], dims)
 
 Base.show(io::IO, ex::SwizzleArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::SwizzleArray{dims}) where {dims}
-	print(io, "SwizzleArray($(ex.body), $(dims)")
+	print(io, "SwizzleArray($(ex.body), $(dims))")
 end
 
 #Base.getindex(arr::SwizzleArray, i...) = ...

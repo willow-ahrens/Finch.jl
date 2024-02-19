@@ -1,5 +1,4 @@
-abstract type AbstractFiber{Lvl} end
-abstract type AbstractVirtualTensor end
+abstract type AbstractFiber{Lvl} <: AbstractTensor end
 abstract type AbstractVirtualFiber{Lvl} <: AbstractVirtualTensor end
 
 """
