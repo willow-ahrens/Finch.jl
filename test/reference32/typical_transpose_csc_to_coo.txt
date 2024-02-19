@@ -32,6 +32,7 @@ quote
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
     A_lvl_2_val = A_lvl_2.lvl.val
+    result = nothing
     qos = Finch.declare_table!(B_lvl_tbl, 1)
     B_lvl_qos_stop = 0
     Finch.declare_table!(B_lvl_tbl_2, qos)
@@ -97,7 +98,7 @@ quote
     qos_stop_4 = Finch.freeze_table!(B_lvl_tbl, 1)
     qos_stop_5 = Finch.freeze_table!(B_lvl_tbl_2, qos_stop_4)
     resize!(B_lvl_2_val, qos_stop_5)
-    result = something(nothing, (B = Tensor((SparseLevel){Int32}((SparseLevel){Int32}(B_lvl_3, A_lvl.shape, B_lvl_tbl_2), A_lvl_2.shape, B_lvl_tbl)),))
+    result = (B = Tensor((SparseLevel){Int32}((SparseLevel){Int32}(B_lvl_3, A_lvl.shape, B_lvl_tbl_2), A_lvl_2.shape, B_lvl_tbl)),)
     result
 end
 julia> @finch mode = fastfinch begin

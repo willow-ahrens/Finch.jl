@@ -5,6 +5,7 @@ begin
     A_lvl_ptr = A_lvl.ptr
     A_lvl_idx = A_lvl.idx
     A_lvl_val = A_lvl.lvl.val
+    result = nothing
     A_lvl_q = A_lvl_ptr[1]
     A_lvl_q_stop = A_lvl_ptr[1 + 1]
     if A_lvl_q < A_lvl_q_stop
@@ -34,7 +35,7 @@ begin
             end
         end
     end
-    result = something(nothing, ())
+    result = ()
     B.val = B_val
     result
 end

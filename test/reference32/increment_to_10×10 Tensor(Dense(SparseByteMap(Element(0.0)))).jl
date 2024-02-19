@@ -13,6 +13,7 @@ begin
     arr_2_lvl_val = arr_2_lvl.lvl.val
     arr_2_lvl.shape[1] == fmt_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(arr_2_lvl.shape[1]) != $(fmt_lvl_2.shape))"))
     arr_2_lvl.shape[2] == fmt_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(arr_2_lvl.shape[2]) != $(fmt_lvl.shape))"))
+    result = nothing
     arr_2_lvl_q = arr_2_lvl_ptr[1]
     arr_2_lvl_q_stop = arr_2_lvl_ptr[1 + 1]
     if arr_2_lvl_q < arr_2_lvl_q_stop
@@ -140,7 +141,7 @@ begin
             end
         end
     end
-    result = something(nothing, ())
+    result = ()
     pos_stop = fmt_lvl.shape
     resize!(fmt_lvl_ptr, pos_stop + 1)
     resize!(fmt_lvl_tbl, pos_stop * fmt_lvl_2.shape)

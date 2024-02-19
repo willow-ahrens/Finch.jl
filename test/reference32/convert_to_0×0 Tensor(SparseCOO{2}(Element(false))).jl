@@ -12,6 +12,7 @@ begin
     ref_lvl_ptr_2 = ref_lvl_2.ptr
     ref_lvl_idx_2 = ref_lvl_2.idx
     ref_lvl_2_val = ref_lvl_2.lvl.val
+    result = nothing
     tmp_lvl_qos_stop = 0
     Finch.resize_if_smaller!(tmp_lvl_ptr, 1 + 1)
     Finch.fill_range!(tmp_lvl_ptr, 0, 1 + 1, 1 + 1)
@@ -158,6 +159,6 @@ begin
     resize!(tmp_lvl_tbl1, qos_stop)
     resize!(tmp_lvl_tbl2, qos_stop)
     resize!(tmp_lvl_val, qos_stop)
-    result = something(nothing, (tmp = Tensor((SparseCOOLevel){2, Tuple{Int32, Int32}}(tmp_lvl_2, (ref_lvl_2.shape, ref_lvl.shape), tmp_lvl_ptr, (tmp_lvl_tbl1, tmp_lvl_tbl2))),))
+    result = (tmp = Tensor((SparseCOOLevel){2, Tuple{Int32, Int32}}(tmp_lvl_2, (ref_lvl_2.shape, ref_lvl.shape), tmp_lvl_ptr, (tmp_lvl_tbl1, tmp_lvl_tbl2))),)
     result
 end

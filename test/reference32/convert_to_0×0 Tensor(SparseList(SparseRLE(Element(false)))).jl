@@ -15,6 +15,7 @@ begin
     ref_lvl_ptr_2 = ref_lvl_2.ptr
     ref_lvl_idx_2 = ref_lvl_2.idx
     ref_lvl_2_val = ref_lvl_2.lvl.val
+    result = nothing
     tmp_lvl_qos_stop = 0
     tmp_lvl_2_qos_fill = 0
     tmp_lvl_2_qos_stop = 0
@@ -199,6 +200,6 @@ begin
     resize!(tmp_lvl_left, qos_stop_2)
     resize!(tmp_lvl_right, qos_stop_2)
     resize!(tmp_lvl_2_val, qos_stop_2)
-    result = something(nothing, (tmp = Tensor((SparseListLevel){Int32}((SparseRLELevel){Int32}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr_2, tmp_lvl_left, tmp_lvl_right), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),))
+    result = (tmp = Tensor((SparseListLevel){Int32}((SparseRLELevel){Int32}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr_2, tmp_lvl_left, tmp_lvl_right), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),)
     result
 end
