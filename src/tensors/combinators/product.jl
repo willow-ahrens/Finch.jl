@@ -40,6 +40,15 @@ function virtualize(ex, ::Type{ProductArray{dim, Body}}, ctx) where {dim, Body}
     VirtualProductArray(virtualize(:($ex.body), Body, ctx), dim)
 end
 
+"""
+    product(tns, dim)
+
+Create a `ProductArray` such that
+```
+    product(tns, dim)[i...] == tns[i[1:dim-1]..., i[dim] * i[dim + 1], i[dim + 2:end]...]
+```
+This is like a [`ToeplitzArray`](@ref) but with times instead of plus.
+"""
 products(body, dim) = ProductArray(body, dim)
 function virtual_call(::typeof(products), ctx, body, dim)
     @assert isliteral(dim)

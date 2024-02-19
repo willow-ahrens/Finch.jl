@@ -1,6 +1,11 @@
-
 struct DiagMask end
 
+```
+    diagmask
+
+A mask for a diagonal tensor, `diagmask[i, j] = i == j`. Note that this
+specializes each column for the cases where `i < j`, `i == j`, and `i > j`.
+```
 const diagmask = DiagMask()
 
 Base.show(io::IO, ex::DiagMask) = Base.show(io, MIME"text/plain"(), ex)
@@ -37,6 +42,12 @@ end
 
 struct UpTriMask end
 
+```
+    uptrimask
+
+A mask for an upper triangular tensor, `uptrimask[i, j] = i <= j`. Note that this
+specializes each column for the cases where `i <= j` and `i > j`.
+```
 const uptrimask = UpTriMask()
 
 Base.show(io::IO, ex::UpTriMask) = Base.show(io, MIME"text/plain"(), ex)
@@ -71,6 +82,12 @@ end
 
 struct LoTriMask end
 
+```
+    lotrimask
+
+A mask for an upper triangular tensor, `lotrimask[i, j] = i >= j`. Note that this
+specializes each column for the cases where `i < j` and `i >= j`.
+```
 const lotrimask = LoTriMask()
 
 Base.show(io::IO, ex::LoTriMask) = Base.show(io, MIME"text/plain"(), ex)
@@ -105,6 +122,12 @@ end
 
 struct BandMask end
 
+```
+    bandmask
+
+A mask for a banded tensor, `bandmask[i, j, k] = j <= i <= k`. Note that this
+specializes each column for the cases where `i < j`, `j <= i <= k`, and `k < i`.
+```
 const bandmask = BandMask()
 
 Base.show(io::IO, ex::BandMask) = Base.show(io, MIME"text/plain"(), ex)
@@ -145,51 +168,13 @@ function instantiate(arr::BandMask, ctx, mode, subprotos, ::typeof(defaultread),
     )
 end
 
-struct SplitMask
-    P::Int
-end
+```
+    chunkmask(b)
 
-Base.show(io::IO, ex::SplitMask) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::SplitMask)
-    print(io, "splitmask(", ex.P, ")")
-end
-
-struct VirtualSplitMask
-    P
-end
-
-function virtualize(ex, ::Type{SplitMask}, ctx)
-    return VirtualSplitMask(value(:($ex.P), Int))
-end
-
-FinchNotation.finch_leaf(x::VirtualSplitMask) = virtual(x)
-Finch.virtual_size(arr::VirtualSplitMask, ctx) = (dimless, Extent(literal(1), arr.P))
-
-function instantiate(arr::VirtualSplitMask, ctx, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
-    Unfurled(
-        arr = arr,
-        body = Furlable(
-            body = (ctx, ext) -> Lookup(
-                body = (ctx, i) -> Furlable(
-                    body = (ctx, ext_2) -> begin
-                        Sequence([
-                            Phase(
-                                stop = (ctx, ext) -> call(+, call(-, getstart(ext_2), 1), call(fld, call(*, measure(ext_2), call(-, i, 1)), arr.P)),
-                                body = (ctx, ext) -> Run(body=Fill(false))
-                            ),
-                            Phase(
-                                stop = (ctx, ext) -> call(+, call(-, getstart(ext_2), 1), call(fld, call(*, measure(ext_2), i), arr.P)),
-                                body = (ctx, ext) -> Run(body=Fill(true)),
-                            ),
-                            Phase(body = (ctx, ext) -> Run(body=Fill(false)))
-                        ])
-                    end
-                )
-            )
-        )
-    )
-end
-
+A mask for a chunked tensor, `chunkmask[i, j] = b * (j - 1) < i <= b * j`. Note
+that this specializes each column for the cases where `i < b * (j - 1)`, `b * (j
+- 1) < i <= b * j`, and `b * j < i`.
+```
 struct ChunkMask{Dim}
     b::Int
     dim::Dim
