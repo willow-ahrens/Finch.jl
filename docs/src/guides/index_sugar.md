@@ -25,7 +25,7 @@ iteration protocol, and `x` is an expression:
 | `A[a * i]`          | `scale(A, (3,))[i]`                     |
 | `A[i * x]`          | `products(A, 1)[i, j]`                  |
 | `A[~i]`             | `permissive(A)[i]`                      |
-| `A[p(i)]`           | `protocolized(A, p)[i]`                 |
+| `A[p(i)]`           | `protocolize(A, p)[i]`                 |
 
 Each of these tensor modifiers is described below:
 
@@ -36,6 +36,6 @@ window
 scale
 products
 permissive
-protocolized
+protocolize
 ```
 

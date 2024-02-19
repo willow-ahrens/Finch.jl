@@ -41,8 +41,8 @@ export Pattern, PatternLevel
 export Scalar, SparseScalar, ShortCircuitScalar, SparseShortCircuitScalar
 export walk, gallop, follow, extrude, laminate
 export Tensor, pattern!, dropdefaults, dropdefaults!, redefault!
-export diagmask, lotrimask, uptrimask, bandmask
-export scale, product, offset, permissive, protocolize, swizzle, toeplitz, window
+export diagmask, lotrimask, uptrimask, bandmask, chunkmask
+export scale, products, offset, permissive, protocolize, swizzle, toeplitz, window
 export PlusOneVector
 
 export choose, minby, maxby, overwrite, initwrite, d

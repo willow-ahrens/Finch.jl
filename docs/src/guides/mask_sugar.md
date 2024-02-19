@@ -39,9 +39,9 @@ constant with respect to the loop over the index.
 The mask tensors are described below:
 
 ```@docs
-UpTriMask
-LoTriMask
-DiagMask
-BandMask
-ChunkMask
+uptrimask
+lotrimask
+diagmask
+bandmask
+chunkmask
 ```
