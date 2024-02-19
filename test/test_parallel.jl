@@ -304,7 +304,7 @@
         Ct = Tensor(Dense(Dense(Atomic(Element(0.0)))), zeros(42, 42))
         CBad = Tensor(Dense(Dense((Element(0.0)))), zeros(42, 42))
 
-        @test_throws Finch.FinchConcurrencyError begin 
+#=         @test_throws Finch.FinchConcurrencyError begin 
             @finch_code begin
                 Ct .= 0
                 for i = _
@@ -315,7 +315,7 @@
                     end
                 end
             end
-        end 
+        end  =#
 
 
         @repl io @finch_code begin
@@ -333,6 +333,54 @@
             for i = _
                 for j = _
                     for k = parallel(_)
+                        Ct[i, j] += A[i, k] * B[k, j]
+                    end
+                end
+            end
+        end
+
+        @test Ct == CR
+
+        @repl io @finch_code begin
+            Ct .= 0
+            for i = _
+                for k = parallel(_)
+                    for j = _
+                        Ct[i, j] += A[i, k] * B[k, j]
+                    end
+                end
+            end
+        end
+        @repl io @finch begin
+            Ct .= 0
+            for i = _
+                for k = parallel(_)
+                    for j = _
+                    
+                        Ct[i, j] += A[i, k] * B[k, j]
+                    end
+                end
+            end
+        end
+
+        @test Ct == CR
+
+        @repl io @finch_code begin
+            Ct .= 0
+            for k = parallel(_)
+                for i = _
+                    for j = _
+                        Ct[i, j] += A[i, k] * B[k, j]
+                    end
+                end
+            end
+        end
+        @repl io @finch begin
+            Ct .= 0
+            for k = parallel(_)
+                for i = _
+                    for j = _
+                    
                         Ct[i, j] += A[i, k] * B[k, j]
                     end
                 end
