@@ -66,7 +66,7 @@ function ensure_concurrent(root, ctx)
         injectivity = (@capture(acc, access(~tns, ~mode, ~i..., idx)) ?  (is_injective(tns, ctx), [length(i) + 1]) : ([false], [1]))
         injectivityAlt = (@capture(acc, access(~tns, ~mode, ~i...)) ?  (is_injective(tns, ctx), [length(i)]) : ([false], [1]))
         testInjectivity = injectivity[1][injectivity[2]][1]
-        testInjectivityp = injectivityAlt[1][injectivityAlt[2]][1]
+        testInjectivityp = injectivityAlt[1][end][1]
         if !(
             atomicity || testInjectivity || testInjectivityp
             
