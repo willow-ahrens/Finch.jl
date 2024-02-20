@@ -538,24 +538,3 @@ Base.@propagate_inbounds function scansearch(v, x, lo::T1, hi::T2) where {T1<:In
     end
     return hi
 end
-
-
-
-"""
-This function provides straightforward access to the non-default entries of a Finch Tensor
-by transforming it into a COO-style format. For example, a 2-d sparse tensor will be
-transformed into a vector of 3-element tuples: Vector{Tuple{Idx, Idx, Value}}
-"""
-function tensor_to_vec_of_tuples(t::Tensor)
-    s = size(t)
-    DT = typeof(Finch.default(t))
-    coo_tensor = Tensor(SparseCOOLevel(Element(Finch.default(t)), s))
-    copyto!(coo_tensor, t)
-    index_tuples = coo_tensor.lvl.tbl
-    index_vector = zip(index_tuples...)
-    values_vector = DT[]
-    for indices in index_vector
-        push!(values_vector, coo_tensor[indices...])
-    end
-    return collect(zip(index_tuples..., values_vector))
-end

@@ -120,7 +120,7 @@ postype(fbr::AbstractVirtualFiber) = postype(fbr.lvl)
 allocator(fbr::AbstractVirtualFiber) = allocator(fbr.lvl)
 
 struct LabelledTree
-    key 
+    key
     node
 end
 
@@ -330,3 +330,25 @@ Base.similar(fbr::AbstractFiber) = Tensor(similar_level(fbr.lvl))
 Base.similar(fbr::AbstractFiber, dims::Tuple) = Tensor(similar_level(fbr.lvl, dims...))
 
 moveto(tns::Tensor, device) = Tensor(moveto(tns.lvl, device))
+
+
+
+
+"""
+This function provides straightforward access to the non-default entries of a Finch Tensor
+by transforming it into a COO-style format. For example, a 2-d sparse tensor will be
+transformed into a vector of 3-element tuples: Vector{Tuple{Idx, Idx, Value}}
+"""
+function tensor_to_vec_of_tuples(t::Tensor)
+    s = size(t)
+    DT = typeof(Finch.default(t))
+    coo_tensor = Tensor(SparseCOOLevel(Element(Finch.default(t)), s))
+    copyto!(coo_tensor, t)
+    index_tuples = coo_tensor.lvl.tbl
+    index_vector = zip(index_tuples...)
+    values_vector = DT[]
+    for indices in index_vector
+        push!(values_vector, coo_tensor[indices...])
+    end
+    return collect(zip(index_tuples..., values_vector))
+end
