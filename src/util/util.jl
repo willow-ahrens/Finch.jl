@@ -75,7 +75,7 @@ macro staged(def)
                 code = $name_generator($(args...))
                 if has_function_def(macroexpand($@__MODULE__, code))
                     :($($(name_invokelatest))($($(map(QuoteNode, args)...))))
-                else 
+                else
                     quote
                         $code
                     end
@@ -124,7 +124,7 @@ function resize_if_smaller!(arr, i)
 end
 
 """
-    pretty(ex) 
+    pretty(ex)
 
 Make ex prettier. Shorthand for `ex |> unblock |> striplines |> regensym`.
 """
@@ -152,7 +152,7 @@ Give gensyms prettier names by renumbering them. `ex` is the target Julia expres
 function regensym(ex)
     counter = 0
     syms = Dict{Symbol, Symbol}()
-    Rewrite(Postwalk((x) -> if isgensym(x) 
+    Rewrite(Postwalk((x) -> if isgensym(x)
         get!(()->Symbol("_", gensymname(x), "_", counter+=1), syms, x)
     end))(ex)
 end
@@ -282,7 +282,7 @@ end
 
 Base.:(==)(a::PropagateCopies, b::PropagateCopies) = (a.ids == b.ids) && (a.refs == b.refs)
 Base.copy(ctx::PropagateCopies) = PropagateCopies(copy(ctx.refs), copy(ctx.ids), copy(ctx.vals))
-function Base.merge!(ctx::PropagateCopies, ctx_2::PropagateCopies) 
+function Base.merge!(ctx::PropagateCopies, ctx_2::PropagateCopies)
     merge!(intersect, ctx.refs, ctx_2.refs)
     merge!(union, ctx.ids, ctx_2.ids)
     merge!(union, ctx.vals, ctx_2.vals)
@@ -290,14 +290,14 @@ end
 
 function propagate_copies(ex)
     id = 0
-    ex = Postwalk(@rule(:(=)(~lhs::issymbol, ~rhs) => 
+    ex = Postwalk(@rule(:(=)(~lhs::issymbol, ~rhs) =>
         Expr(:def, Expr(:(=), lhs, rhs), id += 1)))(ex)
 
     ex = unblock(ex)
 
     ex = PropagateCopies()(ex)
 
-    ex = Postwalk(@rule(:def(:(=)(~lhs::issymbol, ~rhs), ~id) => 
+    ex = Postwalk(@rule(:def(:(=)(~lhs::issymbol, ~rhs), ~id) =>
         Expr(:(=), lhs, rhs)))(ex)
 end
 
@@ -394,7 +394,7 @@ Base.:(==)(a::MarkDead, b::MarkDead) = a.refs == b.refs
 
 branch(ctx::MarkDead) = MarkDead(copy(ctx.refs))
 Base.copy(ctx::MarkDead) = MarkDead(copy(ctx.refs))
-function meet!(ctx::MarkDead, ctx_2::MarkDead) 
+function meet!(ctx::MarkDead, ctx_2::MarkDead)
     union!(ctx.refs, ctx_2.refs)
 end
 
@@ -473,7 +473,7 @@ mark_dead(ex) = MarkDead()(ex, true)
 
 function prune_dead(ex)
     ex = desugar(ex)
-    
+
     ex = Rewrite(Fixpoint(Chain([
         Prewalk(Chain([
             Fixpoint(@rule :block(:block(~a...), ~b...) => Expr(:block, a..., b...)),
@@ -487,7 +487,7 @@ function prune_dead(ex)
             Fixpoint(@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
             (@rule (~f::isassign)(:_, ~rhs) => rhs),
             (@rule :block(~a..., :call(~f::ispure, ~b...), ~c..., ~d) => Expr(:block, a..., b..., c..., d)),
-            (@rule :block(~a..., (~f)(~b...), ~c..., ~d) => if f in (:ref, :., :curly, :string, :kw, :parameters, :tuple) 
+            (@rule :block(~a..., (~f)(~b...), ~c..., ~d) => if f in (:ref, :., :curly, :string, :kw, :parameters, :tuple)
                 Expr(:block, a..., b..., c..., d)
             end),
             (@rule :block(~a..., ~b::(!isexpr), ~c..., ~d) => Expr(:block, a..., c..., d)),
@@ -537,4 +537,25 @@ Base.@propagate_inbounds function scansearch(v, x, lo::T1, hi::T2) where {T1<:In
         end
     end
     return hi
+end
+
+
+
+"""
+This function provides straightforward access to the non-default entries of a Finch Tensor
+by transforming it into a COO-style format. For example, a 2-d sparse tensor will be
+transformed into a vector of 3-element tuples: Vector{Tuple{Idx, Idx, Value}}
+"""
+function tensor_to_vec_of_tuples(t::Tensor)
+    s = size(t)
+    DT = typeof(Finch.default(t))
+    coo_tensor = Tensor(SparseCOOLevel(Element(Finch.default(t)), s))
+    copyto!(coo_tensor, t)
+    index_tuples = coo_tensor.lvl.tbl
+    index_vector = zip(index_tuples...)
+    values_vector = DT[]
+    for indices in index_vector
+        push!(values_vector, coo_tensor[indices...])
+    end
+    return collect(zip(index_tuples..., values_vector))
 end
