@@ -15,6 +15,7 @@ end
 struct VirtualPermissiveArray <: AbstractVirtualCombinator
     body
     dims
+    VirtualPermissiveArray(body, dims) = new(something(body), dims)
 end
 
 is_injective(lvl::VirtualPermissiveArray, ctx) = is_injective(lvl.body, ctx)
