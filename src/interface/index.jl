@@ -25,6 +25,7 @@ getindex_rep_def(lvl::RepeatData, idx::Drop) = SolidData(ElementData(lvl.default
 getindex_rep_def(lvl::RepeatData, idx) = SolidData(ElementData(lvl.default, lvl.eltype))
 getindex_rep_def(lvl::RepeatData, idx::Type{<:AbstractUnitRange}) = SolidData(ElementData(lvl.default, lvl.eltype))
 
+Base.getindex(arr::Tensor, inds::AbstractVector) = getindex_helper(arr, to_indices(arr, axes(arr), (inds,)))
 Base.getindex(arr::Tensor, inds...) = getindex_helper(arr, to_indices(arr, inds))
 @staged function getindex_helper(arr, inds)
     inds <: Type{<:Tuple}

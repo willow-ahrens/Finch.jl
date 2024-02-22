@@ -12,6 +12,8 @@ Base.eltype(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = eltype(Body)
 default(arr::SwizzleArray) = default(typeof(arr))
 default(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = default(Body)
 
+Base.to_indices(A::SwizzleArray, I::Tuple{AbstractVector}) = Base.to_indices(A, axes(A), I)
+
 function Base.getindex(arr::SwizzleArray{perm}, inds...) where {perm}
     inds_2 = Base.to_indices(arr, inds)
     perm_2 = collect(invperm(perm))
