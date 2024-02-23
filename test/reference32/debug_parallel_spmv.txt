@@ -21,11 +21,12 @@ quote
     result = nothing
     Finch.resize_if_smaller!(y_lvl_val, A_lvl.shape)
     Finch.fill_range!(y_lvl_val, 0.0, 1, A_lvl.shape)
-    y_lvl_val = $(Expr(:., Finch, :moveto))(y_lvl_val, CPU(Threads.nthreads()))
-    A_lvl_ptr = $(Expr(:., Finch, :moveto))(A_lvl_ptr, CPU(Threads.nthreads()))
-    A_lvl_idx = $(Expr(:., Finch, :moveto))(A_lvl_idx, CPU(Threads.nthreads()))
-    A_lvl_2_val = $(Expr(:., Finch, :moveto))(A_lvl_2_val, CPU(Threads.nthreads()))
-    x_lvl_val = $(Expr(:., Finch, :moveto))(x_lvl_val, CPU(Threads.nthreads()))
+    val = y_lvl_val
+    y_lvl_val = (Finch).moveto(y_lvl_val, CPU(Threads.nthreads()))
+    A_lvl_ptr = (Finch).moveto(A_lvl_ptr, CPU(Threads.nthreads()))
+    A_lvl_idx = (Finch).moveto(A_lvl_idx, CPU(Threads.nthreads()))
+    A_lvl_2_val = (Finch).moveto(A_lvl_2_val, CPU(Threads.nthreads()))
+    x_lvl_val = (Finch).moveto(x_lvl_val, CPU(Threads.nthreads()))
     Threads.@threads for i_4 = 1:Threads.nthreads()
             phase_start_2 = max(1, 1 + fld(A_lvl.shape * (i_4 + -1), Threads.nthreads()))
             phase_stop_2 = min(A_lvl.shape, fld(A_lvl.shape * i_4, Threads.nthreads()))
@@ -69,7 +70,7 @@ quote
                 end
             end
         end
-    resize!(y_lvl_val, A_lvl.shape)
+    resize!(val, A_lvl.shape)
     result = (y = Tensor((DenseLevel){Int32}(y_lvl_2, A_lvl.shape)),)
     result
 end
