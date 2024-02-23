@@ -191,7 +191,26 @@ function unresolve(ex)
     ex = Rewrite(Postwalk(unresolve1))(ex)
 end
 unresolve1(x) = x
-unresolve1(f::Function) = methods(f).mt.name
+#Adapted from https://github.com/JuliaLang/julia/blob/7790d6f06411be1fd5aec7cb6fffdb38c89c0c2a/base/show.jl#L520
+#Consider just calling show, if that makes sense
+function unresolve1(f::Function)
+    ft = typeof(f)
+    mt = ft.name.mt
+    if mt === Symbol.name.mt
+        # uses shared method table
+        f
+    elseif isdefined(mt, :module) && isdefined(mt.module, mt.name) &&
+        getfield(mt.module, mt.name) === f
+        #mod = active_module()
+        if Base.is_exported_from_stdlib(mt.name, mt.module) #|| mt.module === mod
+            Symbol(mt.name)
+        else
+            Expr(:., mt.module, Symbol(mt.name))
+        end
+    else
+        f
+    end
+end
 
 """
     striplines(ex)
@@ -223,7 +242,12 @@ function ispure(x)
     elseif @capture x :.(~mod, ~fn)
         return ispure(fn)
     elseif x isa Function
-        return ispure(unresolve1(x))
+        x_2 = unresolve1(x)
+        if x_2 !== x
+            return ispure(x_2)
+        else
+            return false
+        end
     elseif x isa QuoteNode
         return ispure(x.value)
     else
