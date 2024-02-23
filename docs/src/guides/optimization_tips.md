@@ -275,14 +275,14 @@ quote
                 if A_lvl_2_i < phase_stop
                     for i_6 = i:-1 + A_lvl_2_i
                         val = B[i_6, j_4]
-                        C_val = $(Expr(:.,  :f))(0.0, val) + C_val
+                        C_val = (Main).f(0.0, val) + C_val
                     end
                     A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                     sugar_4 = size(B)
                     B_mode1_stop = sugar_4[1]
                     B_mode2_stop = sugar_4[2]
                     val = B[A_lvl_2_i, j_4]
-                    C_val += $(Expr(:.,  :f))(A_lvl_3_val, val)
+                    C_val += (Main).f(A_lvl_3_val, val)
                     A_lvl_2_q += 1
                     i = A_lvl_2_i + 1
                 else
@@ -290,14 +290,14 @@ quote
                     if A_lvl_2_i == phase_stop_3
                         for i_8 = i:-1 + phase_stop_3
                             val = B[i_8, j_4]
-                            C_val += $(Expr(:.,  :f))(0.0, val)
+                            C_val += (Main).f(0.0, val)
                         end
                         A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                         sugar_6 = size(B)
                         B_mode1_stop = sugar_6[1]
                         B_mode2_stop = sugar_6[2]
                         val = B[phase_stop_3, j_4]
-                        C_val += $(Expr(:.,  :f))(A_lvl_3_val, val)
+                        C_val += (Main).f(A_lvl_3_val, val)
                         A_lvl_2_q += 1
                     else
                         for i_10 = i:phase_stop_3
@@ -305,7 +305,7 @@ quote
                             B_mode1_stop = sugar_7[1]
                             B_mode2_stop = sugar_7[2]
                             val = B[i_10, j_4]
-                            C_val += $(Expr(:.,  :f))(0.0, val)
+                            C_val += (Main).f(0.0, val)
                         end
                     end
                     i = phase_stop_3 + 1
@@ -320,7 +320,7 @@ quote
                 B_mode1_stop = sugar_8[1]
                 B_mode2_stop = sugar_8[2]
                 val = B[i_12, j_4]
-                C_val += $(Expr(:.,  :f))(0.0, val)
+                C_val += (Main).f(0.0, val)
             end
         end
     end

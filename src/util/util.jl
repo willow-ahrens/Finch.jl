@@ -191,21 +191,12 @@ function unresolve(ex)
     ex = Rewrite(Postwalk(unresolve1))(ex)
 end
 unresolve1(x) = x
-#Adapted from https://github.com/JuliaLang/julia/blob/7790d6f06411be1fd5aec7cb6fffdb38c89c0c2a/base/show.jl#L520
-#Consider just calling show, if that makes sense
 function unresolve1(f::Function)
-    ft = typeof(f)
-    mt = ft.name.mt
-    if mt === Symbol.name.mt
-        # uses shared method table
-        f
-    elseif isdefined(mt, :module) && isdefined(mt.module, mt.name) &&
-        getfield(mt.module, mt.name) === f
-        #mod = active_module()
-        if Base.is_exported_from_stdlib(mt.name, mt.module) #|| mt.module === mod
-            Symbol(mt.name)
+    if nameof(f) != nameof(typeof(f))
+        if parentmodule(f) === Main || parentmodule(f) === Base
+            nameof(f)
         else
-            Expr(:., mt.module, Symbol(mt.name))
+            Expr(:., parentmodule(f), QuoteNode(nameof(f)))
         end
     else
         f
@@ -242,7 +233,7 @@ function ispure(x)
     elseif @capture x :.(~mod, ~fn)
         return ispure(fn)
     elseif x isa Function
-        x_2 = unresolve1(x)
+        x_2 = nameof(x)
         if x_2 !== x
             return ispure(x_2)
         else
@@ -300,19 +291,15 @@ end
 
 @kwdef struct PropagateCopies
     defs = Dict{Symbol, Any}() #A map from lhs to rhs
-    refs = Dict{Symbol, Set{Symbol}}() #A map from rhs to lhss, only valid for symbols in defs
 end
 
 Base.:(==)(a::PropagateCopies, b::PropagateCopies) = (a.defs == b.defs)
-Base.copy(ctx::PropagateCopies) = PropagateCopies(copy(ctx.defs), copy(ctx.refs))
+Base.copy(ctx::PropagateCopies) = PropagateCopies(copy(ctx.defs))
 function Base.merge!(ctx::PropagateCopies, ctx_2::PropagateCopies) 
-    #This code basically performs intersect!(ctx.defs, ctx_2.defs), keeping refs up to date
+    #This code basically performs intersect!(ctx.defs, ctx_2.defs)
     for (lhs, rhs) in ctx.defs
         if !haskey(ctx_2.defs, lhs) || rhs != ctx_2.defs[lhs]
             delete!(ctx.defs, lhs)
-            if rhs isa Symbol && haskey(ctx.defs, rhs)
-                pop!(ctx.refs[rhs], lhs)
-            end
         end
     end
 end
@@ -349,30 +336,29 @@ function (ctx::PropagateCopies)(ex)
         rhs = ctx(rhs)
         rhs == lhs && return rhs
         #clobber old definition if needed
-        if haskey(ctx.defs, lhs) && ctx.defs[lhs] != rhs
+        if !haskey(ctx.defs, lhs) || ctx.defs[lhs] != rhs
             #new copy definition, delete any defs this clobbers
-            for lhs_2 in get(ctx.refs, lhs, Set{Symbol}())
-                delete!(ctx.defs, lhs_2)
+            for (lhs_2, rhs_2) in ctx.defs
+                if rhs_2 === lhs && lhs_2 !== rhs
+                    delete!(ctx.defs, lhs_2)
+                end
             end
             #now delete the def itself
             delete!(ctx.defs, lhs)
-        end
-        #make a new definition if needed
-        if !haskey(ctx.defs, lhs) && !isexpr(rhs)
-            ctx.defs[lhs] = rhs
-            ctx.refs[lhs] = Set{Symbol}()
-            if issymbol(rhs) && haskey(ctx.defs, rhs)
-                push!(ctx.refs[rhs], lhs)
+            #now update the old def
+            if !isexpr(rhs)
+                ctx.defs[lhs] = rhs
             end
         end
         return Expr(:(=), lhs, rhs)
     elseif @capture ex :for(:(=)(~i, ~ext), ~body)
         ext = ctx(ext)
         #clobber old definition if needed
-        if issymbol(i) && haskey(ctx.defs, i)
-            #delete any defs this clobbers
-            for lhs_2 in get(ctx.refs, i, Set{Symbol}())
-                delete!(ctx.defs, lhs_2)
+        if issymbol(i)
+            for (lhs_2, rhs_2) in ctx.defs
+                if rhs_2 === i
+                    delete!(ctx.defs, lhs_2)
+                end
             end
             #now delete the def itself
             delete!(ctx.defs, i)
