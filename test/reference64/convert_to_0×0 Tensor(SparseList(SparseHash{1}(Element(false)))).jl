@@ -191,7 +191,7 @@ begin
     resize!(tmp_lvl_idx, qos_stop)
     resize!(tmp_lvl_srt, length(tmp_lvl_tbl))
     copyto!(tmp_lvl_srt, pairs(tmp_lvl_tbl))
-    sort!(tmp_lvl_srt, by = hashkeycmp)
+    sort!(tmp_lvl_srt, by = $(Expr(:., Finch, :hashkeycmp)))
     resize!(tmp_lvl_ptr_2, qos_stop + 1)
     for p_2 = 2:qos_stop + 1
         tmp_lvl_ptr_2[p_2] += tmp_lvl_ptr_2[p_2 - 1]

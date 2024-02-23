@@ -62,7 +62,7 @@ begin
                         A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                         A_lvl_3_val_2 = A_lvl_2_val[A_lvl_2_q_2]
                         B_lvl_2dirty = true
-                        B_lvl_2_val[B_lvl_2_qos] = B_lvl_2_val[B_lvl_2_qos] + A_lvl_3_val_2 * A_lvl_3_val
+                        B_lvl_2_val[B_lvl_2_qos] += A_lvl_3_val_2 * A_lvl_3_val
                         A_lvl_2_q += 1
                         A_lvl_2_q_2 += 1
                     elseif A_lvl_2_i_2 == phase_stop_2

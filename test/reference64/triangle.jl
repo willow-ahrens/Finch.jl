@@ -105,7 +105,7 @@ begin
                                 if A_lvl_2_i_2 == phase_stop_10 && A_lvl_2_i_4 == phase_stop_10
                                     A_lvl_3_val_6 = A_lvl_2_val[A_lvl_2_q_2]
                                     A_lvl_3_val_7 = A_lvl_2_val[A_lvl_2_q_4]
-                                    B_val = B_val + A_lvl_3_val * A_lvl_3_val_6 * A_lvl_3_val_7
+                                    B_val += A_lvl_3_val * A_lvl_3_val_6 * A_lvl_3_val_7
                                     A_lvl_2_q_2 += 1
                                     A_lvl_2_q_4 += 1
                                 elseif A_lvl_2_i_4 == phase_stop_10

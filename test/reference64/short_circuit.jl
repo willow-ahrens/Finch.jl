@@ -44,7 +44,7 @@ begin
             if y_lvl_i == phase_stop_2 && x_lvl_i == phase_stop_2
                 x_lvl_2_val = x_lvl_val[x_lvl_q]
                 y_lvl_2_val = y_lvl_val[y_lvl_q]
-                s_val = s_val | (y_lvl_2_val && x_lvl_2_val)
+                s_val |= y_lvl_2_val && x_lvl_2_val
                 y_lvl_q += 1
                 x_lvl_q += 1
             elseif x_lvl_i == phase_stop_2
