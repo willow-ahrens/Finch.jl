@@ -49,7 +49,7 @@ let
 
     SUITE["compile"]["compile_4cycle"] = @benchmarkable begin   
         A, c = ($A, $c)
-        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance (c .= 0; for i=_, j=_, k=_, l=_; c[] += A[i, j] * A[j, k] * A[k, l] * A[i, l] end; return c)))
+        @finch_code (c .= 0; for i=_, j=_, k=_, l=_; c[] += A[i, j] * A[j, k] * A[k, l] * A[i, l] end; return c)
     end
 end
 
