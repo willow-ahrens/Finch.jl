@@ -43,6 +43,16 @@ let
     end
 end
 
+let
+    A = Tensor(SparseList(SparseList(Element(0.0))))
+    c = Scalar(0.0)
+
+    SUITE["compile"]["compile_pretty_triangle"] = @benchmarkable begin   
+        A, c = ($A, $c)
+        @finch_code (c .= 0; for i=_, j=_, k=_; c[] += A[i, j] * A[j, k] * A[i, k] end; return c)
+    end
+end
+
 SUITE["graphs"] = BenchmarkGroup()
 
 SUITE["graphs"]["pagerank"] = BenchmarkGroup()
