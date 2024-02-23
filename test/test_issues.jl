@@ -634,4 +634,15 @@ using CIndices
         A = AsArray(swizzle(Tensor(Dense(Dense(Element(0.0))), [1 2 3; 4 5 6; 7 8 9]), 2, 1))
         check_output("print_swizzle_as_array.txt", sprint(show, MIME"text/plain"(), A))
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/427
+    let
+        a = [1, 2, 0, 0, 1]
+        a_fbr = Tensor(Dense(Element(0)), a)
+        a_sw = swizzle(a_fbr, 1)
+        idx = [1, 1, 3]
+
+        @test a[idx] == a_fbr[idx]
+        @test a[idx] == a_sw[idx]
+    end
 end
