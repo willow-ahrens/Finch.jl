@@ -299,47 +299,33 @@ function resugar(ex)
 end
 
 @kwdef struct PropagateCopies
-    refs = Dict()
-    ids = Dict()
-    vals = Dict()
+    defs = Dict{Symbol, Any}() #A map from lhs to rhs
+    refs = Dict{Symbol, Set{Symbol}}() #A map from rhs to lhss, only valid for symbols in defs
 end
 
-Base.:(==)(a::PropagateCopies, b::PropagateCopies) = (a.ids == b.ids) && (a.refs == b.refs)
-Base.copy(ctx::PropagateCopies) = PropagateCopies(copy(ctx.refs), copy(ctx.ids), copy(ctx.vals))
+Base.:(==)(a::PropagateCopies, b::PropagateCopies) = (a.defs == b.defs)
+Base.copy(ctx::PropagateCopies) = PropagateCopies(copy(ctx.defs), copy(ctx.refs))
 function Base.merge!(ctx::PropagateCopies, ctx_2::PropagateCopies) 
-    merge!(intersect, ctx.refs, ctx_2.refs)
-    merge!(union, ctx.ids, ctx_2.ids)
-    merge!(union, ctx.vals, ctx_2.vals)
+    #This code basically performs intersect!(ctx.defs, ctx_2.defs), keeping refs up to date
+    for (lhs, rhs) in ctx.defs
+        if !haskey(ctx_2.defs, lhs) || rhs != ctx_2.defs[lhs]
+            delete!(ctx.defs, lhs)
+            if rhs isa Symbol && haskey(ctx.defs, rhs)
+                pop!(ctx.refs[rhs], lhs)
+            end
+        end
+    end
 end
 
 function propagate_copies(ex)
-    id = 0
-    ex = Postwalk(@rule(:(=)(~lhs::issymbol, ~rhs) => 
-        Expr(:def, Expr(:(=), lhs, rhs), id += 1)))(ex)
-
     ex = unblock(ex)
 
     ex = PropagateCopies()(ex)
-
-    ex = Postwalk(@rule(:def(:(=)(~lhs::issymbol, ~rhs), ~id) => 
-        Expr(:(=), lhs, rhs)))(ex)
 end
 
 function (ctx::PropagateCopies)(ex)
     if issymbol(ex)
-        if haskey(ctx.ids, ex) && length(ctx.vals[ex]) == 1
-            val = first(ctx.vals[ex])
-            if isexpr(val)
-                return ex
-            elseif issymbol(val)
-                if issubset(ctx.ids[ex], get(ctx.refs, val, Set([])))
-                    return val
-                end
-            else
-                return val
-            end
-        end
-        return ex
+        return get(ctx.defs, ex, ex)
     elseif @capture ex :macrocall(~f, ~ln, ~args...)
         return Expr(:macrocall, f, ln, map(ctx, args)...)
     elseif @capture ex :block(~args...)
@@ -359,23 +345,38 @@ function (ctx::PropagateCopies)(ex)
         tail = ctx(tail)
         merge!(ctx, ctx_2)
         return Expr(:if, cond, body, tail)
-    elseif @capture(ex, :def(:(=)(~lhs::issymbol, ~rhs), ~id))
+    elseif @capture(ex, :(=)(~lhs::issymbol, ~rhs))
         rhs = ctx(rhs)
         rhs == lhs && return rhs
-        ctx.refs[lhs] = Set([])
-        if issymbol(rhs)
-            ctx.refs[rhs] = union(get(ctx.refs, rhs, Set([])), [id])
+        #clobber old definition if needed
+        if haskey(ctx.defs, lhs) && ctx.defs[lhs] != rhs
+            #new copy definition, delete any defs this clobbers
+            for lhs_2 in get(ctx.refs, lhs, Set{Symbol}())
+                delete!(ctx.defs, lhs_2)
+            end
+            #now delete the def itself
+            delete!(ctx.defs, lhs)
         end
-        ctx.ids[lhs] = Set([id])
-        #The thought here is to decrease runtime by not hashing expensive exprs, since we won't use exprs to propagate copies anyway.
-        if isexpr(rhs)
-            ctx.vals[lhs] = Set([Expr(:call, identity, gensym())])
-        else
-            ctx.vals[lhs] = Set([rhs])
+        #make a new definition if needed
+        if !haskey(ctx.defs, lhs) && !isexpr(rhs)
+            ctx.defs[lhs] = rhs
+            ctx.refs[lhs] = Set{Symbol}()
+            if issymbol(rhs) && haskey(ctx.defs, rhs)
+                push!(ctx.refs[rhs], lhs)
+            end
         end
-        return Expr(:def, Expr(:(=), lhs, rhs), id)
-    elseif @capture ex :for(:def(:(=)(~i, ~ext), ~id), ~body)
+        return Expr(:(=), lhs, rhs)
+    elseif @capture ex :for(:(=)(~i, ~ext), ~body)
         ext = ctx(ext)
+        #clobber old definition if needed
+        if issymbol(i) && haskey(ctx.defs, i)
+            #delete any defs this clobbers
+            for lhs_2 in get(ctx.refs, i, Set{Symbol}())
+                delete!(ctx.defs, lhs_2)
+            end
+            #now delete the def itself
+            delete!(ctx.defs, i)
+        end
         body_2 = body
         while true
             ctx_2 = copy(ctx)
@@ -384,7 +385,7 @@ function (ctx::PropagateCopies)(ex)
             merge!(ctx, ctx_3)
             ctx_2 == ctx && break
         end
-        return Expr(:for, Expr(:def, Expr(:(=), i, ext), id), body_2)
+        return Expr(:for, Expr(:(=), i, ext), body_2)
     elseif @capture ex :while(~cond, ~body)
         cond_2 = cond
         body_2 = body
