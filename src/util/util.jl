@@ -341,10 +341,12 @@ function (ctx::PropagateCopies)(ex)
         ctx.refs[lhs] = Set([])
         if issymbol(rhs)
             ctx.refs[rhs] = union(get(ctx.refs, rhs, Set([])), [id])
-            ctx.ids[lhs] = Set([id])
-            ctx.vals[lhs] = Set([rhs])
+        end
+        ctx.ids[lhs] = Set([id])
+        #The thought here is to decrease runtime by not hashing expensive exprs, since we won't use exprs to propagate copies anyway.
+        if isexpr(rhs)
+            ctx.vals[lhs] = Set([Expr(:call, identity, gensym())])
         else
-            ctx.ids[lhs] = Set([id])
             ctx.vals[lhs] = Set([rhs])
         end
         return Expr(:def, Expr(:(=), lhs, rhs), id)
