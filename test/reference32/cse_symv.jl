@@ -23,7 +23,7 @@ begin
             x_lvl_2_val_2 = x_lvl_val[x_lvl_q]
             A_lvl_2_q = (A_lvl_q - 1) * A_lvl_2.shape + i_6
             A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
-            y_lvl_val[y_lvl_q] = y_lvl_val[y_lvl_q] + A_lvl_3_val * x_lvl_2_val_2
+            y_lvl_val[y_lvl_q] += A_lvl_3_val * x_lvl_2_val_2
             y_lvl_val[y_lvl_q_2] = A_lvl_3_val * x_lvl_2_val + y_lvl_val[y_lvl_q_2]
         end
     end

@@ -29,11 +29,14 @@ begin
             tmp_lvl_q = Finch.scansearch(tmp_lvl_right, 1, tmp_lvl_q, tmp_lvl_q_stop - 1)
         end
         while true
-            i_start_2 = i
             tmp_lvl_i_start = tmp_lvl_left[tmp_lvl_q]
             tmp_lvl_i_stop = tmp_lvl_right[tmp_lvl_q]
             if tmp_lvl_i_stop < phase_stop
-                phase_start_3 = max(i_start_2, tmp_lvl_i_start)
+                phase_stop_3 = min(tmp_lvl_i_stop, -1 + tmp_lvl_i_start)
+                if phase_stop_3 >= i
+                    i = phase_stop_3 + 1
+                end
+                phase_start_3 = max(i, tmp_lvl_i_start)
                 if tmp_lvl_i_stop >= phase_start_3
                     tmp_lvl_2_val = tmp_lvl_val[tmp_lvl_q]
                     for i_8 = phase_start_3:tmp_lvl_i_stop
@@ -51,9 +54,10 @@ begin
                 tmp_lvl_q += tmp_lvl_i_stop == tmp_lvl_i_stop
                 i = tmp_lvl_i_stop + 1
             else
-                phase_start_4 = i
                 phase_stop_5 = min(tmp_lvl_i_stop, phase_stop)
-                phase_start_6 = max(tmp_lvl_i_start, phase_start_4)
+                phase_stop_6 = min(-1 + tmp_lvl_i_start, phase_stop_5)
+                i = phase_stop_6 + 1
+                phase_start_6 = max(tmp_lvl_i_start, i)
                 if phase_stop_5 >= phase_start_6
                     tmp_lvl_2_val_2 = tmp_lvl_val[tmp_lvl_q]
                     for i_11 = phase_start_6:phase_stop_5
