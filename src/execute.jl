@@ -206,7 +206,7 @@ macro finch_code(opts_ex...)
         )
     )
     return quote
-        $execute_code(:ex, typeof($prgm); $(map(esc, opts)...)) |> pretty |> dataflow |> unresolve |> unquote_literals
+        $execute_code(:ex, typeof($prgm); $(map(esc, opts)...)) |> pretty |> unresolve |> dataflow |> unquote_literals
     end
 end
 
@@ -226,7 +226,7 @@ function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = safe
             ctx_2.bindings[variable(key)] = finch_leaf(virtualize(key, maybe_typeof(val), ctx_2.code, key))
         end
         execute_code(:UNREACHABLE, prgm, algebra = algebra, mode = mode, ctx = ctx_2)
-    end |> pretty |> dataflow |> unquote_literals
+    end |> pretty |> unresolve |> dataflow |> unquote_literals
     arg_defs = map(((key, val),) -> :($key::$(maybe_typeof(val))), args)
     striplines(:(function $fname($(arg_defs...))
         @inbounds $(striplines(unblock(code)))

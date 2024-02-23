@@ -28,7 +28,7 @@ begin
                 phase_stop_3 = min(A_lvl_i, phase_stop)
                 if A_lvl_i == phase_stop_3
                     A_lvl_2_val = A_lvl_val[A_lvl_q]
-                    B_val = B_val + A_lvl_2_val
+                    B_val += A_lvl_2_val
                     A_lvl_q += 1
                 end
                 break
