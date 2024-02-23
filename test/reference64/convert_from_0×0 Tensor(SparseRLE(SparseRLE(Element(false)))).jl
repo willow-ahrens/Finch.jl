@@ -39,14 +39,11 @@ begin
             tmp_lvl_q = Finch.scansearch(tmp_lvl_right, 1, tmp_lvl_q, tmp_lvl_q_stop - 1)
         end
         while true
+            j_start_2 = j
             tmp_lvl_i_start = tmp_lvl_left[tmp_lvl_q]
             tmp_lvl_i_stop = tmp_lvl_right[tmp_lvl_q]
             if tmp_lvl_i_stop < phase_stop
-                phase_stop_3 = min(tmp_lvl_i_stop, -1 + tmp_lvl_i_start)
-                if phase_stop_3 >= j
-                    j = phase_stop_3 + 1
-                end
-                phase_start_3 = max(j, tmp_lvl_i_start)
+                phase_start_3 = max(j_start_2, tmp_lvl_i_start)
                 if tmp_lvl_i_stop >= phase_start_3
                     for j_8 = phase_start_3:tmp_lvl_i_stop
                         if res_lvl_qos > res_lvl_qos_stop
@@ -72,14 +69,11 @@ begin
                                 tmp_lvl_2_q = Finch.scansearch(tmp_lvl_right_2, 1, tmp_lvl_2_q, tmp_lvl_2_q_stop - 1)
                             end
                             while true
+                                i_start_2 = i
                                 tmp_lvl_2_i_start = tmp_lvl_left_2[tmp_lvl_2_q]
                                 tmp_lvl_2_i_stop = tmp_lvl_right_2[tmp_lvl_2_q]
                                 if tmp_lvl_2_i_stop < phase_stop_5
-                                    phase_stop_7 = min(tmp_lvl_2_i_stop, -1 + tmp_lvl_2_i_start)
-                                    if phase_stop_7 >= i
-                                        i = phase_stop_7 + 1
-                                    end
-                                    phase_start_6 = max(i, tmp_lvl_2_i_start)
+                                    phase_start_6 = max(i_start_2, tmp_lvl_2_i_start)
                                     if tmp_lvl_2_i_stop >= phase_start_6
                                         tmp_lvl_3_val = tmp_lvl_2_val[tmp_lvl_2_q]
                                         for i_8 = phase_start_6:tmp_lvl_2_i_stop
@@ -99,10 +93,9 @@ begin
                                     tmp_lvl_2_q += tmp_lvl_2_i_stop == tmp_lvl_2_i_stop
                                     i = tmp_lvl_2_i_stop + 1
                                 else
+                                    phase_start_7 = i
                                     phase_stop_9 = min(tmp_lvl_2_i_stop, phase_stop_5)
-                                    phase_stop_10 = min(-1 + tmp_lvl_2_i_start, phase_stop_9)
-                                    i = phase_stop_10 + 1
-                                    phase_start_9 = max(tmp_lvl_2_i_start, i)
+                                    phase_start_9 = max(tmp_lvl_2_i_start, phase_start_7)
                                     if phase_stop_9 >= phase_start_9
                                         tmp_lvl_3_val_2 = tmp_lvl_2_val[tmp_lvl_2_q]
                                         for i_11 = phase_start_9:phase_stop_9
@@ -136,10 +129,9 @@ begin
                 tmp_lvl_q += tmp_lvl_i_stop == tmp_lvl_i_stop
                 j = tmp_lvl_i_stop + 1
             else
+                phase_start_11 = j
                 phase_stop_13 = min(tmp_lvl_i_stop, phase_stop)
-                phase_stop_14 = min(-1 + tmp_lvl_i_start, phase_stop_13)
-                j = phase_stop_14 + 1
-                phase_start_13 = max(tmp_lvl_i_start, j)
+                phase_start_13 = max(tmp_lvl_i_start, phase_start_11)
                 if phase_stop_13 >= phase_start_13
                     for j_11 = phase_start_13:phase_stop_13
                         if res_lvl_qos > res_lvl_qos_stop
@@ -165,14 +157,11 @@ begin
                                 tmp_lvl_2_q_2 = Finch.scansearch(tmp_lvl_right_2, 1, tmp_lvl_2_q_2, tmp_lvl_2_q_stop_2 - 1)
                             end
                             while true
+                                i_start_6 = i
                                 tmp_lvl_2_i_start_2 = tmp_lvl_left_2[tmp_lvl_2_q_2]
                                 tmp_lvl_2_i_stop_2 = tmp_lvl_right_2[tmp_lvl_2_q_2]
                                 if tmp_lvl_2_i_stop_2 < phase_stop_16
-                                    phase_stop_18 = min(tmp_lvl_2_i_stop_2, -1 + tmp_lvl_2_i_start_2)
-                                    if phase_stop_18 >= i
-                                        i = phase_stop_18 + 1
-                                    end
-                                    phase_start_16 = max(i, tmp_lvl_2_i_start_2)
+                                    phase_start_16 = max(i_start_6, tmp_lvl_2_i_start_2)
                                     if tmp_lvl_2_i_stop_2 >= phase_start_16
                                         tmp_lvl_3_val_3 = tmp_lvl_2_val[tmp_lvl_2_q_2]
                                         for i_17 = phase_start_16:tmp_lvl_2_i_stop_2
@@ -192,10 +181,9 @@ begin
                                     tmp_lvl_2_q_2 += tmp_lvl_2_i_stop_2 == tmp_lvl_2_i_stop_2
                                     i = tmp_lvl_2_i_stop_2 + 1
                                 else
+                                    phase_start_17 = i
                                     phase_stop_20 = min(tmp_lvl_2_i_stop_2, phase_stop_16)
-                                    phase_stop_21 = min(-1 + tmp_lvl_2_i_start_2, phase_stop_20)
-                                    i = phase_stop_21 + 1
-                                    phase_start_19 = max(tmp_lvl_2_i_start_2, i)
+                                    phase_start_19 = max(tmp_lvl_2_i_start_2, phase_start_17)
                                     if phase_stop_20 >= phase_start_19
                                         tmp_lvl_3_val_4 = tmp_lvl_2_val[tmp_lvl_2_q_2]
                                         for i_20 = phase_start_19:phase_stop_20
