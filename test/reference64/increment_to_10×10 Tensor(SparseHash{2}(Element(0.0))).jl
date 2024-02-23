@@ -154,7 +154,7 @@ begin
     result = ()
     resize!(fmt_lvl_srt, length(fmt_lvl_tbl))
     copyto!(fmt_lvl_srt, pairs(fmt_lvl_tbl))
-    sort!(fmt_lvl_srt, by = hashkeycmp)
+    sort!(fmt_lvl_srt, by = (Finch).hashkeycmp)
     resize!(fmt_lvl_ptr, 1 + 1)
     for p = 2:1 + 1
         fmt_lvl_ptr[p] += fmt_lvl_ptr[p - 1]
