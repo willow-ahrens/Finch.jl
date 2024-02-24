@@ -188,6 +188,7 @@ end
 function virtual_level_resize!(lvl::VirtualSparseRLELevel, ctx, dims...)
     lvl.shape = getstop(dims[end])
     lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-1]...)
+    lvl.buf = virtual_level_resize!(lvl.buf, ctx, dims[1:end-1]...)
     lvl
 end
 
@@ -228,7 +229,7 @@ function declare_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos, 
             $(lvl.prev_pos) = $(Tp(0))
         end)
     end
-    lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
+    lvl.lvl = declare_level!(lvl.buf, ctx, qos, init)
     return lvl
 end
 
@@ -241,7 +242,9 @@ function assemble_level!(lvl::VirtualSparseRLELevel, ctx, pos_start, pos_stop)
     end
 end
 
+#=
 function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_stop)
+    (lvl.buf, lvl.lvl) = (lvl.lvl, lvl.buf)
     p = freshen(ctx.code, :p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = freshen(ctx.code, :qos_stop)
@@ -257,7 +260,84 @@ function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_st
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl
 end
+=#
 
+function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_stop)
+    Tp = postype(lvl)
+    p = freshen(ctx.code, :p)
+    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    qos_stop = freshen(ctx.code, :qos_stop)
+    push!(ctx.code.preamble, quote
+        resize!($(lvl.ptr), $pos_stop + 1)
+        for $p = 1:$pos_stop
+            $(lvl.ptr)[$p + 1] += $(lvl.ptr)[$p]
+        end
+        $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
+    end)
+    lvl.buf = freeze_level!(lvl.buf, ctx, value(qos_stop))
+    lvl.lvl = declare_level!(lvl.lvl, ctx, value(qos_stop), literal(virtual_level_default(lvl.buf)))
+    unit = get_smallest_measure(virtual_level_size(lvl, ctx)[end])
+    p = freshen(ctx.code, :p)
+    q = freshen(ctx.code, :q)
+    q_start = freshen(ctx.code, :q_start)
+    q_stop = freshen(ctx.code, :q_stop)
+    q_2 = freshen(ctx.code, :q_2)
+    checkval = freshen(ctx.code, :check)
+    push!(ctx.code.preamble, quote
+        $q_start = 1
+        $q_2 = 1
+        for $p = 1:$pos_stop
+            $q_stop = $q_start + $(lvl.ptr)[$p]
+            $q = $q_start
+            while $q < $q_stop
+                $checkval = true
+                if $q + 1 < $q_stop && $(lvl.right)[$q_start] == $(lvl.left)[$q + 1] - $unit
+                    $(contain(ctx) do ctx_2
+                        left = variable(freshen(ctx.code, :left))
+                        ctx_2.bindings[left] = virtual(VirtualSubFiber(lvl.buf, value(q_start, Tp)))
+                        right = variable(freshen(ctx.code, :right))
+                        ctx_2.bindings[right] = virtual(VirtualSubFiber(lvl.buf, call(+, value(q, Tp), Tp(1))))
+                        check = VirtualScalar(:UNREACHABLE, Bool, false, :check, checkval)
+                        exts = virtual_level_size(lvl.buf, ctx_2)
+                        inds = [freshen(ctx_2.code, :i, n) for n = 1:(length(exts))]
+                        prgm = assign(access(check, updater), and, call(isequal, access(left, reader, inds...), access(right, reader, inds...)))
+                        for (ind, ext) in zip(inds, exts)
+                            prgm = loop(ind, ext, prgm)
+                        end
+                        prgm = instantiate!(prgm, ctx_2)
+                        ctx_2(prgm)
+                    end)
+                else
+                    $checkval = false
+                end
+                if !$checkval
+                    $(lvl.left)[$q_2] = $(lvl.left)[$q_start]
+                    $(lvl.right)[$q_2] = $(lvl.right)[$q]
+                    $(contain(ctx) do ctx_2
+                        src = variable(freshen(ctx.code, :src))
+                        ctx_2.bindings[src] = virtual(VirtualSubFiber(lvl.buf, value(q_start, Tp)))
+                        dst = variable(freshen(ctx.code, :dst))
+                        ctx_2.bindings[dst] = VirtualSubFiber(lvl.lvl, value(q_2, Tp))
+                        exts = virtual_level_size(lvl.buf, ctx_2)
+                        inds = [freshen(ctx_2.code, :i, n) for n = 1:(length(exts))]
+                        prgm = assign(access(dst, updater, inds...), initwrite(virtual_level_default(lvl.lvl)), access(src, reader, inds...))
+                        for (ind, ext) in zip(inds, exts)
+                            prgm = loop(ind, ext, prgm)
+                        end
+                        prgm = instantiate!(prgm, ctx_2)
+                        ctx_2(prgm)
+                    end)
+                    $q += 1
+                    $q_2 = $q_2 + 1
+                    $q_start = $q
+                end
+            end
+        end
+        resize!($(lvl.left), $q_start)
+        resize!($(lvl.right), $q_start)
+    end)
+    return lvl
+end
 
 function thaw_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_stop)
     p = freshen(ctx.code, :p)
@@ -276,12 +356,9 @@ function thaw_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_stop
             $(lvl.ptr)[$p + 1] -= $(lvl.ptr)[$p]
         end
     end)
-    lvl.lvl = thaw_level!(lvl.lvl, ctx, value(qos_stop))
+    lvl.lvl = thaw_level!(lvl.buf, ctx, value(qos_stop))
     return lvl
 end
-
-
-
 
 function instantiate(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos) 
@@ -378,11 +455,11 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseRLELevel}, ctx, mod
                             $qos_stop = max($qos_stop << 1, 1)
                             Finch.resize_if_smaller!($(lvl.left), $qos_stop)
                             Finch.resize_if_smaller!($(lvl.right), $qos_stop)
-                            $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, Tp), value(qos_stop, Tp)), ctx))
+                            $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, value(qos, Tp), value(qos_stop, Tp)), ctx))
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), ctx, mode, subprotos),
+                    body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.buf, value(qos, Tp), dirty), ctx, mode, subprotos),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true
