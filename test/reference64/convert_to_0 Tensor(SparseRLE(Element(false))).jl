@@ -6,6 +6,7 @@ begin
     tmp_lvl_2 = tmp_lvl.lvl
     tmp_lvl_val = tmp_lvl.lvl.val
     tmp_lvl_3 = tmp_lvl.buf
+    tmp_lvl_val_2 = tmp_lvl.buf.val
     ref_lvl = ((ex.bodies[1]).bodies[2]).body.rhs.tns.bind.lvl
     ref_lvl_ptr = ref_lvl.ptr
     ref_lvl_idx = ref_lvl.idx
@@ -36,10 +37,10 @@ begin
                     tmp_lvl_qos_stop = max(tmp_lvl_qos_stop << 1, 1)
                     Finch.resize_if_smaller!(tmp_lvl_left, tmp_lvl_qos_stop)
                     Finch.resize_if_smaller!(tmp_lvl_right, tmp_lvl_qos_stop)
-                    Finch.resize_if_smaller!(tmp_lvl_val, tmp_lvl_qos_stop)
-                    Finch.fill_range!(tmp_lvl_val, false, tmp_lvl_qos, tmp_lvl_qos_stop)
+                    Finch.resize_if_smaller!(tmp_lvl_val_2, tmp_lvl_qos_stop)
+                    Finch.fill_range!(tmp_lvl_val_2, false, tmp_lvl_qos, tmp_lvl_qos_stop)
                 end
-                tmp_lvl_val[tmp_lvl_qos] = ref_lvl_2_val
+                tmp_lvl_val_2[tmp_lvl_qos] = ref_lvl_2_val
                 tmp_lvl_left[tmp_lvl_qos] = ref_lvl_i
                 tmp_lvl_right[tmp_lvl_qos] = ref_lvl_i
                 tmp_lvl_qos += 1
@@ -52,10 +53,10 @@ begin
                         tmp_lvl_qos_stop = max(tmp_lvl_qos_stop << 1, 1)
                         Finch.resize_if_smaller!(tmp_lvl_left, tmp_lvl_qos_stop)
                         Finch.resize_if_smaller!(tmp_lvl_right, tmp_lvl_qos_stop)
-                        Finch.resize_if_smaller!(tmp_lvl_val, tmp_lvl_qos_stop)
-                        Finch.fill_range!(tmp_lvl_val, false, tmp_lvl_qos, tmp_lvl_qos_stop)
+                        Finch.resize_if_smaller!(tmp_lvl_val_2, tmp_lvl_qos_stop)
+                        Finch.fill_range!(tmp_lvl_val_2, false, tmp_lvl_qos, tmp_lvl_qos_stop)
                     end
-                    tmp_lvl_val[tmp_lvl_qos] = ref_lvl_2_val
+                    tmp_lvl_val_2[tmp_lvl_qos] = ref_lvl_2_val
                     tmp_lvl_left[tmp_lvl_qos] = phase_stop_3
                     tmp_lvl_right[tmp_lvl_qos] = phase_stop_3
                     tmp_lvl_qos += 1
@@ -71,9 +72,39 @@ begin
         tmp_lvl_ptr[p + 1] += tmp_lvl_ptr[p]
     end
     qos_stop = tmp_lvl_ptr[1 + 1] - 1
-    resize!(tmp_lvl_left, qos_stop)
-    resize!(tmp_lvl_right, qos_stop)
+    resize!(tmp_lvl_val_2, qos_stop)
+    Finch.resize_if_smaller!(tmp_lvl_val, qos_stop)
+    Finch.fill_range!(tmp_lvl_val, false, 1, qos_stop)
+    q = 1
+    q_2 = 1
+    for p_2 = 1:1
+        q_stop = tmp_lvl_ptr[p_2 + 1]
+        while q < q_stop
+            q_head = q
+            while q + 1 < q_stop && tmp_lvl_right[q] == tmp_lvl_left[q + 1] - 1
+                tmp_lvl_3_val = tmp_lvl_val_2[q_head]
+                tmp_lvl_3_val_2 = tmp_lvl_val_2[1 + q]
+                check = isequal(tmp_lvl_3_val, tmp_lvl_3_val_2) && true
+                if !check
+                    break
+                else
+                    q += 1
+                end
+            end
+            tmp_lvl_left[q_2] = tmp_lvl_left[q_head]
+            tmp_lvl_right[q_2] = tmp_lvl_right[q]
+            tmp_lvl_3_val_3 = tmp_lvl_val_2[q_head]
+            tmp_lvl_val[q_2] = tmp_lvl_3_val_3
+            q_2 += 1
+            q += 1
+        end
+        tmp_lvl_ptr[p_2 + 1] = q_2
+    end
+    resize!(tmp_lvl_left, q_2 - 1)
+    resize!(tmp_lvl_right, q_2 - 1)
+    qos_stop = q_2 - 1
     resize!(tmp_lvl_val, qos_stop)
+    resize!(tmp_lvl_val_2, 0)
     result = (tmp = Tensor((SparseRLELevel){Int64}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_left, tmp_lvl_right, tmp_lvl_3)),)
     result
 end

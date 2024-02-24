@@ -36,5 +36,20 @@
             y[i] = x[i]
         end
     end
+
+    x = Tensor(Dense(Dense(Element(0.0))), [1 1 0 0; 1 1 0 0; 0 0 0 4])
+    y = Tensor(SparseRLE(SparseList(Element(0.0))))
+    display(@finch_code begin
+        y .= 0
+        for i = _, j = _
+            y[j, i] = x[j, i]
+        end
+    end)
+    @finch begin
+        y .= 0
+        for i = _, j = _
+            y[j, i] = x[j, i]
+        end
+    end
     println(y)
 end

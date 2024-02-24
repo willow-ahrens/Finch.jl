@@ -229,7 +229,7 @@ function declare_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos, 
             $(lvl.prev_pos) = $(Tp(0))
         end)
     end
-    lvl.lvl = declare_level!(lvl.buf, ctx, qos, init)
+    lvl.buf = declare_level!(lvl.buf, ctx, qos, init)
     return lvl
 end
 
@@ -275,7 +275,7 @@ function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_st
         $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
     end)
     lvl.buf = freeze_level!(lvl.buf, ctx, value(qos_stop))
-    lvl.lvl = declare_level!(lvl.lvl, ctx, value(qos_stop), literal(virtual_level_default(lvl.buf)))
+    lvl.lvl = declare_level!(lvl.lvl, ctx, literal(1), literal(virtual_level_default(lvl.buf)))
     unit = ctx(get_smallest_measure(virtual_level_size(lvl, ctx)[end]))
     p = freshen(ctx.code, :p)
     q = freshen(ctx.code, :q)
@@ -284,6 +284,7 @@ function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_st
     q_2 = freshen(ctx.code, :q_2)
     checkval = freshen(ctx.code, :check)
     push!(ctx.code.preamble, quote
+        $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(1, Tp), value(qos_stop, Tp)), ctx))
         $q = 1
         $q_2 = 1
         for $p = 1:$pos_stop
@@ -299,7 +300,7 @@ function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_st
                         ctx_2.bindings[right] = virtual(VirtualSubFiber(lvl.buf, call(+, value(q, Tp), Tp(1))))
                         check = VirtualScalar(:UNREACHABLE, Bool, false, :check, checkval)
                         exts = virtual_level_size(lvl.buf, ctx_2)
-                        inds = [freshen(ctx_2.code, :i, n) for n = 1:length(exts)]
+                        inds = [index(freshen(ctx_2.code, :i, n)) for n = 1:length(exts)]
                         prgm = assign(access(check, updater), and, call(isequal, access(left, reader, inds...), access(right, reader, inds...)))
                         for (ind, ext) in zip(inds, exts)
                             prgm = loop(ind, ext, prgm)
@@ -310,19 +311,18 @@ function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_st
                     if !$checkval
                         break
                     else
-                        q += 1
+                        $q += 1
                     end
                 end
                 $(lvl.left)[$q_2] = $(lvl.left)[$q_head]
                 $(lvl.right)[$q_2] = $(lvl.right)[$q]
-                @info "idk" $q_head $(lvl.left)[$q_head]
                 $(contain(ctx) do ctx_2
                     src = variable(freshen(ctx.code, :src))
                     ctx_2.bindings[src] = virtual(VirtualSubFiber(lvl.buf, value(q_head, Tp)))
                     dst = variable(freshen(ctx.code, :dst))
-                    ctx_2.bindings[dst] = VirtualSubFiber(lvl.lvl, value(q_2, Tp))
+                    ctx_2.bindings[dst] = virtual(VirtualSubFiber(lvl.lvl, value(q_2, Tp)))
                     exts = virtual_level_size(lvl.buf, ctx_2)
-                    inds = [freshen(ctx_2.code, :i, n) for n = 1:length(exts)]
+                    inds = [index(freshen(ctx_2.code, :i, n)) for n = 1:length(exts)]
                     prgm = assign(access(dst, updater, inds...), initwrite(virtual_level_default(lvl.lvl)), access(src, reader, inds...))
                     for (ind, ext) in zip(inds, exts)
                         prgm = loop(ind, ext, prgm)
@@ -332,7 +332,6 @@ function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_st
                 end)
                 $q_2 += 1
                 $q += 1
-
             end
             $(lvl.ptr)[$p + 1] = $q_2
         end
@@ -341,6 +340,8 @@ function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_st
         $qos_stop = $q_2 - 1
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
+    lvl.buf = declare_level!(lvl.buf, ctx, literal(1), literal(virtual_level_default(lvl.buf)))
+    lvl.buf = freeze_level!(lvl.buf, ctx, literal(0))
     return lvl
 end
 
@@ -361,7 +362,8 @@ function thaw_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_stop
             $(lvl.ptr)[$p + 1] -= $(lvl.ptr)[$p]
         end
     end)
-    lvl.lvl = thaw_level!(lvl.buf, ctx, value(qos_stop))
+    (lvl.lvl, lvl.buf) = (lvl.buf, lvl.lvl)
+    lvl.buf = thaw_level!(lvl.buf, ctx, value(qos_stop))
     return lvl
 end
 
