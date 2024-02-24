@@ -198,7 +198,7 @@ function visit_simplify(node::FinchNode)
     elseif node.kind === virtual
         visit_simplify(node.val)
     else
-        nothing
+        node
     end
 end
 
