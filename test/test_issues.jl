@@ -645,4 +645,17 @@ using CIndices
         @test a[idx] == a_fbr[idx]
         @test a[idx] == a_sw[idx]
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/pull/433
+    input = Tensor(Dense(Dense(Element(Float64(0)))))
+    output = Tensor(Dense(Dense(Element(Float64(0)))))
+
+    eval(Finch.@finch_kernel function blurSimple(input, output)
+        output .= 0
+        for x = _
+            for c = _
+                output[c, x] += (coalesce(input[c, ~(x-1)]) + coalesce(input[c, x],0) + coalesce(input[c, ~(x+1)], 0))/3
+            end
+        end
+    end)
 end
