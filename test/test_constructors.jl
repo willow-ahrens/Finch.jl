@@ -542,13 +542,13 @@
         fbr = dropdefaults!(Tensor(SparseRLE(Element(zero(eltype(arr))))), arr)
         println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Tensor(SparseRLE(lvl.lvl, lvl.shape, lvl.ptr, lvl.left, lvl.right)))
-        @test Structure(fbr) == Structure(Tensor(SparseRLE{Int}(lvl.lvl, lvl.shape, lvl.ptr, lvl.left, lvl.right)))
+        @test Structure(fbr) == Structure(Tensor(SparseRLE(lvl.lvl, lvl.shape, lvl.ptr, lvl.left, lvl.right, lvl.lvl)))
+        @test Structure(fbr) == Structure(Tensor(SparseRLE{Int}(lvl.lvl, lvl.shape, lvl.ptr, lvl.left, lvl.right, lvl.lvl)))
 
         fbr = dropdefaults!(Tensor(SparseRLE{Int16}(Element(zero(eltype(arr))))), arr)
         println(io, "initialized tensor: ", fbr)
         lvl = fbr.lvl
-        @test Structure(fbr) == Structure(Tensor(SparseRLE{Int16}(lvl.lvl, lvl.shape, lvl.ptr, lvl.left, lvl.right)))
+        @test Structure(fbr) == Structure(Tensor(SparseRLE{Int16}(lvl.lvl, lvl.shape, lvl.ptr, lvl.left, lvl.right, lvl.lvl)))
 
         fbr = Tensor(SparseRLE(Element(0.0), 7))
         println(io, "sized tensor: ", fbr)

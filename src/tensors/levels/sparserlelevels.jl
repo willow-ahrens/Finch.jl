@@ -27,15 +27,16 @@ struct SparseRLELevel{Ti, Ptr<:AbstractVector, Left<:AbstractVector, Right<:Abst
     ptr::Ptr
     left::Left
     right::Right
+    buf::Lvl
 end
 
 const SparseRLE = SparseRLELevel
 SparseRLELevel(lvl::Lvl) where {Lvl} = SparseRLELevel{Int}(lvl)
 SparseRLELevel(lvl, shape, args...) = SparseRLELevel{typeof(shape)}(lvl, shape, args...)
 SparseRLELevel{Ti}(lvl) where {Ti} = SparseRLELevel(lvl, zero(Ti))
-SparseRLELevel{Ti}(lvl, shape) where {Ti} = SparseRLELevel{Ti}(lvl, shape, postype(lvl)[1], Ti[], Ti[])
-SparseRLELevel{Ti}(lvl::Lvl, shape, ptr::Ptr, left::Left, right::Right) where {Ti, Lvl, Ptr, Left, Right} =
-    SparseRLELevel{Ti, Ptr, Left, Right, Lvl}(lvl, Ti(shape), ptr, left, right)
+SparseRLELevel{Ti}(lvl, shape) where {Ti} = SparseRLELevel{Ti}(lvl, shape, postype(lvl)[1], Ti[], Ti[], similar_level(lvl))
+SparseRLELevel{Ti}(lvl::Lvl, shape, ptr::Ptr, left::Left, right::Right, buf::Lvl) where {Ti, Lvl, Ptr, Left, Right} =
+    SparseRLELevel{Ti, Ptr, Left, Right, Lvl}(lvl, Ti(shape), ptr, left, right, buf)
 
 Base.summary(lvl::SparseRLELevel) = "SparseRLE($(summary(lvl.lvl)))"
 similar_level(lvl::SparseRLELevel) = SparseRLE(similar_level(lvl.lvl))
@@ -50,21 +51,22 @@ function moveto(lvl::SparseRLELevel{Ti}, device) where {Ti}
     ptr = moveto(lvl.ptr, device)
     left = moveto(lvl.left, device)
     right = moveto(lvl.right, device)
-    return SparseRLELevel{Ti}(lvl_2, lvl.shape, lvl.ptr, lvl.left, lvl.right)
+    buf = moveto(lvl.buf, device)
+    return SparseRLELevel{Ti}(lvl_2, lvl.shape, lvl.ptr, lvl.left, lvl.buf)
 end
 
 pattern!(lvl::SparseRLELevel{Ti}) where {Ti} = 
-    SparseRLELevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.left, lvl.right)
+    SparseRLELevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.left, lvl.right, pattern!(lvl.buf))
 
 function countstored_level(lvl::SparseRLELevel, pos)
     countstored_level(lvl.lvl, lvl.left[lvl.ptr[pos + 1]]-1)
 end
 
 redefault!(lvl::SparseRLELevel{Ti}, init) where {Ti} = 
-    SparseRLELevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.left, lvl.right)
+    SparseRLELevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.left, lvl.right, redefault!(lvl.buf, init))
 
 Base.resize!(lvl::SparseRLELevel{Ti}, dims...) where {Ti} = 
-    SparseRLELevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.left, lvl.right)
+    SparseRLELevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.left, lvl.right, resize!(lvl.buf, dims[1:end-1]...))
 
 function Base.show(io::IO, lvl::SparseRLELevel{Ti, Ptr, Left, Right, Lvl}) where {Ti, Ptr, Left, Right, Lvl}
     if get(io, :compact, false)
@@ -84,6 +86,8 @@ function Base.show(io::IO, lvl::SparseRLELevel{Ti, Ptr, Left, Right, Lvl}) where
         show(io, lvl.left)
         print(io, ", ")
         show(io, lvl.right)
+        print(io, ", ")
+        show(io, lvl.buf)
     end
     print(io, ")")
 end
@@ -119,7 +123,6 @@ function (fbr::SubFiber{<:SparseRLELevel})(idxs...)
     r1 != r2 ? default(fbr_2) : fbr_2(idxs[1:end-1]...)
 end
 
-
 mutable struct VirtualSparseRLELevel <: AbstractVirtualLevel
     lvl
     ex
@@ -130,6 +133,7 @@ mutable struct VirtualSparseRLELevel <: AbstractVirtualLevel
     ptr
     left
     right
+    buf
     prev_pos
 end
 
@@ -148,15 +152,18 @@ function virtualize(ex, ::Type{SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}, ctx, 
     ptr = freshen(ctx, tag, :_ptr)
     left = freshen(ctx, tag, :_left)
     right = freshen(ctx, tag, :_right)
+    buf = freshen(ctx, tag, :_buf)
     push!(ctx.preamble, quote
         $sym = $ex
         $ptr = $sym.ptr
         $left = $sym.left
         $right = $sym.right
+        $buf = $sym.buf
     end)
     prev_pos = freshen(ctx, sym, :_prev_pos)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    VirtualSparseRLELevel(lvl_2, sym, Ti, shape, qos_fill, qos_stop, ptr, left, right, prev_pos)
+    buf = virtualize(:($sym.buf), Lvl, ctx, sym)
+    VirtualSparseRLELevel(lvl_2, sym, Ti, shape, qos_fill, qos_stop, ptr, left, right, buf, prev_pos)
 end
 function lower(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
@@ -166,6 +173,7 @@ function lower(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, ::DefaultStyle
             $(lvl.ptr),
             $(lvl.left),
             $(lvl.right),
+            $(ctx(lvl.buf)),
         )
     end
 end
@@ -201,6 +209,7 @@ function virtual_moveto_level(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler,
         $(lvl.right) = $right_2
     end)
     virtual_moveto_level(lvl.lvl, ctx, arch)
+    virtual_moveto_level(lvl.buf, ctx, arch)
 end
 
 virtual_level_eltype(lvl::VirtualSparseRLELevel) = virtual_level_eltype(lvl.lvl)

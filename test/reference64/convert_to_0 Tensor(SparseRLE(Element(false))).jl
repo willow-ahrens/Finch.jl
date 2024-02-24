@@ -5,6 +5,7 @@ begin
     tmp_lvl_right = tmp_lvl.right
     tmp_lvl_2 = tmp_lvl.lvl
     tmp_lvl_val = tmp_lvl.lvl.val
+    tmp_lvl_3 = tmp_lvl.buf
     ref_lvl = ((ex.bodies[1]).bodies[2]).body.rhs.tns.bind.lvl
     ref_lvl_ptr = ref_lvl.ptr
     ref_lvl_idx = ref_lvl.idx
@@ -73,6 +74,6 @@ begin
     resize!(tmp_lvl_left, qos_stop)
     resize!(tmp_lvl_right, qos_stop)
     resize!(tmp_lvl_val, qos_stop)
-    result = (tmp = Tensor((SparseRLELevel){Int64}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_left, tmp_lvl_right)),)
+    result = (tmp = Tensor((SparseRLELevel){Int64}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_left, tmp_lvl_right, tmp_lvl_3)),)
     result
 end
