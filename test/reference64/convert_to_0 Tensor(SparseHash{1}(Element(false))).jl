@@ -71,7 +71,7 @@ begin
     end
     resize!(tmp_lvl_srt, length(tmp_lvl_tbl))
     copyto!(tmp_lvl_srt, pairs(tmp_lvl_tbl))
-    sort!(tmp_lvl_srt, by = hashkeycmp)
+    sort!(tmp_lvl_srt, by = (Finch).hashkeycmp)
     resize!(tmp_lvl_ptr, 1 + 1)
     for p = 2:1 + 1
         tmp_lvl_ptr[p] += tmp_lvl_ptr[p - 1]

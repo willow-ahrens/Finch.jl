@@ -21,12 +21,12 @@ begin
     pos_stop = input_lvl_2.shape * input_lvl.shape
     Finch.resize_if_smaller!(output_lvl_2_val, pos_stop)
     Finch.fill_range!(output_lvl_2_val, 0.0, 1, pos_stop)
-    input_lvl_2_val = moveto(input_lvl_2_val, cpu)
+    input_lvl_2_val = (Finch).moveto(input_lvl_2_val, cpu)
     val_2 = output_lvl_2_val
-    output_lvl_2_val = moveto(output_lvl_2_val, cpu)
+    output_lvl_2_val = (Finch).moveto(output_lvl_2_val, cpu)
     Threads.@threads for i = 1:cpu.n
             val_3 = tmp_lvl_val
-            tmp_lvl_val = moveto(tmp_lvl_val, CPUThread(i, cpu, Serial()))
+            tmp_lvl_val = (Finch).moveto(tmp_lvl_val, CPUThread(i, cpu, Serial()))
             phase_start_2 = max(1, 1 + fld(y_stop * (-1 + i), cpu.n))
             phase_stop_2 = min(y_stop, fld(y_stop * i, cpu.n))
             if phase_stop_2 >= phase_start_2
