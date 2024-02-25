@@ -125,6 +125,7 @@ function virtual_moveto_level(lvl::VirtualSeparationLevel, ctx, arch)
     pointers = freshen(ctx.code, lvl.val)
     push!(ctx.code.preamble, quote
               $pointers = $(lvl.val)
+              $(lvl.val) = moveto($(lvl.val), $(ctx(arch)))
           end)
     push!(ctx.code.epilogue, quote
               $(lvl.val) = $pointers
