@@ -82,6 +82,7 @@ countstored_level(lvl::SeparateLevel, pos) = pos
 mutable struct VirtualSeparateLevel <: AbstractVirtualLevel
     lvl  # stand in for the sublevel for virutal resize, etc.
     ex
+    val
     Tv
     Lvl
     Val
@@ -95,17 +96,20 @@ is_level_atomic(lvl::VirtualSeparateLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
 
 function lower(lvl::VirtualSeparateLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
-        $SeparateLevel{$(lvl.Lvl), $(lvl.Val)}($(ctx(lvl.lvl)), $(lvl.ex).val)
+        $SeparateLevel{$(lvl.Lvl), $(lvl.Val)}($(ctx(lvl.lvl)), $(lvl.val))
     end
 end
 
 function virtualize(ex, ::Type{SeparateLevel{Lvl, Val}}, ctx, tag=:lvl) where {Lvl, Val}
     sym = freshen(ctx, tag)
+    pointers = freshen(ctx, tag, :_pointers)
+
     push!(ctx.preamble, quote
-        $sym = $ex
+              $sym = $ex
+              $pointers = $ex.val
     end)
     lvl_2 = virtualize(:($ex.lvl), Lvl, ctx, sym)
-    VirtualSeparateLevel(lvl_2, sym, typeof(level_default(Lvl)), Lvl, Val)
+    VirtualSeparateLevel(lvl_2, sym, pointers, typeof(level_default(Lvl)), Lvl, Val)
 end
 
 Base.summary(lvl::VirtualSeparateLevel) = "Separate($(lvl.Lvl))"
@@ -114,6 +118,19 @@ virtual_level_resize!(lvl::VirtualSeparateLevel, ctx, dims...) = (lvl.lvl = virt
 virtual_level_size(lvl::VirtualSeparateLevel, ctx) = virtual_level_size(lvl.lvl, ctx)
 virtual_level_eltype(lvl::VirtualSeparateLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSeparateLevel) = virtual_level_default(lvl.lvl)
+
+function virtual_moveto_level(lvl::VirtualSeparationLevel, ctx, arch)
+    virtual_moveto_level(lvl.lvl, ctx, arch)
+    # Need to move each pointer...
+    pointers = freshen(ctx.code, lvl.val)
+    push!(ctx.code.preamble, quote
+              $pointers = $(lvl.val)
+          end)
+    push!(ctx.code.epilogue, quote
+              $(lvl.val) = $pointers
+          end)
+end
+
 
 function declare_level!(lvl::VirtualSeparateLevel, ctx, pos, init)
     #declare_level!(lvl.lvl, ctx_2, literal(1), init)
@@ -126,7 +143,7 @@ function assemble_level!(lvl::VirtualSeparateLevel, ctx, pos_start, pos_stop)
     pos = freshen(ctx.code, :pos)
     sym = freshen(ctx.code, :pointer_to_lvl)
     push!(ctx.code.preamble, quote
-        Finch.resize_if_smaller!($(lvl.ex).val, $(ctx(pos_stop)))
+        Finch.resize_if_smaller!($(lvl.val), $(ctx(pos_stop)))
         for $pos in $(ctx(pos_start)):$(ctx(pos_stop))
             $sym = similar_level($(lvl.ex).lvl)
             $(contain(ctx) do ctx_2
@@ -136,7 +153,7 @@ function assemble_level!(lvl::VirtualSeparateLevel, ctx, pos_start, pos_stop)
                 push!(ctx_2.code.preamble, assemble_level!(lvl_2, ctx_2, literal(1), literal(1)))
                 contain(ctx_2) do ctx_3
                     lvl_2 = freeze_level!(lvl_2, ctx_3, literal(1))
-                    :($(lvl.ex).val[$(ctx_3(pos))] = $(ctx_3(lvl_2)))
+                    :($(lvl.val)[$(ctx_3(pos))] = $(ctx_3(lvl_2)))
                 end
             end)
         end
@@ -152,12 +169,12 @@ function reassemble_level!(lvl::VirtualSeparateLevel, ctx, pos_start, pos_stop)
     push!(ctx.code.preamble, quote
         for $idx in $(ctx(pos_start)):$(ctx(pos_stop))
             $(contain(ctx) do ctx_2
-                lvl_2 = virtualize(:($(lvl.ex).val[$idx]), lvl.Lvl, ctx_2.code, sym)
+                lvl_2 = virtualize(:($(lvl.val)[$idx]), lvl.Lvl, ctx_2.code, sym)
                 push!(ctx_2.code.preamble, assemble_level!(lvl_2, ctx_2, literal(1), literal(1)))
                 lvl_2 = declare_level!(lvl_2, ctx_2, literal(1), init)
                 contain(ctx_2) do ctx_3
                     lvl_2 = freeze_level!(lvl_2, ctx_3, literal(1))
-                    :($(lvl.ex).val[$(ctx_3(pos))] = $(ctx_3(lvl_2)))
+                    :($(lvl.val)[$(ctx_3(pos))] = $(ctx_3(lvl_2)))
                 end
             end)
         end
@@ -182,7 +199,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSeparateLevel}, ctx, mode::Read
     val = freshen(ctx.code, lvl.ex, :_val)
     return body = Thunk(
         body = (ctx) -> begin
-            lvl_2 = virtualize(:($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, ctx.code, sym)
+            lvl_2 = virtualize(:($(lvl.val)[$(ctx(pos))]), lvl.Lvl, ctx.code, sym)
             instantiate(VirtualSubFiber(lvl_2, literal(1)), ctx, mode, protos)
         end,
     )
@@ -195,14 +212,14 @@ function instantiate(fbr::VirtualSubFiber{VirtualSeparateLevel}, ctx, mode::Upda
 
     return body = Thunk(
         body = (ctx) -> begin
-            lvl_2 = virtualize(:($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, ctx.code, sym)
+            lvl_2 = virtualize(:($(lvl.val)[$(ctx(pos))]), lvl.Lvl, ctx.code, sym)
             lvl_2 = thaw_level!(lvl_2, ctx, literal(1))
             push!(ctx.code.preamble, assemble_level!(lvl_2, ctx, literal(1), literal(1)))
             res = instantiate(VirtualSubFiber(lvl_2, literal(1)), ctx, mode, protos)
             push!(ctx.code.epilogue, 
                 contain(ctx) do ctx_2
                     lvl_2 = freeze_level!(lvl_2, ctx_2, literal(1))
-                    :($(lvl.ex).val[$(ctx_2(pos))] = $(ctx_2(lvl_2)))
+                    :($(lvl.val)[$(ctx_2(pos))] = $(ctx_2(lvl_2)))
                 end
             )
             res
@@ -216,14 +233,14 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSeparateLevel}, ctx, mode
 
     return body = Thunk(
         body = (ctx) -> begin
-            lvl_2 = virtualize(:($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, ctx.code, sym)
+            lvl_2 = virtualize(:($(lvl.val)[$(ctx(pos))]), lvl.Lvl, ctx.code, sym)
             lvl_2 = thaw_level!(lvl_2, ctx, literal(1))
             push!(ctx.code.preamble, assemble_level!(lvl_2, ctx, literal(1), literal(1)))
             res = instantiate(VirtualHollowSubFiber(lvl_2, literal(1), fbr.dirty), ctx, mode, protos)
             push!(ctx.code.epilogue, 
                 contain(ctx) do ctx_2
                     lvl_2 = freeze_level!(lvl_2, ctx_2, literal(1))
-                    :($(lvl.ex).val[$(ctx_2(pos))] = $(ctx_2(lvl_2)))
+                    :($(lvl.val)[$(ctx_2(pos))] = $(ctx_2(lvl_2)))
                 end
             )
             res
