@@ -114,7 +114,7 @@ Finch.isannihilator(::MyAlgebra, ::typeof(gcd), x) = x == 1
 We pass the algebra to Finch as an optional first argument:
 
 ```
-@finch MyAlgebra() (w .= 1; for i=_; w[i] = gcd(u[i], v[i]) end)
+@finch MyAlgebra() (w .= 1; for i=_; w[i] = gcd(u[i], v[i]) end; return w)
 ```
 
 

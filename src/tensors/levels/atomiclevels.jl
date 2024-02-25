@@ -53,16 +53,15 @@ function Base.show(io::IO, lvl::AtomicLevel{AVal, Lvl}) where {AVal, Lvl}
     print(io, ")")
 end 
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:AtomicLevel}, depth)
-    p = fbr.pos
-    lvl = fbr.lvl
-    if p > length(lvl.locks)
-        print(io, "Atomic -> undef")
-        return
-    end
+labelled_show(io::IO, ::SubFiber{<:AtomicLevel}) =
     print(io, "Atomic -> ")
-    display_fiber(io, mime, SubFiber(lvl.lvl, p), depth)
+
+function labelled_children(fbr::SubFiber{<:AtomicLevel})
+    lvl = fbr.lvl
+    pos = fbr.pos
+    [LabelledTree(SubFiber(lvl.lvl, pos))]
 end
+
 
 @inline level_ndims(::Type{<:AtomicLevel{AVal, Lvl}}) where {AVal, Lvl} = level_ndims(Lvl)
 @inline level_size(lvl::AtomicLevel{AVal, Lvl}) where {AVal, Lvl} = level_size(lvl.lvl)
@@ -157,6 +156,10 @@ function reassemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
 end
 
 function freeze_level!(lvl::VirtualAtomicLevel, ctx, pos)
+    idx = freshen(ctx.code, :idx)
+    push!(ctx.code.preamble, quote
+        resize!($(lvl.locks), $(ctx(pos)))
+    end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, pos)
     return lvl
 end
@@ -164,17 +167,6 @@ end
 function thaw_level!(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, pos)
     lvl.lvl = thaw_level!(lvl.lvl, ctx, pos)
     return lvl
-end
-
-function trim_level!(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, pos)
-    # FIXME: Deallocate atomics?
-    posV = ctx(pos)
-    idx = freshen(ctx.code, :idx)
-    push!(ctx.code.preamble, quote
-              resize!($(lvl.locks), $posV)
-          end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, pos)
-    lvl
 end
 
 function virtual_moveto_level(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, arch)

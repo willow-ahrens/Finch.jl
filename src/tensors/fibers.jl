@@ -1,5 +1,4 @@
-abstract type AbstractFiber{Lvl} end
-abstract type AbstractVirtualTensor end
+abstract type AbstractFiber{Lvl} <: AbstractTensor end
 abstract type AbstractVirtualFiber{Lvl} <: AbstractVirtualTensor end
 
 """
@@ -120,6 +119,53 @@ virtual_default(tns::AbstractVirtualFiber, ctx) = virtual_level_default(tns.lvl)
 postype(fbr::AbstractVirtualFiber) = postype(fbr.lvl)
 allocator(fbr::AbstractVirtualFiber) = allocator(fbr.lvl)
 
+struct LabelledTree
+    key 
+    node
+end
+
+LabelledTree(node) = LabelledTree(nothing, node)
+
+function Base.show(io::IO, node::LabelledTree)
+    if node.key !== nothing
+        show(io, something(node.key))
+        print(io, ": ")
+    end
+    labelled_show(io, node.node)
+end
+labelled_show(io, node) = show(io, node)
+
+AbstractTrees.children(node::LabelledTree) = labelled_children(node.node)
+labelled_children(node) = ()
+
+struct CartesianLabel
+    idxs
+end
+
+cartesian_label(args...) = CartesianLabel(Any[args...])
+
+function Base.show(io::IO, key::CartesianLabel)
+    print(io, "[")
+    join(io, key.idxs, ", ")
+    print(io, "]")
+end
+
+struct RangeLabel
+    start
+    stop
+end
+
+range_label(start = nothing, stop = nothing) = RangeLabel(start, stop)
+
+function Base.show(io::IO, key::RangeLabel)
+    if key.start !== nothing
+        print(io, something(key.start))
+    end
+    print(io, ":")
+    if key.stop !== nothing
+        print(io, something(key.stop))
+    end
+end
 
 function declare!(fbr::VirtualFiber, ctx::AbstractCompiler, init)
     lvl = declare_level!(fbr.lvl, ctx, literal(1), init)
@@ -173,19 +219,19 @@ modified.
 ```jldoctest
 julia> A = Tensor(SparseList(Element(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
 SparseList (0.0) [1:10]
-├─[1]: 2.0
-├─[3]: 3.0
-├─[5]: 4.0
-├─[7]: 5.0
-├─[9]: 6.0
+├─ [1]: 2.0
+├─ [3]: 3.0
+├─ [5]: 4.0
+├─ [7]: 5.0
+└─ [9]: 6.0
 
 julia> redefault!(A, Inf)
 SparseList (Inf) [1:10]
-├─[1]: 2.0
-├─[3]: 3.0
-├─[5]: 4.0
-├─[7]: 5.0
-├─[9]: 6.0
+├─ [1]: 2.0
+├─ [3]: 3.0
+├─ [5]: 4.0
+├─ [7]: 5.0
+└─ [9]: 6.0
 ```
 """
 redefault!(fbr::Tensor, init) = Tensor(redefault!(fbr.lvl, init))
@@ -210,10 +256,6 @@ function thaw!(fbr::VirtualFiber, ctx::AbstractCompiler)
     return VirtualFiber(thaw_level!(fbr.lvl, ctx, literal(1)))
 end
 
-function trim!(fbr::VirtualFiber, ctx)
-    VirtualFiber(trim_level!(fbr.lvl, ctx, literal(1)))
-end
-
 supports_reassembly(lvl) = false
 
 function Base.show(io::IO, fbr::Tensor)
@@ -224,7 +266,7 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Tensor)
     if get(io, :compact, false)
         print(io, "Tensor($(summary(fbr.lvl)))")
     else
-        display_fiber(io, mime, fbr, 0)
+        print_tree(io, LabelledTree(SubFiber(fbr.lvl, 1)))
     end
 end
 
@@ -244,7 +286,7 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::SubFiber)
     if get(io, :compact, false)
         print(io, "SubFiber($(summary(fbr.lvl)), $(fbr.pos))")
     else
-        display_fiber(io, mime, fbr, 0)
+        print_tree(io, LabelledTree(fbr))
     end
 end
 
@@ -258,27 +300,6 @@ end
 
 (fbr::Tensor)(idx...) = SubFiber(fbr.lvl, 1)(idx...)
 
-display_fiber(io::IO, mime::MIME"text/plain", fbr::Tensor, depth) = display_fiber(io, mime, SubFiber(fbr.lvl, 1), depth)
-function display_fiber_data(io::IO, mime::MIME"text/plain", fbr, depth, N, crds, print_coord, get_fbr)
-    function helper(crd)
-        println(io)
-        print(io, "│ " ^ depth, "├─"^N, "[", ":,"^(ndims(fbr) - N))
-        print_coord(io, crd)
-        print(io, "]: ")
-        display_fiber(io, mime, get_fbr(crd), depth + N)
-    end
-    cap = 2
-    if length(crds) > 2cap + 1
-        foreach(helper, crds[1:cap])
-        println(io)
-        print(io, "│ " ^ depth, "│ ⋮")
-        foreach(helper, crds[end - cap + 1:end])
-    else
-        foreach(helper, crds)
-    end
-end
-display_fiber(io::IO, mime::MIME"text/plain", fbr, depth) = show(io, mime, fbr) #TODO get rid of this eventually
-
 """
     countstored(arr)
 
@@ -290,8 +311,6 @@ See also: (`nnz`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseAr
 countstored(fbr::Tensor) = countstored_level(fbr.lvl, 1)
 
 countstored(arr::Array) = length(arr)
-
-
 
 @staged function assemble!(lvl)
     contain(LowerJulia()) do ctx

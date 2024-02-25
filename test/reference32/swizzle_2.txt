@@ -1,10 +1,11 @@
 begin
-    x = ex.body.body.body.lhs.tns.bind
+    x = (ex.bodies[1]).body.body.body.lhs.tns.bind
     x_val = x.val
-    tns_lvl = ex.body.body.body.rhs.tns.bind.body.lvl
+    tns_lvl = (ex.bodies[1]).body.body.body.rhs.tns.bind.body.lvl
     tns_lvl_2 = tns_lvl.lvl
     tns_lvl_3 = tns_lvl_2.lvl
     tns_lvl_3_val = tns_lvl_3.lvl.val
+    result = nothing
     for i_3 = 1:tns_lvl.shape
         tns_lvl_q = (1 - 1) * tns_lvl.shape + i_3
         for j_3 = 1:tns_lvl_2.shape
@@ -16,5 +17,7 @@ begin
             end
         end
     end
-    (x = (Scalar){0.0, Float64}(x_val),)
+    result = ()
+    x.val = x_val
+    result
 end

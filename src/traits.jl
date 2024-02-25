@@ -139,7 +139,7 @@ fiber_ctr_hollow(fbr::SparseData, protos) = :(Tensor($(level_ctr(fbr, protos...)
 fiber_ctr(fbr, protos) = :(Tensor($(level_ctr(fbr, protos...))))
 
 level_ctr(fbr::SparseData, proto::Union{Nothing, typeof(walk), typeof(extrude)}, protos...) = :(SparseList($(level_ctr(fbr.lvl, protos...))))
-level_ctr(fbr::SparseData, proto::Union{typeof(laminate)}, protos...) = :(SparseHash{1}($(level_ctr(fbr.lvl, protos...))))
+level_ctr(fbr::SparseData, proto::Union{typeof(laminate)}, protos...) = :(SparseDict($(level_ctr(fbr.lvl, protos...))))
 level_ctr(fbr::DenseData, proto, protos...) = :(Dense($(level_ctr(fbr.lvl, protos...))))
 level_ctr(fbr::ExtrudeData, proto, protos...) = :(Dense($(level_ctr(fbr.lvl, protos...)), 1))
 level_ctr(fbr::RepeatData, proto::Union{Nothing, typeof(walk), typeof(extrude)}) = :(Repeat{$(fbr.default), $(fbr.eltype)}())

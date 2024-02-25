@@ -19,20 +19,20 @@ The type `Ptr` is the type for the pointer array.
 ```jldoctest
 julia> Tensor(Dense(SparseCOO{1}(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─[:,1]: SparseCOO (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,2]: SparseCOO (0.0) [1:3]
-├─[:,3]: SparseCOO (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+├─ [:, 1]: SparseCOO{1} (0.0) [1:3]
+│  ├─ [1]: 10.0
+│  └─ [2]: 30.0
+├─ [:, 2]: SparseCOO{1} (0.0) [1:3]
+└─ [:, 3]: SparseCOO{1} (0.0) [1:3]
+   ├─ [1]: 20.0
+   └─ [3]: 40.0
 
 julia> Tensor(SparseCOO{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
-SparseCOO (0.0) [1:3,1:3]
-├─├─[1, 1]: 10.0
-├─├─[2, 1]: 30.0
-├─├─[1, 3]: 20.0
-├─├─[3, 3]: 40.0
+SparseCOO{2} (0.0) [:,1:3]
+├─ [1, 1]: 10.0
+├─ [2, 1]: 30.0
+├─ [1, 3]: 20.0
+└─ [3, 3]: 40.0
 ```
 """
 struct SparseCOOLevel{N, TI<:Tuple, Ptr, Tbl, Lvl} <: AbstractLevel
@@ -107,23 +107,16 @@ function Base.show(io::IO, lvl::SparseCOOLevel{N, TI}) where {N, TI}
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseCOOLevel{N}}, depth) where {N}
-    p = fbr.pos
+labelled_show(io::IO, fbr::SubFiber{<:SparseCOOLevel{N}}) where {N} =
+    print(io, "SparseCOO{", N, "} (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+
+function labelled_children(fbr::SubFiber{<:SparseCOOLevel{N}}) where {N}
     lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "SparseCOO(undef...)")
-        return
+    pos = fbr.pos
+    pos + 1 > length(lvl.ptr) && return []
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - N]..., map(n -> lvl.tbl[n][qos], 1:N)...), SubFiber(lvl.lvl, qos))
     end
-
-    crds = fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1
-
-    print_coord(io, q) = join(io, map(n -> fbr.lvl.tbl[n][q], 1:N), ", ")
-    get_fbr(q) = fbr(map(n -> fbr.lvl.tbl[n][q], 1:N)...)
-
-    print(io, "SparseCOO (", default(fbr), ") [", ":,"^(ndims(fbr) - N), "1:")
-    join(io, fbr.lvl.shape, ",1:") 
-    print(io, "]")
-    display_fiber_data(io, mime, fbr, depth, N, crds, print_coord, get_fbr)
 end
 
 @inline level_ndims(::Type{<:SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}}) where {N, TI, Ptr, Tbl, Lvl} = N + level_ndims(Lvl)
@@ -217,7 +210,6 @@ function declare_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos, 
     TI = lvl.TI
     Tp = postype(lvl)
 
-    qos = call(-, call(getindex, :($(lvl.ptr)), call(+, pos, 1)), 1)
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
@@ -227,22 +219,7 @@ function declare_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos, 
             $(lvl.prev_pos) = $(Tp(0))
         end)
     end
-    lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
-    return lvl
-end
-
-function trim_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos)
-    Tp = postype(lvl)
-    qos = freshen(ctx.code, :qos)
-
-    push!(ctx.code.preamble, quote
-        resize!($(lvl.ptr), $(ctx(pos)) + 1)
-        $qos = $(lvl.ptr)[end] - $(Tp(1))
-        $(Expr(:block, map(1:lvl.N) do n
-            :(resize!($(lvl.tbl[n]), $qos))
-        end...))
-    end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
+    lvl.lvl = declare_level!(lvl.lvl, ctx, literal(Tp(0)), init)
     return lvl
 end
 
@@ -260,10 +237,14 @@ function freeze_level!(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, pos_st
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
+        resize!($(lvl.ptr), $pos_stop + 1)
         for $p = 2:($pos_stop + 1)
             $(lvl.ptr)[$p] += $(lvl.ptr)[$p - 1]
         end
         $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
+        $(Expr(:block, map(1:lvl.N) do n
+            :(resize!($(lvl.tbl[n]), $qos_stop))
+        end...))
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl

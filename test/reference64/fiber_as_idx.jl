@@ -1,15 +1,16 @@
 begin
-    B_lvl = (ex.bodies[1]).tns.bind.lvl
+    B_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     B_lvl_2 = B_lvl.lvl
     B_lvl_val = B_lvl.lvl.val
-    A_lvl = (ex.bodies[2]).body.rhs.tns.bind.lvl
+    A_lvl = ((ex.bodies[1]).bodies[2]).body.rhs.tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_2_val = A_lvl_2.lvl.val
-    I_lvl = ((ex.bodies[2]).body.rhs.idxs[1]).tns.bind.lvl
-    I_lvl_ptr = ((ex.bodies[2]).body.rhs.idxs[1]).tns.bind.lvl.ptr
-    I_lvl_idx = ((ex.bodies[2]).body.rhs.idxs[1]).tns.bind.lvl.idx
-    I_lvl_val = ((ex.bodies[2]).body.rhs.idxs[1]).tns.bind.lvl.val
+    I_lvl = (((ex.bodies[1]).bodies[2]).body.rhs.idxs[1]).tns.bind.lvl
+    I_lvl_ptr = (((ex.bodies[1]).bodies[2]).body.rhs.idxs[1]).tns.bind.lvl.ptr
+    I_lvl_idx = (((ex.bodies[1]).bodies[2]).body.rhs.idxs[1]).tns.bind.lvl.idx
+    I_lvl_val = (((ex.bodies[1]).bodies[2]).body.rhs.idxs[1]).tns.bind.lvl.val
     A_lvl.shape == I_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.shape) != $(I_lvl.shape))"))
+    result = nothing
     Finch.resize_if_smaller!(B_lvl_val, A_lvl.shape)
     Finch.fill_range!(B_lvl_val, 0, 1, A_lvl.shape)
     I_lvl_q = I_lvl_ptr[1]
@@ -57,7 +58,7 @@ begin
             break
         end
     end
-    qos = 1 * A_lvl.shape
-    resize!(B_lvl_val, qos)
-    (B = Tensor((DenseLevel){Int64}(B_lvl_2, A_lvl.shape)),)
+    resize!(B_lvl_val, A_lvl.shape)
+    result = (B = Tensor((DenseLevel){Int64}(B_lvl_2, A_lvl.shape)),)
+    result
 end

@@ -24,7 +24,7 @@
                 () -> Dense(base()),
                 () -> RepeatRLE{false}(),
                 () -> SparseRLE(base()),
-                () -> Dense(Separation(base())),
+                () -> Dense(Separate(base())),
             ]
                 for (idx, arr) in enumerate([
                     fill(false, 5),
@@ -81,9 +81,11 @@
             () -> SparseList(base()),
             () -> SparseVBL(base()),
             () -> SparseByteMap(base()),
+            () -> SparseDict(base()),
             () -> SparseHash{1}(base()),
             () -> SparseCOO{1}(base()),
             () -> SparseRLE(base()),
+            () -> Sparse(base()),
         ]
             output = false
             for arr in [
@@ -264,6 +266,7 @@
     for fmt in [
         Tensor(SparseHash{2}(Element(0.0)))
         Tensor(Dense(SparseHash{1}(Element(0.0))))
+        Tensor(Dense(SparseDict(Element(0.0))))
         Tensor(Dense(SparseByteMap(Element(0.0))))
     ]
         arr_1 = fsprand(10, 10, 0.5)
@@ -288,12 +291,12 @@
 
     for inner in [
         () -> Dense(Element{false}()),
-        () -> Dense(Separation(Element{false}())),
+        () -> Dense(Separate(Element{false}())),
     ]
         for outer in [
-            () -> Dense(Separation(inner())),
+            () -> Dense(Separate(inner())),
             () -> SparseList(inner()),
-            () -> SparseList(Separation(inner())),
+            () -> SparseList(Separate(inner())),
         ]
 
             for (arr_key, arr) in [
@@ -308,7 +311,7 @@
                 res = Tensor(SparseList(SparseList(Element(false))))
                 ref = dropdefaults!(ref, arr)
                 tmp = Tensor(outer())
-                @testset "convert Separation $arr_key $(summary(tmp))"  begin
+                @testset "convert Separate $arr_key $(summary(tmp))"  begin
                     @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
                     check = Scalar(true)
                     @finch for j=_, i=_; check[] &= tmp[i, j] == ref[i, j] end

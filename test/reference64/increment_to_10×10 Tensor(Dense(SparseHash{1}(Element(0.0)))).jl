@@ -1,25 +1,24 @@
 begin
-    fmt_lvl = ex.body.body.lhs.tns.bind.lvl
+    fmt_lvl = (ex.bodies[1]).body.body.lhs.tns.bind.lvl
     fmt_lvl_2 = fmt_lvl.lvl
-    fmt_lvl_2_qos_fill = length(fmt_lvl_2.tbl)
-    fmt_lvl_2_qos_stop = fmt_lvl_2_qos_fill
     fmt_lvl_ptr = fmt_lvl.lvl.ptr
     fmt_lvl_tbl = fmt_lvl.lvl.tbl
     fmt_lvl_srt = fmt_lvl.lvl.srt
-    fmt_lvl_3 = fmt_lvl_2.lvl
     fmt_lvl_2_val = fmt_lvl_2.lvl.val
-    arr_2_lvl = ex.body.body.rhs.tns.bind.lvl
-    arr_2_lvl_ptr = ex.body.body.rhs.tns.bind.lvl.ptr
-    arr_2_lvl_tbl1 = ex.body.body.rhs.tns.bind.lvl.tbl[1]
-    arr_2_lvl_tbl2 = ex.body.body.rhs.tns.bind.lvl.tbl[2]
+    arr_2_lvl = (ex.bodies[1]).body.body.rhs.tns.bind.lvl
+    arr_2_lvl_ptr = (ex.bodies[1]).body.body.rhs.tns.bind.lvl.ptr
+    arr_2_lvl_tbl1 = (ex.bodies[1]).body.body.rhs.tns.bind.lvl.tbl[1]
+    arr_2_lvl_tbl2 = (ex.bodies[1]).body.body.rhs.tns.bind.lvl.tbl[2]
     arr_2_lvl_val = arr_2_lvl.lvl.val
     arr_2_lvl.shape[1] == fmt_lvl_2.shape[1] || throw(DimensionMismatch("mismatched dimension limits ($(arr_2_lvl.shape[1]) != $(fmt_lvl_2.shape[1]))"))
     arr_2_lvl.shape[2] == fmt_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(arr_2_lvl.shape[2]) != $(fmt_lvl.shape))"))
+    result = nothing
+    fmt_lvl_2_qos_stop = fmt_lvl_ptr[fmt_lvl.shape + 1] - 1
+    fmt_lvl_2_qos_fill = fmt_lvl_2_qos_stop
     for fmt_lvl_2_p = fmt_lvl.shape + 1:-1:2
         fmt_lvl_ptr[fmt_lvl_2_p] = fmt_lvl_ptr[fmt_lvl_2_p] - fmt_lvl_ptr[fmt_lvl_2_p - 1]
     end
     fmt_lvl_ptr[1] = 1
-    fmt_lvl_2_qos_fill = length(fmt_lvl_tbl)
     arr_2_lvl_q = arr_2_lvl_ptr[1]
     arr_2_lvl_q_stop = arr_2_lvl_ptr[1 + 1]
     if arr_2_lvl_q < arr_2_lvl_q_stop
@@ -155,16 +154,15 @@ begin
             end
         end
     end
+    result = ()
     resize!(fmt_lvl_srt, length(fmt_lvl_tbl))
     copyto!(fmt_lvl_srt, pairs(fmt_lvl_tbl))
-    sort!(fmt_lvl_srt, by = hashkeycmp)
+    sort!(fmt_lvl_srt, by = (Finch).hashkeycmp)
+    resize!(fmt_lvl_ptr, fmt_lvl.shape + 1)
     for p = 2:fmt_lvl.shape + 1
         fmt_lvl_ptr[p] += fmt_lvl_ptr[p - 1]
     end
-    qos = 1 * fmt_lvl.shape
-    resize!(fmt_lvl_ptr, qos + 1)
-    qos_2 = fmt_lvl_ptr[end] - 1
-    resize!(fmt_lvl_srt, qos_2)
-    resize!(fmt_lvl_2_val, qos_2)
-    (fmt = Tensor((DenseLevel){Int64}((SparseHashLevel){1, Tuple{Int64}}(fmt_lvl_3, (fmt_lvl_2.shape[1],), fmt_lvl_ptr, fmt_lvl_tbl, fmt_lvl_srt), fmt_lvl.shape)),)
+    fmt_lvl_2_qos_stop = fmt_lvl_ptr[fmt_lvl.shape + 1] - 1
+    resize!(fmt_lvl_2_val, fmt_lvl_2_qos_stop)
+    result
 end

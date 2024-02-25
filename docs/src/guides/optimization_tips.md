@@ -24,7 +24,7 @@ s = Scalar(0.0)
 
 # output
 
-(s = Scalar{0.0, Float64}(16.5),)
+NamedTuple()
 ```
 
 We can investigate the generated code with `@finch_code`.  This code iterates
@@ -37,13 +37,14 @@ this takes `O(n + nnz)` time.
 # output
 
 quote
-    s = ex.body.body.lhs.tns.bind
+    s = (ex.bodies[1]).body.body.lhs.tns.bind
     s_val = s.val
-    A_lvl = ex.body.body.rhs.tns.bind.lvl
+    A_lvl = (ex.bodies[1]).body.body.rhs.tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
     A_lvl_2_val = A_lvl_2.lvl.val
+    result = nothing
     for j_3 = 1:A_lvl.shape
         A_lvl_q = (1 - 1) * A_lvl.shape + j_3
         A_lvl_2_q = A_lvl_ptr[A_lvl_q]
@@ -68,7 +69,7 @@ quote
                     phase_stop_3 = min(A_lvl_2_i, phase_stop)
                     if A_lvl_2_i == phase_stop_3
                         A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
-                        s_val = s_val + A_lvl_3_val
+                        s_val += A_lvl_3_val
                         A_lvl_2_q += 1
                     end
                     break
@@ -76,7 +77,9 @@ quote
             end
         end
     end
-    (s = (Scalar){0.0, Float64}(s_val),)
+    result = ()
+    s.val = s_val
+    result
 end
 ```
 
@@ -97,14 +100,15 @@ Note the double for loop in the following code
 # output
 
 quote
-    s = ex.body.body.lhs.tns.bind
+    s = (ex.bodies[1]).body.body.lhs.tns.bind
     s_val = s.val
-    A_lvl = ex.body.body.rhs.tns.bind.lvl
+    A_lvl = (ex.bodies[1]).body.body.rhs.tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
     A_lvl_2_val = A_lvl_2.lvl.val
     @warn "Performance Warning: non-concordant traversal of A[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)"
+    result = nothing
     for i_3 = 1:A_lvl_2.shape
         for j_3 = 1:A_lvl.shape
             A_lvl_q = (1 - 1) * A_lvl.shape + j_3
@@ -130,7 +134,7 @@ quote
                         phase_stop_3 = min(A_lvl_2_i, phase_stop)
                         if A_lvl_2_i == phase_stop_3
                             A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
-                            s_val = s_val + A_lvl_3_val
+                            s_val += A_lvl_3_val
                             A_lvl_2_q += 1
                         end
                         break
@@ -139,7 +143,9 @@ quote
             end
         end
     end
-    (s = (Scalar){0.0, Float64}(s_val),)
+    result = ()
+    s.val = s_val
+    result
 end
 ```
 
@@ -158,7 +164,7 @@ densify `B`, filling it with `m * n` stored values:
 ```jldoctest example1
 A = Tensor(Dense(SparseList(Element(0.0))), fsparse([2, 3, 4, 1, 3], [1, 1, 1, 3, 3], [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
 B = Tensor(Dense(SparseList(Element(0.0)))) #DO NOT DO THIS, B has the wrong fill value
-@finch (B .= 0; for j=_, i=_; B[i, j] = A[i, j] + 1 end)
+@finch (B .= 0; for j=_, i=_; B[i, j] = A[i, j] + 1 end; return B)
 countstored(B)
 
 # output
@@ -171,7 +177,7 @@ Since `A` is filled with `0.0`, adding `1` to the fill value produces `1.0`. How
 ```jldoctest example1
 A = Tensor(Dense(SparseList(Element(0.0))), fsparse([2, 3, 4, 1, 3], [1, 1, 1, 3, 3], [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
 B = Tensor(Dense(SparseList(Element(1.0))))
-@finch (B .= 1; for j=_, i=_; B[i, j] = A[i, j] + 1 end)
+@finch (B .= 1; for j=_, i=_; B[i, j] = A[i, j] + 1 end; return B)
 countstored(B)
 
 # output
@@ -189,7 +195,7 @@ behind a variable `x`, Finch can only determine that `x` has type `Int`, not tha
 A = Tensor(Dense(SparseList(Element(0.0))), fsparse([2, 3, 4, 1, 3], [1, 1, 1, 3, 3], [1.1, 2.2, 3.3, 4.4, 5.5], (4, 3)))
 B = Tensor(Dense(SparseList(Element(1.0))))
 x = 1 #DO NOT DO THIS, Finch cannot see the value of x anymore
-@finch (B .= 1; for j=_, i=_; B[i, j] = A[i, j] + x end)
+@finch (B .= 1; for j=_, i=_; B[i, j] = A[i, j] + x end; return B)
 countstored(B)
 
 # output
@@ -202,7 +208,7 @@ However, there are some situations where you may want a value to be dynamic. For
 ```julia
 function saxpy(x, a, y)
     z = Tensor(SparseList(Element(0.0)))
-    @finch (z .= 0; for i=_; z[i] = a * x[i] + y[i] end)
+    @finch (z .= 0; for i=_; z[i] = a * x[i] + y[i] end; return z)
 end
 ```
 
@@ -216,7 +222,7 @@ A = Tensor(Dense(SparseList(Element(0.0))), fsparse([2, 3, 4, 1, 3], [1, 1, 1, 3
 B = ones(4, 3)
 C = Scalar(0.0)
 f(x, y) = x * y # DO NOT DO THIS, Obscures *
-@finch (C .= 0; for j=_, i=_; C[] += f(A[i, j], B[i, j]) end)
+@finch (C .= 0; for j=_, i=_; C[] += f(A[i, j], B[i, j]) end; return C)
 
 # output
 
@@ -226,23 +232,25 @@ f(x, y) = x * y # DO NOT DO THIS, Obscures *
 Checking the generated code, we see that this code is indeed densifying (notice the for-loop which repeatedly evaluates `f(B[i, j], 0.0)`).
 
 ```jldoctest example1
-@finch_code (C .= 0; for j=_, i=_; C[] += f(A[i, j], B[i, j]) end)
+@finch_code (C .= 0; for j=_, i=_; C[] += f(A[i, j], B[i, j]) end; return C)
 
 # output
 
 quote
-    C = (ex.bodies[1]).tns.bind
-    A_lvl = ((ex.bodies[2]).body.body.rhs.args[1]).tns.bind.lvl
+    C = ((ex.bodies[1]).bodies[1]).tns.bind
+    A_lvl = (((ex.bodies[1]).bodies[2]).body.body.rhs.args[1]).tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
     A_lvl_2_val = A_lvl_2.lvl.val
-    B = ((ex.bodies[2]).body.body.rhs.args[2]).tns.bind
+    B = (((ex.bodies[1]).bodies[2]).body.body.rhs.args[2]).tns.bind
     sugar_1 = size(B)
     B_mode1_stop = sugar_1[1]
     B_mode2_stop = sugar_1[2]
     B_mode1_stop == A_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(B_mode1_stop) != $(A_lvl_2.shape))"))
     B_mode2_stop == A_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(B_mode2_stop) != $(A_lvl.shape))"))
+    needs_return = true
+    result = nothing
     C_val = 0
     for j_4 = 1:B_mode2_stop
         sugar_2 = size(B)
@@ -267,14 +275,14 @@ quote
                 if A_lvl_2_i < phase_stop
                     for i_6 = i:-1 + A_lvl_2_i
                         val = B[i_6, j_4]
-                        C_val = f(0.0, val) + C_val
+                        C_val = (Main).f(0.0, val) + C_val
                     end
                     A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                     sugar_4 = size(B)
                     B_mode1_stop = sugar_4[1]
                     B_mode2_stop = sugar_4[2]
                     val = B[A_lvl_2_i, j_4]
-                    C_val = C_val + f(A_lvl_3_val, val)
+                    C_val += (Main).f(A_lvl_3_val, val)
                     A_lvl_2_q += 1
                     i = A_lvl_2_i + 1
                 else
@@ -282,14 +290,14 @@ quote
                     if A_lvl_2_i == phase_stop_3
                         for i_8 = i:-1 + phase_stop_3
                             val = B[i_8, j_4]
-                            C_val = C_val + f(0.0, val)
+                            C_val += (Main).f(0.0, val)
                         end
                         A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                         sugar_6 = size(B)
                         B_mode1_stop = sugar_6[1]
                         B_mode2_stop = sugar_6[2]
                         val = B[phase_stop_3, j_4]
-                        C_val = C_val + f(A_lvl_3_val, val)
+                        C_val += (Main).f(A_lvl_3_val, val)
                         A_lvl_2_q += 1
                     else
                         for i_10 = i:phase_stop_3
@@ -297,7 +305,7 @@ quote
                             B_mode1_stop = sugar_7[1]
                             B_mode2_stop = sugar_7[2]
                             val = B[i_10, j_4]
-                            C_val = C_val + f(0.0, val)
+                            C_val += (Main).f(0.0, val)
                         end
                     end
                     i = phase_stop_3 + 1
@@ -312,11 +320,27 @@ quote
                 B_mode1_stop = sugar_8[1]
                 B_mode2_stop = sugar_8[2]
                 val = B[i_12, j_4]
-                C_val = C_val + f(0.0, val)
+                C_val += (Main).f(0.0, val)
             end
         end
     end
-    (C = (Scalar){0.0, Float64}(C_val),)
+    C.val = C_val
+    result = (C = C,)
+    needs_return = false
+    if needs_return
+        result = (C = C,)
+    end
+    result
 end
 
 ```
+
+## Type Stability
+
+Julia code runs fastest when the compiler can [infer the
+types](https://docs.julialang.org/en/v1/manual/performance-tips/#Write-%22type-stable%22-functions)
+of all intermediate values.  Finch does not check that the generated code is
+type-stable. In situations where tensors have nonuniform index or element types,
+or the computation itself might involve multiple types, one should check that
+the output of `@finch_kernel` code is type-stable with
+[`@code_warntype`](https://docs.julialang.org/en/v1/stdlib/InteractiveUtils/#InteractiveUtils.@code_warntype).

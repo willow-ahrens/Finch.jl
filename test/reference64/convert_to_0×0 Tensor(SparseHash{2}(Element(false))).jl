@@ -1,17 +1,18 @@
 begin
-    tmp_lvl = (ex.bodies[1]).tns.bind.lvl
-    tmp_lvl_ptr = (ex.bodies[1]).tns.bind.lvl.ptr
-    tmp_lvl_tbl = (ex.bodies[1]).tns.bind.lvl.tbl
-    tmp_lvl_srt = (ex.bodies[1]).tns.bind.lvl.srt
+    tmp_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
+    tmp_lvl_ptr = ((ex.bodies[1]).bodies[1]).tns.bind.lvl.ptr
+    tmp_lvl_tbl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl.tbl
+    tmp_lvl_srt = ((ex.bodies[1]).bodies[1]).tns.bind.lvl.srt
     tmp_lvl_2 = tmp_lvl.lvl
     tmp_lvl_val = tmp_lvl.lvl.val
-    ref_lvl = (ex.bodies[2]).body.body.rhs.tns.bind.lvl
+    ref_lvl = ((ex.bodies[1]).bodies[2]).body.body.rhs.tns.bind.lvl
     ref_lvl_ptr = ref_lvl.ptr
     ref_lvl_idx = ref_lvl.idx
     ref_lvl_2 = ref_lvl.lvl
     ref_lvl_ptr_2 = ref_lvl_2.ptr
     ref_lvl_idx_2 = ref_lvl_2.idx
     ref_lvl_2_val = ref_lvl_2.lvl.val
+    result = nothing
     tmp_lvl_qos_fill = 0
     tmp_lvl_qos_stop = 0
     empty!(tmp_lvl_tbl)
@@ -151,13 +152,13 @@ begin
     end
     resize!(tmp_lvl_srt, length(tmp_lvl_tbl))
     copyto!(tmp_lvl_srt, pairs(tmp_lvl_tbl))
-    sort!(tmp_lvl_srt, by = hashkeycmp)
+    sort!(tmp_lvl_srt, by = (Finch).hashkeycmp)
+    resize!(tmp_lvl_ptr, 1 + 1)
     for p = 2:1 + 1
         tmp_lvl_ptr[p] += tmp_lvl_ptr[p - 1]
     end
-    resize!(tmp_lvl_ptr, 1 + 1)
-    qos = tmp_lvl_ptr[end] - 1
-    resize!(tmp_lvl_srt, qos)
-    resize!(tmp_lvl_val, qos)
-    (tmp = Tensor((SparseHashLevel){2, Tuple{Int64, Int64}}(tmp_lvl_2, (ref_lvl_2.shape, ref_lvl.shape), tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt)),)
+    tmp_lvl_qos_stop = tmp_lvl_ptr[1 + 1] - 1
+    resize!(tmp_lvl_val, tmp_lvl_qos_stop)
+    result = (tmp = Tensor((SparseHashLevel){2, Tuple{Int64, Int64}}(tmp_lvl_2, (ref_lvl_2.shape, ref_lvl.shape), tmp_lvl_ptr, tmp_lvl_tbl, tmp_lvl_srt)),)
+    result
 end

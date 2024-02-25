@@ -1,15 +1,16 @@
 begin
-    B_lvl = (ex.bodies[1]).tns.bind.lvl
+    B_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     B_lvl_2 = B_lvl.lvl
     B_lvl_ptr = B_lvl_2.ptr
     B_lvl_idx = B_lvl_2.idx
     B_lvl_3 = B_lvl_2.lvl
     B_lvl_2_val = B_lvl_2.lvl.val
-    A_lvl = ((ex.bodies[2]).body.body.body.rhs.args[1]).tns.bind.lvl
+    A_lvl = (((ex.bodies[1]).bodies[2]).body.body.body.rhs.args[1]).tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
     A_lvl_2_val = A_lvl_2.lvl.val
+    result = nothing
     B_lvl_2_qos_fill = 0
     B_lvl_2_qos_stop = 0
     B_lvl_2_prev_pos = 0
@@ -61,7 +62,7 @@ begin
                         A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                         A_lvl_3_val_2 = A_lvl_2_val[A_lvl_2_q_2]
                         B_lvl_2dirty = true
-                        B_lvl_2_val[B_lvl_2_qos] = B_lvl_2_val[B_lvl_2_qos] + A_lvl_3_val_2 * A_lvl_3_val
+                        B_lvl_2_val[B_lvl_2_qos] += A_lvl_3_val_2 * A_lvl_3_val
                         A_lvl_2_q += 1
                         A_lvl_2_q_2 += 1
                     elseif A_lvl_2_i_2 == phase_stop_2
@@ -81,13 +82,13 @@ begin
         B_lvl_ptr[B_lvl_q + 1] += (B_lvl_2_qos - B_lvl_2_qos_fill) - 1
         B_lvl_2_qos_fill = B_lvl_2_qos - 1
     end
+    resize!(B_lvl_ptr, A_lvl.shape + 1)
     for p = 1:A_lvl.shape
         B_lvl_ptr[p + 1] += B_lvl_ptr[p]
     end
-    qos = 1 * A_lvl.shape
-    resize!(B_lvl_ptr, qos + 1)
-    qos_2 = B_lvl_ptr[end] - 1
-    resize!(B_lvl_idx, qos_2)
-    resize!(B_lvl_2_val, qos_2)
-    (B = Tensor((DenseLevel){Int64}((SparseListLevel){Int64}(B_lvl_3, A_lvl.shape, B_lvl_ptr, B_lvl_idx), A_lvl.shape)),)
+    qos_stop = B_lvl_ptr[A_lvl.shape + 1] - 1
+    resize!(B_lvl_idx, qos_stop)
+    resize!(B_lvl_2_val, qos_stop)
+    result = (B = Tensor((DenseLevel){Int64}((SparseListLevel){Int64}(B_lvl_3, A_lvl.shape, B_lvl_ptr, B_lvl_idx), A_lvl.shape)),)
+    result
 end

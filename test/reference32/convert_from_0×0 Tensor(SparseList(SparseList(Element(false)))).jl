@@ -1,5 +1,5 @@
 begin
-    res_lvl = (ex.bodies[1]).tns.bind.lvl
+    res_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     res_lvl_ptr = res_lvl.ptr
     res_lvl_idx = res_lvl.idx
     res_lvl_2 = res_lvl.lvl
@@ -7,13 +7,14 @@ begin
     res_lvl_idx_2 = res_lvl_2.idx
     res_lvl_3 = res_lvl_2.lvl
     res_lvl_2_val = res_lvl_2.lvl.val
-    tmp_lvl = (ex.bodies[2]).body.body.rhs.tns.bind.lvl
+    tmp_lvl = ((ex.bodies[1]).bodies[2]).body.body.rhs.tns.bind.lvl
     tmp_lvl_ptr = tmp_lvl.ptr
     tmp_lvl_idx = tmp_lvl.idx
     tmp_lvl_2 = tmp_lvl.lvl
     tmp_lvl_ptr_2 = tmp_lvl_2.ptr
     tmp_lvl_idx_2 = tmp_lvl_2.idx
     tmp_lvl_2_val = tmp_lvl_2.lvl.val
+    result = nothing
     res_lvl_qos_stop = 0
     res_lvl_2_qos_fill = 0
     res_lvl_2_qos_stop = 0
@@ -176,19 +177,19 @@ begin
         end
     end
     res_lvl_ptr[1 + 1] += (res_lvl_qos - 0) - 1
+    resize!(res_lvl_ptr, 1 + 1)
     for p = 1:1
         res_lvl_ptr[p + 1] += res_lvl_ptr[p]
     end
     qos_stop = res_lvl_ptr[1 + 1] - 1
+    resize!(res_lvl_idx, qos_stop)
+    resize!(res_lvl_ptr_2, qos_stop + 1)
     for p_2 = 1:qos_stop
         res_lvl_ptr_2[p_2 + 1] += res_lvl_ptr_2[p_2]
     end
-    resize!(res_lvl_ptr, 1 + 1)
-    qos = res_lvl_ptr[end] - 1
-    resize!(res_lvl_idx, qos)
-    resize!(res_lvl_ptr_2, qos + 1)
-    qos_2 = res_lvl_ptr_2[end] - 1
-    resize!(res_lvl_idx_2, qos_2)
-    resize!(res_lvl_2_val, qos_2)
-    (res = Tensor((SparseListLevel){Int32}((SparseListLevel){Int32}(res_lvl_3, tmp_lvl_2.shape, res_lvl_ptr_2, res_lvl_idx_2), tmp_lvl.shape, res_lvl_ptr, res_lvl_idx)),)
+    qos_stop_2 = res_lvl_ptr_2[qos_stop + 1] - 1
+    resize!(res_lvl_idx_2, qos_stop_2)
+    resize!(res_lvl_2_val, qos_stop_2)
+    result = (res = Tensor((SparseListLevel){Int32}((SparseListLevel){Int32}(res_lvl_3, tmp_lvl_2.shape, res_lvl_ptr_2, res_lvl_idx_2), tmp_lvl.shape, res_lvl_ptr, res_lvl_idx)),)
+    result
 end

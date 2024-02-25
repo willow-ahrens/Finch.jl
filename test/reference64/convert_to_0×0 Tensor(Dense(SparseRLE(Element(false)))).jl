@@ -1,18 +1,19 @@
 begin
-    tmp_lvl = (ex.bodies[1]).tns.bind.lvl
+    tmp_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     tmp_lvl_2 = tmp_lvl.lvl
     tmp_lvl_ptr = tmp_lvl_2.ptr
     tmp_lvl_left = tmp_lvl_2.left
     tmp_lvl_right = tmp_lvl_2.right
     tmp_lvl_3 = tmp_lvl_2.lvl
     tmp_lvl_2_val = tmp_lvl_2.lvl.val
-    ref_lvl = (ex.bodies[2]).body.body.rhs.tns.bind.lvl
+    ref_lvl = ((ex.bodies[1]).bodies[2]).body.body.rhs.tns.bind.lvl
     ref_lvl_ptr = ref_lvl.ptr
     ref_lvl_idx = ref_lvl.idx
     ref_lvl_2 = ref_lvl.lvl
     ref_lvl_ptr_2 = ref_lvl_2.ptr
     ref_lvl_idx_2 = ref_lvl_2.idx
     ref_lvl_2_val = ref_lvl_2.lvl.val
+    result = nothing
     tmp_lvl_2_qos_fill = 0
     tmp_lvl_2_qos_stop = 0
     tmp_lvl_2_prev_pos = 0
@@ -156,14 +157,14 @@ begin
             end
         end
     end
+    resize!(tmp_lvl_ptr, ref_lvl.shape + 1)
     for p = 1:ref_lvl.shape
         tmp_lvl_ptr[p + 1] += tmp_lvl_ptr[p]
     end
-    qos = 1 * ref_lvl.shape
-    resize!(tmp_lvl_ptr, qos + 1)
-    qos_2 = tmp_lvl_ptr[end] - 1
-    resize!(tmp_lvl_left, qos_2)
-    resize!(tmp_lvl_right, qos_2)
-    resize!(tmp_lvl_2_val, qos_2)
-    (tmp = Tensor((DenseLevel){Int64}((SparseRLELevel){Int64}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr, tmp_lvl_left, tmp_lvl_right), ref_lvl.shape)),)
+    qos_stop = tmp_lvl_ptr[ref_lvl.shape + 1] - 1
+    resize!(tmp_lvl_left, qos_stop)
+    resize!(tmp_lvl_right, qos_stop)
+    resize!(tmp_lvl_2_val, qos_stop)
+    result = (tmp = Tensor((DenseLevel){Int64}((SparseRLELevel){Int64}(tmp_lvl_3, ref_lvl_2.shape, tmp_lvl_ptr, tmp_lvl_left, tmp_lvl_right), ref_lvl.shape)),)
+    result
 end

@@ -68,7 +68,7 @@
         io = IOBuffer()
 
         @repl io A = Tensor(Dense(SparseList(Element(0.0))), [0 0 3.3; 1.1 0 0; 2.2 0 4.4; 0 0 5.5])
-        @repl io B = Tensor(SparseHash{2}(Element(0.0)))
+        @repl io B = Tensor(SparseDict(SparseDict(Element(0.0))))
         @repl io @finch_code mode=fastfinch begin
             B .= 0
             for j = _

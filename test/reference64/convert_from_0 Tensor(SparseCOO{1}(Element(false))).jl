@@ -1,13 +1,14 @@
 begin
-    res_lvl = (ex.bodies[1]).tns.bind.lvl
+    res_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     res_lvl_ptr = res_lvl.ptr
     res_lvl_idx = res_lvl.idx
     res_lvl_2 = res_lvl.lvl
     res_lvl_val = res_lvl.lvl.val
-    tmp_lvl = (ex.bodies[2]).body.rhs.tns.bind.lvl
-    tmp_lvl_ptr = (ex.bodies[2]).body.rhs.tns.bind.lvl.ptr
-    tmp_lvl_tbl1 = (ex.bodies[2]).body.rhs.tns.bind.lvl.tbl[1]
+    tmp_lvl = ((ex.bodies[1]).bodies[2]).body.rhs.tns.bind.lvl
+    tmp_lvl_ptr = ((ex.bodies[1]).bodies[2]).body.rhs.tns.bind.lvl.ptr
+    tmp_lvl_tbl1 = ((ex.bodies[1]).bodies[2]).body.rhs.tns.bind.lvl.tbl[1]
     tmp_lvl_val = tmp_lvl.lvl.val
+    result = nothing
     res_lvl_qos_stop = 0
     Finch.resize_if_smaller!(res_lvl_ptr, 1 + 1)
     Finch.fill_range!(res_lvl_ptr, 0, 1 + 1, 1 + 1)
@@ -59,12 +60,13 @@ begin
         end
     end
     res_lvl_ptr[1 + 1] += (res_lvl_qos - 0) - 1
+    resize!(res_lvl_ptr, 1 + 1)
     for p = 1:1
         res_lvl_ptr[p + 1] += res_lvl_ptr[p]
     end
-    resize!(res_lvl_ptr, 1 + 1)
-    qos = res_lvl_ptr[end] - 1
-    resize!(res_lvl_idx, qos)
-    resize!(res_lvl_val, qos)
-    (res = Tensor((SparseListLevel){Int64}(res_lvl_2, tmp_lvl.shape[1], res_lvl_ptr, res_lvl_idx)),)
+    qos_stop = res_lvl_ptr[1 + 1] - 1
+    resize!(res_lvl_idx, qos_stop)
+    resize!(res_lvl_val, qos_stop)
+    result = (res = Tensor((SparseListLevel){Int64}(res_lvl_2, tmp_lvl.shape[1], res_lvl_ptr, res_lvl_idx)),)
+    result
 end

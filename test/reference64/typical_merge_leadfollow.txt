@@ -5,20 +5,21 @@ julia> @finch_code begin
         end
     end
 quote
-    z_lvl = (ex.bodies[1]).tns.bind.lvl
+    z_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     z_lvl_ptr = z_lvl.ptr
     z_lvl_idx = z_lvl.idx
     z_lvl_2 = z_lvl.lvl
     z_lvl_val = z_lvl.lvl.val
-    x_lvl = ((ex.bodies[2]).body.rhs.args[1]).tns.bind.lvl
+    x_lvl = (((ex.bodies[1]).bodies[2]).body.rhs.args[1]).tns.bind.lvl
     x_lvl_ptr = x_lvl.ptr
     x_lvl_idx = x_lvl.idx
     x_lvl_val = x_lvl.lvl.val
-    y_lvl = ((ex.bodies[2]).body.rhs.args[2]).tns.bind.lvl
+    y_lvl = (((ex.bodies[1]).bodies[2]).body.rhs.args[2]).tns.bind.lvl
     y_lvl_ptr = y_lvl.ptr
     y_lvl_idx = y_lvl.idx
     y_lvl_val = y_lvl.lvl.val
     y_lvl.shape == x_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(y_lvl.shape) != $(x_lvl.shape))"))
+    result = nothing
     z_lvl_qos_stop = 0
     Finch.resize_if_smaller!(z_lvl_ptr, 1 + 1)
     Finch.fill_range!(z_lvl_ptr, 0, 1 + 1, 1 + 1)
@@ -309,14 +310,15 @@ quote
         end
     end
     z_lvl_ptr[1 + 1] += (z_lvl_qos - 0) - 1
+    resize!(z_lvl_ptr, 1 + 1)
     for p = 1:1
         z_lvl_ptr[p + 1] += z_lvl_ptr[p]
     end
-    resize!(z_lvl_ptr, 1 + 1)
-    qos = z_lvl_ptr[end] - 1
-    resize!(z_lvl_idx, qos)
-    resize!(z_lvl_val, qos)
-    (z = Tensor((SparseListLevel){Int64}(z_lvl_2, y_lvl.shape, z_lvl_ptr, z_lvl_idx)),)
+    qos_stop = z_lvl_ptr[1 + 1] - 1
+    resize!(z_lvl_idx, qos_stop)
+    resize!(z_lvl_val, qos_stop)
+    result = (z = Tensor((SparseListLevel){Int64}(z_lvl_2, y_lvl.shape, z_lvl_ptr, z_lvl_idx)),)
+    result
 end
 julia> @finch begin
         z .= 0

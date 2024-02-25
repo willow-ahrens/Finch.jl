@@ -1,24 +1,23 @@
 begin
-    fmt_lvl = ex.body.body.lhs.tns.bind.lvl
-    fmt_lvl_qos_fill = length(fmt_lvl.tbl)
-    fmt_lvl_qos_stop = fmt_lvl_qos_fill
-    fmt_lvl_ptr = ex.body.body.lhs.tns.bind.lvl.ptr
-    fmt_lvl_tbl = ex.body.body.lhs.tns.bind.lvl.tbl
-    fmt_lvl_srt = ex.body.body.lhs.tns.bind.lvl.srt
-    fmt_lvl_2 = fmt_lvl.lvl
+    fmt_lvl = (ex.bodies[1]).body.body.lhs.tns.bind.lvl
+    fmt_lvl_ptr = (ex.bodies[1]).body.body.lhs.tns.bind.lvl.ptr
+    fmt_lvl_tbl = (ex.bodies[1]).body.body.lhs.tns.bind.lvl.tbl
+    fmt_lvl_srt = (ex.bodies[1]).body.body.lhs.tns.bind.lvl.srt
     fmt_lvl_val = fmt_lvl.lvl.val
-    arr_2_lvl = ex.body.body.rhs.tns.bind.lvl
-    arr_2_lvl_ptr = ex.body.body.rhs.tns.bind.lvl.ptr
-    arr_2_lvl_tbl1 = ex.body.body.rhs.tns.bind.lvl.tbl[1]
-    arr_2_lvl_tbl2 = ex.body.body.rhs.tns.bind.lvl.tbl[2]
+    arr_2_lvl = (ex.bodies[1]).body.body.rhs.tns.bind.lvl
+    arr_2_lvl_ptr = (ex.bodies[1]).body.body.rhs.tns.bind.lvl.ptr
+    arr_2_lvl_tbl1 = (ex.bodies[1]).body.body.rhs.tns.bind.lvl.tbl[1]
+    arr_2_lvl_tbl2 = (ex.bodies[1]).body.body.rhs.tns.bind.lvl.tbl[2]
     arr_2_lvl_val = arr_2_lvl.lvl.val
     arr_2_lvl.shape[1] == fmt_lvl.shape[1] || throw(DimensionMismatch("mismatched dimension limits ($(arr_2_lvl.shape[1]) != $(fmt_lvl.shape[1]))"))
     arr_2_lvl.shape[2] == fmt_lvl.shape[2] || throw(DimensionMismatch("mismatched dimension limits ($(arr_2_lvl.shape[2]) != $(fmt_lvl.shape[2]))"))
+    result = nothing
+    fmt_lvl_qos_stop = fmt_lvl_ptr[1 + 1] - 1
+    fmt_lvl_qos_fill = fmt_lvl_qos_stop
     for fmt_lvl_p = 1 + 1:-1:2
         fmt_lvl_ptr[fmt_lvl_p] = fmt_lvl_ptr[fmt_lvl_p] - fmt_lvl_ptr[fmt_lvl_p - 1]
     end
     fmt_lvl_ptr[1] = 1
-    fmt_lvl_qos_fill = length(fmt_lvl_tbl)
     arr_2_lvl_q = arr_2_lvl_ptr[1]
     arr_2_lvl_q_stop = arr_2_lvl_ptr[1 + 1]
     if arr_2_lvl_q < arr_2_lvl_q_stop
@@ -152,15 +151,15 @@ begin
             end
         end
     end
+    result = ()
     resize!(fmt_lvl_srt, length(fmt_lvl_tbl))
     copyto!(fmt_lvl_srt, pairs(fmt_lvl_tbl))
-    sort!(fmt_lvl_srt, by = hashkeycmp)
+    sort!(fmt_lvl_srt, by = (Finch).hashkeycmp)
+    resize!(fmt_lvl_ptr, 1 + 1)
     for p = 2:1 + 1
         fmt_lvl_ptr[p] += fmt_lvl_ptr[p - 1]
     end
-    resize!(fmt_lvl_ptr, 1 + 1)
-    qos = fmt_lvl_ptr[end] - 1
-    resize!(fmt_lvl_srt, qos)
-    resize!(fmt_lvl_val, qos)
-    (fmt = Tensor((SparseHashLevel){2, Tuple{Int32, Int32}}(fmt_lvl_2, (fmt_lvl.shape[1], fmt_lvl.shape[2]), fmt_lvl_ptr, fmt_lvl_tbl, fmt_lvl_srt)),)
+    fmt_lvl_qos_stop = fmt_lvl_ptr[1 + 1] - 1
+    resize!(fmt_lvl_val, fmt_lvl_qos_stop)
+    result
 end

@@ -33,7 +33,7 @@ isstructequal(a::T, b::T)  where {T <: Pattern} = true
 isstructequal(a::T, b::T) where {T <: Element} =
     a.val == b.val
 
-isstructequal(a::T, b::T) where {T <: Separation} =
+isstructequal(a::T, b::T) where {T <: Separate} =
   all(isstructequal(x,y) for (x,y) in zip(a.val, b.val)) && isstructequal(a.lvl, b.lvl)
 
 isstructequal(a::T, b::T) where {T <: RepeatRLE} =
@@ -55,6 +55,11 @@ isstructequal(a::T, b::T) where {T <: SparseList} =
     a.shape == b.shape &&
     a.ptr == b.ptr &&
     a.idx == b.idx &&
+    isstructequal(a.lvl, b.lvl)
+
+isstructequal(a::T, b::T) where {T <: Sparse} =
+    a.shape == b.shape &&
+    a.tbl == b.tbl &&
     isstructequal(a.lvl, b.lvl)
 
 isstructequal(a::T, b::T) where {T <: SparseCOO} =

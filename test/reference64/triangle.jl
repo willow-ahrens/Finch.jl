@@ -1,11 +1,12 @@
 begin
-    B = (ex.bodies[1]).tns.bind
-    A_lvl = ((ex.bodies[2]).body.body.body.rhs.args[1]).tns.bind.lvl
+    B = ((ex.bodies[1]).bodies[1]).tns.bind
+    A_lvl = (((ex.bodies[1]).bodies[2]).body.body.body.rhs.args[1]).tns.bind.lvl
     A_lvl_2 = A_lvl.lvl
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
     A_lvl_2_val = A_lvl_2.lvl.val
     A_lvl.shape == A_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.shape) != $(A_lvl_2.shape))"))
+    result = nothing
     B_val = 0
     for i_4 = 1:A_lvl.shape
         A_lvl_q = (1 - 1) * A_lvl.shape + i_4
@@ -104,7 +105,7 @@ begin
                                 if A_lvl_2_i_2 == phase_stop_10 && A_lvl_2_i_4 == phase_stop_10
                                     A_lvl_3_val_6 = A_lvl_2_val[A_lvl_2_q_2]
                                     A_lvl_3_val_7 = A_lvl_2_val[A_lvl_2_q_4]
-                                    B_val = B_val + A_lvl_3_val * A_lvl_3_val_6 * A_lvl_3_val_7
+                                    B_val += A_lvl_3_val * A_lvl_3_val_6 * A_lvl_3_val_7
                                     A_lvl_2_q_2 += 1
                                     A_lvl_2_q_4 += 1
                                 elseif A_lvl_2_i_4 == phase_stop_10
@@ -122,5 +123,7 @@ begin
             end
         end
     end
-    (B = (Scalar){0.0, Float64}(B_val),)
+    B.val = B_val
+    result = (B = B,)
+    result
 end

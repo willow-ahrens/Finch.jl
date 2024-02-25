@@ -11,12 +11,12 @@ type used for positions in the level.
 
 ```jldoctest
 julia> Tensor(RepeatRLE(0.0), [11, 11, 22, 22, 00, 00, 00, 33, 33])
-RepeatRLE (0.0) [1:9]
-├─[1:2]: 11.0
-├─[3:4]: 22.0
-├─[5:7]: 0.0
-├─[8:9]: 33.0
-├─[10:9]: 0.0
+RepeatRLE [1:9]
+├─ [1:2]: 11.0
+├─ [3:4]: 22.0
+├─ [5:7]: 0.0
+├─ [8:9]: 33.0
+└─ [10:9]: 0.0
 
 ```
 """
@@ -92,21 +92,16 @@ function Base.show(io::IO, lvl::RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}) wh
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:RepeatRLELevel}, depth)
-    p = fbr.pos
+labelled_show(io::IO, fbr::SubFiber{<:RepeatRLELevel}) =
+    print(io, "RepeatRLE [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+
+function labelled_children(fbr::SubFiber{<:RepeatRLELevel})
     lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "RepeatRLELevel(undef...)")
-        return
+    pos = fbr.pos
+    pos + 1 > length(lvl.ptr) && return []
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledTree(cartesian_label(range_label(qos == lvl.ptr[pos] ? 1 : lvl.idx[qos - 1] + 1, lvl.idx[qos])), lvl.val[qos])
     end
-
-    crds = fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1
-
-    print_coord(io, crd) = print(io, crd == fbr.lvl.ptr[p] ? 1 : fbr.lvl.idx[crd - 1] + 1, ":", fbr.lvl.idx[crd])
-    get_fbr(crd) = fbr.lvl.val[crd]
-
-    print(io, "RepeatRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
 @inline level_ndims(::Type{<:RepeatRLELevel}) = 1
@@ -224,17 +219,6 @@ function declare_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, mode,
     return lvl
 end
 
-function trim_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, pos)
-    qos = freshen(ctx.code, :qos)
-    push!(ctx.code.preamble, quote
-        resize!($(lvl.ptr), $(ctx(pos)) + 1)
-        $qos = $(lvl.ptr)[end] - $(lvl.Tp(1))
-        resize!($(lvl.idx), $qos)
-        resize!($(lvl.val), $qos)
-    end)
-    return lvl
-end
-
 function assemble_level!(lvl::VirtualRepeatRLELevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_stop, pos_stop))
@@ -250,17 +234,18 @@ function freeze_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, pos_st
     p = freshen(ctx.code, :p)
     pos_stop = ctx(cache!(ctx, :p_stop, pos_stop))
     qos_stop = lvl.qos_stop
-    ros_fill = lvl.ros_fill
     qos_fill = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
+        resize!($(lvl.ptr), $pos_stop + 1)
         for $p = 2:($pos_stop + 1)
             $(lvl.ptr)[$p] += $(lvl.ptr)[$p - 1]
         end
         $qos_fill = $(lvl.ptr)[$pos_stop + 1] - 1
-        Finch.resize_if_smaller!($(lvl.idx), $qos_fill)
+        resize!($(lvl.idx), $qos_fill)
         Finch.fill_range!($(lvl.idx), $(ctx(lvl.shape)), $qos_stop + 1, $qos_fill)
-        Finch.resize_if_smaller!($(lvl.val), $qos_fill)
+        resize!($(lvl.val), $qos_fill)
         Finch.fill_range!($(lvl.val), $(lvl.D), $qos_stop + 1, $qos_fill)
+        $qos_stop = $qos_fill
     end)
     return lvl
 end

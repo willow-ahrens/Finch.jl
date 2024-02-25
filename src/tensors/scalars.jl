@@ -24,7 +24,7 @@ struct VirtualScalar
     val
 end
 
-lower(tns::VirtualScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($Scalar{$(tns.D), $(tns.Tv)}($(tns.val)))
+lower(tns::VirtualScalar, ctx::AbstractCompiler, ::DefaultStyle) = tns.ex
 function virtualize(ex, ::Type{Scalar{D, Tv}}, ctx, tag) where {D, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
@@ -54,6 +54,9 @@ function thaw!(tns::VirtualScalar, ctx)
 end
 
 function freeze!(tns::VirtualScalar, ctx)
+    push!(ctx.code.preamble, quote
+        $(tns.ex).val = $(ctx(tns.val))
+    end)
     return tns
 end
 instantiate(tns::VirtualScalar, ctx, mode, subprotos) = tns
@@ -131,6 +134,9 @@ function thaw!(tns::VirtualSparseScalar, ctx)
 end
 
 function freeze!(tns::VirtualSparseScalar, ctx)
+    push!(ctx.code.preamble, quote
+        $(tns.ex).val = $(ctx(tns.val))
+    end)
     return tns
 end
 
@@ -210,6 +216,9 @@ function thaw!(tns::VirtualShortCircuitScalar, ctx)
 end
 
 function freeze!(tns::VirtualShortCircuitScalar, ctx)
+    push!(ctx.code.preamble, quote
+        $(tns.ex).val = $(ctx(tns.val))
+    end)
     return tns
 end
 instantiate(tns::VirtualShortCircuitScalar, ctx, mode, subprotos) = tns
@@ -289,6 +298,9 @@ function thaw!(tns::VirtualSparseShortCircuitScalar, ctx)
 end
 
 function freeze!(tns::VirtualSparseShortCircuitScalar, ctx)
+    push!(ctx.code.preamble, quote
+        $(tns.ex).val = $(ctx(tns.val))
+    end)
     return tns
 end
 
