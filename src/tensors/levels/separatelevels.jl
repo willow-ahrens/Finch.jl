@@ -119,7 +119,7 @@ virtual_level_size(lvl::VirtualSeparateLevel, ctx) = virtual_level_size(lvl.lvl,
 virtual_level_eltype(lvl::VirtualSeparateLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSeparateLevel) = virtual_level_default(lvl.lvl)
 
-function virtual_moveto_level(lvl::VirtualSeparationLevel, ctx, arch)
+function virtual_moveto_level(lvl::VirtualSeparateLevel, ctx, arch)
     virtual_moveto_level(lvl.lvl, ctx, arch)
     # Need to move each pointer...
     pointers = freshen(ctx.code, lvl.val)
