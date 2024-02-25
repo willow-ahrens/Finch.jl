@@ -64,7 +64,6 @@ virtual_get_device(::VirtualSerial) = VirtualCPU(nothing, 1)
 virtual_get_task(::VirtualSerial) = nothing
 
 
-
 struct CPUThread{Parent} <: AbstractTask
     tid::Int
     dev::CPU

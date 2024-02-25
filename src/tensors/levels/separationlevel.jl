@@ -85,10 +85,14 @@ mutable struct VirtualSeparationLevel <: AbstractVirtualLevel
     Lvl
 end
 
+function virtual_moveto_level(lvl::VirtualSeparationLevel, ctx, arch)
+    virtual_moveto_level(lvl.lvl, ctx, arch)
+end
+
 postype(lvl:: VirtualSeparationLevel) = postype(lvl.lvl)
 
-is_level_injective(::VirtualSeparationLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
-is_level_concurrent(::VirtualSeparationLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
+is_level_injective(lvl::VirtualSeparationLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
+is_level_concurrent(lvl::VirtualSeparationLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
 is_level_atomic(lvl::VirtualSeparationLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
 
 function lower(lvl::VirtualSeparationLevel, ctx::AbstractCompiler, ::DefaultStyle)
