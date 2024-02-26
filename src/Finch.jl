@@ -23,6 +23,7 @@ export fastfinch, safefinch, debugfinch
 
 export Tensor
 export SparseRLE, SparseRLELevel 
+export DenseRLE, DenseRLELevel 
 export SingleRLE, SingleRLELevel
 export Sparse, SparseLevel, SparseDict
 export SparseList, SparseListLevel
@@ -117,6 +118,7 @@ include("tensors/levels/sparselevels.jl")
 include("tensors/levels/sparsebytemaplevels.jl")
 include("tensors/levels/sparsevbllevels.jl")
 include("tensors/levels/denselevels.jl")
+include("tensors/levels/denserlelevels.jl")
 include("tensors/levels/repeatrlelevels.jl")
 include("tensors/levels/elementlevels.jl")
 include("tensors/levels/separatelevels.jl")

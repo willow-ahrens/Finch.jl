@@ -1,12 +1,12 @@
 """
-    DenseRLELevel{[Ti=Int], [Ptr, Left, Right]}(lvl, [dim])
+    DenseRLELevel{[Ti=Int], [Ptr, Right]}(lvl, [dim])
 
-The sparse RLE level represent runs of equivalent slices `A[:, ..., :, i]`
-which are not entirely [`default`](@ref). A sorted list is used to record the
-left and right endpoints of each run. Optionally, `dim` is the size of the last dimension.
+The dense RLE level represent runs of equivalent slices `A[:, ..., :, i]`. A
+sorted list is used to record the right endpoint of each run. Optionally, `dim`
+is the size of the last dimension.
 
 `Ti` is the type of the last tensor index, and `Tp` is the type used for
-positions in the level. The types `Ptr`, `Left`, and `Right` are the types of the
+positions in the level. The types `Ptr` and `Right` are the types of the
 arrays used to store positions and endpoints. 
 
 ```jldoctest
@@ -33,7 +33,7 @@ const DenseRLE = DenseRLELevel
 DenseRLELevel(lvl::Lvl) where {Lvl} = DenseRLELevel{Int}(lvl)
 DenseRLELevel(lvl, shape, args...) = DenseRLELevel{typeof(shape)}(lvl, shape, args...)
 DenseRLELevel{Ti}(lvl) where {Ti} = DenseRLELevel(lvl, zero(Ti))
-DenseRLELevel{Ti}(lvl, shape) where {Ti} = DenseRLELevel{Ti}(lvl, shape, postype(lvl)[1], Ti[], Ti[], similar_level(lvl))
+DenseRLELevel{Ti}(lvl, shape) where {Ti} = DenseRLELevel{Ti}(lvl, shape, postype(lvl)[1], Ti[], similar_level(lvl))
 DenseRLELevel{Ti}(lvl::Lvl, shape, ptr::Ptr, right::Right, buf::Lvl) where {Ti, Lvl, Ptr, Right} =
     DenseRLELevel{Ti, Ptr, Right, Lvl}(lvl, Ti(shape), ptr, right, buf)
 
@@ -57,7 +57,7 @@ pattern!(lvl::DenseRLELevel{Ti}) where {Ti} =
     DenseRLELevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.right, pattern!(lvl.buf))
 
 function countstored_level(lvl::DenseRLELevel, pos)
-    countstored_level(lvl.lvl, lvl.left[lvl.ptr[pos + 1]]-1)
+    countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
 
 redefault!(lvl::DenseRLELevel{Ti}, init) where {Ti} = 
@@ -101,12 +101,12 @@ function labelled_children(fbr::SubFiber{<:DenseRLELevel})
     end
 end
 
-@inline level_ndims(::Type{<:DenseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Right, Lvl} = 1 + level_ndims(Lvl)
+@inline level_ndims(::Type{<:DenseRLELevel{Ti, Ptr, Right, Lvl}}) where {Ti, Ptr, Right, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::DenseRLELevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::DenseRLELevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
-@inline level_eltype(::Type{<:DenseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Right, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:DenseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Right, Lvl}= level_default(Lvl)
-data_rep_level(::Type{<:DenseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Right, Lvl} = SparseData(data_rep_level(Lvl))
+@inline level_eltype(::Type{<:DenseRLELevel{Ti, Ptr, Right, Lvl}}) where {Ti, Ptr, Right, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:DenseRLELevel{Ti, Ptr, Right, Lvl}}) where {Ti, Ptr, Right, Lvl}= level_default(Lvl)
+data_rep_level(::Type{<:DenseRLELevel{Ti, Ptr, Right, Lvl}}) where {Ti, Ptr, Right, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:DenseRLELevel})() = fbr
 function (fbr::SubFiber{<:DenseRLELevel})(idxs...)
@@ -128,7 +128,6 @@ mutable struct VirtualDenseRLELevel <: AbstractVirtualLevel
     qos_fill
     qos_stop
     ptr
-    left
     right
     buf
     prev_pos
@@ -190,11 +189,9 @@ end
 
 function virtual_moveto_level(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, arch)
     ptr_2 = freshen(ctx.code, lvl.ptr)
-    left_2 = freshen(ctx.code, lvl.left)
     right_2 = freshen(ctx.code, lvl.right)
     push!(ctx.code.preamble, quote
         $ptr_2 = $(lvl.ptr)
-        $left_2 = $(lvl.left)
         $right_2 = $(lvl.right)
         $(lvl.ptr) = $moveto($(lvl.ptr), $(ctx(arch)))
         $(lvl.right) = $moveto($(lvl.right), $(ctx(arch)))
@@ -246,7 +243,6 @@ function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_sto
             $(lvl.ptr)[$p + 1] += $(lvl.ptr)[$p]
         end
         $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
-        resize!($(lvl.left), $qos_stop)
         resize!($(lvl.right), $qos_stop)
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
@@ -258,10 +254,13 @@ function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_sto
     Tp = postype(lvl)
     p = freshen(ctx.code, :p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    pos_2 = freshen(ctx.code, tag, :_pos)
     qos_stop = freshen(ctx.code, :qos_stop)
+    qos = freshen(ctx.code, :qos)
     unit = ctx(get_smallest_measure(virtual_level_size(lvl, ctx)[end]))
+    Ti = lvl.Ti
     push!(ctx.code.preamble, quote
-        for $pos_2 = $(lvl.prev_pos):$(ctx(pos) - 1)
+        for $pos_2 = $(lvl.prev_pos):$(pos_stop)
             if $qos > $qos_stop #Add one in case we need to write a default level.
                 $qos_stop = max($qos_stop << 1, 1)
                 Finch.resize_if_smaller!($(lvl.right), $qos_stop)
@@ -420,6 +419,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, ctx, mode
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
     dirty = freshen(ctx.code, tag, :dirty)
+    pos_2 = freshen(ctx.code, tag, :_pos)
     unit = ctx(get_smallest_measure(virtual_level_size(lvl, ctx)[end]))
     
     Furlable(
@@ -429,7 +429,6 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, ctx, mode
                 $(if issafe(ctx.mode)
                     quote
                         $(lvl.prev_pos) < $(ctx(pos)) || throw(FinchProtocolError("DenseRLELevels cannot be updated multiple times"))
-
                     end
                 end)
                 for $pos_2 = $(lvl.prev_pos):$(ctx(pos)) - 1

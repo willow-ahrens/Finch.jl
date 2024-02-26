@@ -22,6 +22,7 @@
 
     @test z == y
 
+    #=
     x = Tensor(Dense(Element(0.0)), [1, 1, 1, 2, 2, 2, 0, 0, 0, 2, 2, 0])
     y = Tensor(SparseRLE(Element(0.0)))
     display(@finch_code begin
@@ -52,4 +53,20 @@
         end
     end
     println(y)
+    =#
+    x = Tensor(Dense(Element(0.0)), [1, 1, 1, 2, 2, 2, 0, 0, 0, 2, 2, 0])
+    y = Tensor(DenseRLE(Element(0.0)))
+    display(@finch_code begin
+        y .= 0
+        for i = _
+            y[i] = x[i]
+        end
+    end)
+
+    #@finch begin
+    #    y .= 0
+    #    for i = _
+    #        y[i] = x[i]
+    #    end
+    #end
 end
