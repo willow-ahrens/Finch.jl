@@ -215,7 +215,7 @@ function declare_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos, i
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
-        $(lvl.i_prev) = $(Ti(1)) - $unit
+        $(lvl.i_prev) = $(ctx(lvl.shape))
         $(lvl.prev_pos) = $(Tp(0))
     end)
     lvl.buf = declare_level!(lvl.buf, ctx, qos, init)
@@ -255,16 +255,17 @@ function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_sto
     p = freshen(ctx.code, :p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     pos_2 = freshen(ctx.code, tag, :_pos)
-    qos_stop = freshen(ctx.code, :qos_stop)
+    qos_stop = lvl.qos_stop
     qos = freshen(ctx.code, :qos)
     unit = ctx(get_smallest_measure(virtual_level_size(lvl, ctx)[end]))
     Ti = lvl.Ti
     push!(ctx.code.preamble, quote
+        $qos = $(lvl.qos_fill) + 1
         for $pos_2 = $(lvl.prev_pos):$(pos_stop)
-            if $qos > $qos_stop #Add one in case we need to write a default level.
+            if $qos > $qos_stop
                 $qos_stop = max($qos_stop << 1, 1)
                 Finch.resize_if_smaller!($(lvl.right), $qos_stop)
-                $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, value(call(+, qos, literal(Tp(1))), Tp), value(qos_stop, Tp)), ctx))
+                $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, call(+, value(qos, Tp), literal(Tp(1))), value(qos_stop, Tp)), ctx))
             end
             if $(lvl.i_prev) < $(ctx(lvl.shape))
                 $(lvl.right)[$qos] = $(ctx(lvl.shape))
@@ -354,7 +355,7 @@ function thaw_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_stop)
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(lvl.ptr)[$pos_stop + 1] - 1
         $(lvl.qos_stop) = $(lvl.qos_fill)
-        $(lvl.i_prev) = $(Ti(1)) - $unit
+        $(lvl.i_prev) = $(lvl.right)[$(lvl.qos_fill)]
         $qos_stop = $(lvl.qos_fill)
         $(lvl.prev_pos) = Finch.scansearch($(lvl.ptr), $(lvl.qos_stop) + 1, 1, $pos_stop) - 1
         for $p = $pos_stop:-1:1
@@ -421,6 +422,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, ctx, mode
     dirty = freshen(ctx.code, tag, :dirty)
     pos_2 = freshen(ctx.code, tag, :_pos)
     unit = ctx(get_smallest_measure(virtual_level_size(lvl, ctx)[end]))
+    qos_2 = freshen(ctx.code, tag, :_qos_2)
     
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -435,7 +437,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, ctx, mode
                     if $qos > $qos_stop #Add one in case we need to write a default level.
                         $qos_stop = max($qos_stop << 1, 1)
                         Finch.resize_if_smaller!($(lvl.right), $qos_stop)
-                        $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, value(call(+, qos, literal(Tp(1))), Tp), value(qos_stop, Tp)), ctx))
+                        $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, call(+, value(qos, Tp), literal(Tp(1))), value(qos_stop, Tp)), ctx))
                     end
                     if $(lvl.i_prev) < $(ctx(lvl.shape))
                         $(lvl.right)[$qos] = $(ctx(lvl.shape))
@@ -449,27 +451,24 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, ctx, mode
             body = (ctx) -> AcceptRun(
                 body = (ctx, ext) -> Thunk(
                     preamble = quote
+                        $qos_2 = $qos
                         if $(lvl.i_prev) < $(ctx(getstart(ext))) - $unit
+                            $qos_2 = $qos + 1
                             $(lvl.right)[$qos] = $(ctx(getstart(ext))) - $unit
-                            $(qos) += $(Tp(1))
                         end
-                        if $qos + 1 > $qos_stop #Add one in case we need to write a default level.
+                        if $qos_2 > $qos_stop #Add one in case we need to write a default level.
                             $qos_stop = max($qos_stop << 1, 1)
                             Finch.resize_if_smaller!($(lvl.right), $qos_stop)
-                            $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, value(call(+, qos, literal(Tp(1))), Tp), value(qos_stop, Tp)), ctx))
+                            $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, call(+, value(qos_2, Tp), literal(Tp(1))), value(qos_stop, Tp)), ctx))
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.buf, value(qos, Tp), dirty), ctx, mode, subprotos),
+                    body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.buf, value(qos_2, Tp), dirty), ctx, mode, subprotos),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true
-                            if $(lvl.i_prev) < $(ctx(getstart(ext))) - $unit
-                                $(lvl.right)[$qos] = $(ctx(getstart(ext))) - $unit
-                                $(qos) += $(Tp(1))
-                            end
-                            $(lvl.right)[$qos] = $(ctx(getstop(ext)))
-                            $(qos) += $(Tp(1))
+                            $(lvl.right)[$qos_2] = $(ctx(getstop(ext)))
+                            $(qos) = $qos_2 + $(Tp(1))
                             $(lvl.i_prev) = $(ctx(getstop(ext)))
                             $(lvl.prev_pos) = $(ctx(pos))
                         end
