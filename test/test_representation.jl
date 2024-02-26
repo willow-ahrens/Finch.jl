@@ -151,16 +151,16 @@ using Base.Meta
         dropdefaults!(Tensor(SparseRLE(Dense(Element(zero(eltype(arr)))))), arr)
     end
 
-    test_format(mats, name = "Tensor(SparseList(DenseRLE(Element(zero))))", key = "sl_srl_e") do arr
+    test_format(mats, name = "Tensor(SparseList(DenseRLE(Element(zero))))", key = "sl_drl_e") do arr
         dropdefaults!(Tensor(SparseList(DenseRLE(Element(zero(eltype(arr)))))), arr)
     end
-    test_format(mats, name = "Tensor(DenseRLE(SparseList(Element(zero))))", key = "srl_sl_e") do arr
+    test_format(mats, name = "Tensor(DenseRLE(SparseList(Element(zero))))", key = "drl_sl_e") do arr
         dropdefaults!(Tensor(DenseRLE(SparseList(Element(zero(eltype(arr)))))), arr)
     end
-    test_format(mats, name = "Tensor(Dense(DenseRLE(Element(zero))))", key = "d_srl_e") do arr
+    test_format(mats, name = "Tensor(Dense(DenseRLE(Element(zero))))", key = "d_drl_e") do arr
         dropdefaults!(Tensor(Dense(DenseRLE(Element(zero(eltype(arr)))))), arr)
     end
-    test_format(mats, name = "Tensor(DenseRLE(Dense(Element(zero))))", key = "srl_d_e") do arr
+    test_format(mats, name = "Tensor(DenseRLE(Dense(Element(zero))))", key = "drl_d_e") do arr
         dropdefaults!(Tensor(DenseRLE(Dense(Element(zero(eltype(arr)))))), arr)
     end
 

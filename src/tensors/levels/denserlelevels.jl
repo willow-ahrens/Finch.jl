@@ -113,7 +113,7 @@ function (fbr::SubFiber{<:DenseRLELevel})(idxs...)
     isempty(idxs) && return fbr
     lvl = fbr.lvl
     p = fbr.pos
-    r1 = something(searchsortedlast(@view(lvl.right[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end] - 1), 0) + 1
+    r1 = something(searchsortedlast(@view(lvl.right[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end] + 1), 0) - 1
     r2 = searchsortedfirst(@view(lvl.right[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end])
     q = lvl.ptr[p] + first(r1) - 1
     fbr_2 = SubFiber(lvl.lvl, q)
