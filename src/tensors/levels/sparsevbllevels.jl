@@ -94,17 +94,16 @@ labelled_show(io::IO, fbr::SubFiber{<:SparseVBLLevel}) =
     print(io, "SparseVBL (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
 function labelled_children(fbr::SubFiber{<:SparseVBLLevel})
-    fbr = node.fbr
     lvl = fbr.lvl
     pos = fbr.pos
     pos + 1 > length(lvl.ptr) && return []
     res = []
     for r = lvl.ptr[pos]:lvl.ptr[pos + 1] - 1
-        i = fbr.lvl.idx[r]
-        qos = fbr.lvl.ofs[r]
-        l = fbr.lvl.ofs[r + 1] - fbr.lvl.ofs[r]
-        for qos = fbr.lvl.ofs[r]:fbr.lvl.ofs[r + 1] - 1
-            push!(res, LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., i - (fbr.lvl.ofs[r + 1] - 1) + qos), SubFiber(lvl.lvl, qos)))
+        i = lvl.idx[r]
+        qos = lvl.ofs[r]
+        l = lvl.ofs[r + 1] - lvl.ofs[r]
+        for qos = lvl.ofs[r]:lvl.ofs[r + 1] - 1
+            push!(res, LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., i - (lvl.ofs[r + 1] - 1) + qos), SubFiber(lvl.lvl, qos)))
         end
     end
     res
