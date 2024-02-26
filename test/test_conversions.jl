@@ -24,6 +24,7 @@
                 () -> Dense(base()),
                 () -> RepeatRLE{false}(),
                 () -> SparseRLE(base()),
+                () -> DenseRLE(base()),
                 () -> Dense(Separate(base())),
             ]
                 for (idx, arr) in enumerate([

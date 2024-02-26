@@ -591,6 +591,64 @@
         @test check_output("format_constructors_srl_e.txt", String(take!(io)))
     end
 
+    @testset "Tensor(DenseRLE(Element(0)))" begin
+        io = IOBuffer()
+        arr = [0.0, 2.0, 2.0, 0.0, 3.0, 3.0]
+
+        println(io, "Tensor(DenseRLE(Element(0))) constructors:")
+
+        fbr = dropdefaults!(Tensor(DenseRLE(Element(zero(eltype(arr))))), arr)
+        println(io, "initialized tensor: ", fbr)
+        lvl = fbr.lvl
+        @test Structure(fbr) == Structure(Tensor(DenseRLE(lvl.lvl, lvl.shape, lvl.ptr, lvl.left, lvl.right, lvl.lvl)))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE{Int}(lvl.lvl, lvl.shape, lvl.ptr, lvl.left, lvl.right, lvl.lvl)))
+
+        fbr = dropdefaults!(Tensor(DenseRLE{Int16}(Element(zero(eltype(arr))))), arr)
+        println(io, "initialized tensor: ", fbr)
+        lvl = fbr.lvl
+        @test Structure(fbr) == Structure(Tensor(DenseRLE{Int16}(lvl.lvl, lvl.shape, lvl.ptr, lvl.left, lvl.right, lvl.lvl)))
+
+        fbr = Tensor(DenseRLE(Element(0.0), 7))
+        println(io, "sized tensor: ", fbr)
+        lvl = fbr.lvl
+        @test Structure(fbr) == Structure(Tensor(DenseRLE(Element(0.0), 7)))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE{Int}(Element(0.0), 7)))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE(Element(0.0), 7)))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE{Int}(Element(0.0), 7)))
+
+        fbr = Tensor(DenseRLE{Int16}(Element(0.0), 7))
+        println(io, "sized tensor: ", fbr)
+        lvl = fbr.lvl
+        @test Structure(fbr) == Structure(Tensor(DenseRLE(Element(0.0), Int16(7))))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE{Int16}(Element(0.0), 7)))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE(Element(0.0), Int16(7))))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE{Int16}(Element(0.0), 7)))
+
+        fbr = Tensor(DenseRLE(Element(0.0)))
+        println(io, "empty tensor: ", fbr)
+        lvl = fbr.lvl
+        @test Structure(fbr) == Structure(Tensor(DenseRLE(Element(0.0))))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE{Int}(Element(0.0))))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE(Element(0.0), 0)))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE{Int}(Element(0.0), 0)))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE(Element(0.0))))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE{Int}(Element(0.0))))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE(Element(0.0), 0)))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE{Int}(Element(0.0), 0)))
+
+        fbr = Tensor(DenseRLE{Int16}(Element(0.0)))
+        println(io, "empty tensor: ", fbr)
+        lvl = fbr.lvl
+        @test Structure(fbr) == Structure(Tensor(DenseRLE{Int16}(Element(0.0))))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE(Element(0.0), Int16(0))))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE{Int16}(Element(0.0), 0)))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE{Int16}(Element(0.0))))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE(Element(0.0), Int16(0))))
+        @test Structure(fbr) == Structure(Tensor(DenseRLE{Int16}(Element(0.0), 0)))
+
+        @test check_output("format_constructors_srl_e.txt", String(take!(io)))
+    end
+
       @testset "Tensor(Dense(Atomic(Separate(Dense(Element(0))))))" begin
           io = IOBuffer()
           arr = [0.0 2.0 2.0 0.0 3.0 3.0;

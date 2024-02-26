@@ -69,6 +69,9 @@ using Base.Meta
     test_format(vecs, name = "Tensor(SparseRLE(Element(zero)))", key = "srl_e") do arr
         dropdefaults!(Tensor(SparseRLE(Element(zero(eltype(arr))))), arr)
     end
+    test_format(vecs, name = "Tensor(DenseRLE(Element(zero)))", key = "drl_e") do arr
+        dropdefaults!(Tensor(DenseRLE(Element(zero(eltype(arr))))), arr)
+    end
 
 
     mats = [
@@ -135,9 +138,6 @@ using Base.Meta
     test_format(mats, name = "Tensor(SparseList(SparseTriangle{1}(Element(zero))))", key = "sl_st_e") do arr
         dropdefaults!(Tensor(SparseList(SparseTriangle{1}(Element(zero(eltype(arr)))))), arr)
     end
-    test_format(mats, name = "Tensor(SparseRLE(SparseRLE(Element(zero))))", key = "srl_srl_e") do arr
-        dropdefaults!(Tensor(SparseRLE(SparseRLE(Element(zero(eltype(arr)))))), arr)
-    end
     test_format(mats, name = "Tensor(SparseList(SparseRLE(Element(zero))))", key = "sl_srl_e") do arr
         dropdefaults!(Tensor(SparseList(SparseRLE(Element(zero(eltype(arr)))))), arr)
     end
@@ -149,6 +149,19 @@ using Base.Meta
     end
     test_format(mats, name = "Tensor(SparseRLE(Dense(Element(zero))))", key = "srl_d_e") do arr
         dropdefaults!(Tensor(SparseRLE(Dense(Element(zero(eltype(arr)))))), arr)
+    end
+
+    test_format(mats, name = "Tensor(SparseList(DenseRLE(Element(zero))))", key = "sl_srl_e") do arr
+        dropdefaults!(Tensor(SparseList(DenseRLE(Element(zero(eltype(arr)))))), arr)
+    end
+    test_format(mats, name = "Tensor(DenseRLE(SparseList(Element(zero))))", key = "srl_sl_e") do arr
+        dropdefaults!(Tensor(DenseRLE(SparseList(Element(zero(eltype(arr)))))), arr)
+    end
+    test_format(mats, name = "Tensor(Dense(DenseRLE(Element(zero))))", key = "d_srl_e") do arr
+        dropdefaults!(Tensor(Dense(DenseRLE(Element(zero(eltype(arr)))))), arr)
+    end
+    test_format(mats, name = "Tensor(DenseRLE(Dense(Element(zero))))", key = "srl_d_e") do arr
+        dropdefaults!(Tensor(DenseRLE(Dense(Element(zero(eltype(arr)))))), arr)
     end
 
     # Test SingleList
