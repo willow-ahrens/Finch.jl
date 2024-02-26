@@ -1,5 +1,5 @@
 """
-    SparseRLELevel{[Ti=Int], [Ptr, Left, Right]}(lvl, [dim])
+    DenseRLELevel{[Ti=Int], [Ptr, Left, Right]}(lvl, [dim])
 
 The sparse RLE level represent runs of equivalent slices `A[:, ..., :, i]`
 which are not entirely [`default`](@ref). A sorted list is used to record the
@@ -10,69 +10,67 @@ positions in the level. The types `Ptr`, `Left`, and `Right` are the types of th
 arrays used to store positions and endpoints. 
 
 ```jldoctest
-julia> Tensor(Dense(SparseRLELevel(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
+julia> Tensor(Dense(DenseRLELevel(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─ [:, 1]: SparseRLE (0.0) [1:3]
+├─ [:, 1]: DenseRLE (0.0) [1:3]
 │  ├─ [1:1]: 10.0
 │  └─ [2:2]: 30.0
-├─ [:, 2]: SparseRLE (0.0) [1:3]
-└─ [:, 3]: SparseRLE (0.0) [1:3]
+├─ [:, 2]: DenseRLE (0.0) [1:3]
+└─ [:, 3]: DenseRLE (0.0) [1:3]
    ├─ [1:1]: 20.0
    └─ [3:3]: 40.0
 ```
 """
-struct SparseRLELevel{Ti, Ptr<:AbstractVector, Left<:AbstractVector, Right<:AbstractVector, Lvl} <: AbstractLevel
+struct DenseRLELevel{Ti, Ptr<:AbstractVector, Right<:AbstractVector, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     ptr::Ptr
-    left::Left
     right::Right
     buf::Lvl
 end
 
-const SparseRLE = SparseRLELevel
-SparseRLELevel(lvl::Lvl) where {Lvl} = SparseRLELevel{Int}(lvl)
-SparseRLELevel(lvl, shape, args...) = SparseRLELevel{typeof(shape)}(lvl, shape, args...)
-SparseRLELevel{Ti}(lvl) where {Ti} = SparseRLELevel(lvl, zero(Ti))
-SparseRLELevel{Ti}(lvl, shape) where {Ti} = SparseRLELevel{Ti}(lvl, shape, postype(lvl)[1], Ti[], Ti[], similar_level(lvl))
-SparseRLELevel{Ti}(lvl::Lvl, shape, ptr::Ptr, left::Left, right::Right, buf::Lvl) where {Ti, Lvl, Ptr, Left, Right} =
-    SparseRLELevel{Ti, Ptr, Left, Right, Lvl}(lvl, Ti(shape), ptr, left, right, buf)
+const DenseRLE = DenseRLELevel
+DenseRLELevel(lvl::Lvl) where {Lvl} = DenseRLELevel{Int}(lvl)
+DenseRLELevel(lvl, shape, args...) = DenseRLELevel{typeof(shape)}(lvl, shape, args...)
+DenseRLELevel{Ti}(lvl) where {Ti} = DenseRLELevel(lvl, zero(Ti))
+DenseRLELevel{Ti}(lvl, shape) where {Ti} = DenseRLELevel{Ti}(lvl, shape, postype(lvl)[1], Ti[], Ti[], similar_level(lvl))
+DenseRLELevel{Ti}(lvl::Lvl, shape, ptr::Ptr, right::Right, buf::Lvl) where {Ti, Lvl, Ptr, Right} =
+    DenseRLELevel{Ti, Ptr, Right, Lvl}(lvl, Ti(shape), ptr, right, buf)
 
-Base.summary(lvl::SparseRLELevel) = "SparseRLE($(summary(lvl.lvl)))"
-similar_level(lvl::SparseRLELevel) = SparseRLE(similar_level(lvl.lvl))
-similar_level(lvl::SparseRLELevel, dim, tail...) = SparseRLE(similar_level(lvl.lvl, tail...), dim)
+Base.summary(lvl::DenseRLELevel) = "DenseRLE($(summary(lvl.lvl)))"
+similar_level(lvl::DenseRLELevel) = DenseRLE(similar_level(lvl.lvl))
+similar_level(lvl::DenseRLELevel, dim, tail...) = DenseRLE(similar_level(lvl.lvl, tail...), dim)
 
-function postype(::Type{SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl}
+function postype(::Type{DenseRLELevel{Ti, Ptr, Right, Lvl}}) where {Ti, Ptr, Right, Lvl}
     return postype(Lvl)
 end
 
-function moveto(lvl::SparseRLELevel{Ti}, device) where {Ti}
+function moveto(lvl::DenseRLELevel{Ti}, device) where {Ti}
     lvl_2 = moveto(lvl.lvl, device)
     ptr = moveto(lvl.ptr, device)
-    left = moveto(lvl.left, device)
     right = moveto(lvl.right, device)
     buf = moveto(lvl.buf, device)
-    return SparseRLELevel{Ti}(lvl_2, lvl.shape, lvl.ptr, lvl.left, lvl.right, lvl.buf)
+    return DenseRLELevel{Ti}(lvl_2, lvl.shape, lvl.ptr, lvl.right, lvl.buf)
 end
 
-pattern!(lvl::SparseRLELevel{Ti}) where {Ti} = 
-    SparseRLELevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.left, lvl.right, pattern!(lvl.buf))
+pattern!(lvl::DenseRLELevel{Ti}) where {Ti} = 
+    DenseRLELevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.right, pattern!(lvl.buf))
 
-function countstored_level(lvl::SparseRLELevel, pos)
+function countstored_level(lvl::DenseRLELevel, pos)
     countstored_level(lvl.lvl, lvl.left[lvl.ptr[pos + 1]]-1)
 end
 
-redefault!(lvl::SparseRLELevel{Ti}, init) where {Ti} = 
-    SparseRLELevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.left, lvl.right, redefault!(lvl.buf, init))
+redefault!(lvl::DenseRLELevel{Ti}, init) where {Ti} = 
+    DenseRLELevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.right, redefault!(lvl.buf, init))
 
-Base.resize!(lvl::SparseRLELevel{Ti}, dims...) where {Ti} = 
-    SparseRLELevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.left, lvl.right, resize!(lvl.buf, dims[1:end-1]...))
+Base.resize!(lvl::DenseRLELevel{Ti}, dims...) where {Ti} = 
+    DenseRLELevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.right, resize!(lvl.buf, dims[1:end-1]...))
 
-function Base.show(io::IO, lvl::SparseRLELevel{Ti, Ptr, Left, Right, Lvl}) where {Ti, Ptr, Left, Right, Lvl}
+function Base.show(io::IO, lvl::DenseRLELevel{Ti, Ptr, Right, Lvl}) where {Ti, Ptr, Right, Lvl}
     if get(io, :compact, false)
-        print(io, "SparseRLE(")
+        print(io, "DenseRLE(")
     else
-        print(io, "SparseRLE{$Ti}(")
+        print(io, "DenseRLE{$Ti}(")
     end
     show(io, lvl.lvl)
     print(io, ", ")
@@ -83,8 +81,6 @@ function Base.show(io::IO, lvl::SparseRLELevel{Ti, Ptr, Left, Right, Lvl}) where
     else
         show(io, lvl.ptr)
         print(io, ", ")
-        show(io, lvl.left)
-        print(io, ", ")
         show(io, lvl.right)
         print(io, ", ")
         show(io, lvl.buf)
@@ -92,38 +88,39 @@ function Base.show(io::IO, lvl::SparseRLELevel{Ti, Ptr, Left, Right, Lvl}) where
     print(io, ")")
 end
 
-labelled_show(io::IO, fbr::SubFiber{<:SparseRLELevel}) =
-    print(io, "SparseRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+labelled_show(io::IO, fbr::SubFiber{<:DenseRLELevel}) =
+    print(io, "DenseRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
-function labelled_children(fbr::SubFiber{<:SparseRLELevel})
+function labelled_children(fbr::SubFiber{<:DenseRLELevel})
     lvl = fbr.lvl
     pos = fbr.pos
     pos + 1 > length(lvl.ptr) && return []
     map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
-        LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., range_label(lvl.left[qos], lvl.right[qos])), SubFiber(lvl.lvl, qos))
+        left = qos == lvl.ptr[pos] ? 1 : lvl.right[qos - 1] + 1
+        LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., range_label(left, lvl.right[qos])), SubFiber(lvl.lvl, qos))
     end
 end
 
-@inline level_ndims(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = 1 + level_ndims(Lvl)
-@inline level_size(lvl::SparseRLELevel) = (level_size(lvl.lvl)..., lvl.shape)
-@inline level_axes(lvl::SparseRLELevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
-@inline level_eltype(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl}= level_default(Lvl)
-data_rep_level(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = SparseData(data_rep_level(Lvl))
+@inline level_ndims(::Type{<:DenseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Right, Lvl} = 1 + level_ndims(Lvl)
+@inline level_size(lvl::DenseRLELevel) = (level_size(lvl.lvl)..., lvl.shape)
+@inline level_axes(lvl::DenseRLELevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
+@inline level_eltype(::Type{<:DenseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Right, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:DenseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Right, Lvl}= level_default(Lvl)
+data_rep_level(::Type{<:DenseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Right, Lvl} = SparseData(data_rep_level(Lvl))
 
-(fbr::AbstractFiber{<:SparseRLELevel})() = fbr
-function (fbr::SubFiber{<:SparseRLELevel})(idxs...)
+(fbr::AbstractFiber{<:DenseRLELevel})() = fbr
+function (fbr::SubFiber{<:DenseRLELevel})(idxs...)
     isempty(idxs) && return fbr
     lvl = fbr.lvl
     p = fbr.pos
-    r1 = searchsortedlast(@view(lvl.left[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end])
+    r1 = something(searchsortedlast(@view(lvl.right[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end] - 1), 0) + 1
     r2 = searchsortedfirst(@view(lvl.right[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end])
     q = lvl.ptr[p] + first(r1) - 1
     fbr_2 = SubFiber(lvl.lvl, q)
     r1 != r2 ? default(fbr_2) : fbr_2(idxs[1:end-1]...)
 end
 
-mutable struct VirtualSparseRLELevel <: AbstractVirtualLevel
+mutable struct VirtualDenseRLELevel <: AbstractVirtualLevel
     lvl
     ex
     Ti
@@ -135,64 +132,63 @@ mutable struct VirtualSparseRLELevel <: AbstractVirtualLevel
     right
     buf
     prev_pos
+    i_prev
 end
 
-is_level_injective(lvl::VirtualSparseRLELevel, ctx) = [false, is_level_injective(lvl.lvl, ctx)...]
-is_level_concurrent(lvl::VirtualSparseRLELevel, ctx) = [false, is_level_concurrent(lvl.lvl, ctx)...]
-is_level_atomic(lvl::VirtualSparseRLELevel, ctx) = false
+is_level_injective(lvl::VirtualDenseRLELevel, ctx) = [false, is_level_injective(lvl.lvl, ctx)...]
+is_level_concurrent(lvl::VirtualDenseRLELevel, ctx) = [false, is_level_concurrent(lvl.lvl, ctx)...]
+is_level_atomic(lvl::VirtualDenseRLELevel, ctx) = false
 
-postype(lvl::VirtualSparseRLELevel) = postype(lvl.lvl)
+postype(lvl::VirtualDenseRLELevel) = postype(lvl.lvl)
 
-function virtualize(ex, ::Type{SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Left, Right, Lvl}
+function virtualize(ex, ::Type{DenseRLELevel{Ti, Ptr, Right, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Right, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)
     qos_stop = freshen(ctx, sym, :_qos_stop)
     dirty = freshen(ctx, sym, :_dirty)
     ptr = freshen(ctx, tag, :_ptr)
-    left = freshen(ctx, tag, :_left)
     right = freshen(ctx, tag, :_right)
     buf = freshen(ctx, tag, :_buf)
     push!(ctx.preamble, quote
         $sym = $ex
         $ptr = $sym.ptr
-        $left = $sym.left
         $right = $sym.right
         $buf = $sym.buf
     end)
+    i_prev = freshen(ctx, tag, :_i_prev)
     prev_pos = freshen(ctx, sym, :_prev_pos)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     buf = virtualize(:($sym.buf), Lvl, ctx, sym)
-    VirtualSparseRLELevel(lvl_2, sym, Ti, shape, qos_fill, qos_stop, ptr, left, right, buf, prev_pos)
+    VirtualDenseRLELevel(lvl_2, sym, Ti, shape, qos_fill, qos_stop, ptr, right, buf, prev_pos, i_prev)
 end
-function lower(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
-        $SparseRLELevel{$(lvl.Ti)}(
+        $DenseRLELevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
             $(ctx(lvl.shape)),
             $(lvl.ptr),
-            $(lvl.left),
             $(lvl.right),
             $(ctx(lvl.buf)),
         )
     end
 end
 
-Base.summary(lvl::VirtualSparseRLELevel) = "SparseRLE($(summary(lvl.lvl)))"
+Base.summary(lvl::VirtualDenseRLELevel) = "DenseRLE($(summary(lvl.lvl)))"
 
-function virtual_level_size(lvl::VirtualSparseRLELevel, ctx)
+function virtual_level_size(lvl::VirtualDenseRLELevel, ctx)
     ext = make_extent(lvl.Ti, literal(lvl.Ti(1.0)), lvl.shape)
     (virtual_level_size(lvl.lvl, ctx)..., ext)
 end
 
-function virtual_level_resize!(lvl::VirtualSparseRLELevel, ctx, dims...)
+function virtual_level_resize!(lvl::VirtualDenseRLELevel, ctx, dims...)
     lvl.shape = getstop(dims[end])
     lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-1]...)
     lvl.buf = virtual_level_resize!(lvl.buf, ctx, dims[1:end-1]...)
     lvl
 end
 
-function virtual_moveto_level(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, arch)
+function virtual_moveto_level(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, arch)
     ptr_2 = freshen(ctx.code, lvl.ptr)
     left_2 = freshen(ctx.code, lvl.left)
     right_2 = freshen(ctx.code, lvl.right)
@@ -201,39 +197,35 @@ function virtual_moveto_level(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler,
         $left_2 = $(lvl.left)
         $right_2 = $(lvl.right)
         $(lvl.ptr) = $moveto($(lvl.ptr), $(ctx(arch)))
-        $(lvl.left) = $moveto($(lvl.left), $(ctx(arch)))
         $(lvl.right) = $moveto($(lvl.right), $(ctx(arch)))
     end)
     push!(ctx.code.epilogue, quote
         $(lvl.ptr) = $ptr_2
-        $(lvl.left) = $left_2
         $(lvl.right) = $right_2
     end)
     virtual_moveto_level(lvl.lvl, ctx, arch)
     virtual_moveto_level(lvl.buf, ctx, arch)
 end
 
-virtual_level_eltype(lvl::VirtualSparseRLELevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualSparseRLELevel) = virtual_level_default(lvl.lvl)
+virtual_level_eltype(lvl::VirtualDenseRLELevel) = virtual_level_eltype(lvl.lvl)
+virtual_level_default(lvl::VirtualDenseRLELevel) = virtual_level_default(lvl.lvl)
 
-function declare_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos, init)
+function declare_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos, init)
     Tp = postype(lvl)
     Ti = lvl.Ti
     qos = call(-, call(getindex, :($(lvl.ptr)), call(+, pos, 1)), 1)
+    unit = ctx(get_smallest_measure(virtual_level_size(lvl, ctx)[end]))
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
+        $(lvl.i_prev) = $(Ti(1)) - $unit
+        $(lvl.prev_pos) = $(Tp(0))
     end)
-    if issafe(ctx.mode)
-        push!(ctx.code.preamble, quote
-            $(lvl.prev_pos) = $(Tp(0))
-        end)
-    end
     lvl.buf = declare_level!(lvl.buf, ctx, qos, init)
     return lvl
 end
 
-function assemble_level!(lvl::VirtualSparseRLELevel, ctx, pos_start, pos_stop)
+function assemble_level!(lvl::VirtualDenseRLELevel, ctx, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
@@ -243,7 +235,7 @@ function assemble_level!(lvl::VirtualSparseRLELevel, ctx, pos_start, pos_stop)
 end
 
 #=
-function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_stop)
+function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_stop)
     (lvl.buf, lvl.lvl) = (lvl.lvl, lvl.buf)
     p = freshen(ctx.code, :p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
@@ -262,12 +254,25 @@ function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_st
 end
 =#
 
-function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_stop)
+function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_stop)
     Tp = postype(lvl)
     p = freshen(ctx.code, :p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = freshen(ctx.code, :qos_stop)
+    unit = ctx(get_smallest_measure(virtual_level_size(lvl, ctx)[end]))
     push!(ctx.code.preamble, quote
+        for $pos_2 = $(lvl.prev_pos):$(ctx(pos) - 1)
+            if $qos > $qos_stop #Add one in case we need to write a default level.
+                $qos_stop = max($qos_stop << 1, 1)
+                Finch.resize_if_smaller!($(lvl.right), $qos_stop)
+                $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, value(call(+, qos, literal(Tp(1))), Tp), value(qos_stop, Tp)), ctx))
+            end
+            if $(lvl.i_prev) < $(ctx(lvl.shape))
+                $(lvl.right)[$qos] = $(ctx(lvl.shape))
+                $(qos) += $(Tp(1))
+                $(lvl.i_prev) = $(Ti(1)) - $unit
+            end
+        end
         resize!($(lvl.ptr), $pos_stop + 1)
         for $p = 1:$pos_stop
             $(lvl.ptr)[$p + 1] += $(lvl.ptr)[$p]
@@ -276,7 +281,6 @@ function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_st
     end)
     lvl.buf = freeze_level!(lvl.buf, ctx, value(qos_stop))
     lvl.lvl = declare_level!(lvl.lvl, ctx, literal(1), literal(virtual_level_default(lvl.buf)))
-    unit = ctx(get_smallest_measure(virtual_level_size(lvl, ctx)[end]))
     p = freshen(ctx.code, :p)
     q = freshen(ctx.code, :q)
     q_head = freshen(ctx.code, :q_head)
@@ -291,7 +295,7 @@ function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_st
             $q_stop = $(lvl.ptr)[$p + 1]
             while $q < $q_stop
                 $q_head = $q
-                while $q + 1 < $q_stop && $(lvl.right)[$q] == $(lvl.left)[$q + 1] - $(unit)
+                while $q + 1 < $q_stop && $(lvl.right)[$q] == $(lvl.right)[$q + 1] - $(unit)
                     $checkval = true
                     $(contain(ctx) do ctx_2
                         left = variable(freshen(ctx.code, :left))
@@ -314,7 +318,6 @@ function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_st
                         $q += 1
                     end
                 end
-                $(lvl.left)[$q_2] = $(lvl.left)[$q_head]
                 $(lvl.right)[$q_2] = $(lvl.right)[$q]
                 $(contain(ctx) do ctx_2
                     src = variable(freshen(ctx.code, :src))
@@ -335,7 +338,6 @@ function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_st
             end
             $(lvl.ptr)[$p + 1] = $q_2
         end
-        resize!($(lvl.left), $q_2 - 1)
         resize!($(lvl.right), $q_2 - 1)
         $qos_stop = $q_2 - 1
     end)
@@ -345,19 +347,17 @@ function freeze_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_st
     return lvl
 end
 
-function thaw_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_stop)
+function thaw_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_stop)
     p = freshen(ctx.code, :p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = freshen(ctx.code, :qos_stop)
+    unit = ctx(get_smallest_measure(virtual_level_size(lvl, ctx)[end]))
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(lvl.ptr)[$pos_stop + 1] - 1
         $(lvl.qos_stop) = $(lvl.qos_fill)
+        $(lvl.i_prev) = $(Ti(1)) - $unit
         $qos_stop = $(lvl.qos_fill)
-        $(if issafe(ctx.mode)
-            quote
-                $(lvl.prev_pos) = Finch.scansearch($(lvl.ptr), $(lvl.qos_stop) + 1, 1, $pos_stop) - 1
-            end
-        end)
+        $(lvl.prev_pos) = Finch.scansearch($(lvl.ptr), $(lvl.qos_stop) + 1, 1, $pos_stop) - 1
         for $p = $pos_stop:-1:1
             $(lvl.ptr)[$p + 1] -= $(lvl.ptr)[$p]
         end
@@ -367,74 +367,51 @@ function thaw_level!(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, pos_stop
     return lvl
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
-    (lvl, pos) = (fbr.lvl, fbr.pos) 
+function instantiate(fbr::VirtualSubFiber{VirtualDenseRLELevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
-    Tp = postype(lvl)
+    Tp = lvl.Tp
     Ti = lvl.Ti
-    my_i_end = freshen(ctx.code, tag, :_i_end)
-    my_i_stop = freshen(ctx.code, tag, :_i_stop)
-    my_i_start = freshen(ctx.code, tag, :_i_start)
+    my_i = freshen(ctx.code, tag, :_i)
     my_q = freshen(ctx.code, tag, :_q)
     my_q_stop = freshen(ctx.code, tag, :_q_stop)
+    my_i1 = freshen(ctx.code, tag, :_i1)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
-            preamble = quote
+            preamble = (quote
                 $my_q = $(lvl.ptr)[$(ctx(pos))]
                 $my_q_stop = $(lvl.ptr)[$(ctx(pos)) + $(Tp(1))]
+                #TODO I think this if is only ever true
                 if $my_q < $my_q_stop
-                    $my_i_end = $(lvl.right)[$my_q_stop - $(Tp(1))]
+                    $my_i = $(lvl.right)[$my_q]
+                    $my_i1 = $(lvl.right)[$my_q_stop - $(Tp(1))]
                 else
-                    $my_i_end = $(Ti(0))
+                    $my_i = $(Ti(1))
+                    $my_i1 = $(Ti(0))
                 end
-
-            end,
-            body = (ctx) -> Sequence([
-                Phase(
-                    stop = (ctx, ext) -> value(my_i_end),
-                    body = (ctx, ext) -> Stepper(
-                        seek = (ctx, ext) -> quote
-                            if $(lvl.right)[$my_q] < $(ctx(getstart(ext)))
-                                $my_q = Finch.scansearch($(lvl.right), $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
-                            end
-                        end,
-                        preamble = quote
-                            $my_i_start = $(lvl.left)[$my_q]
-                            $my_i_stop = $(lvl.right)[$my_q]
-                        end,
-                        stop = (ctx, ext) -> value(my_i_stop),
-                        body = (ctx, ext) -> Thunk( 
-                            body = (ctx) -> Sequence([
-                                Phase(
-                                    stop = (ctx, ext) -> call(-, value(my_i_start), getunit(ext)),
-                                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
-                                ),
-                                Phase(
-                                    body = (ctx,ext) -> Run(
-                                        body = Simplify(instantiate(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, mode, subprotos))
-                                    )
-                                )
-                            ]),
-                            epilogue = quote
-                                $my_q += ($(ctx(getstop(ext))) == $my_i_stop)
-                            end
-                        )
-                    )
+            end),
+            body = (ctx) -> Stepper(
+                seek = (ctx, ext) -> quote
+                    if $(lvl.right)[$my_q] < $(ctx(getstart(ext)))
+                        $my_q = Finch.scansearch($(lvl.right), $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
+                    end
+                end,
+                preamble = :($my_i = $(lvl.right)[$my_q]),
+                stop = (ctx, ext) -> value(my_i),
+                chunk = Run(
+                    body = Simplify(instantiate(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, mode, subprotos))
                 ),
-                Phase(
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
-                )
-            ])
+                next = (ctx, ext) -> :($my_q += $(Tp(1)))
+            )
         )
     )
 end
 
-
-instantiate(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, mode::Updater, protos) = 
+instantiate(fbr::VirtualSubFiber{VirtualDenseRLELevel}, ctx, mode::Updater, protos) = 
     instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
 
-function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseRLELevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+function instantiate(fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
     Tp = postype(lvl)
@@ -443,6 +420,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseRLELevel}, ctx, mod
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
     dirty = freshen(ctx.code, tag, :dirty)
+    unit = ctx(get_smallest_measure(virtual_level_size(lvl, ctx)[end]))
     
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -450,19 +428,36 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseRLELevel}, ctx, mod
                 $qos = $qos_fill + 1
                 $(if issafe(ctx.mode)
                     quote
-                        $(lvl.prev_pos) < $(ctx(pos)) || throw(FinchProtocolError("SparseRLELevels cannot be updated multiple times"))
+                        $(lvl.prev_pos) < $(ctx(pos)) || throw(FinchProtocolError("DenseRLELevels cannot be updated multiple times"))
+
                     end
                 end)
+                for $pos_2 = $(lvl.prev_pos):$(ctx(pos)) - 1
+                    if $qos > $qos_stop #Add one in case we need to write a default level.
+                        $qos_stop = max($qos_stop << 1, 1)
+                        Finch.resize_if_smaller!($(lvl.right), $qos_stop)
+                        $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, value(call(+, qos, literal(Tp(1))), Tp), value(qos_stop, Tp)), ctx))
+                    end
+                    if $(lvl.i_prev) < $(ctx(lvl.shape))
+                        $(lvl.right)[$qos] = $(ctx(lvl.shape))
+                        $(qos) += $(Tp(1))
+                        $(lvl.i_prev) = $(Ti(1)) - $unit
+                    end
+                end
+                $(lvl.prev_pos) = $(ctx(pos)) - 1
             end,
 
             body = (ctx) -> AcceptRun(
                 body = (ctx, ext) -> Thunk(
                     preamble = quote
-                        if $qos > $qos_stop
+                        if $(lvl.i_prev) < $(ctx(getstart(ext))) - $unit
+                            $(lvl.right)[$qos] = $(ctx(getstart(ext))) - $unit
+                            $(qos) += $(Tp(1))
+                        end
+                        if $qos + 1 > $qos_stop #Add one in case we need to write a default level.
                             $qos_stop = max($qos_stop << 1, 1)
-                            Finch.resize_if_smaller!($(lvl.left), $qos_stop)
                             Finch.resize_if_smaller!($(lvl.right), $qos_stop)
-                            $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, value(qos, Tp), value(qos_stop, Tp)), ctx))
+                            $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, value(call(+, qos, literal(Tp(1))), Tp), value(qos_stop, Tp)), ctx))
                         end
                         $dirty = false
                     end,
@@ -470,14 +465,14 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseRLELevel}, ctx, mod
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true
-                            $(lvl.left)[$qos] = $(ctx(getstart(ext)))
+                            if $(lvl.i_prev) < $(ctx(getstart(ext))) - $unit
+                                $(lvl.right)[$qos] = $(ctx(getstart(ext))) - $unit
+                                $(qos) += $(Tp(1))
+                            end
                             $(lvl.right)[$qos] = $(ctx(getstop(ext)))
                             $(qos) += $(Tp(1))
-                            $(if issafe(ctx.mode)
-                                quote
-                                    $(lvl.prev_pos) = $(ctx(pos))
-                                end
-                            end)
+                            $(lvl.i_prev) = $(ctx(getstop(ext)))
+                            $(lvl.prev_pos) = $(ctx(pos))
                         end
                     end
                 )
