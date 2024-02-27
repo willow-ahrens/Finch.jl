@@ -141,6 +141,15 @@ is_level_atomic(lvl::VirtualDenseRLELevel, ctx) = false
 postype(lvl::VirtualDenseRLELevel) = postype(lvl.lvl)
 
 function virtualize(ex, ::Type{DenseRLELevel{Ti, Ptr, Right, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Right, Lvl}
+    #Invariants of the level (Read Mode):
+    # 1. right[ptr[p]:ptr[p + 1] - 1] is the sorted list of right endpoints of the runs
+    #
+    #Invariants of the level (Write Mode):
+    # 1. prevpos is the last position written (initially 0)
+    # 2. i_prev is the last index written (initially shape)
+    # 3. for all p in 1:prevpos-1, ptr[p] is the number of runs in that position
+    # 4. qos_fill is the position of the last index written
+
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)
@@ -161,6 +170,7 @@ function virtualize(ex, ::Type{DenseRLELevel{Ti, Ptr, Right, Lvl}}, ctx, tag=:lv
     buf = virtualize(:($sym.buf), Lvl, ctx, sym)
     VirtualDenseRLELevel(lvl_2, sym, Ti, shape, qos_fill, qos_stop, ptr, right, buf, prev_pos, i_prev)
 end
+
 function lower(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
         $DenseRLELevel{$(lvl.Ti)}(
@@ -215,8 +225,8 @@ function declare_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos, i
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
-        $(lvl.i_prev) = $(ctx(lvl.shape))
-        $(lvl.prev_pos) = $(Tp(0))
+        $(lvl.i_prev) = $(Ti(1)) - $unit
+        $(lvl.prev_pos) = $(Tp(1))
     end)
     lvl.buf = declare_level!(lvl.buf, ctx, qos, init)
     return lvl
@@ -227,7 +237,7 @@ function assemble_level!(lvl::VirtualDenseRLELevel, ctx, pos_start, pos_stop)
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
         Finch.resize_if_smaller!($(lvl.ptr), $pos_stop + 1)
-        Finch.fill_range!($(lvl.ptr), 0, $pos_start + 1, $pos_stop + 1)
+        Finch.fill_range!($(lvl.ptr), 1, $pos_start + 1, $pos_stop + 1)
     end
 end
 
@@ -256,23 +266,24 @@ function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_sto
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     pos_2 = freshen(ctx.code, tag, :_pos)
     qos_stop = lvl.qos_stop
+    qos_fill = lvl.qos_fill
     qos = freshen(ctx.code, :qos)
     unit = ctx(get_smallest_measure(virtual_level_size(lvl, ctx)[end]))
     Ti = lvl.Ti
     push!(ctx.code.preamble, quote
-        $qos = $(lvl.qos_fill) + 1
-        for $pos_2 = $(lvl.prev_pos):$(pos_stop)
-            if $qos > $qos_stop
-                $qos_stop = max($qos_stop << 1, 1)
-                Finch.resize_if_smaller!($(lvl.right), $qos_stop)
-                $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, call(+, value(qos, Tp), literal(Tp(1))), value(qos_stop, Tp)), ctx))
-            end
-            if $(lvl.i_prev) < $(ctx(lvl.shape))
-                $(lvl.right)[$qos] = $(ctx(lvl.shape))
-                $(qos) += $(Tp(1))
-                $(lvl.i_prev) = $(Ti(1)) - $unit
-            end
+        $qos = $(lvl.qos_fill)
+        #if we did not write something to finish out the last run, we need to fill that in
+        $qos += $(lvl.i_prev) < $(ctx(lvl.shape))
+        #and all the runs after that
+        $qos += $(pos_stop) - $(lvl.prev_pos)
+        if $qos > $qos_stop
+            $qos_stop = $qos
+            Finch.resize_if_smaller!($(lvl.right), $qos_stop)
+            Finch.fill_range!($(lvl.right), $(ctx(lvl.shape)), $qos_fill + 1, $qos_stop)
+            $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, call(+, value(qos_fill, Tp), Tp(1)), value(qos_stop, Tp)), ctx))
         end
+        @show "hmm" $qos $qos_fill $qos_stop $pos_stop $(lvl.i_prev) $(ctx(lvl.shape)) $(lvl.prev_pos)
+        $(lvl.ptr)[$(pos_stop) + 1] += $qos - $qos_fill - ($(lvl.i_prev) == $(ctx(lvl.shape)))
         resize!($(lvl.ptr), $pos_stop + 1)
         for $p = 1:$pos_stop
             $(lvl.ptr)[$p + 1] += $(lvl.ptr)[$p]
@@ -370,7 +381,7 @@ end
 function instantiate(fbr::VirtualSubFiber{VirtualDenseRLELevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
-    Tp = lvl.Tp
+    Tp = postype(lvl)
     Ti = lvl.Ti
     my_i = freshen(ctx.code, tag, :_i)
     my_q = freshen(ctx.code, tag, :_q)
@@ -411,6 +422,12 @@ end
 instantiate(fbr::VirtualSubFiber{VirtualDenseRLELevel}, ctx, mode::Updater, protos) = 
     instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
 
+#Invariants of the level (Write Mode):
+# 1. prevpos is the last position written (initially 0)
+# 2. i_prev is the last index written (initially shape)
+# 3. for all p in 1:prevpos-1, ptr[p] is the number of runs in that position
+# 4. qos_fill is the position of the last index written
+
 function instantiate(fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
@@ -423,6 +440,8 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, ctx, mode
     pos_2 = freshen(ctx.code, tag, :_pos)
     unit = ctx(get_smallest_measure(virtual_level_size(lvl, ctx)[end]))
     qos_2 = freshen(ctx.code, tag, :_qos_2)
+    qos_set = freshen(ctx.code, tag, :_qos_set)
+    qos_3 = freshen(ctx.code, tag, :_qos_3)
     
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -430,54 +449,52 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, ctx, mode
                 $qos = $qos_fill + 1
                 $(if issafe(ctx.mode)
                     quote
-                        $(lvl.prev_pos) < $(ctx(pos)) || throw(FinchProtocolError("DenseRLELevels cannot be updated multiple times"))
+                        $(lvl.prev_pos) <= $(ctx(pos)) || throw(FinchProtocolError("DenseRLELevels cannot be updated multiple times"))
                     end
                 end)
-                for $pos_2 = $(lvl.prev_pos):$(ctx(pos)) - 1
-                    if $qos > $qos_stop #Add one in case we need to write a default level.
-                        $qos_stop = max($qos_stop << 1, 1)
-                        Finch.resize_if_smaller!($(lvl.right), $qos_stop)
-                        $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, call(+, value(qos, Tp), literal(Tp(1))), value(qos_stop, Tp)), ctx))
-                    end
-                    if $(lvl.i_prev) < $(ctx(lvl.shape))
-                        $(lvl.right)[$qos] = $(ctx(lvl.shape))
-                        $(qos) += $(Tp(1))
-                        $(lvl.i_prev) = $(Ti(1)) - $unit
-                    end
+                #if the previous position is not the same as the current position, we will eventually need to fill in the gap
+                if $(lvl.prev_pos) < $(ctx(pos))
+                    $qos += $(ctx(pos)) - $(lvl.prev_pos) - 1
+                    #only if we did not write something to finish out the last run do we eventually need to fill that in too
+                    $qos += $(lvl.i_prev) < $(ctx(lvl.shape))
                 end
-                $(lvl.prev_pos) = $(ctx(pos)) - 1
+                $qos_set = $qos
             end,
 
             body = (ctx) -> AcceptRun(
                 body = (ctx, ext) -> Thunk(
                     preamble = quote
-                        $qos_2 = $qos
-                        if $(lvl.i_prev) < $(ctx(getstart(ext))) - $unit
-                            $qos_2 = $qos + 1
-                            $(lvl.right)[$qos] = $(ctx(getstart(ext))) - $unit
-                        end
-                        if $qos_2 > $qos_stop #Add one in case we need to write a default level.
-                            $qos_stop = max($qos_stop << 1, 1)
+                        $qos_3 = $qos + ($(lvl.i_prev) < ($(ctx(getstart(ext))) - $unit))
+                        if $qos_3 > $qos_stop
+                            $qos_2 = $qos_stop + 1
+                            while $qos_3 > $qos_stop
+                                $qos_stop = max($qos_stop << 1, 1)
+                            end
                             Finch.resize_if_smaller!($(lvl.right), $qos_stop)
-                            $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, call(+, value(qos_2, Tp), literal(Tp(1))), value(qos_stop, Tp)), ctx))
+                            Finch.fill_range!($(lvl.right), $(ctx(lvl.shape)), $qos_2, $qos_stop)
+                            $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, value(qos_2, Tp), value(qos_stop, Tp)), ctx))
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.buf, value(qos_2, Tp), dirty), ctx, mode, subprotos),
+                    body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.buf, value(qos_3, Tp), dirty), ctx, mode, subprotos),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true
-                            $(lvl.right)[$qos_2] = $(ctx(getstop(ext)))
-                            $(qos) = $qos_2 + $(Tp(1))
+                            @info "Before!" $(lvl.i_prev) $(lvl.prev_pos) $(lvl.right) $(lvl.ptr) $qos
+                            $(lvl.right)[$qos] = $(ctx(getstart(ext))) - $unit
+                            $(lvl.right)[$qos_3] = $(ctx(getstop(ext)))
+                            $(qos) = $qos_3 + $(Tp(1))
                             $(lvl.i_prev) = $(ctx(getstop(ext)))
                             $(lvl.prev_pos) = $(ctx(pos))
+                            @info "Write!" $(lvl.i_prev) $(lvl.prev_pos) $(lvl.right) $(lvl.ptr)
                         end
                     end
                 )
             ),
             epilogue = quote
-                $(lvl.ptr)[$(ctx(pos)) + 1] += $qos - $qos_fill - 1
+                $(lvl.ptr)[$(ctx(pos)) + 1] += $qos - $qos_set - ($(lvl.i_prev) == $(ctx(lvl.shape))) #the last run is accounted for already because ptr starts out at 1
                 $qos_fill = $qos - 1
+                @info "hmmmm" $qos_fill
             end
         )
     )
