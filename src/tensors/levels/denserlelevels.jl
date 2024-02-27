@@ -359,6 +359,8 @@ function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_sto
 end
 
 function thaw_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_stop)
+    error("Thaw is not yet implemented for DenseRLE level. To implement, we need to cache the last written qos as a Ref{Int}, then reconstruct prev_pos and i_prev from the ptr and right arrays")
+    #=
     p = freshen(ctx.code, :p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
     qos_stop = freshen(ctx.code, :qos_stop)
@@ -376,6 +378,7 @@ function thaw_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_stop)
     (lvl.lvl, lvl.buf) = (lvl.buf, lvl.lvl)
     lvl.buf = thaw_level!(lvl.buf, ctx, value(qos_stop))
     return lvl
+    =#
 end
 
 function instantiate(fbr::VirtualSubFiber{VirtualDenseRLELevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
