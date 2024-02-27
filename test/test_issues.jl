@@ -663,7 +663,7 @@ using CIndices
     let
         I = [6, 6, 6, 9]
         J = [1, 3, 10, 5]
-        V = ([1, 1, 1, 1])
+        V = [1, 1, 1, 1]
         fsparse(I, J, V) == sparse(I, J, V)
     end
 end
