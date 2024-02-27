@@ -1,0 +1,9 @@
+Tensor(DenseRLE(SparseList(Element(zero)))) representation:
+
+array: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
+tensor: Tensor(DenseRLE{Int64}(SparseList{Int64}(Element{0.0, Float64, Int64}(Float64[]), 5, [1, 1], Int64[]), 5, [1, 2], [5], SparseList{Int64}(Element{0.0, Float64, Int64}(Float64[]), 5, [1], Int64[])))
+array: [1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0]
+tensor: Tensor(DenseRLE{Int64}(SparseList{Int64}(Element{0.0, Float64, Int64}([1.0, 1.0, 1.0, 1.0, 1.0]), 5, [1, 6], [1, 2, 3, 4, 5]), 5, [1, 2], [5], SparseList{Int64}(Element{0.0, Float64, Int64}(Float64[]), 5, [1], Int64[])))
+array: [0.0 1.0 2.0 2.0; 0.0 0.0 0.0 0.0; 1.0 1.0 2.0 0.0; 0.0 0.0 0.0 0.0]
+tensor: Tensor(DenseRLE{Int64}(SparseList{Int64}(Element{0.0, Float64, Int64}([1.0, 1.0, 1.0, 2.0, 2.0, 2.0]), 4, [1, 2, 4, 6, 7], [3, 1, 3, 1, 3, 1]), 4, [1, 5], [1, 2, 3, 4], SparseList{Int64}(Element{0.0, Float64, Int64}(Float64[]), 4, [1], Int64[])))
+

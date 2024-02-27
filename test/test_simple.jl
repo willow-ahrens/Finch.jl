@@ -53,22 +53,29 @@
         end
     end
     println(y)
-    x = Tensor(Dense(Element(0.0)), [1, 1, 1, 2, 2, 2, 0, 0, 0, 2, 2, 0])
-    y = Tensor(DenseRLE(Element(0.0)))
+    #x = Tensor(Dense(Element(0.0)), [1, 1, 1, 2, 2, 2, 0, 0, 0, 2, 2, 0])
+    #x = Tensor(Dense(Element(0.0)), [0.0, 2.0, 2.0, 0.0, 3.0, 3.0])
+    x = Tensor(Dense(Dense(Element(false))), [false false; true false; false false; false true])
+    y = Tensor(Dense(DenseRLE(Element(false))))
     display(@finch_code begin
         y .= 0
-        for i = _
-            y[i] = x[i]
+        for i = _, j = _
+            if x[j, i] != 0
+                y[j, i] = x[j, i]
+            end
         end
     end)
 
     @finch begin
         y .= 0
-        for i = _
-            y[i] = x[i]
+        for i = _, j = _
+            if x[j, i] != 0
+                y[j, i] = x[j, i]
+            end
         end
     end
 
     println(y)
+    print(y)
     =#
 end

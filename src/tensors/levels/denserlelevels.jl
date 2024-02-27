@@ -14,10 +14,13 @@ julia> Tensor(Dense(DenseRLELevel(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
 ├─ [:, 1]: DenseRLE (0.0) [1:3]
 │  ├─ [1:1]: 10.0
-│  └─ [2:2]: 30.0
+│  ├─ [2:2]: 30.0
+│  └─ [3:3]: 0.0
 ├─ [:, 2]: DenseRLE (0.0) [1:3]
+│  └─ [1:3]: 0.0
 └─ [:, 3]: DenseRLE (0.0) [1:3]
    ├─ [1:1]: 20.0
+   ├─ [2:2]: 0.0
    └─ [3:3]: 40.0
 ```
 """
@@ -113,11 +116,10 @@ function (fbr::SubFiber{<:DenseRLELevel})(idxs...)
     isempty(idxs) && return fbr
     lvl = fbr.lvl
     p = fbr.pos
-    r1 = something(searchsortedlast(@view(lvl.right[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end] + 1), 0) - 1
     r2 = searchsortedfirst(@view(lvl.right[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end])
-    q = lvl.ptr[p] + first(r1) - 1
+    q = lvl.ptr[p] + r2 - 1
     fbr_2 = SubFiber(lvl.lvl, q)
-    r1 != r2 ? default(fbr_2) : fbr_2(idxs[1:end-1]...)
+    fbr_2(idxs[1:end-1]...)
 end
 
 mutable struct VirtualDenseRLELevel <: AbstractVirtualLevel
@@ -282,7 +284,6 @@ function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_sto
             Finch.fill_range!($(lvl.right), $(ctx(lvl.shape)), $qos_fill + 1, $qos_stop)
             $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, call(+, value(qos_fill, Tp), Tp(1)), value(qos_stop, Tp)), ctx))
         end
-        $(lvl.ptr)[$(pos_stop) + 1] += $qos - $qos_fill - ($(lvl.i_prev) == $(ctx(lvl.shape)))
         resize!($(lvl.ptr), $pos_stop + 1)
         for $p = 1:$pos_stop
             $(lvl.ptr)[$p + 1] += $(lvl.ptr)[$p]
