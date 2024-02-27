@@ -100,4 +100,10 @@ isstructequal(a::T, b::T) where {T <: SparseRLE} =
     a.right == b.right &&
     isstructequal(a.lvl, b.lvl)
 
+isstructequal(a::T, b::T) where {T <: DenseRLE} =
+    a.shape == b.shape &&
+    a.ptr == b.ptr &&
+    a.right == b.right &&
+    isstructequal(a.lvl, b.lvl)
+
 
