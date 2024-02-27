@@ -156,5 +156,6 @@ function moveto(vec::Vector, task::CPUThread)
 end
 
 function moveto(vec::CPULocalVector, task::CPUThread)
-    return vec.data[task.tid]
+    temp = vec.data[task.tid]
+    return temp
 end

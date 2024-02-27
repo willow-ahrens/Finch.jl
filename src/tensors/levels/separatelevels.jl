@@ -90,8 +90,8 @@ end
 
 postype(lvl:: VirtualSeparateLevel) = postype(lvl.lvl)
 
-is_level_injective(::VirtualSeparateLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
-is_level_concurrent(::VirtualSeparateLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
+is_level_injective(lvl::VirtualSeparateLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
+is_level_concurrent(lvl::VirtualSeparateLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
 is_level_atomic(lvl::VirtualSeparateLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
 
 function lower(lvl::VirtualSeparateLevel, ctx::AbstractCompiler, ::DefaultStyle)
@@ -120,16 +120,17 @@ virtual_level_eltype(lvl::VirtualSeparateLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSeparateLevel) = virtual_level_default(lvl.lvl)
 
 function virtual_moveto_level(lvl::VirtualSeparateLevel, ctx, arch)
-    virtual_moveto_level(lvl.lvl, ctx, arch)
+    
     # Need to move each pointer...
     pointers = freshen(ctx.code, lvl.val)
     push!(ctx.code.preamble, quote
               $pointers = $(lvl.val)
-              $(lvl.val) = moveto($(lvl.val), $(ctx(arch)))
+              $(lvl.val) = $moveto($(lvl.val), $(ctx(arch)))
           end)
     push!(ctx.code.epilogue, quote
               $(lvl.val) = $pointers
           end)
+    virtual_moveto_level(lvl.lvl, ctx, arch)
 end
 
 
