@@ -32,7 +32,7 @@ fsparse_parse(I, V::AbstractVector) = fsparse_impl(I, V)
 fsparse_parse(I, V::AbstractVector, m::Tuple) = fsparse_impl(I, V, m)
 fsparse_parse(I, V::AbstractVector, m::Tuple, combine) = fsparse_impl(I, V, m, combine)
 function fsparse_impl(I::Tuple, V::Vector, shape = map(maximum, I), combine = eltype(V) isa Bool ? (|) : (+))
-    C = map(tuple, I...)
+    C = map(tuple, reverse(I)...)
     updater = false
     if !issorted(C)
         P = sortperm(C)
@@ -50,9 +50,11 @@ function fsparse_impl(I::Tuple, V::Vector, shape = map(maximum, I), combine = el
     if updater
         I = map(i -> similar(i, length(C)), I)
         foreach(((p, c),) -> ntuple(n->I[n][p] = c[n], length(I)), enumerate(C))
+        I = reverse(I)
+    else
+        I = map(copy, I)
     end
-    I = map(copy, reverse(I))
-    return fsparse!(I..., V, M)
+    return fsparse!(I..., V, shape)
 end
 
 """
