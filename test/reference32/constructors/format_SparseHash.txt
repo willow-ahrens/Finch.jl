@@ -1,0 +1,15 @@
+Tensor(SparseHash{1}(Element(0))) constructors:
+initialized tensor: Tensor(SparseHash{1, Tuple{Int32}}(Element{0.0, Float64, Int32}([2.0, 2.0, 3.0, 3.0]), (6,), [1, 5], Dict{Tuple{Int32, Tuple{Int32}}, Int32}((1, (2,)) => 1, (1, (3,)) => 2, (1, (5,)) => 3, (1, (6,)) => 4), [(1, (2,)) => 1, (1, (3,)) => 2, (1, (5,)) => 3, (1, (6,)) => 4]))
+initialized tensor: Tensor(SparseHash{1, Tuple{Int16}}(Element{0.0, Float64, Int32}([2.0, 2.0, 3.0, 3.0]), (6,), [1, 5], Dict{Tuple{Int32, Tuple{Int16}}, Int32}((1, (2,)) => 1, (1, (3,)) => 2, (1, (5,)) => 3, (1, (6,)) => 4), Pair{Tuple{Int32, Tuple{Int16}}, Int32}[(1, (2,)) => 1, (1, (3,)) => 2, (1, (5,)) => 3, (1, (6,)) => 4]))
+sized tensor: Tensor(SparseHash{1, Tuple{Int32}}(Element{0.0, Float64, Int32}(Float64[]), (6,), [1], Dict{Tuple{Int32, Tuple{Int32}}, Int32}(), Pair{Tuple{Int32, Tuple{Int32}}, Int32}[]))
+sized tensor: Tensor(SparseHash{1, Tuple{Int16}}(Element{0.0, Float64, Int32}(Float64[]), (6,), [1], Dict{Tuple{Int32, Tuple{Int16}}, Int32}(), Pair{Tuple{Int32, Tuple{Int16}}, Int32}[]))
+empty tensor: Tensor(SparseHash{1, Tuple{Int32}}(Element{0.0, Float64, Int32}(Float64[]), (0,), [1], Dict{Tuple{Int32, Tuple{Int32}}, Int32}(), Pair{Tuple{Int32, Tuple{Int32}}, Int32}[]))
+empty tensor: Tensor(SparseHash{1, Tuple{Int16}}(Element{0.0, Float64, Int32}(Float64[]), (0,), [1], Dict{Tuple{Int32, Tuple{Int16}}, Int32}(), Pair{Tuple{Int32, Tuple{Int16}}, Int32}[]))
+Tensor(SparseHash{2}(Element(0))) constructors:
+initialized tensor: Tensor(SparseHash{2, Tuple{Int32, Int32}}(Element{0.0, Float64, Int32}([2.0, 3.0, 2.0, 3.0]), (2, 3), [1, 5], Dict{Tuple{Int32, Tuple{Int32, Int32}}, Int32}((1, (1, 2)) => 1, (1, (1, 3)) => 3, (1, (2, 2)) => 2, (1, (2, 3)) => 4), [(1, (1, 2)) => 1, (1, (2, 2)) => 2, (1, (1, 3)) => 3, (1, (2, 3)) => 4]))
+initialized tensor: Tensor(SparseHash{2, Tuple{Int16, Int16}}(Element{0.0, Float64, Int32}([2.0, 3.0, 2.0, 3.0]), (2, 3), [1, 5], Dict{Tuple{Int32, Tuple{Int16, Int16}}, Int32}((1, (1, 2)) => 1, (1, (1, 3)) => 3, (1, (2, 2)) => 2, (1, (2, 3)) => 4), Pair{Tuple{Int32, Tuple{Int16, Int16}}, Int32}[(1, (1, 2)) => 1, (1, (2, 2)) => 2, (1, (1, 3)) => 3, (1, (2, 3)) => 4]))
+sized tensor: Tensor(SparseHash{2, Tuple{Int32, Int32}}(Element{0.0, Float64, Int32}(Float64[]), (2, 3), [1], Dict{Tuple{Int32, Tuple{Int32, Int32}}, Int32}(), Pair{Tuple{Int32, Tuple{Int32, Int32}}, Int32}[]))
+sized tensor: Tensor(SparseHash{2, Tuple{Int16, Int16}}(Element{0.0, Float64, Int32}(Float64[]), (2, 3), [1], Dict{Tuple{Int32, Tuple{Int16, Int16}}, Int32}(), Pair{Tuple{Int32, Tuple{Int16, Int16}}, Int32}[]))
+empty tensor: Tensor(SparseHash{2, Tuple{Int32, Int32}}(Element{0.0, Float64, Int32}(Float64[]), (0, 0), [1], Dict{Tuple{Int32, Tuple{Int32, Int32}}, Int32}(), Pair{Tuple{Int32, Tuple{Int32, Int32}}, Int32}[]))
+empty tensor: Tensor(SparseHash{2, Tuple{Int16, Int16}}(Element{0.0, Float64, Int32}(Float64[]), (0, 0), [1], Dict{Tuple{Int32, Tuple{Int16, Int16}}, Int32}(), Pair{Tuple{Int32, Tuple{Int16, Int16}}, Int32}[]))
+

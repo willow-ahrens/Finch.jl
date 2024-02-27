@@ -92,7 +92,7 @@ using CIndices
     A = copyto!(Tensor(Dense(Dense(Element(0)))), A)
     B = Tensor(Dense(Element(0)))
     
-    @test check_output("fiber_as_idx.jl", @finch_code (B .= 0; for i=_; B[i] = A[I[i], i] end))
+    @test check_output("issues/fiber_as_idx.jl", @finch_code (B .= 0; for i=_; B[i] = A[I[i], i] end))
     @finch (B .= 0; for i=_; B[i] = A[I[i], i] end)
 
     @test B == [11, 12, 93, 34, 35]
@@ -194,11 +194,11 @@ using CIndices
 
         x = Scalar(Inf)
 
-        @test check_output("specialvals_minimum_inf.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @test check_output("issues/specialvals_minimum_inf.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
         @finch for i=_; x[] <<min>>= yf[i] end
         @test x[] == 1.0
 
-        @test check_output("specialvals_repr_inf.txt", String(take!(io)))
+        @test check_output("issues/specialvals_repr_inf.txt", String(take!(io)))
 
         io = IOBuffer()
         y = [2.0, NaN, NaN, 1.0, 3.0, NaN]
@@ -208,11 +208,11 @@ using CIndices
 
         x = Scalar(Inf)
 
-        @test check_output("specialvals_minimum_nan.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @test check_output("issues/specialvals_minimum_nan.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
         @finch for i=_; x[] <<min>>= yf[i] end
         @test isequal(x[], NaN)
 
-        @test check_output("specialvals_repr_nan.txt", String(take!(io)))
+        @test check_output("issues/specialvals_repr_nan.txt", String(take!(io)))
 
         io = IOBuffer()
         y = [2.0, missing, missing, 1.0, 3.0, missing]
@@ -222,11 +222,11 @@ using CIndices
 
         x = Scalar(Inf)
 
-        @test check_output("specialvals_minimum_missing.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @test check_output("issues/specialvals_minimum_missing.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
         @finch for i=_; x[] <<min>>= coalesce(yf[i], missing, Inf) end
         @test x[] == 1.0
 
-        @test check_output("specialvals_repr_missing.txt", String(take!(io)))
+        @test check_output("issues/specialvals_repr_missing.txt", String(take!(io)))
 
         io = IOBuffer()
         y = [2.0, nothing, nothing, 1.0, 3.0, Some(1.0), nothing]
@@ -236,11 +236,11 @@ using CIndices
 
         x = Scalar(Inf)
 
-        @test check_output("specialvals_minimum_nothing.jl", @finch_code (for i=_; x[] <<min>>= something(yf[i], nothing, Inf) end))
+        @test check_output("issues/specialvals_minimum_nothing.jl", @finch_code (for i=_; x[] <<min>>= something(yf[i], nothing, Inf) end))
         @finch for i=_; x[] <<min>>= something(yf[i], nothing, Inf) end
         @test x[] == 1.0
 
-        @test check_output("specialvals_repr_nothing.txt", String(take!(io)))
+        @test check_output("issues/specialvals_repr_nothing.txt", String(take!(io)))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/118
@@ -258,7 +258,7 @@ using CIndices
         println(io, redefault!(B, Inf))
         println(io, C)
         @test Structure(C) == Structure(redefault!(B, Inf))
-        @test check_output("issue118.txt", String(take!(io)))
+        @test check_output("issues/issue118.txt", String(take!(io)))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/97
@@ -291,7 +291,7 @@ using CIndices
         @repl io C = Scalar(0)
         @repl io @finch for k=_, j=_, i=_; C[] += A[i, j, k] end
 
-        check_output("pull197.txt", String(take!(io)))
+        check_output("issues/pull197.txt", String(take!(io)))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/70
@@ -427,7 +427,7 @@ using CIndices
         A = zeros(3, 3, 3)
         C = zeros(3, 3, 3)
         X = zeros(3, 3)
-        check_output("issue288_concordize_let.jl", @finch_code mode=fastfinch begin
+        check_output("issues/issue288_concordize_let.jl", @finch_code mode=fastfinch begin
             for k=_, j=_, i=_
                 let temp1 = X[i, j]
                     for l=_
@@ -440,7 +440,7 @@ using CIndices
                 end
             end
         end)
-        check_output("issue288_concordize_double_let.jl", @finch_code mode=fastfinch begin
+        check_output("issues/issue288_concordize_double_let.jl", @finch_code mode=fastfinch begin
             for k=_, j=_, i=_
                 let temp1 = X[i, j]
                     for l=_
@@ -488,14 +488,14 @@ using CIndices
         s = ShortCircuitScalar(false, true)
         x = Tensor(SparseList(Element(false)), [false, true, true, false])
         y = Tensor(SparseList(Element(false)), [false, true, false, true])
-        check_output("short_circuit.jl", @finch_code begin
+        check_output("issues/short_circuit.jl", @finch_code begin
             for i = _
                 s[] |= x[i] && y[i]
             end
         end)
 
         c = Scalar(0)
-        check_output("short_circuit_sum.jl", @finch_code begin
+        check_output("issues/short_circuit_sum.jl", @finch_code begin
             for i = _
                 let x_i = x[i]
                     s[] |= x_i && y[i]
@@ -508,7 +508,7 @@ using CIndices
 
         t = SparseShortCircuitScalar(false, true)
 
-        check_output("short_circuit_bfs.jl", @finch_code begin
+        check_output("issues/short_circuit_bfs.jl", @finch_code begin
             x .= false
             for j = _
                 t .= false
@@ -621,7 +621,7 @@ using CIndices
         x = Tensor(Dense(Element(0.0)), rand(3))
         y = Tensor(Dense(Element(0.0)), rand(3))
 
-        check_output("cse_symv.jl", @finch_code begin
+        check_output("issues/cse_symv.jl", @finch_code begin
             for i=_, j=_
                 y[i] += A[i, j] * x[j]
                 y[j] += A[i, j] * x[i]
@@ -632,7 +632,7 @@ using CIndices
     #https://github.com/willow-ahrens/Finch.jl/issues/397
     let
         A = AsArray(swizzle(Tensor(Dense(Dense(Element(0.0))), [1 2 3; 4 5 6; 7 8 9]), 2, 1))
-        check_output("print_swizzle_as_array.txt", sprint(show, MIME"text/plain"(), A))
+        check_output("issues/print_swizzle_as_array.txt", sprint(show, MIME"text/plain"(), A))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/427

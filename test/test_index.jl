@@ -4,7 +4,7 @@
     A = Tensor(SparseList(Element(0.0)), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
     B = Scalar{0.0}()
 
-    @test check_output("sieve_hl_cond.jl", @finch_code (B .= 0; for j=_; if j == 1 B[] += A[j] end end))
+    @test check_output("index/sieve_hl_cond.jl", @finch_code (B .= 0; for j=_; if j == 1 B[] += A[j] end end))
     @finch (B .= 0; for j=_; if j == 1 B[] += A[j] end end)
 
     @test B() == 2.0
@@ -13,7 +13,7 @@
 
     @test B() == 0.0
 
-    @test check_output("sieve_hl_select.jl", @finch_code (for j=_; if diagmask[j, 3] B[] += A[j] end end))
+    @test check_output("index/sieve_hl_select.jl", @finch_code (for j=_; if diagmask[j, 3] B[] += A[j] end end))
 
     @finch (B .= 0; for j=_; if diagmask[j, 3] B[] += A[j] end end)
 
@@ -23,7 +23,7 @@
 
     @test B() == 0.0
 
-    @test check_output("gather_hl.jl", @finch_code (B[] += A[5]))
+    @test check_output("index/gather_hl.jl", @finch_code (B[] += A[5]))
 
     @finch (B .= 0; B[] += A[5])
 
@@ -51,13 +51,13 @@
 
     A_ref = sprand(10, 0.5); B_ref = sprand(10, 0.5); C_ref = vcat(A_ref, B_ref)
     A = Tensor(SparseVector{Float64, Int64}(A_ref)); B = Tensor(SparseVector{Float64, Int64}(B_ref)); C = Tensor(SparseList{Int64}(Element(0.0)), 20)
-    @test check_output("concat_offset_permit.jl", @finch_code (C .= 0; for i=_; C[i] = coalesce(A[~i], B[~(i - 10)]) end))
+    @test check_output("index/concat_offset_permit.jl", @finch_code (C .= 0; for i=_; C[i] = coalesce(A[~i], B[~(i - 10)]) end))
     @finch (C .= 0; for i=_; C[i] = coalesce(A[~i], B[~(i - 10)]) end)
     @test reference_isequal(C, C_ref)
 
     F = Tensor(Int64[1,1,1,1,1])
 
-    @test check_output("sparse_conv.jl", @finch_code (C .= 0; for i=_, j=_; C[i] += (A[i] != 0) * coalesce(A[j - i + 3], 0) * F[j] end))
+    @test check_output("index/sparse_conv.jl", @finch_code (C .= 0; for i=_, j=_; C[i] += (A[i] != 0) * coalesce(A[j - i + 3], 0) * F[j] end))
     @finch (C .= 0; for i=_, j=_; C[i] += (A[i] != 0) * coalesce(A[j - i + 3], 0) * F[j] end)
     C_ref = zeros(10)
     for i = 1:10
@@ -72,7 +72,7 @@
     end
     @test reference_isequal(C, C_ref)
 
-    @test check_output("sparse_window.jl", @finch_code (C .= 0; for i=_; C[i] = A[(2:4)(i)] end))
+    @test check_output("index/sparse_window.jl", @finch_code (C .= 0; for i=_; C[i] = A[(2:4)(i)] end))
     @finch (C .= 0; for i=_; C[i] = A[(2:4)(i)] end)
     @test reference_isequal(C, [A(2), A(3), A(4)])
 
@@ -138,7 +138,7 @@
         end
         @repl io AsArray(A)
         
-        @test check_output("chunkmask.txt", String(take!(io)))
+        @test check_output("index/chunkmask.txt", String(take!(io)))
     end
 
     let
@@ -167,7 +167,7 @@
 
         @test x[] == (24 + 1)*24/2
 
-        @test check_output("swizzle_1.txt", @finch_code begin
+        @test check_output("index/swizzle_1.txt", @finch_code begin
             for i = _
                 for j = _
                     for k = _
@@ -193,7 +193,7 @@
 
         @test x[] == (24 + 1)*24/2
 
-        @test check_output("swizzle_2.txt", @finch_code begin
+        @test check_output("index/swizzle_2.txt", @finch_code begin
             for i = _
                 for j = _
                     for k = _

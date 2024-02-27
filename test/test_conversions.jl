@@ -100,8 +100,8 @@
                 tmp = Tensor(inner())
                 @testset "convert $(summary(tmp))" begin
                     if !output
-                        check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for i=_; tmp[i] = ref[i] end))
-                        check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for i=_; res[i] = tmp[i] end))
+                        check_output("convert/convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for i=_; tmp[i] = ref[i] end))
+                        check_output("convert/convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for i=_; res[i] = tmp[i] end))
                         output = true
                     end
                     @finch (tmp .= 0; for i=_; tmp[i] = ref[i] end)
@@ -130,8 +130,8 @@
                     tmp = Tensor(outer())
                     @testset "convert $arr_key $(summary(tmp))"  begin
                         if !output
-                            check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
-                            check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end))
+                            check_output("convert/convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
+                            check_output("convert/convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end))
                             output = true
                         end
                         @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
@@ -157,8 +157,8 @@
                 tmp = Tensor(inner())
                 @testset "convert $(summary(tmp))" begin
                     if !output
-                        check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for i=_; tmp[i] = ref[i] end))
-                        check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for i=_; res[i] = tmp[i] end))
+                        check_output("convert/convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for i=_; tmp[i] = ref[i] end))
+                        check_output("convert/convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for i=_; res[i] = tmp[i] end))
                         output = true
                     end
                     @finch (ref .= 0; for i=_; ref[i] = arr[i] end)
@@ -186,8 +186,8 @@
                     tmp = Tensor(outer())
                     @testset "convert $arr_key $(summary(tmp))"  begin
                         if !output
-                            check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
-                            check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end))
+                            check_output("convert/convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
+                            check_output("convert/convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end))
                             output = true
                         end
                         @finch (ref .= 0; for j=_, i=_; ref[i, j] = arr[i, j] end)
@@ -220,8 +220,8 @@
                 tmp = Tensor(outer())
                 @testset "convert $arr_key $(summary(tmp))"  begin
                     if !output
-                        check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
-                        check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end))
+                        check_output("convert/convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
+                        check_output("convert/convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end))
                         output = true
                     end
                     @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
@@ -250,8 +250,8 @@
                 tmp = Tensor(outer())
                 @testset "convert $arr_key $(summary(tmp))"  begin
                     if !output
-                        check_output("convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
-                        check_output("convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end))
+                        check_output("convert/convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for j=_,i=_; tmp[i, j] = ref[i, j] end))
+                        check_output("convert/convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for j=_,i=_; res[i, j] = tmp[i, j] end))
                         output = true
                     end
                     @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
@@ -273,7 +273,7 @@
         arr_1 = fsprand(10, 10, 0.5)
         fmt = copyto!(fmt, arr_1)
         arr_2 = fsprand(10, 10, 0.5)
-        check_output("increment_to_$(summary(fmt)).jl", @finch_code begin
+        check_output("convert/increment_to_$(summary(fmt)).jl", @finch_code begin
             for j = _
                 for i = _
                     fmt[i, j] += arr_2[i, j]
