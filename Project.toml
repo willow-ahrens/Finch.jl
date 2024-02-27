@@ -13,7 +13,6 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
-Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 RewriteTools = "5969e224-3634-4c61-9f66-721b69e98b8a"
 SyntaxInterface = "b33eeca9-aacb-4496-a840-e75f1646a4fb"
 
