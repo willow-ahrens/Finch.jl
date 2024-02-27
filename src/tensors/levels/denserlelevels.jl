@@ -282,7 +282,6 @@ function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_sto
             Finch.fill_range!($(lvl.right), $(ctx(lvl.shape)), $qos_fill + 1, $qos_stop)
             $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, call(+, value(qos_fill, Tp), Tp(1)), value(qos_stop, Tp)), ctx))
         end
-        @show "hmm" $qos $qos_fill $qos_stop $pos_stop $(lvl.i_prev) $(ctx(lvl.shape)) $(lvl.prev_pos)
         $(lvl.ptr)[$(pos_stop) + 1] += $qos - $qos_fill - ($(lvl.i_prev) == $(ctx(lvl.shape)))
         resize!($(lvl.ptr), $pos_stop + 1)
         for $p = 1:$pos_stop
@@ -442,6 +441,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, ctx, mode
     qos_2 = freshen(ctx.code, tag, :_qos_2)
     qos_set = freshen(ctx.code, tag, :_qos_set)
     qos_3 = freshen(ctx.code, tag, :_qos_3)
+    local_i_prev = freshen(ctx.code, tag, :_i_prev)
     
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -452,11 +452,13 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, ctx, mode
                         $(lvl.prev_pos) <= $(ctx(pos)) || throw(FinchProtocolError("DenseRLELevels cannot be updated multiple times"))
                     end
                 end)
+                $local_i_prev = $(lvl.i_prev)
                 #if the previous position is not the same as the current position, we will eventually need to fill in the gap
                 if $(lvl.prev_pos) < $(ctx(pos))
                     $qos += $(ctx(pos)) - $(lvl.prev_pos) - 1
                     #only if we did not write something to finish out the last run do we eventually need to fill that in too
                     $qos += $(lvl.i_prev) < $(ctx(lvl.shape))
+                    $local_i_prev = $(Ti(1)) - $unit 
                 end
                 $qos_set = $qos
             end,
@@ -464,7 +466,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, ctx, mode
             body = (ctx) -> AcceptRun(
                 body = (ctx, ext) -> Thunk(
                     preamble = quote
-                        $qos_3 = $qos + ($(lvl.i_prev) < ($(ctx(getstart(ext))) - $unit))
+                        $qos_3 = $qos + ($(local_i_prev) < ($(ctx(getstart(ext))) - $unit))
                         if $qos_3 > $qos_stop
                             $qos_2 = $qos_stop + 1
                             while $qos_3 > $qos_stop
@@ -479,22 +481,22 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, ctx, mode
                     body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.buf, value(qos_3, Tp), dirty), ctx, mode, subprotos),
                     epilogue = quote
                         if $dirty
-                            $(fbr.dirty) = true
-                            @info "Before!" $(lvl.i_prev) $(lvl.prev_pos) $(lvl.right) $(lvl.ptr) $qos
                             $(lvl.right)[$qos] = $(ctx(getstart(ext))) - $unit
                             $(lvl.right)[$qos_3] = $(ctx(getstop(ext)))
                             $(qos) = $qos_3 + $(Tp(1))
-                            $(lvl.i_prev) = $(ctx(getstop(ext)))
-                            $(lvl.prev_pos) = $(ctx(pos))
-                            @info "Write!" $(lvl.i_prev) $(lvl.prev_pos) $(lvl.right) $(lvl.ptr)
+                            $(local_i_prev) = $(ctx(getstop(ext)))
                         end
                     end
                 )
             ),
             epilogue = quote
-                $(lvl.ptr)[$(ctx(pos)) + 1] += $qos - $qos_set - ($(lvl.i_prev) == $(ctx(lvl.shape))) #the last run is accounted for already because ptr starts out at 1
-                $qos_fill = $qos - 1
-                @info "hmmmm" $qos_fill
+                if $qos - $qos_set > 0
+                    $(fbr.dirty) = true
+                    $(lvl.ptr)[$(ctx(pos)) + 1] += $qos - $qos_set - ($(local_i_prev) == $(ctx(lvl.shape))) #the last run is accounted for already because ptr starts out at 1
+                    $(lvl.prev_pos) = $(ctx(pos))
+                    $(lvl.i_prev) = $(local_i_prev)
+                    $qos_fill = $qos - 1
+                end
             end
         )
     )
