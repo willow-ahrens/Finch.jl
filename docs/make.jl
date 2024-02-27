@@ -30,7 +30,7 @@ makedocs(;
             "Calling Finch" => "guides/calling_finch.md",
             "Tensor Formats" => "guides/tensor_formats.md",
             "The Finch Language" => "guides/finch_language.md",
-            #"Dimensionalization" => "guides/dimensionalization.md",
+            "Dimensionalization" => "guides/dimensionalization.md",
             #"Tensor Lifecycles" => "guides/tensor_lifecycles.md",
             "Index Sugar" => "guides/index_sugar.md",
             "Mask Sugar" => "guides/mask_sugar.md",
