@@ -42,10 +42,10 @@ SingleRLELevel{Ti}(lvl, shape) where {Ti} = SingleRLELevel{Ti}(lvl, shape, posty
 
 SingleRLELevel{Ti}(lvl::Lvl, shape, ptr::Ptr, left::Left, right::Right) where {Ti, Lvl, Ptr, Left, Right} =
     SingleRLELevel{Ti, Ptr, Left, Right, Lvl}(lvl, shape, ptr, left, right)
- 
+
 Base.summary(lvl::SingleRLELevel) = "SingleRLE($(summary(lvl.lvl)))"
-similar_level(lvl::SingleRLELevel) = SingleRLE(similar_level(lvl.lvl))
-similar_level(lvl::SingleRLELevel, dim, tail...) = SingleRLE(similar_level(lvl.lvl, tail...), dim)
+similar_level(lvl::SingleRLELevel, fill_value, eltype::Type, dim, tail...) =
+    SingleRLE(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
 
 function memtype(::Type{SingleRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl}
     return Ti 

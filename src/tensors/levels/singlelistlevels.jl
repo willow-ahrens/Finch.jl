@@ -51,8 +51,8 @@ SingleListLevel{Ti}(lvl::Lvl, shape, ptr::Ptr, idx::Idx) where {Ti, Lvl, Ptr, Id
     SingleListLevel{Ti, Ptr, Idx, Lvl}(lvl, shape, ptr, idx)
     
 Base.summary(lvl::SingleListLevel) = "SingleList($(summary(lvl.lvl)))"
-similar_level(lvl::SingleListLevel) = SingleList(similar_level(lvl.lvl))
-similar_level(lvl::SingleListLevel, dim, tail...) = SingleList(similar_level(lvl.lvl, tail...), dim)
+similar_level(lvl::SingleListLevel, fill_value, eltype::Type, dim, tail...) =
+    SingleList(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
 
 function postype(::Type{SingleListLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl}
     return postype(Lvl)

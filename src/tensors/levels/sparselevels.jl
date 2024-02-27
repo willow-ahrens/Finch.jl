@@ -158,8 +158,8 @@ SparseLevel{Ti}(lvl::Lvl, shape, tbl::Tbl) where {Ti, Lvl, Tbl} =
     SparseLevel{Ti, Tbl, Lvl}(lvl, shape, tbl)
     
 Base.summary(lvl::SparseLevel) = "Sparse($(summary(lvl.lvl)))"
-similar_level(lvl::SparseLevel) = Sparse(similar_level(lvl.lvl))
-similar_level(lvl::SparseLevel, dim, tail...) = Sparse(similar_level(lvl.lvl, tail...), dim)
+similar_level(lvl::SparseLevel, fill_value, eltype::Type, dim, tail...) =
+    Sparse(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
 
 function postype(::Type{SparseLevel{Ti, Tbl, Lvl}}) where {Ti, Tbl, Lvl}
     return postype(Lvl)

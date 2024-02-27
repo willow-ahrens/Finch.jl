@@ -41,8 +41,8 @@ DenseRLELevel{Ti}(lvl::Lvl, shape, ptr::Ptr, right::Right, buf::Lvl) where {Ti, 
     DenseRLELevel{Ti, Ptr, Right, Lvl}(lvl, Ti(shape), ptr, right, buf)
 
 Base.summary(lvl::DenseRLELevel) = "DenseRLE($(summary(lvl.lvl)))"
-similar_level(lvl::DenseRLELevel) = DenseRLE(similar_level(lvl.lvl))
-similar_level(lvl::DenseRLELevel, dim, tail...) = DenseRLE(similar_level(lvl.lvl, tail...), dim)
+similar_level(lvl::DenseRLELevel, fill_value, eltype::Type, dim, tail...) =
+    DenseRLE(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
 
 function postype(::Type{DenseRLELevel{Ti, Ptr, Right, Lvl}}) where {Ti, Ptr, Right, Lvl}
     return postype(Lvl)

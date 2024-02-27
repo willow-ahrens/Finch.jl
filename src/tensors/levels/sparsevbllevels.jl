@@ -52,8 +52,8 @@ function moveto(lvl::SparseVBLLevel{Ti}, device) where {Ti}
 end
 
 Base.summary(lvl::SparseVBLLevel) = "SparseVBL($(summary(lvl.lvl)))"
-similar_level(lvl::SparseVBLLevel) = SparseVBL(similar_level(lvl.lvl))
-similar_level(lvl::SparseVBLLevel, dim, tail...) = SparseVBL(similar_level(lvl.lvl, tail...), dim)
+similar_level(lvl::SparseVBLLevel, fill_value, eltype::Type, dim, tail...) =
+    SparseVBL(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
 
 pattern!(lvl::SparseVBLLevel{Ti}) where {Ti} = 
     SparseVBLLevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
