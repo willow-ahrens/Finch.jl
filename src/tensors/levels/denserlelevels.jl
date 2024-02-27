@@ -36,7 +36,7 @@ const DenseRLE = DenseRLELevel
 DenseRLELevel(lvl::Lvl) where {Lvl} = DenseRLELevel{Int}(lvl)
 DenseRLELevel(lvl, shape, args...) = DenseRLELevel{typeof(shape)}(lvl, shape, args...)
 DenseRLELevel{Ti}(lvl) where {Ti} = DenseRLELevel(lvl, zero(Ti))
-DenseRLELevel{Ti}(lvl, shape) where {Ti} = DenseRLELevel{Ti}(lvl, shape, postype(lvl)[1], Ti[], similar_level(lvl))
+DenseRLELevel{Ti}(lvl, shape) where {Ti} = DenseRLELevel{Ti}(lvl, shape, postype(lvl)[1], Ti[], deepcopy(lvl))
 DenseRLELevel{Ti}(lvl::Lvl, shape, ptr::Ptr, right::Right, buf::Lvl) where {Ti, Lvl, Ptr, Right} =
     DenseRLELevel{Ti, Ptr, Right, Lvl}(lvl, Ti(shape), ptr, right, buf)
 
