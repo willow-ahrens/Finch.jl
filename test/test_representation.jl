@@ -16,7 +16,7 @@ using Base.Meta
                 println(io, "tensor: ", repr(fbr))
             end
 
-            @test check_output("format_representation_$key.txt", String(take!(io)))
+            @test check_output("representation/representation_$key.txt", String(take!(io)))
             print(String(take!(io)))
         end
     end

@@ -63,7 +63,7 @@
                 @test Structure(fbr) == Structure(Tensor(Lvl{Int16}(Element(0.0), 0)))
             end
 
-            @test check_output("format_constructors_$key.txt", String(take!(io)))
+            @test check_output("constructors/format_$key.txt", String(take!(io)))
         end
     end
 
@@ -136,7 +136,7 @@
                 @test Structure(fbr) == Structure(Tensor(Lvl{N, NTuple{N, Int16}}(Element(0.0), Int16.(zerodim))))
 
             end
-            @test check_output("format_constructors_$(key).txt", String(take!(io)))
+            @test check_output("constructors/format_$(key).txt", String(take!(io)))
         end
     end
 
@@ -173,7 +173,7 @@
         println(io, "empty tensor: ", fbr)
         @test Structure(fbr) == Structure(Tensor(Dense(Separate(Dense(Element(0))))))
 
-        @test check_output("format_constructors_d_p_d_e.txt", String(take!(io)))
+        @test check_output("constructors/format_d_p_d_e.txt", String(take!(io)))
     end
 
     @testset "Tensor(Dense(Atomic(Dense(Element(0)))))" begin
@@ -197,7 +197,7 @@
         println(io, "empty tensor: ", fbr)
         @test Structure(fbr) == Structure(Tensor(Dense(Atomic(Dense(Element(0))))))
 
-        @test check_output("format_constructors_d_a_d_e.txt", String(take!(io)))
+        @test check_output("constructors/format_d_a_d_e.txt", String(take!(io)))
     end
 
     @testset "PlusOneVector" begin

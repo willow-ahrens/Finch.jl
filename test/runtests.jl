@@ -37,7 +37,7 @@ function check_output(fname, arg)
     ref_dir = joinpath(@__DIR__, "reference$(Sys.WORD_SIZE)")
     ref_file = joinpath(ref_dir, fname)
     if parsed_args["overwrite"]
-        mkpath(ref_dir)
+        mkpath(dirname(ref_file))
         open(ref_file, "w") do f
             println(f, arg)
         end
