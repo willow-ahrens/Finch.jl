@@ -94,6 +94,14 @@ julia> x[]
 """
 overwrite(l, r) = r
 
+"""
+    Dimensionless()
+
+A singleton type representing the lack of a dimension.  This is used in place of
+a dimension when we want to avoid dimensionality checks. In the `@finch` macro,
+you can write `Dimensionless()` with an underscore as `for i = _`, allowing
+finch to pick up the loop bounds from the tensors automatically.
+"""
 struct Dimensionless end
 const dimless = Dimensionless()
 function extent end
