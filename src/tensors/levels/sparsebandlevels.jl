@@ -282,7 +282,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseBandLevel}, ctx, mode::Re
                 if $my_r < $my_r_stop
                     $my_i1 = $(lvl.idx)[$my_r]
                     $my_q_stop = $(lvl.ofs)[$my_r + $(Tp(1))]
-                    $my_i_start = $my_i - ($my_q_stop - $(lvl.ofs)[$my_r])
+                    $my_i_start = $my_i1 - ($my_q_stop - $(lvl.ofs)[$my_r])
                     $my_q_ofs = $my_q_stop - $my_i1 - $(Tp(1))
                 else
                     $my_i_start = $(Ti(1))
@@ -298,6 +298,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseBandLevel}, ctx, mode::Re
                     body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                 ),
                 Phase(
+                    stop = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Lookup(
                         body = (ctx, i) -> Thunk(
                             preamble = :($my_q = $my_q_ofs + $(ctx(i))),
@@ -306,7 +307,6 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseBandLevel}, ctx, mode::Re
                     )
                 ),
                 Phase(
-                    stop = (ctx, ext) -> value(my_i_start),
                     body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                 ),
             ])
