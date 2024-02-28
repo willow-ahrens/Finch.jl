@@ -47,6 +47,8 @@
         push!(levels_1D, (key = "Dense{$(lvl.key)}", Lvl = (base) -> lvl.Lvl(Dense(base)), filter = (key) -> lvl.filter("$(key)_dense"), pattern=false))
     end
 
+    seen_fname = Set{String}()
+
     for (key, arr) = [
         ("5x_false", fill(false, 5)),
         ("5x_true", fill(true, 5)),
@@ -78,9 +80,17 @@
                 ref = dropdefaults!(ref, arr)
                 tmp = Tensor(lvl.Lvl(leaf()))
                 @testset "convert $(key) $(lvl.key)(Element())" begin
-                    check_output("convert/convert_to_$(summary(tmp)).jl", @finch_code (tmp .= 0; for i=_; tmp[i] = ref[i] end))
+                    fname = "conversions/convert_to_$(lvl.key){Element{$(default(arr))}}.jl"
+                    if !(fname in seen_fname)
+                        push!(seen_fname, fname)
+                        check_output(fname, @finch_code (tmp .= 0; for i=_; tmp[i] = ref[i] end))
+                    end
+                    fname = "conversions/convert_from_$(lvl.key){Element{$(default(arr))}}.jl"
+                    if !(fname in seen_fname)
+                        push!(seen_fname, fname)
+                        check_output(fname, @finch_code (res .= 0; for i=_; res[i] = tmp[i] end))
+                    end
                     @finch (tmp .= 0; for i=_; tmp[i] = ref[i] end)
-                    check_output("convert/convert_from_$(summary(tmp)).jl", @finch_code (res .= 0; for i=_; res[i] = tmp[i] end))
                     @finch (res .= 0; for i=_; res[i] = tmp[i] end)
                     @test ref == res
                     if lvl.pattern
