@@ -292,9 +292,9 @@ function instantiate(fbr::VirtualSubFiber{VirtualSingleListLevel}, ctx, mode::Re
                 Phase(
                     start = (ctx, ext) -> literal(lvl.Ti(1)),
                     stop = (ctx, ext) -> value(my_i),
-                    body = (ctx, ext) -> Spike(
+                    body = (ctx, ext) -> truncate(Spike(
                             body = Fill(virtual_level_default(lvl)),
-                            tail = instantiate(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, mode, subprotos))
+                            tail = instantiate(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, mode, subprotos)), ctx, similar_extent(ext, getstart(ext), value(my_i)), ext)
                 ),
                 Phase(
                     stop = (ctx, ext) -> lvl.shape,
