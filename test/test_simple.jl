@@ -77,5 +77,38 @@
 
     println(y)
     print(y)
+    #x = Tensor(Dense(Dense(Element(false))), [false false; true false; false true; false true])
+    x = Tensor(Dense(Element(0.0)), [0.0, 2.0, 2.0, 0.0, 3.0, 3.0])
+    y = Tensor(SparseBand(Element(0.0)))
+    display(@finch_code begin
+        y .= 0
+        for i = _
+            if x[i] != 0
+                y[i] = x[i]
+            end
+        end
+    end)
+
+    @finch begin
+        y .= 0
+        for i = _
+            if x[i] != 0
+                y[i] = x[i]
+            end
+        end
+    end
+
+    println(y)
+
+    z = Tensor(SparseVBL(SparseList(Element(false))))
+    @finch begin
+        z .= 0
+        for i = _, j = _
+            if x[j, i] != 0
+                z[j, i] = x[j, i]
+            end
+        end
+    end
+    println(z)
     =#
 end

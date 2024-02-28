@@ -8,6 +8,7 @@
         ("DenseRLE", DenseRLE, [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
         ("SparseList", SparseList, [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
         ("SparseVBL", SparseVBL, [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
+        ("SparseBand", SparseBand, [[0.0, 2.0, 2.0, 0.0, 3.0, 0.0],]),
         ("SparseByteMap", SparseByteMap, [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
         ("SparseRLE", SparseRLE, [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
         ("SparseDict", SparseDict, [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),

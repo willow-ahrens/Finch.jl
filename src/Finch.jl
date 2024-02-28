@@ -28,6 +28,7 @@ export SingleRLE, SingleRLELevel
 export Sparse, SparseLevel, SparseDict
 export SparseList, SparseListLevel
 export SingleList, SingleListLevel
+export SparseBand, SparseBandLevel
 export SparseHash, SparseHashLevel
 export SparseCOO, SparseCOOLevel
 export SparseTriangle, SparseTriangleLevel
@@ -114,6 +115,7 @@ include("tensors/levels/sparselistlevels.jl")
 include("tensors/levels/singlelistlevels.jl")
 include("tensors/levels/sparsehashlevels.jl")
 include("tensors/levels/sparsecoolevels.jl")
+include("tensors/levels/sparsebandlevels.jl")
 include("tensors/levels/sparselevels.jl")
 include("tensors/levels/sparsebytemaplevels.jl")
 include("tensors/levels/sparsevbllevels.jl")
