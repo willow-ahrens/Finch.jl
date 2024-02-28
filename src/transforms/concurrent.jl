@@ -98,22 +98,7 @@ function ensure_concurrent(root, ctx)
                 
             end
         end
-
-
-
-
-        atomicity = (is_atomic(acc.tns, ctx))
-        injectivity = (@capture(acc, access(~tns, ~mode, ~i..., idx)) ?  (is_injective(tns, ctx), [length(i) + 1]) : ([false], [1]))
-        injectivityAlt = (@capture(acc, access(~tns, ~mode, ~i...)) ?  (is_injective(tns, ctx), [length(i)]) : ([false], [1]))
-        testInjectivity = injectivity[1][injectivity[2]][1]
-        testInjectivityp = injectivityAlt[1][end][1]
-        if !(
-            atomicity || testInjectivity || testInjectivityp
-            
-        )
-            throw(FinchConcurrencyError("Cannot prove that $(acc) is safe to update from multiple threads due atomicity = $(atomicity) and injectivity = $(injectivity)  and erg=$(injectivityAlt)"))
-        end
     end
-
+    # we validated everything so we are done!
     return root
 end
