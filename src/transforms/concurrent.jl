@@ -83,14 +83,23 @@ function ensure_concurrent(root, ctx)
                 injectivity = is_injective(tns, ctx)
                 for loc in 1:length(i)
                     if i[loc] in indicies_in_region
-                        push!(locations_with_parallel_vars, loc)
+                        push!(locations_with_parallel_vars, loc + 1)
                     end
                 end
+                if len(locations_with_parallel_vars) == 0
+                    (below, overall) = is_atomic(acc.tns, ctx)
+                    if !below[0]
+                        throw(FinchConcurrencyError("Assignment $(acc) requires last level atomics!"))
+                        # FIXME: we could do atomic operations here.
+                    end
+
+                end
+
                 if all(injectivity[locations_with_parallel_vars])
                     continue # We pass due to injectivity!
                 end
-                (below, overall) = is_atomic(acc.tns, ctx)
-                if overall || all(below[locations_with_parallel_vars])
+                (below, _) = is_atomic(acc.tns, ctx)
+                if all(below[locations_with_parallel_vars])
                     continue # we pass due to atomics!
                 else
                     throw(FinchConcurrencyError("Assignment $(acc) requires injectivity or atomics in at least places $(locations_with_parallel_vars), but does not have them, due to injectivity=$(injectivity) and atomics=$(below) "))
