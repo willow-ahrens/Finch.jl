@@ -91,8 +91,9 @@ function ensure_concurrent(root, ctx)
                     if !below[0]
                         throw(FinchConcurrencyError("Assignment $(acc) requires last level atomics!"))
                         # FIXME: we could do atomic operations here.
+                    else
+                        continue
                     end
-
                 end
 
                 if all(injectivity[locations_with_parallel_vars])
