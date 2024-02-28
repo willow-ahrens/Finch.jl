@@ -91,9 +91,14 @@ postype(lvl:: AtomicLevel) = postype(lvl.lvl)
 
 postype(lvl:: VirtualAtomicLevel) = postype(lvl.lvl)
 
-is_level_injective(lvl::VirtualAtomicLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
+is_level_injective(lvl::VirtualAtomicLevel, ctx) = [is_level_injective(lvl.lvl, ctx)...]
 is_level_concurrent(lvl::VirtualAtomicLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
-is_level_atomic(lvl::VirtualAtomicLevel, ctx) = true
+function is_level_atomic(lvl::VirtualAtomicLevel, ctx)
+    below = is_level_atomic(lvl.lvl, ctx)
+    return (below, true)
+end
+num_indexable(lvl::VirtualAtomicLevel, ctx) = virtual_level_ndims(lvl) - virtual_level_ndims(lvl.lvl)
+
 
 function lower(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
@@ -116,6 +121,7 @@ end
 Base.summary(lvl::VirtualAtomicLevel) = "Atomic($(lvl.Lvl))"
 virtual_level_resize!(lvl::VirtualAtomicLevel, ctx, dims...) = (lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims...); lvl)
 virtual_level_size(lvl::VirtualAtomicLevel, ctx) = virtual_level_size(lvl.lvl, ctx)
+virtual_level_ndims(lvl::VirtualAtomicLevel, ctx) = length(virtual_level_size(lvl.lvl, ctx))
 virtual_level_size(x, ctx) = error(string("Not defined for", x))
 virtual_level_eltype(lvl::VirtualAtomicLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualAtomicLevel) = virtual_level_default(lvl.lvl)

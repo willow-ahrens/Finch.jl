@@ -15,8 +15,9 @@ function is_injective end
 """
     is_atomic(tns, ctx)
 
-Returns a boolean indicating whether it is safe to update the same element of the
-tensor from multiple simultaneous threads.
+    Returns a tuple (below, overall) where below is a vector, indicating which indicies are safe to write to out of order, 
+    and overall is a boolean that indicates if this is true for the entire tensor.
+
 """
 function is_atomic end
 
@@ -43,6 +44,16 @@ function ensure_concurrent(root, ctx)
         end
     end
 
+    # Get all indicies in the parallel region.
+    indicies_in_region = [idx]
+    for node in PostOrderDFS(body)
+        if  @capture root loop(~idxp, ~ext, ~body)
+            push!(indicies_in_region, idxp)
+        end
+    end
+    
+
+
     for (root, agns) in nonlocal_assigns
         ops = map(agn -> (@capture agn assign(~lhs, ~op, ~rhs); op), agns)
         if !allequal(ops)
@@ -50,17 +61,46 @@ function ensure_concurrent(root, ctx)
         end
 
         accs = map(agn -> (@capture agn assign(~lhs, ~op, ~rhs); lhs), agns)
-        if !allequal(accs)
-            throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not all the same access"))
-        end
         acc = first(accs)
-
-        if !(
-                (@capture(acc, access(~tns, ~mode, ~i..., idx)) && is_injective(tns, ctx)[length(i) + 1]) ||
-                isassociative(ctx.algebra, first(ops))
-            )
+        # The operation must be associative.
+        if !(isassociative(ctx.algebra, first(ops)))
             throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not associative"))
         end
+        # If the acceses are different, then all acceses must be atomic.
+        if !allequal(accs)
+            for acc in accs
+                (_, overall) = is_atomic(acc.tns, ctx)
+                if !overall
+                    throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not all the same access so atomics are needed on all acceses!"))
+                end
+            end 
+            continue
+        else
+            #Since all operations/acceses are the same, a more fine grained analysis takes place:
+            #Every access must be injective or they must all be atomic.
+            if (@capture(acc, access(~tns, ~mode, ~i...)))
+                locations_with_parallel_vars = []
+                injectivity = is_injective(tns, ctx)
+                for loc in 1:length(i)
+                    if i[loc] in indicies_in_region
+                        push!(locations_with_parallel_vars, loc)
+                    end
+                end
+                if all(injectivity[locations_with_parallel_vars])
+                    continue # We pass due to injectivity!
+                end
+                (below, overall) = is_atomic(acc.tns, ctx)
+                if overall || all(below[locations_with_parallel_vars])
+                    continue # we pass due to atomics!
+                else
+                    throw(FinchConcurrencyError("Assignment $(acc) requires injectivity or atomics in at least places $(locations_with_parallel_vars), but does not have them, due to injectivity=$(injectivity) and atomics=$(below) "))
+                end
+                
+            end
+        end
+
+
+
 
         atomicity = (is_atomic(acc.tns, ctx))
         injectivity = (@capture(acc, access(~tns, ~mode, ~i..., idx)) ?  (is_injective(tns, ctx), [length(i) + 1]) : ([false], [1]))

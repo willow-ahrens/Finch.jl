@@ -106,7 +106,12 @@ mutable struct VirtualDenseLevel <: AbstractVirtualLevel
 end
 
 is_level_injective(lvl::VirtualDenseLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
-is_level_atomic(lvl::VirtualDenseLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
+function is_level_atomic(lvl::VirtualDenseLevel, ctx)
+    (data, atomic) = is_level_atomic(lvl.lvl, ctx)
+    return ([data; [atomic for _ in 1:num_indexable(lvl, ctx)]])
+end
+num_indexable(lvl::VirtualAtomicLevel, ctx) = virtual_level_ndims(lvl, ctx) - virtual_level_ndims(lvl.lvl, ctx)
+
 
 function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
     sym = freshen(ctx, tag)

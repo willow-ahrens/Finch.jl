@@ -135,7 +135,12 @@ end
 
 is_level_injective(lvl::VirtualSparseRLELevel, ctx) = [false, is_level_injective(lvl.lvl, ctx)...]
 is_level_concurrent(lvl::VirtualSparseRLELevel, ctx) = [false, is_level_concurrent(lvl.lvl, ctx)...]
-is_level_atomic(lvl::VirtualSparseRLELevel, ctx) = false
+function is_level_atomic(lvl::VirtualSparseRLELevel, ctx)
+    (below, atomic) = is_level_atomic(lvl.lvl, ctx)
+    return ([below; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
+end
+num_indexable(lvl::VirtualSparseRLELevel, ctx) = virtual_level_ndims(lvl, ctx) - virtual_level_ndims(lvl.lvl, ctx)
+
 
 postype(lvl::VirtualSparseRLELevel) = postype(lvl.lvl)
 

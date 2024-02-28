@@ -251,7 +251,12 @@ mutable struct VirtualSparseLevel <: AbstractVirtualLevel
 end
   
 is_level_injective(lvl::VirtualSparseLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
-is_level_atomic(lvl::VirtualSparseLevel, ctx) = false
+function is_level_atomic(lvl::VirtualSparseHashLevel, ctx)
+    (below, atomic) = is_level_atomic(lvl.lvl, ctx)
+    return ([below; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
+end
+num_indexable(lvl::VirtualSparseLevel, ctx) = virtual_level_ndims(lvl, ctx) - virtual_level_ndims(lvl.lvl, ctx)
+
 
 function virtualize(ex, ::Type{SparseLevel{Ti, Tbl, Lvl}}, ctx, tag=:lvl) where {Ti, Tbl, Lvl}
     sym = freshen(ctx, tag)

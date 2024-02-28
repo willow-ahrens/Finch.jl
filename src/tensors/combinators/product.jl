@@ -25,7 +25,10 @@ function is_concurrent(lvl::VirtualProductArray, ctx)
     sub = is_concurrent(lvl.body, ctx)
     return [sub[1:lvl.dim]..., false, sub[lvl.dim + 1:end]...]
 end
-is_atomic(lvl::VirtualProductArray, ctx) = is_atomic(lvl.body, ctx)
+function is_atomic(lvl::VirtualProductArray, ctx)
+    (below, overall) = is_atomic(lvl.body, ctx)
+    return ([below[1:lvl.dim]..., below[lvl.dim] && below[lvl.dim+1], below[lvl.dim + 1:end]... ], overall)
+end
 
 Base.show(io::IO, ex::VirtualProductArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualProductArray)

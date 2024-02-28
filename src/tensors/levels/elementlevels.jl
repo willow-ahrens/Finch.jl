@@ -87,7 +87,8 @@ mutable struct VirtualElementLevel <: AbstractVirtualLevel
 end
 
 is_level_injective(::VirtualElementLevel, ctx) = []
-is_level_atomic(lvl::VirtualElementLevel, ctx) = false
+is_level_atomic(lvl::VirtualElementLevel, ctx) = ([], false)
+num_indexable(lvl::VirtualElementLevel, ctx) = 0
 
 lower(lvl::VirtualElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex
 

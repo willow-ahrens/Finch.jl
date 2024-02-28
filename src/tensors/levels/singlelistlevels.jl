@@ -142,7 +142,11 @@ mutable struct VirtualSingleListLevel <: AbstractVirtualLevel
 end
   
 is_level_injective(lvl::VirtualSingleListLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
-is_level_atomic(lvl::VirtualSingleListLevel, ctx) = false
+function is_level_atomic(lvl::VirtualSeparateLevel, ctx)
+    (below, atomic) = is_level_atomic(lvl.lvl, ctx)
+    return ([below; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
+end
+num_indexable(lvl::VirtualSingleListLevel, ctx) = virtual_level_ndims(lvl, ctx) - virtual_level_ndims(lvl.lvl, ctx)
 
 function virtualize(ex, ::Type{SingleListLevel{Ti, Ptr, Idx, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Idx, Lvl}
     sym = freshen(ctx, tag)
