@@ -69,8 +69,8 @@ function ensure_concurrent(root, ctx)
         # If the acceses are different, then all acceses must be atomic.
         if !allequal(accs)
             for acc in accs
-                (_, overall) = is_atomic(acc.tns, ctx)
-                if !overall
+                (below, overall) = is_atomic(acc.tns, ctx)
+                if !all(below)
                     throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not all the same access so atomics are needed on all acceses!"))
                 end
             end 
