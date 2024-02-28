@@ -278,17 +278,16 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseBandLevel}, ctx, mode::Re
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $my_r = $(lvl.ptr)[$(ctx(pos))]
-                $my_r_stop = $(lvl.ptr)[$(ctx(pos)) + $(Tp(1))]
-                if $my_r < $my_r_stop
+                $my_r_stop = $(lvl.ptr)[$(ctx(pos)) + $(Tp(1))] - 1
+                if $my_r <= $my_r_stop
                     $my_i1 = $(lvl.idx)[$my_r]
                     $my_q_stop = $(lvl.ofs)[$my_r + $(Tp(1))]
-                    $my_i_start = $my_i - ($my_q_stop - $(lvl.ofs)[$my_r])
+                    $my_i_start = $my_i1 - ($my_q_stop - $(lvl.ofs)[$my_r] - 1)
                     $my_q_ofs = $my_q_stop - $my_i1 - $(Tp(1))
                 else
                     $my_i_start = $(Ti(1))
                     $my_i1 = $(Ti(0))
                     $my_q_stop = $(Ti(0))
-                    $my_i_start = $(Ti(0))
                     $my_q = $(Ti(0))
                 end
             end,
@@ -298,6 +297,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseBandLevel}, ctx, mode::Re
                     body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                 ),
                 Phase(
+                    stop = (ctx, ext) -> value(my_i1),
                     body = (ctx, ext) -> Lookup(
                         body = (ctx, i) -> Thunk(
                             preamble = :($my_q = $my_q_ofs + $(ctx(i))),
@@ -306,7 +306,6 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseBandLevel}, ctx, mode::Re
                     )
                 ),
                 Phase(
-                    stop = (ctx, ext) -> value(my_i_start),
                     body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
                 ),
             ])
@@ -333,6 +332,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseBandLevel}, ctx, mo
     ros_fill = lvl.ros_fill
     ros_stop = lvl.ros_stop
     dirty = freshen(ctx.code, tag, :dirty)
+    qos_2 = freshen(ctx.code, tag, :_qos_2)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -362,10 +362,11 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseBandLevel}, ctx, mo
                             $qos = $(ctx(idx)) - $my_i_prev + $qos_fill + 1
                         end
                         if $qos > $qos_stop
+                            $qos_2 = $qos_stop + 1
                             while $qos > $qos_stop
                                 $qos_stop = max($qos_stop << 1, 1)
                             end
-                            $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, Tp), value(qos_stop, Tp)), ctx))
+                            $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos_2, Tp), value(qos_stop, Tp)), ctx))
                         end
                         $dirty = false
                     end,
