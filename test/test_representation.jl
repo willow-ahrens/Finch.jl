@@ -57,6 +57,9 @@ using Base.Meta
     test_format(vecs, name = "Tensor(SparseDict(Element(zero)))", key = "sh_e") do arr
         dropdefaults!(Tensor(Sparse(Element(zero(eltype(arr))))), arr)
     end
+    test_format(vecs, name = "Tensor(SparseBand(Element(zero)))", key = "sbn_e") do arr
+        dropdefaults!(Tensor(SparseBand(Element(zero(eltype(arr))))), arr)
+    end
     test_format(vecs, name = "Tensor(SparseHash{1}(Element(zero)))", key = "sh1_e") do arr
         dropdefaults!(Tensor(SparseHash{1}(Element(zero(eltype(arr))))), arr)
     end
@@ -162,6 +165,12 @@ using Base.Meta
     end
     test_format(mats, name = "Tensor(DenseRLE(Dense(Element(zero))))", key = "drl_d_e") do arr
         dropdefaults!(Tensor(DenseRLE(Dense(Element(zero(eltype(arr)))))), arr)
+    end
+    test_format(mats, name = "Tensor(SparseList(SparseBand(Element(zero))))", key = "sl_sbn_e") do arr
+        dropdefaults!(Tensor(SparseList(SparseBand(Element(zero(eltype(arr)))))), arr)
+    end
+    test_format(mats, name = "Tensor(SparseBand(SparseList(Element(zero))))", key = "sbn_sl_e") do arr
+        dropdefaults!(Tensor(SparseBand(SparseList(Element(zero(eltype(arr)))))), arr)
     end
 
     # Test SingleList
