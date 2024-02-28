@@ -91,7 +91,7 @@ using CIndices
         91 92 93 94 95]
     A = copyto!(Tensor(Dense(Dense(Element(0)))), A)
     B = Tensor(Dense(Element(0)))
-    
+
     @test check_output("issues/fiber_as_idx.jl", @finch_code (B .= 0; for i=_; B[i] = A[I[i], i] end))
     @finch (B .= 0; for i=_; B[i] = A[I[i], i] end)
 
@@ -113,7 +113,7 @@ using CIndices
     let
         function f(a::Float64, b::Float64, c::Float64)
             return a+b+c
-        end 
+        end
         struct MyAlgebra115 <: Finch.AbstractAlgebra end
         Finch.virtualize(ex, ::Type{MyAlgebra115}, ::Finch.JuliaContext) = MyAlgebra115()
         t = Tensor(SparseList(SparseList(Element(0.0))))
@@ -174,7 +174,7 @@ using CIndices
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/99
-    let 
+    let
         m = 4; n = 3; ptr_c = [0, 3, 3, 5]; idx_c = [1, 2, 3, 0, 2]; val_c = [1.1, 2.2, 3.3, 4.4, 5.5];
 
         ptr_jl = PlusOneVector(ptr_c)
@@ -360,12 +360,12 @@ using CIndices
     let
         C = Tensor(Dense(Dense(Element(0.0))), [1 0; 0 1])
         w = Tensor(Dense(Dense(Element(0.0))), [0 0; 0 0])
-        @finch mode=fastfinch begin 
+        @finch mode=fastfinch begin
             for j = _, i = _
                 C[i, j] += 1
             end
-            for j = _, i = _ 
-                w[j, i] = C[i, j] 
+            for j = _, i = _
+                w[j, i] = C[i, j]
             end
             for i = _, j = _
                 C[j, i] = w[j, i]
@@ -414,9 +414,9 @@ using CIndices
         @finch mode=fastfinch (x .= 0; for i=_, j=_; if i != j x[] += A[j, i] end end)
         @test x[] == 30.0
     end
-  
+
     #https://github.com/willow-ahrens/Finch.jl/issues/286
-    let 
+    let
         A = [1 0; 0 1]
         #note that A[i, j] is ignored here, as the temp local is never used
         @finch (for j=_, i=_; let temp = A[i, j]; end end)
@@ -573,7 +573,7 @@ using CIndices
         Point = Tensor(SparseList(Element{0}([1]), 10, [1,2], [1]))
         Kernel = Tensor(SparseList(Dense(Element{0}([1]),1), 10, [1,2], [2]))
 
-        eval(@finch_kernel function test(Output, Point, Kernel) 
+        eval(@finch_kernel function test(Output, Point, Kernel)
             Output .= 0
             for x = _
                 for xx = _
@@ -658,4 +658,12 @@ using CIndices
             end
         end
     end)
+
+    #https://github.com/willow-ahrens/Finch.jl/pull/442
+    let
+        I = [6, 6, 6, 9]
+        J = [1, 3, 10, 5]
+        V = [1, 1, 1, 1]
+        fsparse(I, J, V) == sparse(I, J, V)
+    end
 end
