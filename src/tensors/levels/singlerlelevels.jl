@@ -149,6 +149,10 @@ function is_level_atomic(lvl::VirtualSingleRLELevel, ctx)
     (below, atomic) = is_level_atomic(lvl.lvl, ctx)
     return ([below; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
 end
+function is_level_concurrent(lvl::VirtualSingleRLELevel, ctx)
+    (data, concurrent) = is_level_concurrent(lvl.lvl, ctx)
+    return ([data; [false for _ in 1:num_indexable(lvl, ctx)]], false)
+end
 num_indexable(lvl::VirtualSingleRLELevel, ctx) = virtual_level_ndims(lvl, ctx) - virtual_level_ndims(lvl.lvl, ctx)
 
   

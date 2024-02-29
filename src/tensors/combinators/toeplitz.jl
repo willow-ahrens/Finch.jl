@@ -33,6 +33,10 @@ function is_atomic(lvl::VirtualToeplitzArray, ctx)
     newBelow = [below[1:lvl.dim]..., below[lvl.dim] && below[lvl.dim + 1], below[lvl.dim + 1:end]...]
     return (newBelow, overall)
 end
+function is_concurrent(lvl::VirtualToeplitzArray, ctx)
+    sub = is_concurrent(lvl.body, ctx)
+    return [sub[1:lvl.dim]..., false, sub[lvl.dim + 1:end]...]
+end
 
 Base.show(io::IO, ex::VirtualToeplitzArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualToeplitzArray)

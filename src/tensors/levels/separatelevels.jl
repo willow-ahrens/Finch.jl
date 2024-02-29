@@ -97,6 +97,10 @@ function is_level_atomic(lvl::VirtualSeparateLevel, ctx)
     (below, atomic) = is_level_atomic(lvl.lvl, ctx)
     return ([below; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
 end
+function is_level_concurrent(lvl::VirtualSeparateLevel, ctx)
+    (data, _) = is_level_concurrent(lvl.lvl, ctx)
+    return (data, true)
+end
 
 function lower(lvl::VirtualSeparateLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote

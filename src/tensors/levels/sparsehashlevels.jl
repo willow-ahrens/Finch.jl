@@ -174,6 +174,10 @@ function is_level_atomic(lvl::VirtualSparseHashLevel, ctx)
     (below, atomic) = is_level_atomic(lvl.lvl, ctx)
     return ([below; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
 end
+function is_level_concurrent(lvl::VirtualSparseHashLevel, ctx)
+    (data, _) = is_level_concurrent(lvl.lvl, ctx)
+    return ([data; [false for _ in 1:num_indexable(lvl, ctx)]], false)
+end
 num_indexable(lvl::VirtualSparseHashLevel, ctx) = virtual_level_ndims(lvl, ctx) - virtual_level_ndims(lvl.lvl, ctx)
 
 

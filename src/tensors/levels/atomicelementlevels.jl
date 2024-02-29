@@ -89,6 +89,9 @@ end
 
 is_level_injective(::VirtualAtomicElementLevel, ctx) = []
 is_level_atomic(lvl::VirtualAtomicElementLevel, ctx) = ([true], true)
+function is_level_concurrent(lvl::VirtualAtomicLevel, ctx)
+    return ([], true)
+end
 num_indexable(lvl::VirtualAtomicElementLevel, ctx) = 0
 
 lower(lvl::VirtualAtomicElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex

@@ -110,6 +110,10 @@ function is_level_atomic(lvl::VirtualDenseLevel, ctx)
     (data, atomic) = is_level_atomic(lvl.lvl, ctx)
     return ([data; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
 end
+function is_level_concurrent(lvl::VirtualDenseLevel, ctx)
+    (data, concurrent) = is_level_concurrent(lvl.lvl, ctx)
+    return ([data; [atomic for _ in 1:num_indexable(lvl, ctx)]], concurrent)
+end
 num_indexable(lvl::VirtualDenseLevel, ctx) = virtual_level_ndims(lvl, ctx) - virtual_level_ndims(lvl.lvl, ctx)
 
 

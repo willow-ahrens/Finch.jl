@@ -86,6 +86,9 @@ end
 
 is_level_injective(::VirtualPatternLevel, ctx) = []
 is_level_atomic(lvl::VirtualPatternLevel, ctx) = ([false], false)
+function is_level_concurrent(lvl::VirtualPatternLevel, ctx)
+    return ([], true)
+end
 num_indexable(lvl::VirtualPatternLevel, ctx) = 0
 
 
