@@ -94,7 +94,7 @@ function ensure_concurrent(root, ctx)
                     println("below:", below)
                     println("overall:", overall)
                     println("tns:", tns)
-                    if !below[0]
+                    if !below[1]
                         throw(FinchConcurrencyError("Assignment $(acc) requires last level atomics!"))
                         # FIXME: we could do atomic operations here.
                     else
