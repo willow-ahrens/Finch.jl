@@ -15,11 +15,20 @@ function is_injective end
 """
     is_atomic(tns, ctx)
 
-    Returns a tuple (below, overall) where below is a vector, indicating which indicies are safe to write to out of order, 
-    and overall is a boolean that indicates if this is true for the entire tensor.
-
+    Returns a tuple (below, overall) where below is a vector, indicating which indicies have an atomic that guards them, 
+    and overall is a boolean that indicates is the last level had an atomic guarding it.
 """
 function is_atomic end
+
+"""
+    is_concurrent(tns, ctx)
+
+    Returns a vector of booleans, one for each dimension of the tensor, indicating
+    whether the index can be written to without any state. So if a matrix returns [true, false],
+    then we can write to A[i, j] and A[i+1, j] without any shared state between the two, but
+    we can't write to A[i, j] and A[i, j+1] without carrying over state.
+"""
+function is_concurrent end
 
 """
 ensure_concurrent(root, ctx)
