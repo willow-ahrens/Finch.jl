@@ -70,9 +70,11 @@ function ensure_concurrent(root, ctx)
             if (length(ops) == 1)
                 if (@capture(acc, access(~tns, ~mode, ~i...)))
                     injectivityIdp:: Vector{Bool} = is_injective(tns, ctx)
-                    if !all(injectivityIdp)
-                        throw(FinchConcurrencyError("Non-associative operations can only be parallelized in the case of a single injective acceses, but the injectivity is $(injectivity)"))
+                    concurrencyInfo = is_concurrent(tns, ctx)
+                    if !all(injectivityIdp) || !all(concurrencyInfo)
+                        throw(FinchConcurrencyError("Non-associative operations can only be parallelized in the case of a single injective acceses, but the injectivity is $(injectivity) and the concurrency is $(concurrencyInfo)."))
                     else
+
                         continue # We pass via a single assignment that is completely injective.
                     end
                 else
@@ -85,8 +87,9 @@ function ensure_concurrent(root, ctx)
         if !allequal(accs)
             for acc in accs
                 (below, _) = is_atomic(acc.tns, ctx)
-                if !all(below)
-                    throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not all the same access so atomics are needed on all acceses!"))
+                concurrencyInfo = is_concurrent(acc.tns, ctx)
+                if !all(below) || !all(concurrencyInfo)
+                    throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not all the same access so concurrency and atomics are needed on all acceses!"))
                 end
             end 
             continue
@@ -96,6 +99,7 @@ function ensure_concurrent(root, ctx)
             if (@capture(acc, access(~tns, ~mode, ~i...)))
                 locations_with_parallel_vars = []
                 injectivity:: Vector{Bool} = is_injective(tns, ctx)
+                concurrencyInfo = is_concurrent(acc.tns, ctx)
                 for loc in 1:length(i)
                     if i[loc] in indicies_in_region
                         push!(locations_with_parallel_vars, loc + 1)
@@ -111,15 +115,15 @@ function ensure_concurrent(root, ctx)
                     end
                 end
 
-                if all(injectivity[[x-1 for x in locations_with_parallel_vars]])
+                if all(injectivity[[x-1 for x in locations_with_parallel_vars]]) && all(concurrencyInfo[[x-1 for x in locations_with_parallel_vars]])
                     continue # We pass due to injectivity!
                 end
                 # FIXME: This could be more fine grained: atomics need to only protect the non-injectivity. 
                 (below, _) = is_atomic(acc.tns, ctx)
-                if all(below[locations_with_parallel_vars])
+                if all(below[locations_with_parallel_vars]) && all(concurrencyInfo[[x-1 for x in locations_with_parallel_vars]])
                     continue # we pass due to atomics!
                 else
-                    throw(FinchConcurrencyError("Assignment $(acc) requires injectivity or atomics in at least places $(locations_with_parallel_vars), but does not have them, due to injectivity=$(injectivity) and atomics=$(below) "))
+                    throw(FinchConcurrencyError("Assignment $(acc) requires injectivity or atomics in at least places $(locations_with_parallel_vars), but does not have them, due to injectivity=$(injectivity) and atomics=$(below) and concurrency=$(concurrencyInfo)."))
                 end
             else
                 throw(FinchConcurrencyError("Assignment $(acc) is invalid! "))
