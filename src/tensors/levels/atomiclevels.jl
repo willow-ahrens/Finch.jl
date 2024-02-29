@@ -94,7 +94,7 @@ postype(lvl:: VirtualAtomicLevel) = postype(lvl.lvl)
 is_level_injective(lvl::VirtualAtomicLevel, ctx) = [is_level_injective(lvl.lvl, ctx)...]
 is_level_concurrent(lvl::VirtualAtomicLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
 function is_level_atomic(lvl::VirtualAtomicLevel, ctx)
-    below = is_level_atomic(lvl.lvl, ctx)
+    (below, _) = is_level_atomic(lvl.lvl, ctx)
     return (below, true)
 end
 num_indexable(lvl::VirtualAtomicLevel, ctx) = virtual_level_ndims(lvl) - virtual_level_ndims(lvl.lvl)

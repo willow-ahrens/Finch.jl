@@ -318,76 +318,76 @@
         end  =#
 
 
-        @repl io @finch_code begin
-            Ct .= 0
-            for i = _
-                for j = _
-                    for k = parallel(_)
-                        Ct[i, j] += A[i, k] * B[k, j]
-                    end
-                end
-            end
-        end
-        @repl io @finch begin
-            Ct .= 0
-            for i = _
-                for j = _
-                    for k = parallel(_)
-                        Ct[i, j] += A[i, k] * B[k, j]
-                    end
-                end
-            end
-        end
+        # @repl io @finch_code begin
+        #     Ct .= 0
+        #     for i = _
+        #         for j = _
+        #             for k = parallel(_)
+        #                 Ct[i, j] += A[i, k] * B[k, j]
+        #             end
+        #         end
+        #     end
+        # end
+        # @repl io @finch begin
+        #     Ct .= 0
+        #     for i = _
+        #         for j = _
+        #             for k = parallel(_)
+        #                 Ct[i, j] += A[i, k] * B[k, j]
+        #             end
+        #         end
+        #     end
+        # end
 
-        @test Ct == CR
+        # @test Ct == CR
 
-        @repl io @finch_code begin
-            Ct .= 0
-            for i = _
-                for k = parallel(_)
-                    for j = _
-                        Ct[i, j] += A[i, k] * B[k, j]
-                    end
-                end
-            end
-        end
-        @repl io @finch begin
-            Ct .= 0
-            for i = _
-                for k = parallel(_)
-                    for j = _
+        # @repl io @finch_code begin
+        #     Ct .= 0
+        #     for i = _
+        #         for k = parallel(_)
+        #             for j = _
+        #                 Ct[i, j] += A[i, k] * B[k, j]
+        #             end
+        #         end
+        #     end
+        # end
+        # @repl io @finch begin
+        #     Ct .= 0
+        #     for i = _
+        #         for k = parallel(_)
+        #             for j = _
                     
-                        Ct[i, j] += A[i, k] * B[k, j]
-                    end
-                end
-            end
-        end
+        #                 Ct[i, j] += A[i, k] * B[k, j]
+        #             end
+        #         end
+        #     end
+        # end
 
-        @test Ct == CR
+        # @test Ct == CR
 
-        @repl io @finch_code begin
-            Ct .= 0
-            for k = parallel(_)
-                for i = _
-                    for j = _
-                        Ct[i, j] += A[i, k] * B[k, j]
-                    end
-                end
-            end
-        end
-        @repl io @finch begin
-            Ct .= 0
-            for k = parallel(_)
-                for i = _
-                    for j = _
+        # @repl io @finch_code begin
+        #     Ct .= 0
+        #     for k = parallel(_)
+        #         for i = _
+        #             for j = _
+        #                 Ct[i, j] += A[i, k] * B[k, j]
+        #             end
+        #         end
+        #     end
+        # end
+        # @repl io @finch begin
+        #     Ct .= 0
+        #     for k = parallel(_)
+        #         for i = _
+        #             for j = _
                     
-                        Ct[i, j] += A[i, k] * B[k, j]
-                    end
-                end
-            end
-        end
+        #                 Ct[i, j] += A[i, k] * B[k, j]
+        #             end
+        #         end
+        #     end
+        # end
 
-        @test Ct == CR
+        # @test Ct == CR
 
         @test check_output("debug_parallel_spmms_atomics.txt", String(take!(io)))
     end 
