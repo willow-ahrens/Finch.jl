@@ -108,7 +108,7 @@ end
 is_level_injective(lvl::VirtualDenseLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
 function is_level_atomic(lvl::VirtualDenseLevel, ctx)
     (data, atomic) = is_level_atomic(lvl.lvl, ctx)
-    return ([data; [atomic for _ in 1:num_indexable(lvl, ctx)]])
+    return ([data; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
 end
 num_indexable(lvl::VirtualDenseLevel, ctx) = virtual_level_ndims(lvl, ctx) - virtual_level_ndims(lvl.lvl, ctx)
 

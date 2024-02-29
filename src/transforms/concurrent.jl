@@ -79,15 +79,21 @@ function ensure_concurrent(root, ctx)
             #Since all operations/acceses are the same, a more fine grained analysis takes place:
             #Every access must be injective or they must all be atomic.
             if (@capture(acc, access(~tns, ~mode, ~i...)))
-                locations_with_parallel_vars = []
-                injectivity = is_injective(tns, ctx)
+                println("idxs:", i)
+                locations_with_parallel_vars:: Vector{Int} = []
+                injectivity:: Vector{Bool} = is_injective(tns, ctx)
+                println("injectivity:", injectivity)
                 for loc in 1:length(i)
                     if i[loc] in indicies_in_region
                         push!(locations_with_parallel_vars, loc + 1)
                     end
                 end
+                println("parvars:", locations_with_parallel_vars)
                 if length(locations_with_parallel_vars) == 0
                     (below, overall) = is_atomic(acc.tns, ctx)
+                    println("below:", below)
+                    println("overall:", overall)
+                    println("tns:", tns)
                     if !below[0]
                         throw(FinchConcurrencyError("Assignment $(acc) requires last level atomics!"))
                         # FIXME: we could do atomic operations here.
@@ -96,7 +102,7 @@ function ensure_concurrent(root, ctx)
                     end
                 end
 
-                if all(injectivity[locations_with_parallel_vars])
+                if all(injectivity[[x-1 for x in locations_with_parallel_vars]])
                     continue # We pass due to injectivity!
                 end
                 (below, _) = is_atomic(acc.tns, ctx)
