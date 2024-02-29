@@ -48,8 +48,8 @@ SparseListLevel{Ti}(lvl::Lvl, shape, ptr::Ptr, idx::Idx) where {Ti, Lvl, Ptr, Id
     SparseListLevel{Ti, Ptr, Idx, Lvl}(lvl, shape, ptr, idx)
     
 Base.summary(lvl::SparseListLevel) = "SparseList($(summary(lvl.lvl)))"
-similar_level(lvl::SparseListLevel) = SparseList(similar_level(lvl.lvl))
-similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(similar_level(lvl.lvl, tail...), dim)
+similar_level(lvl::SparseListLevel, fill_value, eltype::Type, dim, tail...) =
+    SparseList(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
 
 function postype(::Type{SparseListLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl}
     return postype(Lvl)

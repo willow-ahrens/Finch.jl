@@ -27,7 +27,8 @@ SeparateLevel(lvl::Lvl) where {Lvl} = SeparateLevel(lvl, [lvl])
 SeparateLevel{Lvl, Val}(lvl::Lvl) where {Lvl, Val} =  SeparateLevel{Lvl, Val}(lvl, [lvl])
 Base.summary(::Separate{Lvl, Val}) where {Lvl, Val} = "Separate($(Lvl))"
 
-similar_level(lvl::Separate{Lvl, Val}) where {Lvl, Val} = SeparateLevel{Lvl, Val}(similar_level(lvl.lvl))
+similar_level(lvl::Separate{Lvl, Val}, fill_value, eltype::Type, dims...) where {Lvl, Val} =
+    SeparateLevel(similar_level(lvl.lvl, fill_value, eltype, dims...))
 
 postype(::Type{<:Separate{Lvl, Val}}) where {Lvl, Val} = postype(Lvl)
 
@@ -128,7 +129,12 @@ function assemble_level!(lvl::VirtualSeparateLevel, ctx, pos_start, pos_stop)
     push!(ctx.code.preamble, quote
         Finch.resize_if_smaller!($(lvl.ex).val, $(ctx(pos_stop)))
         for $pos in $(ctx(pos_start)):$(ctx(pos_stop))
-            $sym = similar_level($(lvl.ex).lvl)
+            $sym = similar_level(
+                $(lvl.ex).lvl,
+                level_default(typeof($(lvl.ex).lvl)),
+                level_eltype(typeof($(lvl.ex).lvl)),
+                $(map(ctx, map(getstop, virtual_level_size(lvl, ctx)))...)
+            )
             $(contain(ctx) do ctx_2
                 lvl_2 = virtualize(sym, lvl.Lvl, ctx_2.code, sym)
                 lvl_2 = declare_level!(lvl_2, ctx_2, literal(0), literal(virtual_level_default(lvl_2)))

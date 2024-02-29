@@ -25,7 +25,8 @@ AtomicLevel(lvl::Lvl) where {Lvl} = AtomicLevel{Vector{Base.Threads.SpinLock}, L
 # AtomicLevel{AVal, Lvl}(atomics::AVal, lvl::Lvl) where {Lvl, AVal} =  AtomicLevel{AVal, Lvl}(lvl, atomics)
 Base.summary(::AtomicLevel{AVal, Lvl}) where {Lvl, AVal} = "AtomicLevel($(AVal), $(Lvl))"
 
-similar_level(lvl::Atomic{AVal, Lvl}) where {Lvl, AVal} = AtomicLevel{AVal, Lvl}(similar_level(lvl.lvl))
+similar_level(lvl::Atomic{AVal, Lvl}, fill_value, eltype::Type, dims...) where {Lvl, AVal} =
+    AtomicLevel(similar_level(lvl.lvl, fill_value, eltype, dims...))
 
 postype(::Type{<:AtomicLevel{AVal, Lvl}}) where {Lvl, AVal} = postype(Lvl)
 

@@ -34,8 +34,9 @@ DenseLevel{Ti}(lvl::Lvl, shape) where {Ti, Lvl} = DenseLevel{Ti, Lvl}(lvl, shape
 const Dense = DenseLevel
 
 Base.summary(lvl::Dense) = "Dense($(summary(lvl.lvl)))"
-similar_level(lvl::DenseLevel) = Dense(similar_level(lvl.lvl))
-similar_level(lvl::DenseLevel, dims...) = Dense(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
+
+similar_level(lvl::DenseLevel, fill_value, eltype::Type, dims...) =
+    Dense(similar_level(lvl.lvl, fill_value, eltype, dims[1:end-1]...), dims[end])
 
 function postype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
     return postype(Lvl)

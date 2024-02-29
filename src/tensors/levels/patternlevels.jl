@@ -19,7 +19,7 @@ const Pattern = PatternLevel
 PatternLevel() = PatternLevel{Int}()
 
 Base.summary(::Pattern) = "Pattern()"
-similar_level(::PatternLevel) = PatternLevel()
+similar_level(::PatternLevel, ::Any, ::Type, ::Vararg) = PatternLevel()
 
 countstored_level(lvl::PatternLevel, pos) = pos
 

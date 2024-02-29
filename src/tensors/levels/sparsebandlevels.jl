@@ -43,8 +43,8 @@ function moveto(lvl::SparseBandLevel{Ti}, device) where {Ti}
 end
 
 Base.summary(lvl::SparseBandLevel) = "SparseBand($(summary(lvl.lvl)))"
-similar_level(lvl::SparseBandLevel) = SparseBand(similar_level(lvl.lvl))
-similar_level(lvl::SparseBandLevel, dim, tail...) = SparseBand(similar_level(lvl.lvl, tail...), dim)
+similar_level(lvl::SparseBandLevel, fill_value, eltype::Type, dim, tail...) =
+    SparseBand(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
 
 pattern!(lvl::SparseBandLevel{Ti}) where {Ti} = 
     SparseBandLevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)

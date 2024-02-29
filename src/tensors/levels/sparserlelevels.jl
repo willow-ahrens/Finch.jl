@@ -39,8 +39,8 @@ SparseRLELevel{Ti}(lvl::Lvl, shape, ptr::Ptr, left::Left, right::Right, buf::Lvl
     SparseRLELevel{Ti, Ptr, Left, Right, Lvl}(lvl, Ti(shape), ptr, left, right, buf)
 
 Base.summary(lvl::SparseRLELevel) = "SparseRLE($(summary(lvl.lvl)))"
-similar_level(lvl::SparseRLELevel) = SparseRLE(similar_level(lvl.lvl))
-similar_level(lvl::SparseRLELevel, dim, tail...) = SparseRLE(similar_level(lvl.lvl, tail...), dim)
+similar_level(lvl::SparseRLELevel, fill_value, eltype::Type, dim, tail...) =
+    SparseRLE(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
 
 function postype(::Type{SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl}
     return postype(Lvl)

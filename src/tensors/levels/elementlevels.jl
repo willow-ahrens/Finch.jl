@@ -5,7 +5,7 @@ A subfiber of an element level is a scalar of type `Tv`, initialized to `D`. `D`
 may optionally be given as the first argument.
 
 The data is stored in a vector
-of type `Val` with `eltype(Val) = Tv`. The type `Ti` is the index type used to
+of type `Val` with `eltype(Val) = Tv`. The type `Tp` is the index type used to
 access Val.
 
 ```jldoctest
@@ -34,7 +34,8 @@ ElementLevel{D, Tv, Tp}(val::Val) where {D, Tv, Tp, Val} = ElementLevel{D, Tv, T
 
 Base.summary(::Element{D}) where {D} = "Element($(D))"
 
-similar_level(::ElementLevel{D, Tv, Tp}) where {D, Tv, Tp} = ElementLevel{D, Tv, Tp}()
+similar_level(::ElementLevel{D, Tv, Tp}, fill_value, eltype::Type, ::Vararg) where {D, Tv, Tp} =
+    ElementLevel{fill_value, eltype, Tp}()
 
 postype(::Type{<:ElementLevel{D, Tv, Tp}}) where {D, Tv, Tp} = Tp
 

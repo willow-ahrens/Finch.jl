@@ -62,6 +62,39 @@
                 @test Structure(fbr) == Structure(Tensor(Lvl{Int16}(Element(0.0))))
                 @test Structure(fbr) == Structure(Tensor(Lvl(Element(0.0), Int16(0))))
                 @test Structure(fbr) == Structure(Tensor(Lvl{Int16}(Element(0.0), 0)))
+
+                fbr = Tensor(Dense(Lvl(Element(Int64(0)))), [0 0 0 1; 0 1 0 0; 0 0 0 0])
+                res = similar(fbr)
+                @test size(res) == size(fbr)
+                @test default(res) == 0 && eltype(res) == Int64
+
+                res = similar(fbr, (10, 5))
+                @test size(res) == (10, 5)
+                @test default(res) == 0 && eltype(res) == Int64
+
+                res = similar(fbr, Float64)
+                @test size(res) == size(fbr)
+                @test default(res) == 0 && eltype(res) == Float64
+
+                res = similar(fbr, 1, Float64)
+                @test size(res) == size(fbr)
+                @test default(res) == 1 && eltype(res) == Float64
+
+                res = similar(fbr, ComplexF32, (10, 5))
+                @test size(res) == (10, 5)
+                @test default(res) == 0 && eltype(res) == ComplexF32
+
+                res = similar(fbr, 2, ComplexF64, (10, 5))
+                @test size(res) == (10, 5)
+                @test default(res) == 2 && eltype(res) == ComplexF64
+
+                if key == "SingleList" || key == "SingleRLE"
+                    continue  # don't test copyto! for Single*
+                end
+
+                res = copyto!(similar(fbr, -1, Float64), fbr)
+                @test res == fbr
+                @test default(res) == -1 && eltype(res) == Float64
             end
 
             @test check_output("constructors/format_$key.txt", String(take!(io)))
@@ -136,6 +169,11 @@
                 @test Structure(fbr) == Structure(Tensor(Lvl{N}(Element(0.0), Int16.(zerodim))))
                 @test Structure(fbr) == Structure(Tensor(Lvl{N, NTuple{N, Int16}}(Element(0.0), Int16.(zerodim))))
 
+                fbr = Tensor(Lvl{2}(Element(0)), Matrix(reshape(1:25, (5, 5))))
+                res = copyto!(similar(fbr, -1, Float64), fbr)
+                @test res == fbr
+                @test default(res) == -1 && eltype(res) == Float64
+
             end
             @test check_output("constructors/format_$(key).txt", String(take!(io)))
         end
@@ -174,6 +212,11 @@
         println(io, "empty tensor: ", fbr)
         @test Structure(fbr) == Structure(Tensor(Dense(Separate(Dense(Element(0))))))
 
+        fbr = Tensor(Dense(Separate(Dense(Element(0)))), Matrix(reshape(1:25, (5, 5))))
+        res = copyto!(similar(fbr, -1, Float64), fbr)
+        @test res == fbr
+        @test default(res) == -1 && eltype(res) == Float64
+
         @test check_output("constructors/format_d_p_d_e.txt", String(take!(io)))
     end
 
@@ -197,6 +240,11 @@
         fbr = Tensor(Dense(Atomic(Dense(Element(0)))))
         println(io, "empty tensor: ", fbr)
         @test Structure(fbr) == Structure(Tensor(Dense(Atomic(Dense(Element(0))))))
+
+        fbr = Tensor(Dense(Atomic(Dense(Element(0)))), Matrix(reshape(1:25, (5, 5))))
+        res = copyto!(similar(fbr, -1, Float64), fbr)
+        @test res == fbr
+        @test default(res) == -1 && eltype(res) == Float64
 
         @test check_output("constructors/format_d_a_d_e.txt", String(take!(io)))
     end
@@ -230,4 +278,5 @@
         @test obov == [val, val, val, 4] && obov.data == [val-1, val-1, val-1, 3]
 
     end
+
 end

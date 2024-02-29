@@ -34,8 +34,8 @@ SparseTriangleLevel{N, Ti, Lvl}(lvl) where {N, Ti, Lvl} = SparseTriangleLevel{N,
 const SparseTriangle = SparseTriangleLevel
 
 Base.summary(lvl::SparseTriangle{N}) where {N} = "SparseTriangle{$N}($(summary(lvl.lvl)))"
-similar_level(lvl::SparseTriangle{N}) where {N} = SparseTriangle(similar_level(lvl.lvl))
-similar_level(lvl::SparseTriangle{N}, dims...) where {N} = SparseTriangle(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
+similar_level(lvl::SparseTriangle{N}, fill_value, eltype::Type, dims...) where {N} =
+    SparseTriangle(similar_level(lvl.lvl, fill_value, eltype, dims[1:end-1]...), dims[end])
 
 function postype(::Type{SparseTriangleLevel{N, Ti, Lvl}}) where {N, Ti, Lvl}
     return postype(Lvl)

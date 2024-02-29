@@ -9,7 +9,7 @@ begin
     result = nothing
     Finch.resize_if_smaller!(tmp_lvl.val, 1)
     for pos = 1:1
-        pointer_to_lvl = similar_level(tmp_lvl.lvl)
+        pointer_to_lvl = similar_level(tmp_lvl.lvl, level_default(typeof(tmp_lvl.lvl)), level_eltype(typeof(tmp_lvl.lvl)), ref_lvl.shape)
         pointer_to_lvl_3 = pointer_to_lvl.lvl
         pointer_to_lvl_2_val = pointer_to_lvl.lvl.val
         Finch.resize_if_smaller!(pointer_to_lvl_2_val, ref_lvl.shape)
