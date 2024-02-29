@@ -327,10 +327,10 @@ Base.summary(fbr::Tensor) = "$(join(size(fbr), "×")) Tensor($(summary(fbr.lvl))
 Base.summary(fbr::SubFiber) = "$(join(size(fbr), "×")) SubFiber($(summary(fbr.lvl)))"
 
 Base.similar(fbr::AbstractFiber) = similar(fbr, default(fbr), eltype(fbr), size(fbr))
-Base.similar(fbr::AbstractFiber, eltype::Type) = similar(fbr, default(fbr), eltype, size(fbr))
+Base.similar(fbr::AbstractFiber, eltype::Type) = similar(fbr, convert(eltype, default(fbr)), eltype, size(fbr))
 Base.similar(fbr::AbstractFiber, fill_value, eltype::Type) = similar(fbr, fill_value, eltype, size(fbr))
 Base.similar(fbr::AbstractFiber, dims::Tuple) = similar(fbr, default(fbr), eltype(fbr), dims)
-Base.similar(fbr::AbstractFiber, eltype::Type, dims::Tuple) = similar(fbr, default(fbr), eltype, dims)
+Base.similar(fbr::AbstractFiber, eltype::Type, dims::Tuple) = similar(fbr, convert(eltype, default(fbr)), eltype, dims)
 Base.similar(fbr::AbstractFiber, fill_value, eltype::Type, dims::Tuple) = Tensor(similar_level(fbr.lvl, fill_value, eltype, dims...))
 
 moveto(tns::Tensor, device) = Tensor(moveto(tns.lvl, device))

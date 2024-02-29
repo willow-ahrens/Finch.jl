@@ -133,7 +133,7 @@ function assemble_level!(lvl::VirtualSeparateLevel, ctx, pos_start, pos_stop)
                 $(lvl.ex).lvl,
                 level_default(typeof($(lvl.ex).lvl)),
                 level_eltype(typeof($(lvl.ex).lvl)),
-                level_size($(lvl.ex).lvl)...
+                $(map(ctx, map(getstop, virtual_level_size(lvl, ctx)))...)
             )
             $(contain(ctx) do ctx_2
                 lvl_2 = virtualize(sym, lvl.Lvl, ctx_2.code, sym)
