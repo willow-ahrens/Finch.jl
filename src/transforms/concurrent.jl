@@ -24,9 +24,9 @@ function is_atomic end
     is_concurrent(tns, ctx)
 
     Returns a vector of booleans, one for each dimension of the tensor, indicating
-    whether the index can be written to without any state. So if a matrix returns [true, false],
-    then we can write to A[i, j] and A[i+1, j] without any shared state between the two, but
-    we can't write to A[i, j] and A[i, j+1] without carrying over state.
+    whether the index can be written to without any execution state. So if a matrix returns [true, false],
+    then we can write to A[i, j] and A[i_2, j] without any shared execution state between the two, but
+    we can't write to A[i, j] and A[i, j_2] without carrying over execution state.
 """
 function is_concurrent end
 
@@ -112,6 +112,7 @@ function ensure_concurrent(root, ctx)
                 for loc in 1:length(i)
                     if i[loc] in indicies_in_region
                         push!(locations_with_parallel_vars, loc + 1)
+                        #off by one should go away
                     end
                 end
                 if length(locations_with_parallel_vars) == 0
@@ -124,6 +125,7 @@ function ensure_concurrent(root, ctx)
                     end
                 end
 
+                #TODO If we could prove that some indices do not depend on the parallel index, we could exempt them from this somehow.
                 if all(injectivity[[x-1 for x in locations_with_parallel_vars]]) && all(concurrencyInfo[[x-1 for x in locations_with_parallel_vars]])
                     continue # We pass due to injectivity!
                 end
@@ -134,6 +136,8 @@ function ensure_concurrent(root, ctx)
                 else
                     throw(FinchConcurrencyError("Assignment $(acc) requires injectivity or atomics in at least places $(locations_with_parallel_vars), but does not have them, due to injectivity=$(injectivity) and atomics=$(below) and concurrency=$(concurrencyInfo)."))
                 end
+
+                #TODO perhaps if the last access is the parallel index, we only need injectivity or atomics on the parallel one, and concurrency on that one only
             else
                 throw(FinchConcurrencyError("Assignment $(acc) is invalid! "))
 
