@@ -114,6 +114,7 @@ function ensure_concurrent(root, ctx)
                 if all(injectivity[[x-1 for x in locations_with_parallel_vars]])
                     continue # We pass due to injectivity!
                 end
+                # FIXME: This could be more fine grained: atomics need to only protect the non-injectivity. 
                 (below, _) = is_atomic(acc.tns, ctx)
                 if all(below[locations_with_parallel_vars])
                     continue # we pass due to atomics!
