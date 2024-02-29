@@ -47,8 +47,10 @@ function ensure_concurrent(root, ctx)
     # Get all indicies in the parallel region.
     indicies_in_region = [idx]
     for node in PostOrderDFS(body)
-        if  @capture root loop(~idxp, ~ext, ~body)
-            push!(indicies_in_region, idxp)
+        if  @capture node loop(~idxp, ~ext, ~body)
+            if !(idxp in indicies_in_region)
+                push!(indicies_in_region, idxp)
+            end
         end
     end
     
@@ -80,9 +82,10 @@ function ensure_concurrent(root, ctx)
             #Every access must be injective or they must all be atomic.
             if (@capture(acc, access(~tns, ~mode, ~i...)))
                 println("idxs:", i)
-                locations_with_parallel_vars:: Vector{Int} = []
+                locations_with_parallel_vars = []
                 injectivity:: Vector{Bool} = is_injective(tns, ctx)
                 println("injectivity:", injectivity)
+                println("region:", indicies_in_region)
                 for loc in 1:length(i)
                     if i[loc] in indicies_in_region
                         push!(locations_with_parallel_vars, loc + 1)
