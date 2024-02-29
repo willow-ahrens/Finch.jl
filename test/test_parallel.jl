@@ -576,4 +576,29 @@
             end
         end)
     end
+    let
+        io = IOBuffer()
+        y = Tensor(Dense(Atomic(Element(0.0))))
+        A = Tensor(Dense(SparseList(Element(0.0))))
+        x = Tensor(Dense(Element(0.0)))
+        diag = Tensor(Dense(Element(0.0)))
+        y_j = Scalar(0.0)
+        @repl io @finch_code begin
+            y .= 0
+            for j = parallel(_)
+                let x_j = x[j]
+                    y_j .= 0
+                    for i = _
+                        let A_ij = A[i, j]
+                            y[i] += x_j * A_ij
+                            y_j[] += A_ij * x[i]
+                        end
+                    end
+                    y[j] += y_j[] + diag[j] * x_j
+                end
+            end
+        end
+        @test check_output("atomics_sym_spmv.txt", String(take!(io)))
+
+    end
 end
