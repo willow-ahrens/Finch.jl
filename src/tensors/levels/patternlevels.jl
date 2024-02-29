@@ -85,7 +85,12 @@ function virtual_moveto_level(lvl::VirtualPatternLevel, ctx::AbstractCompiler, a
 end
 
 is_level_injective(::VirtualPatternLevel, ctx) = []
-is_level_atomic(lvl::VirtualPatternLevel, ctx) = true
+is_level_atomic(lvl::VirtualPatternLevel, ctx) = ([false], false)
+function is_level_concurrent(lvl::VirtualPatternLevel, ctx)
+    return ([], true)
+end
+num_indexable(lvl::VirtualPatternLevel, ctx) = 0
+
 
 lower(lvl::VirtualPatternLevel, ctx::AbstractCompiler, ::DefaultStyle) = :(PatternLevel())
 virtualize(ex, ::Type{PatternLevel{Tp}}, ctx) where {Tp} = VirtualPatternLevel(Tp)

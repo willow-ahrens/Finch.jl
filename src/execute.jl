@@ -62,15 +62,15 @@ execute(ex) = execute(ex, NamedTuple())
     contain(JuliaContext()) do ctx
         code = execute_code(:ex, ex; virtualize(:opts, opts, ctx)...)
         quote
-            # try
+            try
                 @inbounds begin
                     $(code |> unblock)
                 end
-            # catch
-            #    println("Error executing code:")
-            #    println($(QuoteNode(code |> unblock |> pretty |> unquote_literals)))
-            #    rethrow()
-            #end
+            catch
+            println("Error executing code:")
+            println($(QuoteNode(code |> unblock |> pretty |> unquote_literals)))
+            rethrow()
+            end
         end
     end
 end

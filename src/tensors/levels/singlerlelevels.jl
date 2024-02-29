@@ -144,8 +144,16 @@ mutable struct VirtualSingleRLELevel <: AbstractVirtualLevel
 end
 
 is_level_injective(lvl::VirtualSingleRLELevel, ctx) = [false, is_level_injective(lvl.lvl, ctx)...]
-is_level_concurrent(lvl::VirtualSingleRLELevel, ctx) = [false, is_level_concurrent(lvl.lvl, ctx)...]
-is_level_atomic(lvl::VirtualSingleRLELevel, ctx) = false
+function is_level_atomic(lvl::VirtualSingleRLELevel, ctx)
+    (below, atomic) = is_level_atomic(lvl.lvl, ctx)
+    return ([below; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
+end
+function is_level_concurrent(lvl::VirtualSingleRLELevel, ctx)
+    (data, concurrent) = is_level_concurrent(lvl.lvl, ctx)
+    return ([data; [false for _ in 1:num_indexable(lvl, ctx)]], false)
+end
+num_indexable(lvl::VirtualSingleRLELevel, ctx) = virtual_level_ndims(lvl, ctx) - virtual_level_ndims(lvl.lvl, ctx)
+
   
 
 function virtualize(ex, ::Type{SingleRLELevel{Ti, Ptr, Left, Right, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Left, Right, Lvl}

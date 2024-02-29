@@ -140,7 +140,15 @@ mutable struct VirtualSparseByteMapLevel <: AbstractVirtualLevel
 end
   
 is_level_injective(lvl::VirtualSparseByteMapLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
-is_level_atomic(lvl::VirtualSparseByteMapLevel, ctx) = false
+function is_level_atomic(lvl::VirtualSparseByteMapLevel, ctx)
+    (below, atomic) = is_level_atomic(lvl.lvl, ctx)
+    return ([below; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
+end
+function is_level_concurrent(lvl::VirtualSparseByteMapLevel, ctx)
+    (data, _) = is_level_concurrent(lvl.lvl, ctx)
+    return ([data; [false for _ in 1:num_indexable(lvl, ctx)]], false)
+end
+num_indexable(lvl::VirtualSparseByteMapLevel, ctx) = virtual_level_ndims(lvl, ctx) - virtual_level_ndims(lvl.lvl, ctx)
 
 function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Tbl, Srt, Lvl}
     sym = freshen(ctx, tag)
@@ -180,9 +188,9 @@ function virtual_moveto_level(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompi
         $ptr_2 = $(lvl.ptr)
         $tbl_2 = $(lvl.tbl)
         $srt_2 = $(lvl.srt)
-        $(lvl.ptr) = $moveto($(lvl.ptr), $(ctx(arch)))
-        $(lvl.tbl) = $moveto($(lvl.tbl), $(ctx(arch)))
-        $(lvl.srt) = $moveto($(lvl.srt), $(ctx(arch)))
+        $(lvl.ptr) = moveto($(lvl.ptr), $(ctx(arch)))
+        $(lvl.tbl) = moveto($(lvl.tbl), $(ctx(arch)))
+        $(lvl.srt) = moveto($(lvl.srt), $(ctx(arch)))
     end)
     push!(ctx.code.epilogue, quote
         $(lvl.ptr) = $ptr_2
