@@ -86,7 +86,7 @@ function ensure_concurrent(root, ctx)
                         push!(locations_with_parallel_vars, loc + 1)
                     end
                 end
-                if len(locations_with_parallel_vars) == 0
+                if length(locations_with_parallel_vars) == 0
                     (below, overall) = is_atomic(acc.tns, ctx)
                     if !below[0]
                         throw(FinchConcurrencyError("Assignment $(acc) requires last level atomics!"))

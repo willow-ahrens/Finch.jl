@@ -142,7 +142,8 @@ mutable struct VirtualSingleListLevel <: AbstractVirtualLevel
 end
   
 is_level_injective(lvl::VirtualSingleListLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
-function is_level_atomic(lvl::VirtualSeparateLevel, ctx)
+
+function is_level_atomic(lvl::VirtualSingleListLevel, ctx)
     (below, atomic) = is_level_atomic(lvl.lvl, ctx)
     return ([below; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
 end

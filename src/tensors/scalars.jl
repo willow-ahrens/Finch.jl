@@ -22,8 +22,6 @@ struct VirtualScalar
     D
     name
     val
-    preamble = quote end
-    epilogue = quote end
 end
 
 lower(tns::VirtualScalar, ctx::AbstractCompiler, ::DefaultStyle) = tns.ex
@@ -103,8 +101,6 @@ struct VirtualSparseScalar
     name
     val
     dirty
-    preamble = quote end
-    epilogue = quote end
 end
 
 lower(tns::VirtualSparseScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($SparseScalar{$(tns.D), $(tns.Tv)}($(tns.val), $(tns.dirty)))
@@ -188,8 +184,6 @@ struct VirtualShortCircuitScalar
     B
     name
     val
-    preamble = quote end
-    epilogue = quote end
 end
 
 lower(tns::VirtualShortCircuitScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($ShortCircuitScalar{$(tns.D), $(tns.Tv), $(tns.B)}($(tns.val)))
@@ -271,8 +265,6 @@ struct VirtualSparseShortCircuitScalar
     name
     val
     dirty
-    preamble = quote end
-    epilogue = quote end
 end
 
 lower(tns::VirtualSparseShortCircuitScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($SparseShortCircuitScalar{$(tns.D), $(tns.Tv), $(tns.B)}($(tns.val), $(tns.dirty)))

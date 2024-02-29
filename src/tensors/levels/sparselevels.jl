@@ -251,7 +251,7 @@ mutable struct VirtualSparseLevel <: AbstractVirtualLevel
 end
   
 is_level_injective(lvl::VirtualSparseLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
-function is_level_atomic(lvl::VirtualSparseHashLevel, ctx)
+function is_level_atomic(lvl::VirtualSparseLevel, ctx)
     (below, atomic) = is_level_atomic(lvl.lvl, ctx)
     return ([below; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
 end

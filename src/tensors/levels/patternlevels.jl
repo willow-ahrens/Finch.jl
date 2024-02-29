@@ -86,7 +86,7 @@ end
 
 is_level_injective(::VirtualPatternLevel, ctx) = []
 is_level_atomic(lvl::VirtualPatternLevel, ctx) = ([false], false)
-num_indexable(lvl::VirtualElementLevel, ctx) = 0
+num_indexable(lvl::VirtualPatternLevel, ctx) = 0
 
 
 lower(lvl::VirtualPatternLevel, ctx::AbstractCompiler, ::DefaultStyle) = :(PatternLevel())
