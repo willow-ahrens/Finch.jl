@@ -101,7 +101,6 @@ function ensure_concurrent(root, ctx)
                         push!(locations_with_parallel_vars, loc + 1)
                     end
                 end
-                println("parvars:", locations_with_parallel_vars)
                 if length(locations_with_parallel_vars) == 0
                     (below, overall) = is_atomic(acc.tns, ctx)
                     if !below[1]
