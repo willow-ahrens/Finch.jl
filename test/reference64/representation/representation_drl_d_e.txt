@@ -1,9 +1,9 @@
 Tensor(DenseRLE(Dense(Element(zero)))) representation:
 
 array: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
-tensor: Tensor(DenseRLE{Int64}(Dense{Int64}(Element{0.0, Float64, Int64}([0.0, 0.0, 0.0, 0.0, 0.0]), 5), 5, [1, 2], [5], Dense{Int64}(Element{0.0, Float64, Int64}(Float64[]), 5)))
+tensor: Tensor(DenseRLE{Int64}(Dense{Int64}(Element{0.0, Float64, Int64}([0.0, 0.0, 0.0, 0.0, 0.0]), 5), 5, [1, 2], [5], Dense{Int64}(Element{0.0, Float64, Int64}(Float64[]), 5); merge = true))
 array: [1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0]
-tensor: Tensor(DenseRLE{Int64}(Dense{Int64}(Element{0.0, Float64, Int64}([1.0, 1.0, 1.0, 1.0, 1.0]), 5), 5, [1, 2], [5], Dense{Int64}(Element{0.0, Float64, Int64}(Float64[]), 5)))
+tensor: Tensor(DenseRLE{Int64}(Dense{Int64}(Element{0.0, Float64, Int64}([1.0, 1.0, 1.0, 1.0, 1.0]), 5), 5, [1, 2], [5], Dense{Int64}(Element{0.0, Float64, Int64}(Float64[]), 5); merge = true))
 array: [0.0 1.0 2.0 2.0; 0.0 0.0 0.0 0.0; 1.0 1.0 2.0 0.0; 0.0 0.0 0.0 0.0]
-tensor: Tensor(DenseRLE{Int64}(Dense{Int64}(Element{0.0, Float64, Int64}([0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 2.0, 0.0, 2.0, 0.0, 2.0, 0.0, 0.0, 0.0]), 4), 4, [1, 5], [1, 2, 3, 4], Dense{Int64}(Element{0.0, Float64, Int64}(Float64[]), 4)))
+tensor: Tensor(DenseRLE{Int64}(Dense{Int64}(Element{0.0, Float64, Int64}([0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 2.0, 0.0, 2.0, 0.0, 2.0, 0.0, 0.0, 0.0]), 4), 4, [1, 5], [1, 2, 3, 4], Dense{Int64}(Element{0.0, Float64, Int64}(Float64[]), 4); merge = true))
 

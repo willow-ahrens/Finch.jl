@@ -9,6 +9,7 @@
     basic_levels = [
         (key = "Dense", Lvl = Dense, pattern = false),
         (key = "DenseRLE", Lvl = DenseRLE, pattern = false),
+        (key = "DenseRLELazy", Lvl = (base) -> DenseRLE(base; merge = false), pattern = false),
         (key = "SparseList", Lvl = SparseList),
         (key = "SparseVBL", Lvl = SparseVBL),
         (key = "SparseBand", Lvl = SparseBand, pattern = false),

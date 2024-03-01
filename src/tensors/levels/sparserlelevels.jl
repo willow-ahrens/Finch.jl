@@ -1,5 +1,5 @@
 """
-    SparseRLELevel{[Ti=Int], [Ptr, Left, Right]}(lvl, [dim], merge = true)
+    SparseRLELevel{[Ti=Int], [Ptr, Left, Right]}(lvl, [dim]; [merge = true])
 
 The sparse RLE level represent runs of equivalent slices `A[:, ..., :, i]`
 which are not entirely [`default`](@ref). A sorted list is used to record the

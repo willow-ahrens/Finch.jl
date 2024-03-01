@@ -72,11 +72,14 @@ using Base.Meta
     test_format(vecs, name = "Tensor(SparseRLE(Element(zero)))", key = "srl_e") do arr
         dropdefaults!(Tensor(SparseRLE(Element(zero(eltype(arr))))), arr)
     end
-    test_format(vecs, name = "Tensor(SparseRLE(Element(zero)))", key = "srl_e") do arr
+    test_format(vecs, name = "Tensor(SparseRLE(Element(zero); merge=false))", key = "srl_e") do arr
         dropdefaults!(Tensor(SparseRLE(Element(zero(eltype(arr))), merge=false)), arr)
     end
     test_format(vecs, name = "Tensor(DenseRLE(Element(zero)))", key = "drl_e") do arr
         dropdefaults!(Tensor(DenseRLE(Element(zero(eltype(arr))))), arr)
+    end
+    test_format(vecs, name = "Tensor(DenseRLE(Element(zero); merge=false))", key = "drl_e") do arr
+        dropdefaults!(Tensor(DenseRLE(Element(zero(eltype(arr))), merge=false)), arr)
     end
 
 

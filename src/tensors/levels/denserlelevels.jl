@@ -1,5 +1,5 @@
 """
-    DenseRLELevel{[Ti=Int], [Ptr, Right]}(lvl, [dim])
+    DenseRLELevel{[Ti=Int], [Ptr, Right]}(lvl, [dim], [merge = true])
 
 The dense RLE level represent runs of equivalent slices `A[:, ..., :, i]`. A
 sorted list is used to record the right endpoint of each run. Optionally, `dim`
@@ -8,6 +8,9 @@ is the size of the last dimension.
 `Ti` is the type of the last tensor index, and `Tp` is the type used for
 positions in the level. The types `Ptr` and `Right` are the types of the
 arrays used to store positions and endpoints. 
+
+The `merge` keyword argument is used to specify whether the level should merge
+duplicate consecutive runs.
 
 ```jldoctest
 julia> Tensor(Dense(DenseRLELevel(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
@@ -24,7 +27,7 @@ Dense [:,1:3]
    └─ [3:3]: 40.0
 ```
 """
-struct DenseRLELevel{Ti, Ptr<:AbstractVector, Right<:AbstractVector, Lvl} <: AbstractLevel
+struct DenseRLELevel{Ti, Ptr<:AbstractVector, Right<:AbstractVector, merge, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     ptr::Ptr
@@ -33,18 +36,20 @@ struct DenseRLELevel{Ti, Ptr<:AbstractVector, Right<:AbstractVector, Lvl} <: Abs
 end
 
 const DenseRLE = DenseRLELevel
-DenseRLELevel(lvl::Lvl) where {Lvl} = DenseRLELevel{Int}(lvl)
-DenseRLELevel(lvl, shape, args...) = DenseRLELevel{typeof(shape)}(lvl, shape, args...)
-DenseRLELevel{Ti}(lvl) where {Ti} = DenseRLELevel(lvl, zero(Ti))
-DenseRLELevel{Ti}(lvl, shape) where {Ti} = DenseRLELevel{Ti}(lvl, shape, postype(lvl)[1], Ti[], deepcopy(lvl)) #TODO if similar_level could return the same type, we could use it here
-DenseRLELevel{Ti}(lvl::Lvl, shape, ptr::Ptr, right::Right, buf::Lvl) where {Ti, Lvl, Ptr, Right} =
-    DenseRLELevel{Ti, Ptr, Right, Lvl}(lvl, Ti(shape), ptr, right, buf)
+DenseRLELevel(lvl::Lvl; kwargs...) where {Lvl} = DenseRLELevel{Int}(lvl; kwargs...)
+DenseRLELevel(lvl, shape, args...; kwargs...) = DenseRLELevel{typeof(shape)}(lvl, shape, args...; kwargs...)
+DenseRLELevel{Ti}(lvl; kwargs...) where {Ti} = DenseRLELevel(lvl, zero(Ti); kwargs...)
+DenseRLELevel{Ti}(lvl, shape; kwargs...) where {Ti} = DenseRLELevel{Ti}(lvl, shape, postype(lvl)[1], Ti[], deepcopy(lvl); kwargs...) #TODO if similar_level could return the same type, we could use it here
+DenseRLELevel{Ti}(lvl::Lvl, shape, ptr::Ptr, right::Right, buf::Lvl; merge=true) where {Ti, Lvl, Ptr, Right} =
+    DenseRLELevel{Ti, Ptr, Right, merge, Lvl}(lvl, Ti(shape), ptr, right, buf)
+
+getmerge(lvl::DenseRLELevel{Ti, Ptr, Right, merge}) where {Ti, Ptr, Right, merge} = merge
 
 Base.summary(lvl::DenseRLELevel) = "DenseRLE($(summary(lvl.lvl)))"
 similar_level(lvl::DenseRLELevel, fill_value, eltype::Type, dim, tail...) =
-    DenseRLE(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
+    DenseRLE(similar_level(lvl.lvl, fill_value, eltype, tail...), dim; merge = getmerge(lvl))
 
-function postype(::Type{DenseRLELevel{Ti, Ptr, Right, Lvl}}) where {Ti, Ptr, Right, Lvl}
+function postype(::Type{DenseRLELevel{Ti, Ptr, Right, merge, Lvl}}) where {Ti, Ptr, Right, merge, Lvl}
     return postype(Lvl)
 end
 
@@ -53,23 +58,23 @@ function moveto(lvl::DenseRLELevel{Ti}, device) where {Ti}
     ptr = moveto(lvl.ptr, device)
     right = moveto(lvl.right, device)
     buf = moveto(lvl.buf, device)
-    return DenseRLELevel{Ti}(lvl_2, lvl.shape, lvl.ptr, lvl.right, lvl.buf)
+    return DenseRLELevel{Ti}(lvl_2, lvl.shape, lvl.ptr, lvl.right, lvl.buf; merge = getmerge(lvl))
 end
 
 pattern!(lvl::DenseRLELevel{Ti}) where {Ti} = 
-    DenseRLELevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.right, pattern!(lvl.buf))
+    DenseRLELevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.right, pattern!(lvl.buf); merge = getmerge(lvl))
 
 function countstored_level(lvl::DenseRLELevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
 
 redefault!(lvl::DenseRLELevel{Ti}, init) where {Ti} = 
-    DenseRLELevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.right, redefault!(lvl.buf, init))
+    DenseRLELevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.right, redefault!(lvl.buf, init); merge = getmerge(lvl))
 
 Base.resize!(lvl::DenseRLELevel{Ti}, dims...) where {Ti} = 
-    DenseRLELevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.right, resize!(lvl.buf, dims[1:end-1]...))
+    DenseRLELevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.right, resize!(lvl.buf, dims[1:end-1]...); merge = getmerge(lvl))
 
-function Base.show(io::IO, lvl::DenseRLELevel{Ti, Ptr, Right, Lvl}) where {Ti, Ptr, Right, Lvl}
+function Base.show(io::IO, lvl::DenseRLELevel{Ti, Ptr, Right, merge, Lvl}) where {Ti, Ptr, Right, merge, Lvl}
     if get(io, :compact, false)
         print(io, "DenseRLE(")
     else
@@ -87,6 +92,8 @@ function Base.show(io::IO, lvl::DenseRLELevel{Ti, Ptr, Right, Lvl}) where {Ti, P
         show(io, lvl.right)
         print(io, ", ")
         show(io, lvl.buf)
+        print(io, "; merge = ")
+        show(io, merge) 
     end
     print(io, ")")
 end
@@ -104,12 +111,12 @@ function labelled_children(fbr::SubFiber{<:DenseRLELevel})
     end
 end
 
-@inline level_ndims(::Type{<:DenseRLELevel{Ti, Ptr, Right, Lvl}}) where {Ti, Ptr, Right, Lvl} = 1 + level_ndims(Lvl)
+@inline level_ndims(::Type{<:DenseRLELevel{Ti, Ptr, Right, merge, Lvl}}) where {Ti, Ptr, Right, merge, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::DenseRLELevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::DenseRLELevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
-@inline level_eltype(::Type{<:DenseRLELevel{Ti, Ptr, Right, Lvl}}) where {Ti, Ptr, Right, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:DenseRLELevel{Ti, Ptr, Right, Lvl}}) where {Ti, Ptr, Right, Lvl}= level_default(Lvl)
-data_rep_level(::Type{<:DenseRLELevel{Ti, Ptr, Right, Lvl}}) where {Ti, Ptr, Right, Lvl} = SparseData(data_rep_level(Lvl))
+@inline level_eltype(::Type{<:DenseRLELevel{Ti, Ptr, Right, merge, Lvl}}) where {Ti, Ptr, Right, merge, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:DenseRLELevel{Ti, Ptr, Right, merge, Lvl}}) where {Ti, Ptr, Right, merge, Lvl}= level_default(Lvl)
+data_rep_level(::Type{<:DenseRLELevel{Ti, Ptr, Right, merge, Lvl}}) where {Ti, Ptr, Right, merge, Lvl} = DenseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:DenseRLELevel})() = fbr
 function (fbr::SubFiber{<:DenseRLELevel})(idxs...)
@@ -134,6 +141,7 @@ mutable struct VirtualDenseRLELevel <: AbstractVirtualLevel
     buf
     prev_pos
     i_prev
+    merge
 end
 
 is_level_injective(lvl::VirtualDenseRLELevel, ctx) = [false, is_level_injective(lvl.lvl, ctx)...]
@@ -142,7 +150,7 @@ is_level_atomic(lvl::VirtualDenseRLELevel, ctx) = false
 
 postype(lvl::VirtualDenseRLELevel) = postype(lvl.lvl)
 
-function virtualize(ex, ::Type{DenseRLELevel{Ti, Ptr, Right, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Right, Lvl}
+function virtualize(ex, ::Type{DenseRLELevel{Ti, Ptr, Right, merge, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Right, merge, Lvl}
     #Invariants of the level (Read Mode):
     # 1. right[ptr[p]:ptr[p + 1] - 1] is the sorted list of right endpoints of the runs
     #
@@ -170,7 +178,7 @@ function virtualize(ex, ::Type{DenseRLELevel{Ti, Ptr, Right, Lvl}}, ctx, tag=:lv
     prev_pos = freshen(ctx, sym, :_prev_pos)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     buf = virtualize(:($sym.buf), Lvl, ctx, sym)
-    VirtualDenseRLELevel(lvl_2, sym, Ti, shape, qos_fill, qos_stop, ptr, right, buf, prev_pos, i_prev)
+    VirtualDenseRLELevel(lvl_2, sym, Ti, shape, qos_fill, qos_stop, ptr, right, buf, prev_pos, i_prev, merge)
 end
 
 function lower(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
@@ -180,7 +188,8 @@ function lower(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
             $(ctx(lvl.shape)),
             $(lvl.ptr),
             $(lvl.right),
-            $(ctx(lvl.buf)),
+            $(ctx(lvl.buf));
+            merge = $(lvl.merge)
         )
     end
 end

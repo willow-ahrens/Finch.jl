@@ -1,9 +1,9 @@
 Tensor(SparseList(DenseRLE(Element(zero)))) representation:
 
 array: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
-tensor: Tensor(SparseList{Int64}(DenseRLE{Int64}(Element{0.0, Float64, Int64}(Float64[]), 5, [1], Int64[], Element{0.0, Float64, Int64}(Float64[])), 5, [1, 1], Int64[]))
+tensor: Tensor(SparseList{Int64}(DenseRLE{Int64}(Element{0.0, Float64, Int64}(Float64[]), 5, [1], Int64[], Element{0.0, Float64, Int64}(Float64[]); merge = true), 5, [1, 1], Int64[]))
 array: [1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0]
-tensor: Tensor(SparseList{Int64}(DenseRLE{Int64}(Element{0.0, Float64, Int64}([1.0, 1.0, 1.0, 1.0, 1.0]), 5, [1, 2, 3, 4, 5, 6], [5, 5, 5, 5, 5], Element{0.0, Float64, Int64}(Float64[])), 5, [1, 6], [1, 2, 3, 4, 5]))
+tensor: Tensor(SparseList{Int64}(DenseRLE{Int64}(Element{0.0, Float64, Int64}([1.0, 1.0, 1.0, 1.0, 1.0]), 5, [1, 2, 3, 4, 5, 6], [5, 5, 5, 5, 5], Element{0.0, Float64, Int64}(Float64[]); merge = true), 5, [1, 6], [1, 2, 3, 4, 5]))
 array: [0.0 1.0 2.0 2.0; 0.0 0.0 0.0 0.0; 1.0 1.0 2.0 0.0; 0.0 0.0 0.0 0.0]
-tensor: Tensor(SparseList{Int64}(DenseRLE{Int64}(Element{0.0, Float64, Int64}([0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 2.0, 0.0, 2.0, 0.0, 2.0, 0.0]), 4, [1, 4, 8, 12, 14], [2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 4], Element{0.0, Float64, Int64}(Float64[])), 4, [1, 5], [1, 2, 3, 4]))
+tensor: Tensor(SparseList{Int64}(DenseRLE{Int64}(Element{0.0, Float64, Int64}([0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 2.0, 0.0, 2.0, 0.0, 2.0, 0.0]), 4, [1, 4, 8, 12, 14], [2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 4], Element{0.0, Float64, Int64}(Float64[]); merge = true), 4, [1, 5], [1, 2, 3, 4]))
 
