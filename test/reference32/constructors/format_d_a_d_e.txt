@@ -1,4 +1,0 @@
-initialized tensor: Tensor(Dense{Int32}(Atomic([Base.Threads.SpinLock(0), Base.Threads.SpinLock(0), Base.Threads.SpinLock(0), Base.Threads.SpinLock(0), Base.Threads.SpinLock(0), Base.Threads.SpinLock(0)], Dense{Int32}(Element{0, Int32, Int32}([0, 1, 0, 2, 0, 0, 2, 7, 0, 0, 1, 0, 3, 0, 0, 3, 0, 9]), 3)), 6))
-sized tensor: Tensor(Dense{Int32}(Atomic([], Dense{Int32}(Element{0, Int32, Int32}(Int32[]), 3)), 6))
-empty tensor: Tensor(Dense{Int32}(Atomic([], Dense{Int32}(Element{0, Int32, Int32}(Int32[]), 0)), 0))
-

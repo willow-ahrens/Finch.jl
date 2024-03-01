@@ -1,1 +1,0 @@
-Tensor(Dense(SparseByteMap(Element{0.0, Float64, Int32}(…), 5, …), 10))

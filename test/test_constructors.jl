@@ -14,8 +14,8 @@
         ("SparseRLE", SparseRLE, (;), [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
         ("SparseRLELazy", SparseRLE, (; merge = false), [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
         ("SparseDict", SparseDict, (;), [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
-        ("SingleList", SingleList, (;), [[0.0, 0.0, 2.0, 0.0, 0.0, 0.0],]),
-        ("SingleRLE", SingleRLE, (;), [[0.0, 0.0, 2.0, 0.0, 0.0, 0.0],]),
+        ("SparsePoint", SparsePoint, (;), [[0.0, 0.0, 2.0, 0.0, 0.0, 0.0],]),
+        ("SparseInterval", SparseInterval, (;), [[0.0, 0.0, 2.0, 0.0, 0.0, 0.0],]),
     ]
 
     for (key, Lvl, flags, arrs) in basic_levels
@@ -90,7 +90,7 @@
                 @test size(res) == (10, 5)
                 @test default(res) == 2 && eltype(res) == ComplexF64
 
-                if key == "SingleList" || key == "SingleRLE"
+                if key == "SparsePoint" || key == "SparseInterval"
                     continue  # don't test copyto! for Single*
                 end
 

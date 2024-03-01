@@ -22,8 +22,8 @@
         (key = "SparseRLE", Lvl = SparseRLE),
         (key = "SparseRLELazy", Lvl = (base) -> SparseRLE(base, merge=false)),
         (key = "SparseDict", Lvl = SparseDict),
-        (key = "SingleList", Lvl = SingleList, filter = (key) -> key in ["6x_one_bool"]),
-        (key = "SingleRLE", Lvl = SingleRLE, filter = (key) -> key in ["6x_one_bool"]),
+        (key = "SparsePoint", Lvl = SparsePoint, filter = (key) -> key in ["6x_one_bool"]),
+        (key = "SparseInterval", Lvl = SparseInterval, filter = (key) -> key in ["6x_one_bool"]),
         (key = "SparseList{Separate}", Lvl = (base) -> SparseList(Separate(base))),
     ]
 
