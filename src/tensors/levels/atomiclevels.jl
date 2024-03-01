@@ -14,15 +14,16 @@ Dense [1:3]
 ```
 """
 
-struct AtomicLevel{AVal <: AbstractVector, Lvl} <: AbstractLevel
+struct AtomicLevel{AVal, Lvl} <: AbstractLevel
     lvl::Lvl
     locks::AVal
 end
 const Atomic = AtomicLevel
 
 
-AtomicLevel(lvl::Lvl) where {Lvl} = AtomicLevel{Vector{Base.Threads.SpinLock}, Lvl}(lvl, Vector{Base.Threads.SpinLock}([]))
-# AtomicLevel{AVal, Lvl}(atomics::AVal, lvl::Lvl) where {Lvl, AVal} =  AtomicLevel{AVal, Lvl}(lvl, atomics)
+AtomicLevel(lvl) = AtomicLevel(lvl, Base.Threads.SpinLock[])
+#AtomicLevel(lvl::Lvl, locks::AVal) where {Lvl, AVal} =
+#    AtomicLevel{AVal, Lvl}(lvl, locks)
 Base.summary(::AtomicLevel{AVal, Lvl}) where {Lvl, AVal} = "AtomicLevel($(AVal), $(Lvl))"
 
 similar_level(lvl::Atomic{AVal, Lvl}, fill_value, eltype::Type, dims...) where {Lvl, AVal} =
@@ -47,9 +48,9 @@ function Base.show(io::IO, lvl::AtomicLevel{AVal, Lvl}) where {AVal, Lvl}
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>AVal), lvl.locks)
+        show(IOContext(io), lvl.lvl)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Val), lvl.lvl)
+        show(IOContext(io, :typeinfo=>AVal), lvl.locks)
     end
     print(io, ")")
 end 
@@ -74,7 +75,7 @@ end
 (fbr::Tensor{<:AtomicLevel})() = SubFiber(fbr.lvl, 1)()
 (fbr::SubFiber{<:AtomicLevel})() = fbr #TODO this is not consistent somehow
 function (fbr::SubFiber{<:AtomicLevel})(idxs...)
-    return Tensor(fbr.lvl)(idxs...)
+    return Tensor(fbr.lvl.lvl)(idxs...)
 end
 
 countstored_level(lvl::AtomicLevel, pos) = countstored_level(lvl.lvl, pos)

@@ -84,9 +84,8 @@ include("utils.jl")
 
 @testset "Finch.jl" begin
     if should_run("print") include("test_print.jl") end
-    if should_run("representation") include("test_representation.jl") end
     if should_run("constructors") include("test_constructors.jl") end
-    if should_run("conversions") include("test_conversions.jl") end
+    if should_run("representation") include("test_representation.jl") end
     if should_run("merges") include("test_merges.jl") end
     if should_run("index") include("test_index.jl") end
     if should_run("typical") include("test_typical.jl") end

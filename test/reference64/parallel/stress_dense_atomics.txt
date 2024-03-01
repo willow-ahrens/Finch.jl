@@ -66,7 +66,7 @@ julia> @finch begin
             y[x[j]] += 1
         end
     end
-(x = Tensor(Dense{Int64}(Element{0, Int64, Int64}([2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1]), 100)), y = Tensor(Dense{Int64}(Atomic([Base.Threads.SpinLock(0), Base.Threads.SpinLock(0), Base.Threads.SpinLock(0), Base.Threads.SpinLock(0), Base.Threads.SpinLock(0)], Element{0.0, Float64, Int64}([20.0, 40.0, 0.0, 0.0, 40.0])), 5)))
+(x = Tensor(Dense{Int64}(Element{0, Int64, Int64}([2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1, 2, 5, 5, 2, 1]), 100)), y = Tensor(Dense{Int64}(Atomic(Element{0.0, Float64, Int64}([20.0, 40.0, 0.0, 0.0, 40.0]), [Base.Threads.SpinLock(0), Base.Threads.SpinLock(0), Base.Threads.SpinLock(0), Base.Threads.SpinLock(0), Base.Threads.SpinLock(0)]), 5)))
 julia> @finch begin
         xp .= 0
         for j = _
