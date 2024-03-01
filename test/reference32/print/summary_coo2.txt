@@ -1,0 +1,1 @@
+5×10 Tensor(SparseCOO{2}(Element(0.0)))
