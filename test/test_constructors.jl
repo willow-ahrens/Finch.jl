@@ -4,66 +4,66 @@
     using Base.Meta
 
     basic_levels = [
-        ("Dense", Dense, [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
-        ("DenseRLE", DenseRLE, [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
-        ("SparseList", SparseList, [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
-        ("SparseVBL", SparseVBL, [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
-        ("SparseBand", SparseBand, [[0.0, 2.0, 2.0, 0.0, 3.0, 0.0],]),
-        ("SparseByteMap", SparseByteMap, [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
-        ("SparseRLE", SparseRLE, [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
-        ("SparseDict", SparseDict, [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
-        ("SingleList", SingleList, [[0.0, 0.0, 2.0, 0.0, 0.0, 0.0],]),
-        ("SingleRLE", SingleRLE, [[0.0, 0.0, 2.0, 0.0, 0.0, 0.0],]),
+        ("Dense", Dense, (;), [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
+        ("DenseRLE", DenseRLE, (;), [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
+        ("SparseList", SparseList, (;), [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
+        ("SparseVBL", SparseVBL, (;), [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
+        ("SparseBand", SparseBand, (;), [[0.0, 2.0, 2.0, 0.0, 3.0, 0.0],]),
+        ("SparseByteMap", SparseByteMap, (;), [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
+        ("SparseRLE", SparseRLE, (;), [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
+        ("SparseDict", SparseDict, (;), [[0.0, 2.0, 2.0, 0.0, 3.0, 3.0],]),
+        ("SingleList", SingleList, (;), [[0.0, 0.0, 2.0, 0.0, 0.0, 0.0],]),
+        ("SingleRLE", SingleRLE, (;), [[0.0, 0.0, 2.0, 0.0, 0.0, 0.0],]),
     ]
 
-    for (key, Lvl, arrs) in basic_levels
+    for (key, Lvl, flags, arrs) in basic_levels
         @testset "Construct $key" begin
             io = IOBuffer()
             println(io, "Tensor($key(Element(0))) constructors:")
 
             for arr in arrs
 
-                fbr = dropdefaults!(Tensor(Lvl(Element(zero(eltype(arr))))), arr)
+                fbr = dropdefaults!(Tensor(Lvl(Element(zero(eltype(arr))); flags...)), arr)
                 println(io, "initialized tensor: ", fbr)
                 lvl = fbr.lvl
                 props = map(name -> getproperty(lvl, name), propertynames(lvl))
-                @test Structure(fbr) == Structure(Tensor(Lvl(props...)))
-                @test Structure(fbr) == Structure(Tensor(Lvl{Int}(props...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl(props...; flags...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{Int}(props...; flags...)))
 
-                fbr = dropdefaults!(Tensor(Lvl{Int16}(Element(zero(eltype(arr))))), arr)
+                fbr = dropdefaults!(Tensor(Lvl{Int16}(Element(zero(eltype(arr))); flags...)), arr)
                 println(io, "initialized tensor: ", fbr)
                 lvl = fbr.lvl
                 props = map(name -> getproperty(lvl, name), propertynames(lvl))
-                @test Structure(fbr) == Structure(Tensor(Lvl{Int16}(props...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{Int16}(props...; flags...)))
 
-                fbr = Tensor(Lvl(Element(0.0), 7))
+                fbr = Tensor(Lvl(Element(0.0), 7; flags...))
                 println(io, "sized tensor: ", fbr)
                 lvl = fbr.lvl
-                @test Structure(fbr) == Structure(Tensor(Lvl(Element(0.0), 7)))
-                @test Structure(fbr) == Structure(Tensor(Lvl{Int}(Element(0.0), 7)))
+                @test Structure(fbr) == Structure(Tensor(Lvl(Element(0.0), 7; flags...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{Int}(Element(0.0), 7; flags...)))
 
-                fbr = Tensor(Lvl{Int16}(Element(0.0), 7))
+                fbr = Tensor(Lvl{Int16}(Element(0.0), 7; flags...))
                 println(io, "sized tensor: ", fbr)
                 lvl = fbr.lvl
-                @test Structure(fbr) == Structure(Tensor(Lvl(Element(0.0), Int16(7))))
-                @test Structure(fbr) == Structure(Tensor(Lvl{Int16}(Element(0.0), 7)))
+                @test Structure(fbr) == Structure(Tensor(Lvl(Element(0.0), Int16(7); flags...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{Int16}(Element(0.0), 7; flags...)))
 
-                fbr = Tensor(Lvl(Element(0.0)))
+                fbr = Tensor(Lvl(Element(0.0); flags...))
                 println(io, "empty tensor: ", fbr)
                 lvl = fbr.lvl
-                @test Structure(fbr) == Structure(Tensor(Lvl(Element(0.0))))
-                @test Structure(fbr) == Structure(Tensor(Lvl{Int}(Element(0.0))))
-                @test Structure(fbr) == Structure(Tensor(Lvl(Element(0.0), 0)))
-                @test Structure(fbr) == Structure(Tensor(Lvl{Int}(Element(0.0), 0)))
+                @test Structure(fbr) == Structure(Tensor(Lvl(Element(0.0); flags...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{Int}(Element(0.0); flags...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl(Element(0.0), 0; flags...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{Int}(Element(0.0), 0; flags...)))
 
-                fbr = Tensor(Lvl{Int16}(Element(0.0)))
+                fbr = Tensor(Lvl{Int16}(Element(0.0); flags...))
                 println(io, "empty tensor: ", fbr)
                 lvl = fbr.lvl
-                @test Structure(fbr) == Structure(Tensor(Lvl{Int16}(Element(0.0))))
-                @test Structure(fbr) == Structure(Tensor(Lvl(Element(0.0), Int16(0))))
-                @test Structure(fbr) == Structure(Tensor(Lvl{Int16}(Element(0.0), 0)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{Int16}(Element(0.0); flags...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl(Element(0.0), Int16(0); flags...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{Int16}(Element(0.0), 0; flags...)))
 
-                fbr = Tensor(Dense(Lvl(Element(Int64(0)))), [0 0 0 1; 0 1 0 0; 0 0 0 0])
+                fbr = Tensor(Dense(Lvl(Element(Int64(0)); flags...)), [0 0 0 1; 0 1 0 0; 0 0 0 0])
                 res = similar(fbr)
                 @test size(res) == size(fbr)
                 @test default(res) == 0 && eltype(res) == Int64
@@ -102,15 +102,15 @@
     end
 
     multi_levels = [
-        ("SparseCOO", SparseCOO, [
+        ("SparseCOO", SparseCOO, (;), [
             [0.0, 2.0, 2.0, 0.0, 3.0, 3.0],
             [0.0 2.0 2.0; 0.0 3.0 3.0]
         ]),
-        ("SparseHash", SparseHash, [
+        ("SparseHash", SparseHash, (;), [
             [0.0, 2.0, 2.0, 0.0, 3.0, 3.0],
             [0.0 2.0 2.0; 0.0 3.0 3.0]
         ]),
-        #("SparseTriangle", SparseTriangle, [
+        #("SparseTriangle", SparseTriangle, (;), [
         #    [1.0  2.0  3.0  4.0  5.0; 
         #    6.0  7.0  8.0  9.0  10.0; 
         #    11.0 12.0 13.0 14.0 15.0; 
@@ -120,56 +120,56 @@
         #])
     ]
 
-    for (key, Lvl, arrs) in multi_levels
+    for (key, Lvl, flags, arrs) in multi_levels
         @testset "Tensor($key{?}(Element(0)))" begin
             io = IOBuffer()
             for arr in arrs
                 N = ndims(arr)
                 println(io, "Tensor($key{$N}(Element(0))) constructors:")
 
-                fbr = dropdefaults!(Tensor(Lvl{N}(Element(zero(eltype(arr))))), arr)
+                fbr = dropdefaults!(Tensor(Lvl{N}(Element(zero(eltype(arr))); flags...)), arr)
                 println(io, "initialized tensor: ", fbr)
                 lvl = fbr.lvl
                 props = map(name -> getproperty(lvl, name), propertynames(lvl))
-                @test Structure(fbr) == Structure(Tensor(Lvl{N}(props...)))
-                @test Structure(fbr) == Structure(Tensor(Lvl{N, NTuple{N, Int}}(props...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{N}(props...; flags...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{N, NTuple{N, Int}}(props...; flags...)))
 
-                fbr = dropdefaults!(Tensor(Lvl{N, NTuple{N, Int16}}(Element(zero(eltype(arr))))), arr)
+                fbr = dropdefaults!(Tensor(Lvl{N, NTuple{N, Int16}}(Element(zero(eltype(arr))); flags...)), arr)
                 println(io, "initialized tensor: ", fbr)
                 lvl = fbr.lvl
                 props = map(name -> getproperty(lvl, name), propertynames(lvl))
-                @test Structure(fbr) == Structure(Tensor(Lvl{N, NTuple{N, Int16}}(props...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{N, NTuple{N, Int16}}(props...; flags...)))
 
-                fbr = Tensor(Lvl{N}(Element(0.0), size(arr)))
+                fbr = Tensor(Lvl{N}(Element(0.0), size(arr); flags...))
                 println(io, "sized tensor: ", fbr)
                 lvl = fbr.lvl
-                @test Structure(fbr) == Structure(Tensor(Lvl{N}(Element(0.0), size(arr))))
-                @test Structure(fbr) == Structure(Tensor(Lvl{N, NTuple{N, Int}}(Element(0.0), size(arr))))
+                @test Structure(fbr) == Structure(Tensor(Lvl{N}(Element(0.0), size(arr); flags...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{N, NTuple{N, Int}}(Element(0.0), size(arr); flags...)))
 
-                fbr = Tensor(Lvl{N, NTuple{N, Int16}}(Element(0.0), Int16.(size(arr))))
+                fbr = Tensor(Lvl{N, NTuple{N, Int16}}(Element(0.0), Int16.(size(arr)); flags...))
                 println(io, "sized tensor: ", fbr)
                 lvl = fbr.lvl
-                @test Structure(fbr) == Structure(Tensor(Lvl{N}(Element(0.0), Int16.(size(arr)))))
-                @test Structure(fbr) == Structure(Tensor(Lvl{N, NTuple{N, Int16}}(Element(0.0), Int16.(size(arr)))))
+                @test Structure(fbr) == Structure(Tensor(Lvl{N}(Element(0.0), Int16.(size(arr)); flags...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{N, NTuple{N, Int16}}(Element(0.0), Int16.(size(arr)); flags...)))
 
                 zerodim = size(arr) .- size(arr)
 
-                fbr = Tensor(Lvl{N}(Element(0.0)))
+                fbr = Tensor(Lvl{N}(Element(0.0); flags...))
                 println(io, "empty tensor: ", fbr)
                 lvl = fbr.lvl
-                @test Structure(fbr) == Structure(Tensor(Lvl{N}(Element(0.0))))
-                @test Structure(fbr) == Structure(Tensor(Lvl{N, NTuple{N, Int}}(Element(0.0))))
-                @test Structure(fbr) == Structure(Tensor(Lvl{N}(Element(0.0), zerodim)))
-                @test Structure(fbr) == Structure(Tensor(Lvl{N, NTuple{N, Int}}(Element(0.0), zerodim)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{N}(Element(0.0); flags...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{N, NTuple{N, Int}}(Element(0.0); flags...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{N}(Element(0.0), zerodim; flags...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{N, NTuple{N, Int}}(Element(0.0), zerodim; flags...)))
 
-                fbr = Tensor(Lvl{N, NTuple{N, Int16}}(Element(0.0)))
+                fbr = Tensor(Lvl{N, NTuple{N, Int16}}(Element(0.0); flags...))
                 println(io, "empty tensor: ", fbr)
                 lvl = fbr.lvl
-                @test Structure(fbr) == Structure(Tensor(Lvl{N, NTuple{N, Int16}}(Element(0.0))))
-                @test Structure(fbr) == Structure(Tensor(Lvl{N}(Element(0.0), Int16.(zerodim))))
-                @test Structure(fbr) == Structure(Tensor(Lvl{N, NTuple{N, Int16}}(Element(0.0), Int16.(zerodim))))
+                @test Structure(fbr) == Structure(Tensor(Lvl{N, NTuple{N, Int16}}(Element(0.0); flags...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{N}(Element(0.0), Int16.(zerodim); flags...)))
+                @test Structure(fbr) == Structure(Tensor(Lvl{N, NTuple{N, Int16}}(Element(0.0), Int16.(zerodim); flags...)))
 
-                fbr = Tensor(Lvl{2}(Element(0)), Matrix(reshape(1:25, (5, 5))))
+                fbr = Tensor(Lvl{2}(Element(0); flags...), Matrix(reshape(1:25, (5, 5))))
                 res = copyto!(similar(fbr, -1, Float64), fbr)
                 @test res == fbr
                 @test default(res) == -1 && eltype(res) == Float64

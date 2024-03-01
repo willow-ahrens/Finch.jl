@@ -1,5 +1,5 @@
 """
-    SparseRLELevel{[Ti=Int], [Ptr, Left, Right]}(lvl, [dim])
+    SparseRLELevel{[Ti=Int], [Ptr, Left, Right]}(lvl, [dim], merge = true)
 
 The sparse RLE level represent runs of equivalent slices `A[:, ..., :, i]`
 which are not entirely [`default`](@ref). A sorted list is used to record the
@@ -8,6 +8,9 @@ left and right endpoints of each run. Optionally, `dim` is the size of the last 
 `Ti` is the type of the last tensor index, and `Tp` is the type used for
 positions in the level. The types `Ptr`, `Left`, and `Right` are the types of the
 arrays used to store positions and endpoints. 
+
+The `merge` keyword argument is used to specify whether the level should merge
+duplicate consecutive runs.
 
 ```jldoctest
 julia> Tensor(Dense(SparseRLELevel(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
@@ -21,7 +24,7 @@ Dense [:,1:3]
    └─ [3:3]: 40.0
 ```
 """
-struct SparseRLELevel{Ti, Ptr<:AbstractVector, Left<:AbstractVector, Right<:AbstractVector, Lvl} <: AbstractLevel
+struct SparseRLELevel{Ti, Ptr<:AbstractVector, Left<:AbstractVector, Right<:AbstractVector, merge, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     ptr::Ptr
@@ -31,18 +34,20 @@ struct SparseRLELevel{Ti, Ptr<:AbstractVector, Left<:AbstractVector, Right<:Abst
 end
 
 const SparseRLE = SparseRLELevel
-SparseRLELevel(lvl::Lvl) where {Lvl} = SparseRLELevel{Int}(lvl)
-SparseRLELevel(lvl, shape, args...) = SparseRLELevel{typeof(shape)}(lvl, shape, args...)
-SparseRLELevel{Ti}(lvl) where {Ti} = SparseRLELevel(lvl, zero(Ti))
-SparseRLELevel{Ti}(lvl, shape) where {Ti} = SparseRLELevel{Ti}(lvl, shape, postype(lvl)[1], Ti[], Ti[], deepcopy(lvl)) #TODO if similar_level could return the same type, we could use it here
-SparseRLELevel{Ti}(lvl::Lvl, shape, ptr::Ptr, left::Left, right::Right, buf::Lvl) where {Ti, Lvl, Ptr, Left, Right} =
-    SparseRLELevel{Ti, Ptr, Left, Right, Lvl}(lvl, Ti(shape), ptr, left, right, buf)
+SparseRLELevel(lvl; kwargs...) = SparseRLELevel{Int}(lvl; kwargs...)
+SparseRLELevel(lvl, shape, args...; kwargs...) = SparseRLELevel{typeof(shape)}(lvl, shape, args...; kwargs...)
+SparseRLELevel{Ti}(lvl; kwargs...) where {Ti} = SparseRLELevel(lvl, zero(Ti); kwargs...)
+SparseRLELevel{Ti}(lvl, shape; kwargs...) where {Ti} = SparseRLELevel{Ti}(lvl, shape, postype(lvl)[1], Ti[], Ti[], deepcopy(lvl); kwargs...) #TODO if similar_level could return the same type, we could use it here
+SparseRLELevel{Ti}(lvl::Lvl, shape, ptr::Ptr, left::Left, right::Right, buf::Lvl; merge=true) where {Ti, Lvl, Ptr, Left, Right} =
+    SparseRLELevel{Ti, Ptr, Left, Right, merge, Lvl}(lvl, Ti(shape), ptr, left, right, buf)
+
+getmerge(lvl::SparseRLELevel{Ti, Ptr, Left, Right, merge}) where {Ti, Ptr, Left, Right, merge} = merge
 
 Base.summary(lvl::SparseRLELevel) = "SparseRLE($(summary(lvl.lvl)))"
 similar_level(lvl::SparseRLELevel, fill_value, eltype::Type, dim, tail...) =
     SparseRLE(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
 
-function postype(::Type{SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl}
+function postype(::Type{SparseRLELevel{Ti, Ptr, Left, Right, merge, Lvl}}) where {Ti, Ptr, Left, Right, merge, Lvl}
     return postype(Lvl)
 end
 
@@ -52,23 +57,23 @@ function moveto(lvl::SparseRLELevel{Ti}, device) where {Ti}
     left = moveto(lvl.left, device)
     right = moveto(lvl.right, device)
     buf = moveto(lvl.buf, device)
-    return SparseRLELevel{Ti}(lvl_2, lvl.shape, lvl.ptr, lvl.left, lvl.right, lvl.buf)
+    return SparseRLELevel{Ti}(lvl_2, lvl.shape, lvl.ptr, lvl.left, lvl.right, lvl.buf; merge = getmerge(lvl))
 end
 
 pattern!(lvl::SparseRLELevel{Ti}) where {Ti} = 
-    SparseRLELevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.left, lvl.right, pattern!(lvl.buf))
+    SparseRLELevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.left, lvl.right, pattern!(lvl.buf); merge = getmerge(lvl))
 
 function countstored_level(lvl::SparseRLELevel, pos)
     countstored_level(lvl.lvl, lvl.left[lvl.ptr[pos + 1]]-1)
 end
 
 redefault!(lvl::SparseRLELevel{Ti}, init) where {Ti} = 
-    SparseRLELevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.left, lvl.right, redefault!(lvl.buf, init))
+    SparseRLELevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.left, lvl.right, redefault!(lvl.buf, init); merge = getmerge(lvl))
 
 Base.resize!(lvl::SparseRLELevel{Ti}, dims...) where {Ti} = 
-    SparseRLELevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.left, lvl.right, resize!(lvl.buf, dims[1:end-1]...))
+    SparseRLELevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.left, lvl.right, resize!(lvl.buf, dims[1:end-1]...); merge = getmerge(lvl))
 
-function Base.show(io::IO, lvl::SparseRLELevel{Ti, Ptr, Left, Right, Lvl}) where {Ti, Ptr, Left, Right, Lvl}
+function Base.show(io::IO, lvl::SparseRLELevel{Ti, Ptr, Left, Right, merge, Lvl}) where {Ti, Ptr, Left, Right, merge, Lvl}
     if get(io, :compact, false)
         print(io, "SparseRLE(")
     else
@@ -88,6 +93,8 @@ function Base.show(io::IO, lvl::SparseRLELevel{Ti, Ptr, Left, Right, Lvl}) where
         show(io, lvl.right)
         print(io, ", ")
         show(io, lvl.buf)
+        print(io, "; merge =")
+        show(io, merge)
     end
     print(io, ")")
 end
@@ -104,12 +111,12 @@ function labelled_children(fbr::SubFiber{<:SparseRLELevel})
     end
 end
 
-@inline level_ndims(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = 1 + level_ndims(Lvl)
+@inline level_ndims(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, merge, Lvl}}) where {Ti, Ptr, Left, Right, merge, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::SparseRLELevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::SparseRLELevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
-@inline level_eltype(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl}= level_default(Lvl)
-data_rep_level(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = SparseData(data_rep_level(Lvl))
+@inline level_eltype(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, merge, Lvl}}) where {Ti, Ptr, Left, Right, merge, Lvl} = level_eltype(Lvl)
+@inline level_default(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, merge, Lvl}}) where {Ti, Ptr, Left, Right, merge, Lvl}= level_default(Lvl)
+data_rep_level(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, merge, Lvl}}) where {Ti, Ptr, Left, Right, merge, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseRLELevel})() = fbr
 function (fbr::SubFiber{<:SparseRLELevel})(idxs...)
@@ -134,6 +141,7 @@ mutable struct VirtualSparseRLELevel <: AbstractVirtualLevel
     left
     right
     buf
+    merge
     prev_pos
 end
 
@@ -143,7 +151,7 @@ is_level_atomic(lvl::VirtualSparseRLELevel, ctx) = false
 
 postype(lvl::VirtualSparseRLELevel) = postype(lvl.lvl)
 
-function virtualize(ex, ::Type{SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Left, Right, Lvl}
+function virtualize(ex, ::Type{SparseRLELevel{Ti, Ptr, Left, Right, merge, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Left, Right, merge, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)
@@ -163,7 +171,7 @@ function virtualize(ex, ::Type{SparseRLELevel{Ti, Ptr, Left, Right, Lvl}}, ctx, 
     prev_pos = freshen(ctx, sym, :_prev_pos)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
     buf = virtualize(:($sym.buf), Lvl, ctx, sym)
-    VirtualSparseRLELevel(lvl_2, sym, Ti, shape, qos_fill, qos_stop, ptr, left, right, buf, prev_pos)
+    VirtualSparseRLELevel(lvl_2, sym, Ti, shape, qos_fill, qos_stop, ptr, left, right, buf, merge, prev_pos)
 end
 function lower(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
@@ -173,7 +181,8 @@ function lower(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, ::DefaultStyle
             $(lvl.ptr),
             $(lvl.left),
             $(lvl.right),
-            $(ctx(lvl.buf)),
+            $(ctx(lvl.buf));
+            merge = $(lvl.merge)
         )
     end
 end
