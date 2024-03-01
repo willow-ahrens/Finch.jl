@@ -23,8 +23,8 @@ struct SeparateLevel{Lvl, Val} <: AbstractLevel
 end
 const Separate = SeparateLevel
 
-SeparateLevel(lvl::Lvl) where {Lvl} = SeparateLevel(lvl, [lvl])
-SeparateLevel{Lvl, Val}(lvl::Lvl) where {Lvl, Val} =  SeparateLevel{Lvl, Val}(lvl, [lvl])
+#similar_level(lvl, level_default(typeof(lvl)), level_eltype(typeof(lvl)), level_size(lvl)...)
+SeparateLevel(lvl::Lvl) where {Lvl} = SeparateLevel(lvl, Lvl[])
 Base.summary(::Separate{Lvl, Val}) where {Lvl, Val} = "Separate($(Lvl))"
 
 similar_level(lvl::Separate{Lvl, Val}, fill_value, eltype::Type, dims...) where {Lvl, Val} =
@@ -48,9 +48,9 @@ function Base.show(io::IO, lvl::SeparateLevel{Lvl, Val}) where {Lvl, Val}
     if get(io, :compact, false)
         print(io, "…")
     else
-        show(IOContext(io, :typeinfo=>Val), lvl.val)
+        show(io, lvl.lvl)
         print(io, ", ")
-        show(IOContext(io, :typeinfo=>Val), lvl.lvl)
+        show(io, lvl.val)
     end
     print(io, ")")
 end 
@@ -71,11 +71,9 @@ end
 @inline level_eltype(::Type{SeparateLevel{Lvl, Val}}) where {Lvl, Val} = level_eltype(Lvl)
 @inline level_default(::Type{<:SeparateLevel{Lvl, Val}}) where {Lvl, Val} = level_default(Lvl)
 
-(fbr::Tensor{<:SeparateLevel})() = SubFiber(fbr.lvl, 1)()
-(fbr::SubFiber{<:SeparateLevel})() = fbr #TODO this is not consistent somehow
 function (fbr::SubFiber{<:SeparateLevel})(idxs...)
     q = fbr.pos
-    return Tensor(fbr.lvl.val[q])(idxs...)
+    return SubFiber(fbr.lvl.val[q], 1)(idxs...)
 end
 
 countstored_level(lvl::SeparateLevel, pos) = pos
