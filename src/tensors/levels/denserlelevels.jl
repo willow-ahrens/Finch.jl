@@ -275,12 +275,12 @@ function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_sto
     Tp = postype(lvl)
     p = freshen(ctx.code, :p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    Ti = lvl.Ti
     pos_2 = freshen(ctx.code, tag, :_pos)
     qos_stop = lvl.qos_stop
     qos_fill = lvl.qos_fill
     qos = freshen(ctx.code, :qos)
     unit = ctx(get_smallest_measure(virtual_level_size(lvl, ctx)[end]))
-    Ti = lvl.Ti
     push!(ctx.code.preamble, quote
         $qos = $(lvl.qos_fill)
         #if we did not write something to finish out the last run, we need to fill that in
@@ -299,72 +299,81 @@ function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_sto
         end
         $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
     end)
-    lvl.buf = freeze_level!(lvl.buf, ctx, value(qos_stop))
-    lvl.lvl = declare_level!(lvl.lvl, ctx, literal(1), literal(virtual_level_default(lvl.buf)))
-    p = freshen(ctx.code, :p)
-    q = freshen(ctx.code, :q)
-    q_head = freshen(ctx.code, :q_head)
-    q_stop = freshen(ctx.code, :q_stop)
-    q_2 = freshen(ctx.code, :q_2)
-    checkval = freshen(ctx.code, :check)
-    push!(ctx.code.preamble, quote
-        $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(1, Tp), value(qos_stop, Tp)), ctx))
-        $q = 1
-        $q_2 = 1
-        for $p = 1:$pos_stop
-            $q_stop = $(lvl.ptr)[$p + 1]
-            while $q < $q_stop
-                $q_head = $q
-                while $q + 1 < $q_stop && $(lvl.right)[$q] == $(lvl.right)[$q + 1] - $(unit)
-                    $checkval = true
+    if lvl.merge
+        lvl.buf = freeze_level!(lvl.buf, ctx, value(qos_stop))
+        lvl.lvl = declare_level!(lvl.lvl, ctx, literal(1), literal(virtual_level_default(lvl.buf)))
+        p = freshen(ctx.code, :p)
+        q = freshen(ctx.code, :q)
+        q_head = freshen(ctx.code, :q_head)
+        q_stop = freshen(ctx.code, :q_stop)
+        q_2 = freshen(ctx.code, :q_2)
+        checkval = freshen(ctx.code, :check)
+        push!(ctx.code.preamble, quote
+            $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(1, Tp), value(qos_stop, Tp)), ctx))
+            $q = 1
+            $q_2 = 1
+            for $p = 1:$pos_stop
+                $q_stop = $(lvl.ptr)[$p + 1]
+                while $q < $q_stop
+                    $q_head = $q
+                    while $q + 1 < $q_stop && $(lvl.right)[$q] == $(lvl.right)[$q + 1] - $(unit)
+                        $checkval = true
+                        $(contain(ctx) do ctx_2
+                            left = variable(freshen(ctx.code, :left))
+                            ctx_2.bindings[left] = virtual(VirtualSubFiber(lvl.buf, value(q_head, Tp)))
+                            right = variable(freshen(ctx.code, :right))
+                            ctx_2.bindings[right] = virtual(VirtualSubFiber(lvl.buf, call(+, value(q, Tp), Tp(1))))
+                            check = VirtualScalar(:UNREACHABLE, Bool, false, :check, checkval)
+                            exts = virtual_level_size(lvl.buf, ctx_2)
+                            inds = [index(freshen(ctx_2.code, :i, n)) for n = 1:length(exts)]
+                            prgm = assign(access(check, updater), and, call(isequal, access(left, reader, inds...), access(right, reader, inds...)))
+                            for (ind, ext) in zip(inds, exts)
+                                prgm = loop(ind, ext, prgm)
+                            end
+                            prgm = instantiate!(prgm, ctx_2)
+                            ctx_2(prgm)
+                        end)
+                        if !$checkval
+                            break
+                        else
+                            $q += 1
+                        end
+                    end
+                    $(lvl.right)[$q_2] = $(lvl.right)[$q]
                     $(contain(ctx) do ctx_2
-                        left = variable(freshen(ctx.code, :left))
-                        ctx_2.bindings[left] = virtual(VirtualSubFiber(lvl.buf, value(q_head, Tp)))
-                        right = variable(freshen(ctx.code, :right))
-                        ctx_2.bindings[right] = virtual(VirtualSubFiber(lvl.buf, call(+, value(q, Tp), Tp(1))))
-                        check = VirtualScalar(:UNREACHABLE, Bool, false, :check, checkval)
+                        src = variable(freshen(ctx.code, :src))
+                        ctx_2.bindings[src] = virtual(VirtualSubFiber(lvl.buf, value(q_head, Tp)))
+                        dst = variable(freshen(ctx.code, :dst))
+                        ctx_2.bindings[dst] = virtual(VirtualSubFiber(lvl.lvl, value(q_2, Tp)))
                         exts = virtual_level_size(lvl.buf, ctx_2)
                         inds = [index(freshen(ctx_2.code, :i, n)) for n = 1:length(exts)]
-                        prgm = assign(access(check, updater), and, call(isequal, access(left, reader, inds...), access(right, reader, inds...)))
+                        prgm = assign(access(dst, updater, inds...), initwrite(virtual_level_default(lvl.lvl)), access(src, reader, inds...))
                         for (ind, ext) in zip(inds, exts)
                             prgm = loop(ind, ext, prgm)
                         end
                         prgm = instantiate!(prgm, ctx_2)
                         ctx_2(prgm)
                     end)
-                    if !$checkval
-                        break
-                    else
-                        $q += 1
-                    end
+                    $q_2 += 1
+                    $q += 1
                 end
-                $(lvl.right)[$q_2] = $(lvl.right)[$q]
-                $(contain(ctx) do ctx_2
-                    src = variable(freshen(ctx.code, :src))
-                    ctx_2.bindings[src] = virtual(VirtualSubFiber(lvl.buf, value(q_head, Tp)))
-                    dst = variable(freshen(ctx.code, :dst))
-                    ctx_2.bindings[dst] = virtual(VirtualSubFiber(lvl.lvl, value(q_2, Tp)))
-                    exts = virtual_level_size(lvl.buf, ctx_2)
-                    inds = [index(freshen(ctx_2.code, :i, n)) for n = 1:length(exts)]
-                    prgm = assign(access(dst, updater, inds...), initwrite(virtual_level_default(lvl.lvl)), access(src, reader, inds...))
-                    for (ind, ext) in zip(inds, exts)
-                        prgm = loop(ind, ext, prgm)
-                    end
-                    prgm = instantiate!(prgm, ctx_2)
-                    ctx_2(prgm)
-                end)
-                $q_2 += 1
-                $q += 1
+                $(lvl.ptr)[$p + 1] = $q_2
             end
-            $(lvl.ptr)[$p + 1] = $q_2
-        end
-        resize!($(lvl.right), $q_2 - 1)
-        $qos_stop = $q_2 - 1
-    end)
-    lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
-    lvl.buf = declare_level!(lvl.buf, ctx, literal(1), literal(virtual_level_default(lvl.buf)))
-    lvl.buf = freeze_level!(lvl.buf, ctx, literal(0))
-    return lvl
+            resize!($(lvl.right), $q_2 - 1)
+            $qos_stop = $q_2 - 1
+        end)
+        lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
+        lvl.buf = declare_level!(lvl.buf, ctx, literal(1), literal(virtual_level_default(lvl.buf)))
+        lvl.buf = freeze_level!(lvl.buf, ctx, literal(0))
+        return lvl
+    else
+        push!(ctx.code.preamble, quote
+            resize!($(lvl.right), $qos_stop)
+        end)
+        (lvl.buf, lvl.lvl) = (lvl.lvl, lvl.buf)
+        lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
+        return lvl
+    end
 end
 
 function thaw_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_stop)
