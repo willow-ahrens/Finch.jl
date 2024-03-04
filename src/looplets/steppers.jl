@@ -100,7 +100,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
         push!(ctx.code.preamble, stepper_seek(node.val, ctx, root.ext))
     end
     
-    if style.count == 1
+    if style.count == 1 && !(query(call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)), ctx))
         body_2 = contain(ctx) do ctx_2
             push!(ctx_2.code.preamble, :($i0 = $i))
             i1 = freshen(ctx_2.code, i)
@@ -168,14 +168,10 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
             end)
         end
 
-        if query(call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)), ctx)
-            body_2
-        else
-            return quote
-                while true
-                    $cases
-                    $body_2
-                end
+        return quote
+            while true
+                $cases
+                $body_2
             end
         end
 
