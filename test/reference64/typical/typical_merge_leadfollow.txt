@@ -299,5 +299,5 @@ julia> @finch begin
             z[i] = x[gallop(i)] + y[i]
         end
     end
-(z = Tensor(SparseList{Int64}(Element{0.0, Float64, Int64}([1.0, 2.0, 1.0, 3.0, 1.0, 4.0, 2.607167245e-314, 5.0, 6.0]), 10, [1, 10], [0, 1, 2, 3, 4, 5, 6, 7, 9])),)
+(z = Tensor(SparseList{Int64}(Element{0.0, Float64, Int64}([1.0, 2.0, 1.0, 3.0, 1.0, 4.0, 2.506492571e-314, 5.0, 6.0]), 10, [1, 10], [0, 1, 2, 3, 4, 5, 6, 7, 9])),)
 
