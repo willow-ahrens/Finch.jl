@@ -666,4 +666,29 @@ using CIndices
         V = [1, 1, 1, 1]
         fsparse(I, J, V) == sparse(I, J, V)
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/pull/450
+    let
+        #there was a bug with let statements and scoping
+        input = Tensor(Dense(Dense(Element(UInt(0)))))
+        output = Tensor(Dense(Dense(Element(UInt(0)))))
+        tmp = Tensor(Dense(Dense(Element(UInt(0)))))
+
+        eval(Finch.@finch_kernel function erode_finch_bits_kernel(output, input, tmp)
+            tmp .= 0
+            for y = _
+                for x = _
+                    tmp[x, y] = coalesce(input[x, ~(y-1)], ~(UInt(0))) & input[x, y] & coalesce(input[x, ~(y+1)], ~(UInt(0)))
+                end
+            end
+            output .= 0
+            for y = _
+                for x = _
+                    let tl = coalesce(tmp[~(x-1), y], ~(UInt(0))), t = tmp[x, y], tr = coalesce(tmp[~(x+1), y], ~(UInt(0)))
+                        output[x, y] = ((tr << (8 * sizeof(UInt) - 1)) | (t >> 1)) & t & ((t << 1) | (tl >> (8 * sizeof(UInt) - 1)))
+                    end
+                end
+            end
+        end)
+    end
 end
