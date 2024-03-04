@@ -69,7 +69,7 @@ Base.resize!(lvl::SparseByteMapLevel{Ti}, dims...) where {Ti} =
     SparseByteMapLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.tbl, lvl.srt)
 
 function countstored_level(lvl::SparseByteMapLevel, pos)
-    countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
+    countstored_level(lvl.lvl, pos * lvl.shape)
 end
 
 function Base.show(io::IO, lvl::SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl},) where {Ti, Ptr, Tbl, Srt, Lvl}
