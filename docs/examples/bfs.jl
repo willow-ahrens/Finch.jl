@@ -20,7 +20,7 @@ function bfs(edges, source=5)
     P = Tensor(Dense(Element(0)), n)
     @finch P[source] = source
 
-    while countstored(F) > 0
+    while F_nnz > 0
         @finch begin
             _F .= false
             for j=_, k=_
