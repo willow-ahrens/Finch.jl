@@ -16,6 +16,21 @@ default(fbr::SparseData) = default(fbr.lvl)
 Base.eltype(fbr::SparseData) = eltype(fbr.lvl)
 
 """
+    RepeatData(lvl)
+    
+Represents a tensor `A` where `A[:, ..., :, i]` is sometimes entirely default(lvl)
+and is sometimes represented by repeated runs of `lvl`.
+"""
+struct RepeatData
+    lvl
+end
+Finch.finch_leaf(x::RepeatData) = virtual(x)
+
+Base.ndims(fbr::RepeatData) = 1 + ndims(fbr.lvl)
+default(fbr::RepeatData) = default(fbr.lvl)
+Base.eltype(fbr::RepeatData) = eltype(fbr.lvl)
+
+"""
     DenseData(lvl)
     
 Represents a tensor `A` where each `A[:, ..., :, i]` is represented by `lvl`.
@@ -72,22 +87,6 @@ Base.ndims(fbr::ElementData) = 0
 Base.eltype(fbr::ElementData) = fbr.eltype
 
 """
-    RepeatData(default, eltype)
-    
-Represents an array A[i] with many repeated runs of elements of type `eltype`
-and default `default`.
-"""
-struct RepeatData
-    default
-    eltype
-end
-Finch.finch_leaf(x::RepeatData) = virtual(x)
-default(fbr::RepeatData) = fbr.default
-
-Base.ndims(fbr::RepeatData) = 1
-Base.eltype(fbr::RepeatData) = fbr.eltype
-
-"""
     data_rep(tns)
 
 Return a trait object representing everything that can be learned about the data
@@ -120,8 +119,9 @@ collapse_rep(fbr::SparseData) = collapse_rep(fbr, collapse_rep(fbr.lvl))
 collapse_rep(::SparseData, lvl::HollowData) = collapse_rep(SparseData(lvl.lvl))
 collapse_rep(::SparseData, lvl) = SparseData(collapse_rep(lvl))
 
-collapse_rep(::RepeatData, lvl::HollowData) = collapse_rep(SparseData(lvl.lvl))
-collapse_rep(::RepeatData, lvl) = DenseData(collapse_rep(lvl))
+collapse_rep(fbr::RepeatData) = collapse_rep(fbr, collapse_rep(fbr.lvl))
+collapse_rep(::RepeatData, lvl::HollowData) = collapse_rep(RepeatData(lvl.lvl))
+collapse_rep(::RepeatData, lvl) = RepeatData(collapse_rep(lvl))
 
 """
     map_rep(f, args...)
@@ -143,11 +143,9 @@ extrude_rep(tns, dims) = extrude_rep_def(tns, reverse(dims)...)
 extrude_rep_def(tns) = tns
 extrude_rep_def(tns::HollowData, dims...) = HollowData(extrude_rep_def(tns.lvl, dims...))
 extrude_rep_def(tns::SparseData, dim, dims...) = SparseData(pad_data_rep(extrude_rep_def(tns.lvl, dims...), dim - 1))
+extrude_rep_def(tns::RepeatData, dim, dims...) = RepeatData(pad_data_rep(extrude_rep_def(tns.lvl, dims...), dim - 1))
 extrude_rep_def(tns::DenseData, dim, dims...) = DenseData(pad_data_rep(extrude_rep_def(tns.lvl, dims...), dim - 1))
 extrude_rep_def(tns::ExtrudeData, dim, dims...) = ExtrudeData(pad_data_rep(extrude_rep_def(tns.lvl, dims...), dim - 1))
-extrude_rep_def(tns::RepeatData, dim) = dim == 1 ? tns : DenseData(extrude_rep_def(ElementData(default(tns), eltype(tns)), dim - 1))
-
-pad_data_rep(rep, n) = ndims(rep) < n ? pad_data_rep(ExtrudeData(rep), n) : rep
 
 struct MapRepExtrudeStyle end
 struct MapRepSparseStyle end
@@ -205,7 +203,20 @@ function map_rep(::MapRepSparseStyle, f, args)
 end
 
 function map_rep(::MapRepRepeatStyle, f, args)
-    return RepeatData(map_rep(f, map(map_rep_child, args)))
+    lvl = map_rep(f, map(map_rep_child, args))
+    if all(arg -> isa(arg, RepeatData), args)
+        return RepeatData(lvl)
+    end
+    for (n, arg) in enumerate(args)
+        if arg isa RepeatData
+            args_2 = map(arg -> value(gensym(), eltype(arg)), collect(args))
+            args_2[n] = literal(default(arg))
+            if finch_leaf(simplify(call(f, args_2...), LowerJulia())) == literal(default(lvl))
+                return RepeatData(lvl)
+            end
+        end
+    end
+    return DenseData(lvl)
 end
 
 function map_rep(::MapRepElementStyle, f, args)
@@ -244,6 +255,14 @@ function aggregate_rep_def(op, z, lvl::SparseData, drop, drops...)
     end
 end
 
+function aggregate_rep_def(op, z, lvl::RepeatData, drop, drops...)
+    if drop
+        aggregate_rep_def(op, z, lvl.lvl, drops...)
+    else
+        RepeatData(aggregate_rep_def(op, z, lvl.lvl, drops...))
+    end
+end
+
 function aggregate_rep_def(op, z, lvl::DenseData, drop, drops...)
     if drop
         aggregate_rep_def(op, z, lvl.lvl, drops...)
@@ -262,14 +281,6 @@ function aggregate_rep_def(op, z, lvl::ExtrudeData, drop, drops...)
 end
 
 aggregate_rep_def(op, z, lvl::ElementData) = ElementData(z, fixpoint_type(op, z, lvl))
-
-function aggregate_rep_def(op, z, lvl::RepeatData, drop)
-    if drop
-        aggregate_rep_def(op, ElementData(lvl.default, lvl.eltype))
-    else
-        RepeatData(z, fixpoint_type(op, z))
-    end
-end
 
 """
     permutedims_rep(tns, perm)
@@ -314,16 +325,16 @@ rep_construct(fbr) = rep_construct(fbr, [nothing for _ in 1:ndims(fbr)])
 rep_construct(fbr::HollowData, protos) = rep_construct_hollow(fbr.lvl, protos)
 rep_construct_hollow(fbr::DenseData, protos) = Tensor(construct_level_rep(SparseData(fbr.lvl), protos...))
 rep_construct_hollow(fbr::ExtrudeData, protos) = Tensor(construct_level_rep(SparseData(fbr.lvl), protos...))
-rep_construct_hollow(fbr::RepeatData, protos) = Tensor(construct_level_rep(SparseData(ElementData(fbr.default, fbr.eltype)), protos...)) #This is the best format we have for this case right now
+rep_construct_hollow(fbr::RepeatData, protos) = Tensor(construct_level_rep(fbr, protos...))
 rep_construct_hollow(fbr::SparseData, protos) = Tensor(construct_level_rep(fbr, protos...))
 rep_construct(fbr, protos) = Tensor(construct_level_rep(fbr, protos...))
 
 construct_level_rep(fbr::SparseData, proto::Union{Nothing, typeof(walk), typeof(extrude)}, protos...) = SparseList(construct_level_rep(fbr.lvl, protos...))
-construct_level_rep(fbr::SparseData, proto::Union{typeof(laminate)}, protos...) = SparseHash{1}(construct_level_rep(fbr.lvl, protos...))
+construct_level_rep(fbr::SparseData, proto::Union{typeof(laminate)}, protos...) = SparseDict(construct_level_rep(fbr.lvl, protos...))
+construct_level_rep(fbr::RepeatData, proto::Union{Nothing, typeof(walk), typeof(extrude)}, protos...) = SparseRLE(construct_level_rep(fbr.lvl, protos...))
+construct_level_rep(fbr::RepeatData, proto::Union{typeof(laminate)}, protos...) = SparseDict(construct_level_rep(fbr.lvl, protos...))
 construct_level_rep(fbr::DenseData, proto, protos...) = Dense(construct_level_rep(fbr.lvl, protos...))
 construct_level_rep(fbr::ExtrudeData, proto, protos...) = Dense(construct_level_rep(fbr.lvl, protos...), 1)
-construct_level_rep(fbr::RepeatData, proto::Union{Nothing, typeof(walk), typeof(extrude)}) = Repeat{fbr.default, fbr.eltype}()
-construct_level_rep(fbr::RepeatData, proto::Union{typeof(laminate)}) = construct_level_rep(DenseData(ElementData(fbr.default, fbr.eltype)), proto)
 construct_level_rep(fbr::ElementData) = Element{fbr.default, fbr.eltype}()
 
 """
@@ -337,12 +348,14 @@ fiber_ctr(fbr) = fiber_ctr(fbr, [nothing for _ in 1:ndims(fbr)])
 fiber_ctr(fbr::HollowData, protos) = fiber_ctr_hollow(fbr.lvl, protos)
 fiber_ctr_hollow(fbr::DenseData, protos) = :(Tensor($(level_ctr(SparseData(fbr.lvl), protos...))))
 fiber_ctr_hollow(fbr::ExtrudeData, protos) = :(Tensor($(level_ctr(SparseData(fbr.lvl), protos...))))
-fiber_ctr_hollow(fbr::RepeatData, protos) = :(Tensor($(level_ctr(SparseData(ElementData(fbr.default, fbr.eltype)), protos...)))) #This is the best format we have for this case right now
 fiber_ctr_hollow(fbr::SparseData, protos) = :(Tensor($(level_ctr(fbr, protos...))))
+fiber_ctr_hollow(fbr::RepeatData, protos) = :(Tensor($(level_ctr(fbr, protos...))))
 fiber_ctr(fbr, protos) = :(Tensor($(level_ctr(fbr, protos...))))
 
 level_ctr(fbr::SparseData, proto::Union{Nothing, typeof(walk), typeof(extrude)}, protos...) = :(SparseList($(level_ctr(fbr.lvl, protos...))))
 level_ctr(fbr::SparseData, proto::Union{typeof(laminate)}, protos...) = :(SparseDict($(level_ctr(fbr.lvl, protos...))))
+level_ctr(fbr::RepeatData, proto::Union{Nothing, typeof(walk), typeof(extrude)}, protos...) = :(SparseRLE($(level_ctr(fbr.lvl, protos...))))
+level_ctr(fbr::RepeatData, proto::Union{typeof(laminate)}, protos...) = :(SparseDict($(level_ctr(fbr.lvl, protos...))))
 level_ctr(fbr::DenseData, proto, protos...) = :(Dense($(level_ctr(fbr.lvl, protos...))))
 level_ctr(fbr::ExtrudeData, proto, protos...) = :(Dense($(level_ctr(fbr.lvl, protos...)), 1))
 level_ctr(fbr::RepeatData, proto::Union{Nothing, typeof(walk), typeof(extrude)}) = :(Repeat{$(fbr.default), $(fbr.eltype)}())

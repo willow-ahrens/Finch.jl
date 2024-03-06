@@ -144,9 +144,7 @@ function concordize(root, bindings)
             idxs_2 = getfields(a, bindings)
             idxs_3 = intersect(idxs, idxs_2)
             if !issubsequence(idxs_3, idxs_2)
-                res = reorder(get!(get!(needed_swizzles, a, Dict()), idxs_3, alias(gensym(:A))), idxs...)
-                println(res)
-                res
+                reorder(get!(get!(needed_swizzles, a, Dict()), idxs_3, alias(gensym(:A))), idxs...)
             end
         end),
     ])))(root)
@@ -225,7 +223,7 @@ end
 
 FinchInterpreter() = FinchInterpreter(Dict())
 
-using Finch.FinchNotation: block_instance, declare_instance, call_instance, loop_instance, index_instance, variable_instance, tag_instance, access_instance, assign_instance, literal_instance
+using Finch.FinchNotation: block_instance, declare_instance, call_instance, loop_instance, index_instance, variable_instance, tag_instance, access_instance, assign_instance, literal_instance, yieldbind_instance
 
 function finch_pointwise_logic_to_program(scope, ex)
     if @capture ex mapjoin(~op, ~args...)
@@ -263,7 +261,7 @@ function (ctx::FinchInterpreter)(ex)
         for idx in idxs_2
             body = loop_instance(idx, dimless, body)
         end
-        body = block_instance(declare_instance(res, literal_instance(default(tns.val))), body)
+        body = block_instance(declare_instance(res, literal_instance(default(tns.val))), body, yieldbind_instance(res))
         execute(body).res
     elseif @capture ex produces(~args...)
         return map(arg -> ctx.scope[arg], args)
