@@ -275,6 +275,18 @@ function (ctx::FinchInterpreter)(ex)
     end
 end
 
+function normalize(ex)
+    spc = Namespace()
+    scope = Dict()
+    normname(sym) = get!(scope, sym) do
+        if isgensym(sym)
+            sym = gensymname(sym)
+        end
+        freshen(spc, sym)
+    end
+    Rewrite(Postwalk(@rule ~a::isalias => alias(normname(a.name))))(ex)
+end
+
 struct DefaultOptimizer
     ctx
 end
@@ -308,5 +320,6 @@ function compute(args::Tuple, ctx::DefaultOptimizer)
     prgm = push_labels(prgm, bindings)
     prgm = propagate_copy_queries(prgm)
     prgm = format_queries(bindings)(prgm)
+    prgm = normalize(prgm)
     FinchInterpreter(Dict())(prgm)
 end
