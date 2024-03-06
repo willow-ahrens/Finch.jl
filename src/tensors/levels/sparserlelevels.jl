@@ -64,7 +64,7 @@ pattern!(lvl::SparseRLELevel{Ti}) where {Ti} =
     SparseRLELevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.left, lvl.right, pattern!(lvl.buf); merge = getmerge(lvl))
 
 function countstored_level(lvl::SparseRLELevel, pos)
-    countstored_level(lvl.lvl, lvl.left[lvl.ptr[pos + 1]]-1)
+    countstored_level(lvl.lvl, lvl.ptr[pos + 1]-1)
 end
 
 redefault!(lvl::SparseRLELevel{Ti}, init) where {Ti} = 

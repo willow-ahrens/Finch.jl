@@ -86,7 +86,7 @@ function subtable_seek(tbl, subtbl, state, i, j)
 end
 
 function subtable_seek(tbl::DictTable, (p, start, stop), q, i, j)
-    q = Finch.scansearch(tbl.idx, j, q, stop)
+    q = Finch.scansearch(tbl.idx, j, q, stop - 1)
     return (tbl.idx[q], q)
 end
 
@@ -175,7 +175,19 @@ function moveto(lvl::SparseLevel{Ti, Tbl, Lvl}, Tm) where {Ti, Tbl, Lvl}
 end
 
 function countstored_level(lvl::SparseLevel, pos)
-    countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
+    pos == 0 && return countstored_level(lvl.lvl, pos)
+    subtbl = table_query(lvl.tbl, pos)
+    start, stop, state = subtable_init(lvl.tbl, subtbl)
+    if start <= stop
+        i, qos = subtable_get(lvl.tbl, subtbl, state)
+        if i < stop
+            i, state = subtable_seek(lvl.tbl, subtbl, state, start, stop)
+            i, qos = subtable_get(lvl.tbl, subtbl, state)
+        end
+        countstored_level(lvl.lvl, qos)
+    else
+        0
+    end
 end
 
 pattern!(lvl::SparseLevel{Ti}) where {Ti} = 
