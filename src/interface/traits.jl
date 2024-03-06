@@ -130,7 +130,7 @@ Return a storage trait object representing the result of mapping `f` over
 storage traits `args`. Assumes representation is collapsed.
 """
 function map_rep(f, args...)
-    map_rep(f, map(arg -> pad_data_rep(arg, maximum(ndims, args)), args))
+    map_rep_def(f, map(arg -> pad_data_rep(arg, maximum(ndims, args)), args))
 end
 
 pad_data_rep(rep, n) = ndims(rep) < n ? pad_data_rep(ExtrudeData(rep), n) : rep
@@ -176,17 +176,17 @@ map_rep_style(r::DenseData) = MapRepDenseStyle()
 map_rep_style(r::RepeatData) = MapRepRepeatStyle()
 map_rep_style(r::ElementData) = MapRepElementStyle()
 
-map_rep(f, args) = map_rep(mapreduce(map_rep_style, result_style, args), f, args)
+map_rep_def(f, args) = map_rep_def(mapreduce(map_rep_style, result_style, args), f, args)
 
 map_rep_child(r::ExtrudeData) = r.lvl
 map_rep_child(r::SparseData) = r.lvl
 map_rep_child(r::DenseData) = r.lvl
 map_rep_child(r::RepeatData) = r.lvl
 
-map_rep(::MapRepDenseStyle, f, args) = DenseData(map_rep(f, map(map_rep_child, args)))
+map_rep_def(::MapRepDenseStyle, f, args) = DenseData(map_rep_def(f, map(map_rep_child, args)))
 
-function map_rep(::MapRepSparseStyle, f, args)
-    lvl = map_rep(f, map(map_rep_child, args))
+function map_rep_def(::MapRepSparseStyle, f, args)
+    lvl = map_rep_def(f, map(map_rep_child, args))
     if all(arg -> isa(arg, SparseData), args)
         return SparseData(lvl)
     end
@@ -202,8 +202,8 @@ function map_rep(::MapRepSparseStyle, f, args)
     return DenseData(lvl)
 end
 
-function map_rep(::MapRepRepeatStyle, f, args)
-    lvl = map_rep(f, map(map_rep_child, args))
+function map_rep_def(::MapRepRepeatStyle, f, args)
+    lvl = map_rep_def(f, map(map_rep_child, args))
     if all(arg -> isa(arg, RepeatData), args)
         return RepeatData(lvl)
     end
@@ -219,7 +219,7 @@ function map_rep(::MapRepRepeatStyle, f, args)
     return DenseData(lvl)
 end
 
-function map_rep(::MapRepElementStyle, f, args)
+function map_rep_def(::MapRepElementStyle, f, args)
     return ElementData(f(map(default, args)...), combine_eltypes(f, (args...,)))
 end
 
@@ -309,7 +309,7 @@ function permutedims_rep(tns, perm)
     src = extrude_rep(tns, src_dims)
     for mask_dims in diags
         mask = extrude_rep(DenseData(SparseData(ElementData(false, Bool))), mask_dims)
-        src = map_rep(filterop(default(src)), pad_data_rep(mask, ndims(src)), src)
+        src = map_rep_def(filterop(default(src)), pad_data_rep(mask, ndims(src)), src)
     end
     aggregate_rep(initwrite(default(tns)), default(tns), src, setdiff(src_dims, dst_dims))
 end
@@ -329,7 +329,7 @@ rep_construct_hollow(fbr::RepeatData, protos) = Tensor(construct_level_rep(fbr, 
 rep_construct_hollow(fbr::SparseData, protos) = Tensor(construct_level_rep(fbr, protos...))
 rep_construct(fbr, protos) = Tensor(construct_level_rep(fbr, protos...))
 
-construct_level_rep(fbr::SparseData, proto::Union{Nothing, typeof(walk), typeof(extrude)}, protos...) = SparseList(construct_level_rep(fbr.lvl, protos...))
+construct_level_rep(fbr::SparseData, proto::Union{Nothing, typeof(walk), typeof(extrude)}, protos...) = SparseDict(construct_level_rep(fbr.lvl, protos...))
 construct_level_rep(fbr::SparseData, proto::Union{typeof(laminate)}, protos...) = SparseDict(construct_level_rep(fbr.lvl, protos...))
 construct_level_rep(fbr::RepeatData, proto::Union{Nothing, typeof(walk), typeof(extrude)}, protos...) = SparseRLE(construct_level_rep(fbr.lvl, protos...))
 construct_level_rep(fbr::RepeatData, proto::Union{typeof(laminate)}, protos...) = SparseDict(construct_level_rep(fbr.lvl, protos...))
@@ -352,7 +352,7 @@ fiber_ctr_hollow(fbr::SparseData, protos) = :(Tensor($(level_ctr(fbr, protos...)
 fiber_ctr_hollow(fbr::RepeatData, protos) = :(Tensor($(level_ctr(fbr, protos...))))
 fiber_ctr(fbr, protos) = :(Tensor($(level_ctr(fbr, protos...))))
 
-level_ctr(fbr::SparseData, proto::Union{Nothing, typeof(walk), typeof(extrude)}, protos...) = :(SparseList($(level_ctr(fbr.lvl, protos...))))
+level_ctr(fbr::SparseData, proto::Union{Nothing, typeof(walk), typeof(extrude)}, protos...) = :(SparseDict($(level_ctr(fbr.lvl, protos...))))
 level_ctr(fbr::SparseData, proto::Union{typeof(laminate)}, protos...) = :(SparseDict($(level_ctr(fbr.lvl, protos...))))
 level_ctr(fbr::RepeatData, proto::Union{Nothing, typeof(walk), typeof(extrude)}, protos...) = :(SparseRLE($(level_ctr(fbr.lvl, protos...))))
 level_ctr(fbr::RepeatData, proto::Union{typeof(laminate)}, protos...) = :(SparseDict($(level_ctr(fbr.lvl, protos...))))

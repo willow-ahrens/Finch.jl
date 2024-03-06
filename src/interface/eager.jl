@@ -4,6 +4,29 @@ using Base.Broadcast: combine_eltypes
 using Base: broadcasted
 using LinearAlgebra
 
+struct FinchStyle{N} <: BroadcastStyle
+end
+Base.Broadcast.BroadcastStyle(F::Type{<:Tensor}) = FinchStyle{ndims(F)}()
+Base.Broadcast.broadcastable(fbr::Tensor) = fbr
+Base.Broadcast.BroadcastStyle(a::FinchStyle{N}, b::FinchStyle{M}) where {M, N} = FinchStyle{max(M, N)}()
+Base.Broadcast.BroadcastStyle(a::LogicStyle{M}, b::FinchStyle{N}) where {M, N} = LogicStyle{max(M, N)}()
+Base.Broadcast.BroadcastStyle(a::FinchStyle{N}, b::Broadcast.AbstractArrayStyle{M}) where {M, N} = FinchStyle{max(M, N)}()
+
+function Base.materialize!(dest, bc::Broadcasted{<:FinchStyle})
+    return copyto!(dest, bc)
+end
+
+function Base.materialize(bc::Broadcasted{<:FinchStyle})
+    return copy(bc)
+end
+
+function Base.copyto!(out, bc::Broadcasted{FinchStyle{N}}) where {N}
+    compute(copyto!(out, copy(Broadcasted{LogicStyle{N}}(bc.f, bc.args))))
+end
+
+function Base.copy(bc::Broadcasted{FinchStyle{N}}) where {N}
+    return compute(copy(Broadcasted{LogicStyle{N}}(bc.f, bc.args)))
+end
 
 function Base.reduce(op, src::Tensor; kw...)
     bc = broadcasted(identity, src)
@@ -17,6 +40,15 @@ function Base.map(f, src::Tensor, args::Union{Tensor, Base.AbstractArrayOrBroadc
 end
 function Base.map!(dst, f, src::Tensor, args::Union{Tensor, Base.AbstractArrayOrBroadcasted}...)
     copyto!(dst, Base.broadcasted(f, src, args...))
+end
+
+function Base.reduce(op::Function, bc::Broadcasted{FinchStyle{N}}; dims=:, init = initial_value(op, combine_eltypes(bc.f, bc.args))) where {N}
+    res = compute(reduce(op, copy(Broadcasted{LogicStyle{N}}(bc.f, bc.args)); dims=dims, init=init))
+    if dims === Colon()
+        return res[]
+    else
+        return res
+    end
 end
 
 Base.:+(
@@ -53,47 +85,6 @@ Base.:-(x::Tensor, y::Tensor) = map(-, x, y)
 
 Base.:/(x::Tensor, y::Number) = map(/, x, y)
 Base.:/(x::Number, y::Tensor) = map(\, y, x)
-
-function Base.reduce(op::Function, bc::Broadcasted{FinchStyle{N}}; dims=:, init = initial_value(op, combine_eltypes(bc.f, bc.args))) where {N}
-    reduce_helper(Callable{op}(), lift_broadcast(bc), Val(dims), Val(init))
-end
-
-@staged function reduce_helper(op, bc, dims, init)
-    reduce_helper_code(op, bc, dims, init)
-end
-
-function reduce_helper_code(::Type{Callable{op}}, bc::Type{<:Broadcasted{FinchStyle{N}}}, ::Type{Val{dims}}, ::Type{Val{init}}) where {op, dims, init, N}
-    contain(LowerJulia()) do ctx
-        idxs = [freshen(ctx.code, :idx, n) for n = 1:N]
-        rep = collapse_rep(data_rep(bc))
-        dst = freshen(ctx.code, :dst)
-        if dims == Colon()
-            dst_protos = []
-            dst_rep = collapse_rep(reduce_rep(op, init, rep, 1:N))
-            dst_ctr = :(Scalar{$(default(dst_rep)), $(eltype(dst_rep))}())
-            dst_idxs = []
-            res_ex = :($dst[])
-        else
-            dst_rep = collapse_rep(reduce_rep(op, init, rep, dims))
-            dst_protos = [n <= maximum(dims) ? laminate : extrude for n = 1:N]
-            dst_ctr = fiber_ctr(dst_rep, dst_protos)
-            dst_idxs = [n in dims ? 1 : idxs[n] for n in 1:N]
-            res_ex = dst
-        end
-        pw_ex = pointwise_finch_expr(:bc, bc, ctx, idxs)
-        exts = Expr(:block, (:($idx = _) for idx in reverse(idxs))...)
-        quote
-            $dst = $dst_ctr
-            @finch begin
-                $dst .= $(init)
-                $(Expr(:for, exts, quote
-                    $dst[$(dst_idxs...)] <<$op>>= $pw_ex
-                end))
-            end
-            $res_ex
-        end
-    end
-end
 
 const FiberOrBroadcast = Union{<:Tensor, <:Broadcasted{FinchStyle{N}} where N}
 

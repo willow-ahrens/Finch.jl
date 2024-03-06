@@ -198,6 +198,8 @@ function (ctx::SuitableRep)(ex)
         return ctx(ex.arg)
     elseif ex.kind === reformat
         return data_rep(ex.tns.val)
+    elseif ex.kind === immediate
+        return ElementData(ex.val, typeof(ex.val))
     else
         error("Unrecognized expression: $(ex.kind)")
     end
@@ -210,7 +212,8 @@ The finch interpreter is a simple interpreter for finch logic programs. The inte
 only capable of executing programs of the form:
 REORDER = relabel(reorder(tns::isalias, idxs_1...), idxs_2...)
 ACCESS = relabel(reorder(tns::isalias, idxs_1...), idxs_2...) where issubsequence(idxs_1, idxs_2)
-POINTWISE = ACCESS | mapjoin(f, arg::POINTWISE...)
+IMMEDIATE = reorder(relabel(val::isimmediate))
+POINTWISE = ACCESS | mapjoin(f, arg::POINTWISE...) | IMMEDIATE
 MAPREDUCE = POINTWISE | aggregate(op, init, arg::POINTWISE, idxs...)
 TABLE = table(tns, idxs...)
 COMPUTE_QUERY = query(lhs, reformat(tns, arg::(REORDER | MAPREDUCE)))
@@ -233,6 +236,8 @@ function finch_pointwise_logic_to_program(scope, ex)
             idx in idxs_2 ? index_instance(idx.name) : first(axes(arg)[n])
         end
         access_instance(tag_instance(variable_instance(arg.name), scope[arg]), literal_instance(reader), idxs_3...)
+    elseif (@capture ex reorder(relabel(~arg::isimmediate)))
+        literal_instance(arg.val)
     else
         error("Unrecognized logic: $(ex)")
     end
@@ -275,7 +280,7 @@ function (ctx::FinchInterpreter)(ex)
     end
 end
 
-function normalize(ex)
+function normalize_names(ex)
     spc = Namespace()
     scope = Dict()
     normname(sym) = get!(scope, sym) do
@@ -293,9 +298,35 @@ end
 
 default_optimizer = DefaultOptimizer(FinchInterpreter())
 
-compute(arg) = compute(arg, default_optimizer)
-compute(arg, ctx) = compute((arg,), ctx)[1]
-function compute(args::Tuple, ctx::DefaultOptimizer)
+"""
+    lazy(arg)
+
+Create a lazy tensor from an argument. All operations on lazy tensors are
+lazy, and will not be executed until `compute` is called on their result.
+
+for example,
+```julia
+x = lazy(rand(10))
+y = lazy(rand(10))
+z = x + y
+z = z + 1
+z = compute(z)
+```
+will not actually compute `z` until `compute(z)` is called, so the execution of `x + y`
+is fused with the execution of `z + 1`.
+"""
+lazy(arg) = LazyTensor(arg, DefaultAlgebra())
+
+"""
+    compute(args..., ctx=default_optimizer) -> Any
+
+Compute the value of a lazy tensor. The result is the argument itself, or a
+tuple of arguments if multiple arguments are passed.
+"""
+compute(args...; ctx=default_optimizer) = compute(arg, default_optimizer)
+compute(arg; ctx=default_optimizer) = compute_impl((arg,), ctx)[1]
+compute(args::Tuple; ctx=default_optimizer) = compute_impl(args, ctx)
+function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     args = collect(args)
     vars = map(arg -> alias(gensym(:A)), args)
     bodies = map((arg, var) -> query(var, arg.data), args, vars)
@@ -320,6 +351,6 @@ function compute(args::Tuple, ctx::DefaultOptimizer)
     prgm = push_labels(prgm, bindings)
     prgm = propagate_copy_queries(prgm)
     prgm = format_queries(bindings)(prgm)
-    prgm = normalize(prgm)
+    prgm = normalize_names(prgm)
     FinchInterpreter(Dict())(prgm)
 end

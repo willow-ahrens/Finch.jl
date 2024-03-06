@@ -152,15 +152,14 @@ using .FinchLogic
 include("interface/traits.jl")
 include("interface/abstractarrays.jl")
 include("interface/abstractunitranges.jl")
-include("interface/broadcast.jl")
 include("interface/index.jl")
-include("interface/mapreduce.jl")
 include("interface/compare.jl")
 include("interface/copy.jl")
 include("interface/fsparse.jl")
 include("interface/fileio/fileio.jl")
-include("interface/lazy.jl")
 include("interface/compute.jl")
+include("interface/lazy.jl")
+include("interface/eager.jl")
 
 
 @static if !isdefined(Base, :get_extension)
