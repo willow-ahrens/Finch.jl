@@ -51,10 +51,12 @@ function (ctx::ScopeVisitor)(node::FinchNode)
         if node.lhs.kind != variable
             throw(ScopeError("cannot define a non-variable $node.lhs"))
         end
+        #TODO why not just freshen variables?
+        rhs = ctx(node.rhs)
         var = node.lhs
         haskey(ctx.vars, var) && throw(ScopeError("In node $(node) variable $(var) is already bound."))
         ctx.vars[var] = node.rhs
-        define(node.lhs, node.rhs, open_scope(node.body, ctx))
+        define(node.lhs, rhs, open_scope(node.body, ctx))
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
     else

@@ -133,7 +133,9 @@
                         @test Structure(tmp) == Structure(eval(Meta.parse(repr(tmp))))
                     end
                     @test reference_isequal(tmp, arr)
+                    @test Finch.AsArray(tmp) == arr
                     println(io, "tensor: ", repr(tmp))
+                    println(io, "countstored: ", countstored(tmp))
                 end
             end
         end
@@ -189,6 +191,7 @@
                     end
                     @test reference_isequal(tmp, arr)
                     println(io, "tensor: ", repr(tmp))
+                    println(io, "countstored: ", countstored(tmp))
                 end
             end
         end
