@@ -191,7 +191,17 @@ function unresolve(ex)
     ex = Rewrite(Postwalk(unresolve1))(ex)
 end
 unresolve1(x) = x
-unresolve1(f::Function) = methods(f).mt.name
+function unresolve1(f::Function)
+    if nameof(f) != nameof(typeof(f))
+        if parentmodule(f) === Main || parentmodule(f) === Base
+            nameof(f)
+        else
+            Expr(:., parentmodule(f), QuoteNode(nameof(f)))
+        end
+    else
+        f
+    end
+end
 
 """
     striplines(ex)
@@ -212,7 +222,7 @@ striplines(ex) = ex
 
 Run dead code elimination and constant propagation. `ex` is the target Julia expression.
 """
-dataflow(ex) = ex |> striplines |> desugar |> propagate_copies |> mark_dead |> prune_dead |> resugar
+dataflow(ex) = (ex |> striplines |> desugar |> propagate_copies |> mark_dead |> prune_dead |> resugar)
 
 isassign(x) = x in Set([:+=, :*=, :&=, :|=, :(=)])
 incs = Dict(:+= => :+, :-= => :-, :*= => :*, :&= => :&, :|= => :|)
@@ -223,7 +233,12 @@ function ispure(x)
     elseif @capture x :.(~mod, ~fn)
         return ispure(fn)
     elseif x isa Function
-        return ispure(unresolve1(x))
+        x_2 = nameof(x)
+        if x_2 !== x
+            return ispure(x_2)
+        else
+            return false
+        end
     elseif x isa QuoteNode
         return ispure(x.value)
     else
@@ -275,52 +290,34 @@ function resugar(ex)
 end
 
 @kwdef struct PropagateCopies
-    refs = Dict()
-    ids = Dict()
-    vals = Dict()
+    defs = Dict{Symbol, Any}() #A map from lhs to rhs
 end
 
-Base.:(==)(a::PropagateCopies, b::PropagateCopies) = (a.ids == b.ids) && (a.refs == b.refs)
-Base.copy(ctx::PropagateCopies) = PropagateCopies(copy(ctx.refs), copy(ctx.ids), copy(ctx.vals))
+Base.:(==)(a::PropagateCopies, b::PropagateCopies) = (a.defs == b.defs)
+Base.copy(ctx::PropagateCopies) = PropagateCopies(copy(ctx.defs))
 function Base.merge!(ctx::PropagateCopies, ctx_2::PropagateCopies) 
-    merge!(intersect, ctx.refs, ctx_2.refs)
-    merge!(union, ctx.ids, ctx_2.ids)
-    merge!(union, ctx.vals, ctx_2.vals)
+    #This code basically performs intersect!(ctx.defs, ctx_2.defs)
+    for (lhs, rhs) in ctx.defs
+        if !haskey(ctx_2.defs, lhs) || rhs != ctx_2.defs[lhs]
+            delete!(ctx.defs, lhs)
+        end
+    end
 end
 
 function propagate_copies(ex)
-    id = 0
-    ex = Postwalk(@rule(:(=)(~lhs::issymbol, ~rhs) => 
-        Expr(:def, Expr(:(=), lhs, rhs), id += 1)))(ex)
-
     ex = unblock(ex)
 
     ex = PropagateCopies()(ex)
-
-    ex = Postwalk(@rule(:def(:(=)(~lhs::issymbol, ~rhs), ~id) => 
-        Expr(:(=), lhs, rhs)))(ex)
 end
 
 function (ctx::PropagateCopies)(ex)
     if issymbol(ex)
-        if haskey(ctx.ids, ex) && length(ctx.vals[ex]) == 1
-            val = first(ctx.vals[ex])
-            if isexpr(val)
-                return ex
-            elseif issymbol(val)
-                if issubset(ctx.ids[ex], get(ctx.refs, val, Set([])))
-                    return val
-                end
-            else
-                return val
-            end
-        end
-        return ex
+        return get(ctx.defs, ex, ex)
     elseif @capture ex :macrocall(~f, ~ln, ~args...)
         return Expr(:macrocall, f, ln, map(ctx, args)...)
     elseif @capture ex :block(~args...)
         return Expr(:block, map(ctx, args)...)
-    elseif @capture(ex, (~f)(~args...)) && f in (:ref, :call, :., :curly, :string, :kw, :parameters, :tuple)
+    elseif @capture(ex, (~f)(~args...)) && f in (:ref, :call, :., :curly, :string, :kw, :parameters, :tuple, :return)
         return Expr(f, map(ctx, args)...)
     elseif (@capture ex (~f)(~cond, ~body)) && f in [:&&, :||]
         cond = ctx(cond)
@@ -335,28 +332,46 @@ function (ctx::PropagateCopies)(ex)
         tail = ctx(tail)
         merge!(ctx, ctx_2)
         return Expr(:if, cond, body, tail)
-    elseif @capture(ex, :def(:(=)(~lhs::issymbol, ~rhs), ~id))
+    elseif @capture(ex, :(=)(~lhs::issymbol, ~rhs))
         rhs = ctx(rhs)
         rhs == lhs && return rhs
-        ctx.refs[lhs] = Set([])
-        if issymbol(rhs)
-            ctx.refs[rhs] = union(get(ctx.refs, rhs, Set([])), [id])
-            ctx.ids[lhs] = Set([id])
-            ctx.vals[lhs] = Set([rhs])
-        else
-            ctx.ids[lhs] = Set([id])
-            ctx.vals[lhs] = Set([rhs])
+        #clobber old definition if needed
+        if !haskey(ctx.defs, lhs) || ctx.defs[lhs] != rhs
+            #new copy definition, delete any defs this clobbers
+            for (lhs_2, rhs_2) in ctx.defs
+                if rhs_2 === lhs && lhs_2 !== rhs
+                    delete!(ctx.defs, lhs_2)
+                end
+            end
+            #now delete the def itself
+            delete!(ctx.defs, lhs)
+            #now update the old def
+            if !isexpr(rhs)
+                ctx.defs[lhs] = rhs
+            end
         end
-        return Expr(:def, Expr(:(=), lhs, rhs), id)
-    elseif @capture ex :for(:def(:(=)(~i, ~ext), ~id), ~body)
+        return Expr(:(=), lhs, rhs)
+    elseif @capture ex :for(:(=)(~i, ~ext), ~body)
         ext = ctx(ext)
+        #clobber old definition if needed
+        if issymbol(i)
+            for (lhs_2, rhs_2) in ctx.defs
+                if rhs_2 === i
+                    delete!(ctx.defs, lhs_2)
+                end
+            end
+            #now delete the def itself
+            delete!(ctx.defs, i)
+        end
         body_2 = body
         while true
             ctx_2 = copy(ctx)
-            body_2 = ctx(body)
+            ctx_3 = copy(ctx)
+            body_2 = ctx_3(body)
+            merge!(ctx, ctx_3)
             ctx_2 == ctx && break
         end
-        return Expr(:for, Expr(:def, Expr(:(=), i, ext), id), body_2)
+        return Expr(:for, Expr(:(=), i, ext), body_2)
     elseif @capture ex :while(~cond, ~body)
         cond_2 = cond
         body_2 = body
@@ -402,7 +417,7 @@ function (ctx::MarkDead)(ex, res)
             push!(ctx.refs, ex)
         end
         ex
-    elseif !isexpr(ex) || ex.head == :break
+    elseif !isexpr(ex) || ex.head === :break
         ex
     elseif @capture ex :macrocall(~f, ~ln, ~args...)
         return Expr(:macrocall, f, ln, reverse(map((arg)->ctx(arg, res), reverse(args)))...)
@@ -413,8 +428,9 @@ function (ctx::MarkDead)(ex, res)
             res = false
         end
         return Expr(:block, reverse(args_2)...)
-    elseif @capture(ex, (~head)(~args...)) && head in (:ref, :call, :., :curly, :string, :kw, :parameters, :tuple)
-        res |= head == :call && !ispure(args[1])
+    elseif @capture(ex, (~head)(~args...)) && head in (:ref, :call, :., :curly, :string, :kw, :parameters, :tuple, :return)
+        res |= head === :call && !ispure(args[1])
+        res |= head === :return
         return Expr(head, reverse(map((arg)->ctx(arg, res), reverse(args)))...)
     elseif (@capture ex (~f)(~cond, ~body)) && f in [:&&, :||]
         ctx_2 = branch(ctx)
@@ -517,9 +533,9 @@ end
 return the first value of `v` greater than or equal to `x`, within the range
 `lo:hi`. Return `hi+1` if all values are less than `x`.
 """
-Base.@propagate_inbounds function scansearch(v, x, lo::T, hi::T)::T where T<:Integer
-    u = T(1)
-    stop = min(hi, lo + T(32))
+Base.@propagate_inbounds function scansearch(v, x, lo::T1, hi::T2) where {T1<:Integer, T2<:Integer} # TODO types for `lo` and `hi` #406
+    u = T1(1)
+    stop = min(hi, lo + T1(32))
     while lo + u < stop && v[lo] < x
         lo += u
     end

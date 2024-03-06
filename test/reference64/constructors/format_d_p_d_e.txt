@@ -1,0 +1,5 @@
+Tensor(Dense(Separate(Dense(Element(0))))):
+initialized tensor: Tensor(Dense{Int64}(Separate(Dense{Int64}(Element{0, Int64, Int64}(Int64[]), 3), DenseLevel{Int64, ElementLevel{0, Int64, Int64, Vector{Int64}}}[Dense{Int64}(Element{0, Int64, Int64}([0, 1, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([2, 0, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([2, 7, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([0, 1, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([3, 0, 0]), 3), Dense{Int64}(Element{0, Int64, Int64}([3, 0, 9]), 3)]), 6))
+sized tensor: Tensor(Dense{Int64}(Separate(Dense{Int64}(Element{0, Int64, Int64}(Int64[]), 3), DenseLevel{Int64, ElementLevel{0, Int64, Int64, Vector{Int64}}}[]), 6))
+empty tensor: Tensor(Dense{Int64}(Separate(Dense{Int64}(Element{0, Int64, Int64}(Int64[]), 0), DenseLevel{Int64, ElementLevel{0, Int64, Int64, Vector{Int64}}}[]), 0))
+

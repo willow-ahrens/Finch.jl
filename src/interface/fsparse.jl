@@ -22,9 +22,9 @@ julia> V = [1.0; 2.0; 3.0];
 
 julia> fsparse(I, V)
 SparseCOO (0.0) [1:3×1:3×1:3]
-│ │ │ 
+│ │ │
 └─└─└─[1, 1, 1] [2, 2, 2] [3, 3, 3]
-      1.0       2.0       3.0    
+      1.0       2.0       3.0
 """
 fsparse(iV::AbstractVector, args...) = fsparse_parse((), iV, args...)
 fsparse_parse(I, i::AbstractVector, args...) = fsparse_parse((I..., i), args...)
@@ -50,6 +50,7 @@ function fsparse_impl(I::Tuple, V::Vector, shape = map(maximum, I), combine = el
     if updater
         I = map(i -> similar(i, length(C)), I)
         foreach(((p, c),) -> ntuple(n->I[n][p] = c[n], length(I)), enumerate(C))
+        I = reverse(I)
     else
         I = map(copy, I)
     end
@@ -90,13 +91,13 @@ SparseCOO (false) [1:3,1:3]
 ├─├─[3, 1]: true
 ├─├─[2, 2]: true
 ├─├─[3, 2]: true
-├─├─[3, 3]: true  
+├─├─[3, 3]: true
 
 julia> fsprand(Float64, 2, 2, 2, 0.5)
 SparseCOO (0.0) [1:2,1:2,1:2]
 ├─├─├─[2, 2, 1]: 0.6478553157718558
 ├─├─├─[1, 1, 2]: 0.996665291437684
-├─├─├─[2, 1, 2]: 0.7491940599574348 
+├─├─├─[2, 1, 2]: 0.7491940599574348
 ```
 """
 fsprand(args...) = fsprand_parse_rng(args...)
@@ -140,10 +141,10 @@ See also: (`spzeros`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spar
 # Examples
 ```jldoctest
 julia> fspzeros(Bool, 3, 3)
-SparseCOO (false) [1:3,1:3]
-    
+SparseCOO{2} (false) [:,1:3]
+
 julia> fspzeros(Float64, 2, 2, 2)
-SparseCOO (0.0) [1:2,1:2,1:2]
+SparseCOO{3} (0.0) [:,:,1:2]
 ```
 """
 fspzeros(M...) = fspzeros(Float64, M...)

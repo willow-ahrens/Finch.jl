@@ -5,15 +5,15 @@ A subfiber of an element level is a scalar of type `Tv`, initialized to `D`. `D`
 may optionally be given as the first argument.
 
 The data is stored in a vector
-of type `Val` with `eltype(Val) = Tv`. The type `Ti` is the index type used to
+of type `Val` with `eltype(Val) = Tv`. The type `Tp` is the index type used to
 access Val.
 
 ```jldoctest
 julia> Tensor(Dense(Element(0.0)), [1, 2, 3])
 Dense [1:3]
-├─[1]: 1.0
-├─[2]: 2.0
-├─[3]: 3.0
+├─ [1]: 1.0
+├─ [2]: 2.0
+└─ [3]: 3.0
 ```
 """
 struct ElementLevel{D, Tv, Tp, Val} <: AbstractLevel
@@ -34,7 +34,8 @@ ElementLevel{D, Tv, Tp}(val::Val) where {D, Tv, Tp, Val} = ElementLevel{D, Tv, T
 
 Base.summary(::Element{D}) where {D} = "Element($(D))"
 
-similar_level(::ElementLevel{D, Tv, Tp}) where {D, Tv, Tp} = ElementLevel{D, Tv, Tp}()
+similar_level(::ElementLevel{D, Tv, Tp}, fill_value, eltype::Type, ::Vararg) where {D, Tv, Tp} =
+    ElementLevel{fill_value, eltype, Tp}()
 
 postype(::Type{<:ElementLevel{D, Tv, Tp}}) where {D, Tv, Tp} = Tp
 
@@ -48,7 +49,6 @@ redefault!(lvl::ElementLevel{D, Tv, Tp}, init) where {D, Tv, Tp} =
     ElementLevel{init, Tv, Tp}(lvl.val)
 Base.resize!(lvl::ElementLevel) = lvl
 
-
 function Base.show(io::IO, lvl::ElementLevel{D, Tv, Tp, Val}) where {D, Tv, Tp, Val}
     print(io, "Element{")
     show(io, D)
@@ -61,15 +61,8 @@ function Base.show(io::IO, lvl::ElementLevel{D, Tv, Tp, Val}) where {D, Tv, Tp, 
     print(io, ")")
 end 
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:ElementLevel}, depth)
-    p = fbr.pos
-    lvl = fbr.lvl
-    if p > length(fbr.lvl.val)
-        show(io, mime, undef)
-        return
-    end
-    show(io, mime, fbr.lvl.val[p])
-end
+labelled_show(io::IO, fbr::SubFiber{<:ElementLevel}) =
+    print(io, fbr.lvl.val[fbr.pos])
 
 @inline level_ndims(::Type{<:ElementLevel}) = 0
 @inline level_size(::ElementLevel) = ()
@@ -123,16 +116,14 @@ function declare_level!(lvl::VirtualElementLevel, ctx, pos, init)
     lvl
 end
 
-freeze_level!(lvl::VirtualElementLevel, ctx, pos) = lvl
-
-thaw_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, pos) = lvl
-
-function trim_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, pos)
+function freeze_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, pos)
     push!(ctx.code.preamble, quote
         resize!($(lvl.val), $(ctx(pos)))
     end)
     return lvl
 end
+
+thaw_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, pos) = lvl
 
 function assemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
     pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))

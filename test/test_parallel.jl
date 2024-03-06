@@ -1,7 +1,7 @@
 # FIXME: Add a test for failures of concurrent.
 @testset "parallel" begin
     @info "Testing Julia Threads Parallelism and Analysis"
-
+    @assert Threads.nthreads() > 1
     let
         io = IOBuffer()
         A = Tensor(Dense(SparseList(Element(0.0))), [1 2; 3 4])
@@ -25,7 +25,80 @@
             end
         end
 
-        @test check_output("debug_parallel_spmv.txt", String(take!(io)))
+        @test check_output("parallel/parallel_spmv.txt", String(take!(io)))
+    end
+
+    let
+        io = IOBuffer()
+        A = Tensor(Dense(SparseList(Element(0.0))), [1 2; 3 4])
+        x = Tensor(Dense(Element(0.0)), [1, 1])
+        y = Tensor(Dense(Atomic(Element(0.0))))
+        @repl io @finch_code begin
+            y .= 0
+            for j = parallel(_)
+                for i = _
+                    y[j] += x[i] * A[walk(i), j]
+                end
+            end
+        end
+
+        @repl io @finch begin
+            y .= 0
+            for i = parallel(_)
+                for j = _
+                    y[j] += x[i] * A[walk(i), j]
+                end
+            end
+        end
+
+        
+
+        @test check_output("parallel/parallel_spmv_atomics.txt", String(take!(io)))
+    end
+
+    let
+        io = IOBuffer()
+
+        x = Tensor(Dense(Element(Int(0)), 100))
+        y = Tensor(Dense(Atomic(Element(0.0)), 5))
+        @repl io @finch_code begin
+            x .= 0
+            for j = _
+                x[j] = Int((j * j) % 5 + 1)
+            end
+            y .= 0
+            for j = parallel(_)
+                y[x[j]] += 1
+            end
+        end
+        @repl io @finch begin
+            x .= 0
+            for j = _
+                x[j] = Int((j * j) % 5 + 1)
+            end
+            y .= 0
+            for j = parallel(_)
+                y[x[j]] += 1
+            end
+        end
+
+        xp = Tensor(Dense(Element(Int(0)), 100))
+        yp = Tensor(Dense(Element(0.0), 5))
+
+        @repl io @finch begin
+            xp .= 0
+            for j = _
+                xp[j] = Int((j * j) % 5 + 1)
+            end
+            yp .= 0
+            for j = _
+                yp[x[j]] += 1
+            end
+        end
+
+        @test yp == y
+
+        @test check_output("parallel/stress_dense_atomics.txt", String(take!(io)))
     end
 
     let
@@ -103,7 +176,7 @@
         cpu = CPU(Threads.nthreads())
         tmp = moveto(Tensor(Dense(Element(0))), CPULocalMemory(cpu))
 
-        check_output("parallel_blur.jl", @finch_code begin
+        check_output("parallel/parallel_blur.jl", @finch_code begin
             output .= 0
             for y = parallel(_, cpu)
                 tmp .= 0
@@ -125,7 +198,7 @@
         cpu = CPU(Threads.nthreads())
         tmp = moveto(Tensor(Dense(Element(0))), CPULocalMemory(cpu))
 
-        check_output("parallel_blur_sparse.jl", @finch_code begin
+        check_output("parallel/parallel_blur_sparse.jl", @finch_code begin
             output .= 0
             for y = parallel(_, cpu)
                 tmp .= 0

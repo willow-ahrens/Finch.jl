@@ -1,6 +1,11 @@
-
 struct DiagMask end
 
+"""
+    diagmask
+
+A mask for a diagonal tensor, `diagmask[i, j] = i == j`. Note that this
+specializes each column for the cases where `i < j`, `i == j`, and `i > j`.
+"""
 const diagmask = DiagMask()
 
 Base.show(io::IO, ex::DiagMask) = Base.show(io, MIME"text/plain"(), ex)
@@ -37,6 +42,12 @@ end
 
 struct UpTriMask end
 
+"""
+    uptrimask
+
+A mask for an upper triangular tensor, `uptrimask[i, j] = i <= j`. Note that this
+specializes each column for the cases where `i <= j` and `i > j`.
+"""
 const uptrimask = UpTriMask()
 
 Base.show(io::IO, ex::UpTriMask) = Base.show(io, MIME"text/plain"(), ex)
@@ -71,6 +82,12 @@ end
 
 struct LoTriMask end
 
+"""
+    lotrimask
+
+A mask for an upper triangular tensor, `lotrimask[i, j] = i >= j`. Note that this
+specializes each column for the cases where `i < j` and `i >= j`.
+"""
 const lotrimask = LoTriMask()
 
 Base.show(io::IO, ex::LoTriMask) = Base.show(io, MIME"text/plain"(), ex)
@@ -105,6 +122,12 @@ end
 
 struct BandMask end
 
+"""
+    bandmask
+
+A mask for a banded tensor, `bandmask[i, j, k] = j <= i <= k`. Note that this
+specializes each column for the cases where `i < j`, `j <= i <= k`, and `k < i`.
+"""
 const bandmask = BandMask()
 
 Base.show(io::IO, ex::BandMask) = Base.show(io, MIME"text/plain"(), ex)
@@ -211,6 +234,13 @@ function virtualize(ex, ::Type{ChunkMask{Dim}}, ctx) where {Dim}
         virtualize(:($ex.dim), Dim, ctx))
 end
 
+"""
+    chunkmask(b)
+
+A mask for a chunked tensor, `chunkmask[i, j] = b * (j - 1) < i <= b * j`. Note
+that this specializes each column for the cases where `i < b * (j - 1)`, `b * (j
+- 1) < i <= b * j`, and `b * j < i`.
+"""
 function chunkmask end
 
 function Finch.virtual_call(::typeof(chunkmask), ctx, b, dim)
@@ -218,8 +248,6 @@ function Finch.virtual_call(::typeof(chunkmask), ctx, b, dim)
         return VirtualChunkMask(b, dim.val)
     end
 end
-
-virtual_uncall(arr::VirtualChunkMask) = call(chunkmask, arr.b, arr.dim)
 
 FinchNotation.finch_leaf(x::VirtualChunkMask) = virtual(x)
 Finch.virtual_size(arr::VirtualChunkMask, ctx) = (arr.dim, Extent(literal(1), call(cld, measure(arr.dim), arr.b)))

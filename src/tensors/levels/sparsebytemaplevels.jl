@@ -10,22 +10,20 @@ positions in the level.
 ```jldoctest
 julia> Tensor(Dense(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 Dense [:,1:3]
-├─[:,1]: SparseByteMap (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,2]: SparseByteMap (0.0) [1:3]
-├─[:,3]: SparseByteMap (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+├─ [:, 1]: SparseByteMap (0.0) [1:3]
+│  ├─ [1]: 10.0
+│  └─ [2]: 30.0
+├─ [:, 2]: SparseByteMap (0.0) [1:3]
+└─ [:, 3]: SparseByteMap (0.0) [1:3]
+   ├─ [1]: 0.0
+   └─ [3]: 0.0
 
 julia> Tensor(SparseByteMap(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 SparseByteMap (0.0) [:,1:3]
-├─[:,1]: SparseByteMap (0.0) [1:3]
-│ ├─[1]: 10.0
-│ ├─[2]: 30.0
-├─[:,3]: SparseByteMap (0.0) [1:3]
-│ ├─[1]: 20.0
-│ ├─[3]: 40.0
+├─ [:, 1]: SparseByteMap (0.0) [1:3]
+│  ├─ [1]: 10.0
+│  └─ [2]: 30.0
+└─ [:, 3]: SparseByteMap (0.0) [1:3]
 ```
 """
 struct SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl} <: AbstractLevel
@@ -45,8 +43,8 @@ SparseByteMapLevel{Ti}(lvl::Lvl, shape, ptr::Ptr, tbl::Tbl, srt::Srt) where {Ti,
     SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}(lvl, shape, ptr, tbl, srt)
 
 Base.summary(lvl::SparseByteMapLevel) = "SparseByteMap($(summary(lvl.lvl)))"
-similar_level(lvl::SparseByteMapLevel) = SparseByteMap(similar_level(lvl.lvl))
-similar_level(lvl::SparseByteMapLevel, dims...) = SparseByteMap(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
+similar_level(lvl::SparseByteMapLevel, fill_value, eltype::Type, dims...) =
+    SparseByteMap(similar_level(lvl.lvl, fill_value, eltype, dims[1:end-1]...), dims[end])
 
 function postype(::Type{SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}}) where {Ti, Ptr, Tbl, Srt, Lvl}
     return postype(Lvl)
@@ -96,21 +94,16 @@ function Base.show(io::IO, lvl::SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl},) whe
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseByteMapLevel}, depth)
-    p = fbr.pos
+labelled_show(io::IO, fbr::SubFiber{<:SparseByteMapLevel}) =
+    print(io, "SparseByteMap (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+
+function labelled_children(fbr::SubFiber{<:SparseByteMapLevel})
     lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "SparseBytemap(undef...)")
-        return
+    pos = fbr.pos
+    pos + 1 > length(lvl.ptr) && return []
+    map(lvl.ptr[pos]:lvl.ptr[pos + 1] - 1) do qos
+        LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., lvl.srt[qos][2]), SubFiber(lvl.lvl, qos))
     end
-
-    crds = @view(fbr.lvl.srt[fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1])
-
-    print_coord(io, (p, i)) = show(io, i)
-    get_fbr((p, i),) = fbr(i)
-
-    print(io, "SparseByteMap (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
 end
 
 @inline level_ndims(::Type{<:SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}}) where {Ti, Ptr, Tbl, Srt, Lvl} = 1 + level_ndims(Lvl)
@@ -162,7 +155,6 @@ function virtualize(ex, ::Type{SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}}, ctx,
         $ptr = $ex.ptr
         $tbl = $ex.tbl
         $srt = $ex.srt
-        #TODO this line is not strictly correct unless the tensor is trimmed.
         $qos_stop = $qos_fill = length($sym.srt)
     end)
     lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
@@ -257,17 +249,6 @@ function thaw_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, pos)
     return lvl
 end
 
-function trim_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, pos)
-    ros = freshen(ctx.code, :ros)
-    push!(ctx.code.preamble, quote
-        resize!($(lvl.ptr), $(ctx(pos)) + 1)
-        resize!($(lvl.tbl), $(ctx(pos)) * $(ctx(lvl.shape)))
-        resize!($(lvl.srt), $(lvl.qos_fill))
-    end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, call(*, pos, lvl.shape))
-    return lvl
-end
-
 function assemble_level!(lvl::VirtualSparseByteMapLevel, ctx, pos_start, pos_stop)
     Ti = lvl.Ti
     Tp = postype(lvl)
@@ -296,7 +277,10 @@ function freeze_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, po
     Ti = lvl.Ti
     Tp = postype(lvl)
     push!(ctx.code.preamble, quote
-        sort!(view($(lvl.srt), 1:$(lvl.qos_fill)))
+        resize!($(lvl.ptr), $(ctx(pos_stop)) + 1)
+        resize!($(lvl.tbl), $(ctx(pos_stop)) * $(ctx(lvl.shape)))
+        resize!($(lvl.srt), $(lvl.qos_fill))
+        sort!($(lvl.srt))
         $p_prev = $(Tp(0))
         for $r = 1:$(lvl.qos_fill)
             $p = first($(lvl.srt)[$r])
@@ -307,6 +291,7 @@ function freeze_level!(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, po
             $p_prev = $p
         end
         $(lvl.ptr)[$p_prev + 1] = $(lvl.qos_fill) + 1
+        $(lvl.qos_stop) = $(lvl.qos_fill)
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, call(*, pos_stop, lvl.shape))
     return lvl

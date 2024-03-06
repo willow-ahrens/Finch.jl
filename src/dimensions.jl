@@ -46,18 +46,15 @@ end
 end
 
 function virtual_call(::typeof(extent), ctx, start, stop)
-    if isconstant(start) && isconstant(stop)
+    if isfoldable(start) && isfoldable(stop)
         Extent(start, stop)
     end
 end
 function virtual_call(::typeof(realextent), ctx, start, stop)
-    if isconstant(start) && isconstant(stop)
+    if isfoldable(start) && isfoldable(stop)
         ContinuousExtent(start, stop)
     end
 end
-
-virtual_uncall(ext::Extent) = call(extent, ext.start, ext.stop)
-virtual_uncall(ext::ContinuousExtent) = call(realextent, ext.start, ext.stop)
 
 FinchNotation.finch_leaf(x::Extent) = virtual(x)
 FinchNotation.finch_leaf(x::ContinuousExtent) = virtual(x)
@@ -147,8 +144,6 @@ function virtual_call(::typeof(parallel), ctx, ext, device)
     end
 end
 
-virtual_uncall(ext::ParallelDimension) = call(parallel, ext.ext, ext.device)
-
 FinchNotation.finch_leaf(x::ParallelDimension) = virtual(x)
 
 Base.:(==)(a::ParallelDimension, b::ParallelDimension) = a.ext == b.ext
@@ -193,7 +188,6 @@ function shiftdim(ext::FinchNode, body)
     end
 end
 
-
 function scaledim(ext::Extent, scale)
     Extent(
         start = call(*, ext.start, scale),
@@ -232,8 +226,8 @@ virtual_intersect(ctx, a::Dimensionless, b::Dimensionless) = b
 
 function virtual_intersect(ctx, a::Extent, b::Extent)
     Extent(
-        start = @f(max($(getstart(a)), $(getstart(b)))),
-        stop = @f(min($(getstop(a)), $(getstop(b))))
+        start = call(max, getstart(a), getstart(b)),
+        stop = call(min, getstop(a), getstop(b))
     )
 end
 
@@ -244,8 +238,8 @@ virtual_union(ctx, a::Dimensionless, b::Dimensionless) = b
 #virtual_union(ctx, a, b) = virtual_union(ctx, promote(a, b)...)
 function virtual_union(ctx, a::Extent, b::Extent)
     Extent(
-        start = @f(min($(getstart(a)), $(getstart(b)))),
-        stop = @f(max($(getstop(a)), $(getstop(b))))
+        start = call(min, getstart(a), getstart(b)),
+        stop = call(max, getstop(a), getstop(b))
     )
 end
 
@@ -299,14 +293,14 @@ is_continuous_extent(x::ParallelDimension) = is_continuous_extent(x.dim)
 
 function virtual_intersect(ctx, a::ContinuousExtent, b::ContinuousExtent)
     ContinuousExtent(
-        start = @f(max($(getstart(a)), $(getstart(b)))),
-        stop = @f(min($(getstop(a)), $(getstop(b))))
+        start = call(max, getstart(a), getstart(b)),
+        stop = call(min, getstop(a), getstop(b))
     )
 end
 
 function virtual_union(ctx, a::ContinuousExtent, b::ContinuousExtent)
     ContinuousExtent(
-        start = @f(min($(getstart(a)), $(getstart(b)))),
-        stop = @f(max($(getstop(a)), $(getstop(b))))
+        start = call(min, getstart(a), getstart(b)),
+        stop = call(max, getstop(a), getstop(b))
     )
 end

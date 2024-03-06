@@ -23,13 +23,13 @@ a sparse array.
 ```jldoctest setup=:(using Finch)
 julia> a = Tensor(SparseList(Element(0.0)), [0, 1.1, 0, 4.4, 0])
 SparseList (0.0) [1:5]
-├─[2]: 1.1
-├─[4]: 4.4
+├─ [2]: 1.1
+└─ [4]: 4.4
 
-julia> x = Scalar(0.0); @finch for i=_; x[] <<choose(0.0)>>= a[i] end;
+julia> x = Scalar(0.0); @finch for i=_; x[] <<choose(1.1)>>= a[i] end;
 
 julia> x[]
-1.1
+0.0
 ```
 """
 choose(d) = Chooser{d}()
@@ -267,7 +267,7 @@ collapsed(alg, idx, ext, lhs, f::FinchNode, rhs) = collapsed(alg, idx, ext, lhs,
 
 Return collapsed expression with respect to f.
 """
-collapsed(alg, idx, ext, lhs, f::Any, rhs) = isidempotent(alg, f) ? sieve(call(>, measure(ext), 0), assign(lhs, f, rhs)) : nothing # Hmm.. Why do we need sieve for  only idempotent?
+collapsed(alg, idx, ext, lhs, f::Any, rhs) = isidempotent(alg, f) ? sieve(call(>=, measure(ext), get_smallest_measure(ext)), assign(lhs, f, rhs)) : nothing # Hmm.. Why do we need sieve for  only idempotent?
 
 collapsed(alg, idx, ext, lhs, f::typeof(-), rhs) = assign(lhs, f, call(*, measure(ext), rhs))
 collapsed(alg, idx, ext, lhs, f::typeof(*), rhs) = assign(lhs, f, call(^, rhs, measure(ext)))

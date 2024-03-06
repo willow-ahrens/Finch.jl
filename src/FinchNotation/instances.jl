@@ -14,6 +14,7 @@ struct AssignInstance{Lhs, Op, Rhs} <: FinchNodeInstance lhs::Lhs; op::Op; rhs::
 struct CallInstance{Op, Args<:Tuple} <: FinchNodeInstance op::Op; args::Args end
 struct AccessInstance{Tns, Mode, Idxs} <: FinchNodeInstance tns::Tns; mode::Mode; idxs::Idxs end
 struct TagInstance{Var, Bind} <: FinchNodeInstance var::Var; bind::Bind end
+struct YieldBindInstance{Args} <: FinchNodeInstance args::Args end
 
 Base.getproperty(::LiteralInstance{val}, name::Symbol) where {val} = name == :val ? val : error("type LiteralInstance has no field $name")
 Base.getproperty(::IndexInstance{val}, name::Symbol) where {val} = name == :name ? val : error("type IndexInstance has no field $name")
@@ -36,6 +37,7 @@ Base.getproperty(::VariableInstance{val}, name::Symbol) where {val} = name == :n
 @inline call_instance(op, args...) = CallInstance(op, args)
 @inline access_instance(tns, mode, idxs...) = AccessInstance(tns, mode, idxs)
 @inline tag_instance(var, bind) = TagInstance(var, bind)
+@inline yieldbind_instance(args...) = YieldBindInstance(args)
 
 @inline finch_leaf_instance(arg::Type) = literal_instance(arg)
 @inline finch_leaf_instance(arg::Function) = literal_instance(arg)
@@ -63,6 +65,7 @@ instance_ctrs = Dict(
 	access => access_instance,
 	variable => variable_instance,
 	tag => tag_instance,
+	yieldbind => yieldbind_instance,
 )
 
 function SyntaxInterface.similarterm(::Type{FinchNodeInstance}, op::FinchNodeKind, args)
@@ -83,6 +86,7 @@ SyntaxInterface.operation(::CallInstance) = call
 SyntaxInterface.operation(::AccessInstance) = access
 SyntaxInterface.operation(::VariableInstance) = variable
 SyntaxInterface.operation(::TagInstance) = tag
+SyntaxInterface.operation(::YieldBindInstance) = yieldbind
 
 SyntaxInterface.arguments(node::DefineInstance) = [node.lhs, node.rhs, node.body]
 SyntaxInterface.arguments(node::DeclareInstance) = [node.tns, node.init]
@@ -95,6 +99,7 @@ SyntaxInterface.arguments(node::AssignInstance) = [node.lhs, node.op, node.rhs]
 SyntaxInterface.arguments(node::CallInstance) = [node.op, node.args...]
 SyntaxInterface.arguments(node::AccessInstance) = [node.tns, node.mode, node.idxs...]
 SyntaxInterface.arguments(node::TagInstance) = [node.var, node.bind]
+SyntaxInterface.arguments(node::YieldBindInstance) = node.args
 
 Base.show(io::IO, node::LiteralInstance{val}) where {val} = print(io, "literal_instance(", val, ")")
 Base.show(io::IO, node::IndexInstance{name}) where {name} = print(io, "index_instance(", name, ")")

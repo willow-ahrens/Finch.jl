@@ -23,9 +23,12 @@ export fastfinch, safefinch, debugfinch
 
 export Tensor
 export SparseRLE, SparseRLELevel 
-export SingleRLE, SingleRLELevel
+export DenseRLE, DenseRLELevel 
+export SparseInterval, SparseIntervalLevel
+export Sparse, SparseLevel, SparseDict
 export SparseList, SparseListLevel
-export SingleList, SingleListLevel
+export SparsePoint, SparsePointLevel
+export SparseBand, SparseBandLevel
 export SparseHash, SparseHashLevel
 export SparseCOO, SparseCOOLevel
 export SparseTriangle, SparseTriangleLevel
@@ -34,13 +37,15 @@ export SparseVBL, SparseVBLLevel
 export Dense, DenseLevel
 export RepeatRLE, RepeatRLELevel
 export Element, ElementLevel
-export Separation, SeparationLevel
+export Separate, SeparateLevel
+export Atomic, AtomicLevel
 export Pattern, PatternLevel
 export Scalar, SparseScalar, ShortCircuitScalar, SparseShortCircuitScalar
 export walk, gallop, follow, extrude, laminate
 export Tensor, pattern!, dropdefaults, dropdefaults!, redefault!
-export diagmask, lotrimask, uptrimask, bandmask
-export scale, product, offset, permissive, protocolize, swizzle, toeplitz, window
+export diagmask, lotrimask, uptrimask, bandmask, chunkmask
+export scale, products, offset, permissive, protocolize, swizzle, toeplitz, window
+export PlusOneVector
 
 export choose, minby, maxby, overwrite, initwrite, d
 
@@ -62,11 +67,13 @@ end
 
 include("util/util.jl")
 include("util/limits.jl")
+include("util/vectors.jl")
 
 include("environment.jl")
 include("FinchNotation/FinchNotation.jl")
 using .FinchNotation
 using .FinchNotation: and, or, InitWriter
+include("tensors/abstract_tensor.jl")
 include("semantics.jl")
 include("style.jl")
 include("dimensions.jl")
@@ -103,17 +110,21 @@ include("tensors/scalars.jl")
 include("tensors/levels/abstractlevel.jl")
 include("tensors/fibers.jl")
 include("tensors/levels/sparserlelevels.jl")
-include("tensors/levels/singlerlelevels.jl")
+include("tensors/levels/sparseintervallevels.jl")
 include("tensors/levels/sparselistlevels.jl")
-include("tensors/levels/singlelistlevels.jl")
+include("tensors/levels/sparsepointlevels.jl")
 include("tensors/levels/sparsehashlevels.jl")
 include("tensors/levels/sparsecoolevels.jl")
+include("tensors/levels/sparsebandlevels.jl")
+include("tensors/levels/sparselevels.jl")
 include("tensors/levels/sparsebytemaplevels.jl")
 include("tensors/levels/sparsevbllevels.jl")
 include("tensors/levels/denselevels.jl")
+include("tensors/levels/denserlelevels.jl")
 include("tensors/levels/repeatrlelevels.jl")
 include("tensors/levels/elementlevels.jl")
-include("tensors/levels/separationlevel.jl")
+include("tensors/levels/separatelevels.jl")
+include("tensors/levels/atomiclevels.jl")
 include("tensors/levels/patternlevels.jl")
 include("tensors/levels/sparsetrianglelevels.jl")
 include("tensors/masks.jl")

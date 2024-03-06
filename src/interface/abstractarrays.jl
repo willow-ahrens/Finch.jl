@@ -100,6 +100,13 @@ end
 
 AsArray(fbr::Fbr) where {Fbr} = AsArray{eltype(Fbr), ndims(Fbr), Fbr}(fbr)
 
+function Base.summary(io::IO, arr::AsArray)
+    join(io, size(arr), "×")
+    print(io, " ", typeof(arr.fbr))
+    #print(io, " ")
+    #summary(io, arr.fbr)
+end
+
 Base.size(arr::AsArray) = size(arr.fbr)
 Base.getindex(arr::AsArray{T, N}, i::Vararg{Int, N}) where {T, N} = arr.fbr[i...]
 Base.getindex(arr::AsArray{T, N}, i::Vararg{Any, N}) where {T, N} = arr.fbr[i...]

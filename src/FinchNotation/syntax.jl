@@ -13,6 +13,7 @@ const program_nodes = (
     assign = assign,
     call = call,
     access = access,
+    yieldbind = yieldbind,
     reader = literal(reader),
     updater = literal(updater),
     variable = variable,
@@ -34,6 +35,7 @@ const instance_nodes = (
     assign = assign_instance,
     call = call_instance,
     access = access_instance,
+    yieldbind = yieldbind_instance,
     reader = literal_instance(reader),
     updater = literal_instance(updater),
     variable = variable_instance,
@@ -81,8 +83,8 @@ initwrite(z) = InitWriter{z}()
 ```jldoctest setup=:(using Finch)
 julia> a = Tensor(SparseList(Element(0.0)), [0, 1.1, 0, 4.4, 0])
 SparseList (0.0) [1:5]
-├─[2]: 1.1
-├─[4]: 4.4
+├─ [2]: 1.1
+└─ [4]: 4.4
 
 julia> x = Scalar(0.0); @finch for i=_; x[] <<overwrite>>= a[i] end;
 
@@ -92,6 +94,14 @@ julia> x[]
 """
 overwrite(l, r) = r
 
+"""
+    Dimensionless()
+
+A singleton type representing the lack of a dimension.  This is used in place of
+a dimension when we want to avoid dimensionality checks. In the `@finch` macro,
+you can write `Dimensionless()` with an underscore as `for i = _`, allowing
+finch to pick up the loop bounds from the tensors automatically.
+"""
 struct Dimensionless end
 const dimless = Dimensionless()
 function extent end
@@ -99,7 +109,6 @@ function realextent end
 
 struct FinchParserVisitor
     nodes
-    results
 end
 
 function (ctx::FinchParserVisitor)(ex::Symbol)
@@ -112,7 +121,7 @@ function (ctx::FinchParserVisitor)(ex::Symbol)
     end
 end
 (ctx::FinchParserVisitor)(ex::QuoteNode) = ctx.nodes.literal(ex.value)
-(ctx::FinchParserVisitor)(ex) = ctx.nodes.literal(ex)
+(ctx::FinchParserVisitor)(ex) = ctx.nodes.literal(ex) #TODO error on any unrecognized syntax like this.
 
 struct FinchSyntaxError msg end
 
@@ -181,19 +190,21 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         else
             return :($(ctx.nodes.block)($(map(ctx, bodies)...)))
         end
+    elseif @capture ex :return(:tuple(~args...))
+        return :($(ctx.nodes.yieldbind)($(map(ctx, args)...)))
+    elseif @capture ex :return(~arg)
+        return :($(ctx.nodes.yieldbind)($(ctx(arg))))
     elseif @capture ex :ref(~tns, ~idxs...)
         mode = ctx.nodes.reader
         return :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
     elseif (@capture ex (~op)(~lhs, ~rhs)) && haskey(incs, op)
         return ctx(:($lhs << $(incs[op]) >>= $rhs))
     elseif @capture ex :(=)(:ref(~tns, ~idxs...), ~rhs)
-        tns isa Symbol && push!(ctx.results, tns)
         mode = ctx.nodes.updater
         lhs = :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
         op = :($(ctx.nodes.literal)($initwrite))
         return :($(ctx.nodes.assign)($lhs, $op, $(ctx(rhs))))
     elseif @capture ex :>>=(:call(:<<, :ref(~tns, ~idxs...), ~op), ~rhs)
-        tns isa Symbol && push!(ctx.results, tns)
         mode = ctx.nodes.updater
         lhs = :($(ctx.nodes.access)($(ctx(tns)), $mode, $(map(ctx, idxs)...)))
         return :($(ctx.nodes.assign)($lhs, $(ctx(op)), $(ctx(rhs))))
@@ -217,7 +228,7 @@ function (ctx::FinchParserVisitor)(ex::Expr)
         else
             return :($(ctx.nodes.call)($(ctx(op)), $(map(ctx, args)...)))
         end
-    elseif @capture ex :(...)(~arg)
+    elseif @capture ex :(...)(~arg) #TODO error on any unrecognized syntax like this.
         return esc(ex)
     elseif @capture ex :$(~arg)
         return esc(arg)
@@ -228,14 +239,35 @@ function (ctx::FinchParserVisitor)(ex::Expr)
     end
 end
 
-finch_parse_program(ex, results=Set()) = FinchParserVisitor(program_nodes, results)(ex)
-finch_parse_instance(ex, results=Set()) = FinchParserVisitor(instance_nodes, results)(ex)
-
-macro finch_program(ex)
-    return finch_parse_program(ex)
+finch_parse_program(ex) = FinchParserVisitor(program_nodes)(ex)
+finch_parse_instance(ex) = FinchParserVisitor(instance_nodes)(ex)
+function finch_parse_yieldbind(ex)
+    if @capture ex :$(~arg)
+        return nothing
+    elseif @capture ex :macrocall(~args)
+        return nothing
+    elseif @capture ex :return(~arg)
+        if arg isa Symbol
+            return [arg]
+        elseif @capture arg :tuple(~args...)
+            return filter(arg_2 -> arg_2 isa Symbol, collect(args))
+        end
+    elseif ex isa Expr
+        return mapreduce(finch_parse_yieldbind, (x, y) -> something(x, y, Some(nothing)), ex.args, init = nothing)
+    end
 end
 
-macro f(ex)
+function finch_parse_default_yieldbind(ex)
+    if @capture ex :block(~args...)
+        return mapreduce(finch_parse_default_yieldbind, vcat, args)
+    elseif (@capture ex :(.=)(~tns, ~init)) && tns isa Symbol
+        return [tns]
+    else
+        return []
+    end
+end
+
+macro finch_program(ex)
     return finch_parse_program(ex)
 end
 
@@ -382,6 +414,16 @@ function display_statement(io, mime, node::Union{FinchNode, FinchNodeInstance}, 
     elseif operation(node) === thaw
         print(io, " "^indent * "@thaw(")
         display_expression(io, mime, node.tns)
+        print(io, ")")
+    elseif operation(node) === yieldbind
+        print(io, " "^indent * "return (")
+        for arg in node.args[1:end-1]
+            display_expression(io, mime, arg)
+            print(io, ", ")
+        end
+        if !isempty(node.args)
+            display_expression(io, mime, node.args[end])
+        end
         print(io, ")")
     elseif operation(node) === block
         print(io, " "^indent * "begin\n")

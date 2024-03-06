@@ -36,12 +36,21 @@ function virtualize(ex, ::Type{ProtocolizedArray{Protos, Body}}, ctx) where {Pro
     VirtualProtocolizedArray(virtualize(:($ex.body), Body, ctx), protos)
 end
 
+"""
+    protocolize(tns, protos...)
+
+Create a `ProtocolizedArray` that accesses dimension `n` with protocol
+`protos[n]`, if `protos[n]` is not nothing. See the documention for [Iteration
+Protocols](@ref) for more information. For example, to gallop along the inner
+dimension of a matrix `A`, we write `A[gallop(i), j]`, which becomes
+`protocolize(A, gallop, nothing)[i, j]`.
+"""
 protocolize(body, protos...) = ProtocolizedArray(body, protos)
 function virtual_call(::typeof(protocolize), ctx, body, protos...)
     @assert All(isliteral)(protos)
     VirtualProtocolizedArray(body, map(proto -> proto.val, protos))
 end
-virtual_uncall(arr::VirtualProtocolizedArray) = call(protocolize, arr.body, arr.protos...)
+unwrap(ctx, arr::VirtualProtocolizedArray, var) = call(protocolize, unwrap(ctx, arr.body, var), arr.protos...)
 
 function lower(tns::VirtualProtocolizedArray, ctx::AbstractCompiler, ::DefaultStyle)
     error()

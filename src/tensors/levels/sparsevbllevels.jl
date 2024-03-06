@@ -52,8 +52,8 @@ function moveto(lvl::SparseVBLLevel{Ti}, device) where {Ti}
 end
 
 Base.summary(lvl::SparseVBLLevel) = "SparseVBL($(summary(lvl.lvl)))"
-similar_level(lvl::SparseVBLLevel) = SparseVBL(similar_level(lvl.lvl))
-similar_level(lvl::SparseVBLLevel, dim, tail...) = SparseVBL(similar_level(lvl.lvl, tail...), dim)
+similar_level(lvl::SparseVBLLevel, fill_value, eltype::Type, dim, tail...) =
+    SparseVBL(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
 
 pattern!(lvl::SparseVBLLevel{Ti}) where {Ti} = 
     SparseVBLLevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
@@ -90,25 +90,23 @@ function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}) where {T
     print(io, ")")
 end
 
-function display_fiber(io::IO, mime::MIME"text/plain", fbr::SubFiber{<:SparseVBLLevel}, depth)
-    p = fbr.pos
-    crds = []
+labelled_show(io::IO, fbr::SubFiber{<:SparseVBLLevel}) =
+    print(io, "SparseVBL (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+
+function labelled_children(fbr::SubFiber{<:SparseVBLLevel})
     lvl = fbr.lvl
-    if p + 1 > length(lvl.ptr)
-        print(io, "SparseVBL(undef...)")
-        return
+    pos = fbr.pos
+    pos + 1 > length(lvl.ptr) && return []
+    res = []
+    for r = lvl.ptr[pos]:lvl.ptr[pos + 1] - 1
+        i = lvl.idx[r]
+        qos = lvl.ofs[r]
+        l = lvl.ofs[r + 1] - lvl.ofs[r]
+        for qos = lvl.ofs[r]:lvl.ofs[r + 1] - 1
+            push!(res, LabelledTree(cartesian_label([range_label() for _ = 1:ndims(fbr) - 1]..., i - (lvl.ofs[r + 1] - 1) + qos), SubFiber(lvl.lvl, qos)))
+        end
     end
-    for r in fbr.lvl.ptr[p]:fbr.lvl.ptr[p + 1] - 1
-        i = fbr.lvl.idx[r]
-        l = fbr.lvl.ofs[r + 1] - fbr.lvl.ofs[r]
-        append!(crds, (i - l + 1):i)
-    end
-
-    print_coord(io, crd) = show(io, crd)
-    get_fbr(crd) = fbr(crd)
-
-    print(io, "SparseVBL (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", fbr.lvl.shape, "]")
-    display_fiber_data(io, mime, fbr, depth, 1, crds, print_coord, get_fbr)
+    res
 end
 
 @inline level_ndims(::Type{<:SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}}) where {Ti, Ptr, Idx, Ofs, Lvl} = 1 + level_ndims(Lvl)
@@ -225,8 +223,6 @@ end
 function declare_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos, init)
     Tp = postype(lvl)
     Ti = lvl.Ti
-    ros = call(-, call(getindex, :($(lvl.ptr)), call(+, pos, 1)), 1)
-    qos = call(-, call(getindex, :($(lvl.ofs)), call(+, ros, 1)), 1)
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
@@ -240,23 +236,7 @@ function declare_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos, 
             $(lvl.prev_pos) = $(Tp(0))
         end)
     end
-    lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
-    return lvl
-end
-
-function trim_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos)
-    Tp = postype(lvl)
-    Ti = lvl.Ti
-    ros = freshen(ctx.code, :ros)
-    qos = freshen(ctx.code, :qos)
-    push!(ctx.code.preamble, quote
-        resize!($(lvl.ptr), $(ctx(pos)) + 1)
-        $ros = $(lvl.ptr)[end] - $(Tp(1))
-        resize!($(lvl.idx), $ros)
-        resize!($(lvl.ofs), $ros + 1)
-        $qos = $(lvl.ofs)[end] - $(Tp(1))
-    end)
-    lvl.lvl = trim_level!(lvl.lvl, ctx, value(qos, Tp))
+    lvl.lvl = declare_level!(lvl.lvl, ctx, literal(Tp(0)), init)
     return lvl
 end
 
@@ -271,13 +251,19 @@ end
 
 function freeze_level!(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, pos_stop)
     p = freshen(ctx.code, :p)
+    Tp = postype(lvl)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    ros_stop = freshen(ctx.code, :ros_stop)
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
+        resize!($(lvl.ptr), $pos_stop + 1)
         for $p = 2:($pos_stop + 1)
             $(lvl.ptr)[$p] += $(lvl.ptr)[$p - 1]
         end
-        $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
+        $ros_stop = $(lvl.ptr)[$pos_stop + 1] - 1
+        resize!($(lvl.idx), $ros_stop)
+        resize!($(lvl.ofs), $ros_stop + 1)
+        $qos_stop = $(lvl.ofs)[$ros_stop + 1] - $(Tp(1))
     end)
     lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
     return lvl

@@ -1,0 +1,8 @@
+Tensor(Dense(Element(0))) constructors:
+initialized tensor: Tensor(Dense{Int64}(Element{0.0, Float64, Int64}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0]), 6))
+initialized tensor: Tensor(Dense{Int16}(Element{0.0, Float64, Int64}([0.0, 2.0, 2.0, 0.0, 3.0, 3.0]), 6))
+sized tensor: Tensor(Dense{Int64}(Element{0.0, Float64, Int64}(Float64[]), 7))
+sized tensor: Tensor(Dense{Int16}(Element{0.0, Float64, Int64}(Float64[]), 7))
+empty tensor: Tensor(Dense{Int64}(Element{0.0, Float64, Int64}(Float64[]), 0))
+empty tensor: Tensor(Dense{Int16}(Element{0.0, Float64, Int64}(Float64[]), 0))
+

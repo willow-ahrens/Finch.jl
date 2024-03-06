@@ -61,13 +61,14 @@ code is dense):
 ```jldoctest example1; setup=:(using Finch; A = rand(5, 5); s = Scalar(0))
 julia> @finch_code for i=_, j=_ ; s[] += A[i, j] end
 quote
-    s = ex.body.body.lhs.tns.bind
+    s = (ex.bodies[1]).body.body.lhs.tns.bind
     s_val = s.val
-    A = ex.body.body.rhs.tns.bind
+    A = (ex.bodies[1]).body.body.rhs.tns.bind
     sugar_1 = size(A)
     A_mode1_stop = sugar_1[1]
     A_mode2_stop = sugar_1[2]
     @warn "Performance Warning: non-concordant traversal of A[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)"
+    result = nothing
     for i_3 = 1:A_mode1_stop
         for j_3 = 1:A_mode2_stop
             sugar_3 = size(A)
@@ -77,7 +78,9 @@ quote
             s_val = val + s_val
         end
     end
-    (s = (Scalar){0, Int64}(s_val),)
+    result = ()
+    s.val = s_val
+    result
 end
 ```
 

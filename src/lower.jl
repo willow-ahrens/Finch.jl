@@ -1,7 +1,9 @@
 @kwdef mutable struct LowerJulia <: AbstractCompiler
     code = JuliaContext()
+    needs_return = freshen(code, :needs_return)
+    result = freshen(code, :result)
     algebra = DefaultAlgebra()
-    bindings::Dict{Any, Any} = Dict()
+    bindings::Dict{FinchNode, FinchNode} = Dict{FinchNode, FinchNode}()
     mode = fastfinch
     modes::Dict{Any, Any} = Dict()
     scope = Set()
@@ -11,8 +13,8 @@
 end
 
 function contain(f, ctx::LowerJulia; bindings = ctx.bindings, kwargs...)
-    contain(ctx.code, kwargs...) do code_2
-        f(LowerJulia(code_2, ctx.algebra, bindings, ctx.mode, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules))
+    contain(ctx.code; kwargs...) do code_2
+        f(LowerJulia(code_2, ctx.needs_return, ctx.result, ctx.algebra, bindings, ctx.mode, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules))
     end
 end
 
@@ -142,21 +144,26 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
     elseif root.kind === access
         return lower_access(ctx, root, resolve(root.tns, ctx))
     elseif root.kind === call
-        if root.op == literal(and)
-            if isempty(root.args)
-                return true
+        root = simplify(root, ctx)
+        if root.kind === call 
+            if root.op == literal(and)
+                if isempty(root.args)
+                    return true
+                else
+                    reduce((x, y) -> :($x && $y), map(ctx, root.args)) #TODO This could be better. should be able to handle empty case
+                end
+            elseif root.op == literal(or)
+                if isempty(root.args)
+                    return false
+                else
+                    reduce((x, y) -> :($x || $y), map(ctx, root.args))
+                end
             else
-                reduce((x, y) -> :($x && $y), map(ctx, root.args)) #TODO This could be better. should be able to handle empty case
+                :($(ctx(root.op))($(map(ctx, root.args)...)))
             end
-        elseif root.op == literal(or)
-            if isempty(root.args)
-                return false
-            else
-                reduce((x, y) -> :($x || $y), map(ctx, root.args))
-            end
-        else
-            :($(ctx(root.op))($(map(ctx, root.args)...)))
-        end
+         else 
+           return ctx(root) 
+         end
     elseif root.kind === cached
         return ctx(root.arg)
     elseif root.kind === loop
@@ -187,6 +194,18 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         return :($lhs = $rhs)
     elseif root.kind === variable
         return ctx(ctx.bindings[root])
+    elseif root.kind === yieldbind
+        contain(ctx) do ctx_2
+            quote
+                if $(ctx.needs_return)
+                    $(ctx.result) = (; $(map(root.args) do tns
+                        name = getroot(tns).name
+                        Expr(:kw, name, ctx_2(tns))
+                    end...), )
+                    $(ctx.needs_return) = false
+                end
+            end
+        end
     else
         error("unimplemented ($root)")
     end

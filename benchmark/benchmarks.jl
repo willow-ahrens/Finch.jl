@@ -39,7 +39,17 @@ let
 
     SUITE["compile"]["compile_SpGeMM"] = @benchmarkable begin   
         A, B, C = ($A, $B, $C)
-        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance (C .= 0; for i=_, j=_, k=_; C[j, i] += A[k, i] * B[k, j] end)))
+        Finch.execute_code(:ex, typeof(Finch.@finch_program_instance (C .= 0; for i=_, j=_, k=_; C[j, i] += A[k, i] * B[k, j] end; return C)))
+    end
+end
+
+let
+    A = Tensor(SparseList(SparseList(Element(0.0))))
+    c = Scalar(0.0)
+
+    SUITE["compile"]["compile_pretty_triangle"] = @benchmarkable begin   
+        A, c = ($A, $c)
+        @finch_code (c .= 0; for i=_, j=_, k=_; c[] += A[i, j] * A[j, k] * A[i, k] end; return c)
     end
 end
 

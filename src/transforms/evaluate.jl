@@ -18,13 +18,25 @@ function evaluate_partial(root, ctx)
         end
         )
     ]))))(root)
+
     root = Rewrite(Fixpoint(Chain([
         Fixpoint(@rule define(~a::isvariable, ~v::Or(isconstant, isvirtual), ~s) => begin
             ctx.bindings[a] = v
             s
         end),
         Postwalk(Fixpoint(Chain([
-            (@rule call(~f::isliteral, ~a::(All(Or(isvariable, isvirtual, isfoldable)))...) => virtual_call(f.val, ctx, a...)),
+            (@rule call(~f::isliteral, ~a::(All(Or(isvariable, isvirtual, isfoldable)))...) => begin
+               x = virtual_call(f.val, ctx, a...)
+               if x !== nothing
+                   finch_leaf(x)
+               end
+             end),
+            (@rule ~v::isvariable => if haskey(ctx.bindings, v) 
+                val = ctx.bindings[v]
+                if isvariable(val) || isconstant(val)
+                    val
+                end
+            end),
             (@rule call(~f::isliteral, ~a::(All(isliteral))...) => finch_leaf(getval(f)(getval.(a)...))),
             (@rule define(~a::isvariable, ~v::isconstant, ~body) => begin
                 body_2 = Postwalk(@rule a => v)(body)
@@ -33,6 +45,10 @@ function evaluate_partial(root, ctx)
                     define(a, v, body_2)
                 end
             end),
+            (@rule block(~a) => a),
+            (@rule block(~a1..., block(~b...), ~a2...) => block(a1..., b..., a2...)),
+            (@rule block(~a1..., define(~b, ~v, ~c), yieldbind(~d...), ~a2...) => 
+                block(a1..., define(b, v, block(c, yieldbind(d...))), a2...)),
         ])))
     ])))(root)
 end
@@ -45,16 +61,3 @@ function virtual_call(::typeof(default), ctx, a)
     end
 end
 
-
-virtual_uncall(x) = nothing
-
-function unevaluate_partial(root, ctx)
-    tnss = unique(filter(!isnothing, map(node->if @capture(node, access(~A, ~m, ~i...)) getroot(A) end, PostOrderDFS(root))))
-    for tns in tnss
-        if haskey(ctx.bindings, tns)
-            root = define(tns, ctx.bindings[tns], root)
-            delete!(ctx.bindings, tns)
-        end
-    end
-    Rewrite(Fixpoint(Postwalk(@rule ~x::isvirtual => virtual_uncall(x.val))))(root)
-end

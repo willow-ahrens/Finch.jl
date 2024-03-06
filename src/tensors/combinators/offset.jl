@@ -34,11 +34,18 @@ function virtualize(ex, ::Type{OffsetArray{Delta, Body}}, ctx) where {Delta, Bod
     VirtualOffsetArray(virtualize(:($ex.body), Body, ctx), delta)
 end
 
+"""
+    offset(tns, delta...)
+
+Create an `OffsetArray` such that `offset(tns, delta...)[i...] == tns[i .+ delta...]`.
+The dimensions declared by an OffsetArray are shifted, so that `size(offset(tns, delta...)) == size(tns) .+ delta`.
+"""
 offset(body, delta...) = OffsetArray(body, delta)
 function virtual_call(::typeof(offset), ctx, body, delta...)
     VirtualOffsetArray(body, delta)
 end
-virtual_uncall(arr::VirtualOffsetArray) = call(offset, arr.body, arr.delta...)
+
+unwrap(ctx, arr::VirtualOffsetArray, var) = call(offset, unwrap(ctx, arr.body, var), arr.delta...)
 
 lower(tns::VirtualOffsetArray, ctx::AbstractCompiler, ::DefaultStyle) = :(OffsetArray($(ctx(tns.body)), $(ctx(tns.delta))))
 

@@ -15,6 +15,13 @@ end
 struct VirtualToeplitzArray <: AbstractVirtualCombinator
     body
     dim
+    VirtualToeplitzArray(body,dim) = begin
+      if body isa Thunk
+        @assert(false)
+      else
+        new(body,dim)
+      end
+    end
 end
 
 function is_injective(lvl::VirtualToeplitzArray, ctx)
@@ -36,13 +43,22 @@ function virtualize(ex, ::Type{ToeplitzArray{dim, Body}}, ctx) where {dim, Body}
     VirtualToeplitzArray(virtualize(:($ex.body), Body, ctx), dim)
 end
 
+"""
+    toeplitz(tns, dim)
+
+Create a `ToeplitzArray` such that
+```
+    Toeplitz(tns, dim)[i...] == tns[i[1:dim-1]..., i[dim] + i[dim + 1], i[dim + 2:end]...]
+```
+The ToplitzArray can be thought of as adding a dimension that shifts another dimension of the original tensor.
+"""
 toeplitz(body, dim) = ToeplitzArray(body, dim)
 function virtual_call(::typeof(toeplitz), ctx, body, dim)
     @assert isliteral(dim)
     VirtualToeplitzArray(body, dim.val)
 end
 
-virtual_uncall(arr::VirtualToeplitzArray) = call(toeplitz, arr.body, arr.dim)
+unwrap(ctx, arr::VirtualToeplitzArray, var) = call(toeplitz, unwrap(ctx, arr.body, var), arr.dim)
 
 lower(tns::VirtualToeplitzArray, ctx::AbstractCompiler, ::DefaultStyle) = :(ToeplitzArray($(ctx(tns.body)), $(tns.dim)))
 
@@ -63,12 +79,12 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::VirtualToep
     stylize_access(node, ctx, tns.body)
 end
 
-function popdim(node::VirtualToeplitzArray)
-    if length(virtual_size(node)) == node.dim
-        return node.body
-    else
-        return node
-    end
+#Note, popdim is NOT recursive, it should only be called on the node itself to
+#reflect that the child lost a dimension and perhaps update this wrapper
+#accordingly.
+function popdim(node::VirtualToeplitzArray, ctx::AbstractCompiler)
+    @assert length(virtual_size(node, ctx)) >= node.dim + 1
+    return node
 end
 
 truncate(node::VirtualToeplitzArray, ctx, ext, ext_2) = VirtualToeplitzArray(truncate(node.body, ctx, ext, ext_2), node.dim)
@@ -78,7 +94,7 @@ function get_point_body(node::VirtualToeplitzArray, ctx, ext, idx)
     if body_2 === nothing
         return nothing
     else
-        return popdim(VirtualToeplitzArray(body_2, node.dim))
+        return popdim(VirtualToeplitzArray(body_2, node.dim), ctx)
     end
 end
 
@@ -89,7 +105,7 @@ function get_run_body(node::VirtualToeplitzArray, ctx, ext)
     if body_2 === nothing
         return nothing
     else
-        return popdim(VirtualToeplitzArray(body_2, node.dim))
+        return popdim(VirtualToeplitzArray(body_2, node.dim), ctx)
     end
 end
 
@@ -98,7 +114,7 @@ function get_acceptrun_body(node::VirtualToeplitzArray, ctx, ext)
     if body_2 === nothing
         return nothing
     else
-        return popdim(VirtualToeplitzArray(body_2, node.dim))
+        return popdim(VirtualToeplitzArray(body_2, node.dim), ctx)
     end
 end
 

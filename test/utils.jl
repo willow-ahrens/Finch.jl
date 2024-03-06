@@ -33,7 +33,7 @@ isstructequal(a::T, b::T)  where {T <: Pattern} = true
 isstructequal(a::T, b::T) where {T <: Element} =
     a.val == b.val
 
-isstructequal(a::T, b::T) where {T <: Separation} =
+isstructequal(a::T, b::T) where {T <: Separate} =
   all(isstructequal(x,y) for (x,y) in zip(a.val, b.val)) && isstructequal(a.lvl, b.lvl)
 
 isstructequal(a::T, b::T) where {T <: RepeatRLE} =
@@ -46,10 +46,20 @@ isstructequal(a::T, b::T) where {T <: Dense} =
     a.shape == b.shape &&
     isstructequal(a.lvl, b.lvl)
 
+isstructequal(a::T, b::T) where {T <: Atomic} =
+    typeof(a.locks) == typeof(b.locks) &&
+    isstructequal(a.lvl, b.lvl)
+# Temporary hack to deal with SpinLock allocate undefined references.
+
 isstructequal(a::T, b::T) where {T <: SparseList} =
     a.shape == b.shape &&
     a.ptr == b.ptr &&
     a.idx == b.idx &&
+    isstructequal(a.lvl, b.lvl)
+
+isstructequal(a::T, b::T) where {T <: Sparse} =
+    a.shape == b.shape &&
+    a.tbl == b.tbl &&
     isstructequal(a.lvl, b.lvl)
 
 isstructequal(a::T, b::T) where {T <: SparseCOO} =
@@ -66,6 +76,13 @@ isstructequal(a::T, b::T) where {T <: SparseHash} =
     isstructequal(a.lvl, b.lvl)
 
 isstructequal(a::T, b::T) where {T <: SparseVBL} =
+    a.shape == b.shape &&
+    a.ptr == b.ptr &&
+    a.idx == b.idx &&
+    a.ofs == b.ofs &&
+    isstructequal(a.lvl, b.lvl)
+
+isstructequal(a::T, b::T) where {T <: SparseBand} =
     a.shape == b.shape &&
     a.ptr == b.ptr &&
     a.idx == b.idx &&
@@ -90,4 +107,21 @@ isstructequal(a::T, b::T) where {T <: SparseRLE} =
     a.right == b.right &&
     isstructequal(a.lvl, b.lvl)
 
+isstructequal(a::T, b::T) where {T <: DenseRLE} =
+    a.shape == b.shape &&
+    a.ptr == b.ptr &&
+    a.right == b.right &&
+    isstructequal(a.lvl, b.lvl)
 
+isstructequal(a::T, b::T) where {T <: SparseInterval} =
+    a.shape == b.shape &&
+    a.ptr == b.ptr &&
+    a.left == b.left &&
+    a.right == b.right &&
+    isstructequal(a.lvl, b.lvl)
+
+isstructequal(a::T, b::T) where {T <: SparsePoint} =
+    a.shape == b.shape &&
+    a.ptr == b.ptr &&
+    a.idx == b.idx &&
+    isstructequal(a.lvl, b.lvl)
