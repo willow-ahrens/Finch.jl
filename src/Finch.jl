@@ -49,7 +49,7 @@ export PlusOneVector
 
 export lazy, compute
 
-export choose, minby, maxby, overwrite, initwrite, d
+export choose, minby, maxby, overwrite, initwrite, filterop, d
 
 export default, AsArray
 
