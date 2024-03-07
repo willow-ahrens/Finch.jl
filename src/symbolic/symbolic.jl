@@ -55,14 +55,27 @@ julia> x = Tensor(SparseList(Element(0.0)));
 
 julia> c = Tensor(SparseList(Element(false)), [false, false, false, true, false]);
 
-julia> @finch for i=_; x[i] = filterop(0.0)(c[i], a[i]) end;
-ERROR: UndefVarError: `filterop` not defined
+julia> @finch begin
+    x .= 0
+    for i=_
+        x[i] = filterop(0.0)(c[i], a[i])
+    end
+end
+ERROR: DimensionMismatch: mismatched dimension limits (5 != 0)
 Stacktrace:
  [1] macro expansion
-   @ ~/Projects/Finch.jl/src/FinchNotation/syntax.jl:156 [inlined]
+   @ ~/Projects/Finch.jl/src/environment.jl:118 [inlined]
  [2] macro expansion
+   @ ~/Projects/Finch.jl/src/execute.jl:67 [inlined]
+ [3] macro expansion
+   @ ~/Projects/Finch.jl/src/environment.jl:80 [inlined]
+ [4] macro expansion
+   @ ~/Projects/Finch.jl/src/util/util.jl:80 [inlined]
+ [5] execute(ex::Finch.FinchNotation.BlockInstance{Tuple{Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.Dimensionless, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:x}, Tensor{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Updater()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.initwrite}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:filterop}, Finch.FinchNotation.LiteralInstance{Finch.filterop}}, Tuple{Finch.FinchNotation.LiteralInstance{0.0}}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:c}, Tensor{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{false, Bool, Int64, Vector{Bool}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Reader()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:a}, Tensor{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Reader()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}}}}}, Finch.FinchNotation.YieldBindInstance{Tuple{}}}}, opts::@NamedTuple{})
+   @ Finch ~/Projects/Finch.jl/src/util/util.jl:72
+ [6] macro expansion
    @ ~/Projects/Finch.jl/src/execute.jl:176 [inlined]
- [3] top-level scope
+ [7] top-level scope
    @ none:1
 
 julia> x

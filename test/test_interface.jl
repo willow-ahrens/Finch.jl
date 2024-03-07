@@ -157,7 +157,7 @@ using Finch: AsArray
     B = Tensor(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
     C = lazy(A)
     D = lazy(B)
-    E = A + B * 0.5
+    E = (C + D) * 0.5
     F = compute(E)
     @test F == A
 end
