@@ -230,7 +230,7 @@ using Finch.FinchNotation: block_instance, declare_instance, call_instance, loop
 
 function finch_pointwise_logic_to_program(scope, ex)
     if @capture ex mapjoin(~op, ~args...)
-        call_instance(op.val, map(arg -> finch_pointwise_logic_to_program(scope, arg), args)...)
+        call_instance(literal_instance(op.val), map(arg -> finch_pointwise_logic_to_program(scope, arg), args)...)
     elseif (@capture ex reorder(relabel(~arg::isalias, ~idxs_1...), ~idxs_2...)) && issubsequence(idxs_1, idxs_2)
         idxs_3 = map(enumerate(idxs_1)) do (n, idx)
             idx in idxs_2 ? index_instance(idx.name) : first(axes(arg)[n])
@@ -267,6 +267,7 @@ function (ctx::FinchInterpreter)(ex)
             body = loop_instance(idx, dimless, body)
         end
         body = block_instance(declare_instance(res, literal_instance(default(tns.val))), body, yieldbind_instance(res))
+        #display(body) # wow it's really satisfying to uncomment this and type finch ops at the repl.
         execute(body).res
     elseif @capture ex produces(~args...)
         return map(arg -> ctx.scope[arg], args)
