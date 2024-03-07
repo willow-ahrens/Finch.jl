@@ -44,8 +44,20 @@ function Base.copyto!(dst::SwizzleArray{dims}, src::Union{Tensor, AbstractArray}
     swizzle(copyto_helper!(dst.body, tmp), dims...)
 end
 
+"""
+    dropdefaults(src)
+
+Drop the default values from `src` and return a new tensor with the same shape and
+format.
+"""
 dropdefaults(src) = dropdefaults!(similar(src), src)
 
+"""
+    dropdefaults!(dst, src)
+
+Copy only the non- default values from `src` into `dst`. The shape and format of
+`dst` must match `src`
+"""
 dropdefaults!(dst::Tensor, src) = dropdefaults_helper!(dst, src)
 
 @staged function dropdefaults_helper!(dst, src)

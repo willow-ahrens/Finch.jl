@@ -316,7 +316,7 @@ z = compute(z)
 will not actually compute `z` until `compute(z)` is called, so the execution of `x + y`
 is fused with the execution of `z + 1`.
 """
-lazy(arg) = LazyTensor(arg, DefaultAlgebra())
+lazy(arg) = LazyTensor(arg)
 
 """
     compute(args..., ctx=default_optimizer) -> Any

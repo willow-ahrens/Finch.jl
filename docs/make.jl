@@ -29,6 +29,7 @@ makedocs(;
         "Comprehensive Guides" => [
             "Calling Finch" => "guides/calling_finch.md",
             "Tensor Formats" => "guides/tensor_formats.md",
+            "Sparse and Structured Utilities" => "guides/sparse_utils.md",
             "The Finch Language" => "guides/finch_language.md",
             "Dimensionalization" => "guides/dimensionalization.md",
             #"Tensor Lifecycles" => "guides/tensor_lifecycles.md",
@@ -36,6 +37,7 @@ makedocs(;
             "Mask Sugar" => "guides/mask_sugar.md",
             "Iteration Protocols" => "guides/iteration_protocols.md",
             "Custom Operators" => "guides/custom_operators.md",
+            "Array API and Fusion" => "guides/array_fusion.md",
             #"Parallelization and Architectures" => "guides/parallelization.md",
             "FileIO" => "guides/fileio.md",
             "Interoperability" => "guides/interoperability.md",

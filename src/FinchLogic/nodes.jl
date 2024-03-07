@@ -359,7 +359,7 @@ end
 
 function getfields(node::LogicNode, bindings)
     if node.kind == field || node.kind == immediate
-        return ArgumentError("getfields($(node.kind)) is undefined")
+        throw(ArgumentError("getfields($(node.kind)) is undefined"))
     elseif node.kind == alias
         return getfields(bindings[node], bindings)
     elseif node.kind == table
@@ -380,6 +380,6 @@ function getfields(node::LogicNode, bindings)
     elseif node.kind == reformat
         return getfields(node.arg, bindings)
     else
-        return ArgumentError("getfields($(node.kind)) is undefined")
+        throw(ArgumentError("getfields($(node.kind)) is undefined"))
     end
 end

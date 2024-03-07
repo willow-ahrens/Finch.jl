@@ -47,6 +47,8 @@ export diagmask, lotrimask, uptrimask, bandmask, chunkmask
 export scale, products, offset, permissive, protocolize, swizzle, toeplitz, window
 export PlusOneVector
 
+export lazy, compute
+
 export choose, minby, maxby, overwrite, initwrite, d
 
 export default, AsArray

@@ -50,12 +50,17 @@ function Base.mapreduce(f, op, src::LazyTensor, args...; kw...)
 end
 
 function Base.map(f, src::LazyTensor, args...)
-    args = (src, args...)
+    largs = map(LazyTensor, (src, args...))
+    extrude = largs[something(findfirst(arg -> length(arg.extrude) > 0, largs), 1)].extrude
     idxs = [field(gensym(:i)) for _ in src.extrude]
-    ldatas = map(args) do arg
-        larg = LazyTensor(arg)
-        @assert larg.extrude == src.extrude "Logic only supports matching size and number of dimensions"
-        return relabel(larg.data, idxs...)
+    ldatas = map(largs) do larg
+        if larg.extrude == extrude
+            return relabel(larg.data, idxs...)
+        elseif larg.extrude == ()
+            return relabel(larg.data)
+        else
+            throw(DimensionMismatch("Cannot map across arrays with different sizes."))
+        end
     end
     T = combine_eltypes(f, args)
     data = mapjoin(immediate(f), ldatas...)
@@ -296,7 +301,7 @@ end
         if iszero(y.arg) && iszero(y.scale)
             y = Power(y.arg, y.scale, x.exponent)
         else
-            ArgumentError("Cannot accurately add Powers with different exponents")
+            throw(ArgumentError("Cannot accurately add Powers with different exponents"))
         end
     end
     #TODO handle negative exponent

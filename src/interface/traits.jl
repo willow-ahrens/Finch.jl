@@ -309,7 +309,7 @@ function permutedims_rep(tns, perm)
     src = extrude_rep(tns, src_dims)
     for mask_dims in diags
         mask = extrude_rep(DenseData(SparseData(ElementData(false, Bool))), mask_dims)
-        src = map_rep_def(filterop(default(src)), pad_data_rep(mask, ndims(src)), src)
+        src = map_rep(filterop(default(src)), pad_data_rep(mask, ndims(src)), src)
     end
     aggregate_rep(initwrite(default(tns)), default(tns), src, setdiff(src_dims, dst_dims))
 end

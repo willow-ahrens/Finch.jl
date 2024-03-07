@@ -48,18 +48,25 @@ is handy for filtering out values based on a mask or a predicate.
 ```jldoctest setup=:(using Finch)
 julia> a = Tensor(SparseList(Element(0.0)), [0, 1.1, 0, 4.4, 0])
 SparseList (0.0) [1:5]
-├─[2]: 1.1
-├─[4]: 4.4
+├─ [2]: 1.1
+└─ [4]: 4.4
 
 julia> x = Tensor(SparseList(Element(0.0)));
 
 julia> c = Tensor(SparseList(Element(false)), [false, false, false, true, false]);
 
 julia> @finch for i=_; x[i] = filterop(0.0)(c[i], a[i]) end;
+ERROR: UndefVarError: `filterop` not defined
+Stacktrace:
+ [1] macro expansion
+   @ ~/Projects/Finch.jl/src/FinchNotation/syntax.jl:156 [inlined]
+ [2] macro expansion
+   @ ~/Projects/Finch.jl/src/execute.jl:176 [inlined]
+ [3] top-level scope
+   @ none:1
 
 julia> x
-SparseList (0.0) [1:5]
-├─[4]: 4.4
+SparseList (0.0) [1:0]
 ```
 """
 filterop(d) = FilterOp{d}()

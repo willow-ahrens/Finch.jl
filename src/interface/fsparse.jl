@@ -110,7 +110,7 @@ fsprand_parse_type(r, args...) = fsprand_parse_shape(r, (), (), args...)
 
 fsprand_parse_shape(r, T, M, m, args...) = fsprand_parse_shape(r, T, (M..., m), args...)
 fsprand_parse_shape(r, T, M, p::AbstractFloat, rfn=rand) = fsprand_impl(r, T, M, p, rfn)
-fsprand_parse_shape(r, T, M) = ArgumentError("No float p given to fsprand")
+fsprand_parse_shape(r, T, M) = throw(ArgumentError("No float p given to fsprand"))
 
 function fsprand_impl(r::AbstractRNG, T, M::Tuple, p::AbstractFloat, rfn)
     I = fsprand_helper(r, M, p)
