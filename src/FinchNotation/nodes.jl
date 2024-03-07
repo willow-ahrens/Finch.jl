@@ -179,8 +179,7 @@ yieldbind
 """
     FinchNode
 
-A Finch IR node. Finch uses a variant of Concrete Index Notation as an
-intermediate representation. 
+A Finch IR node, used to represent an imperative, physical Finch program.
 
 The FinchNode struct represents many different Finch IR nodes. The nodes are
 differentiated by a `FinchNotation.FinchNodeKind` enum.

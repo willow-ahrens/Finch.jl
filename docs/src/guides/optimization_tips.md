@@ -244,7 +244,7 @@ quote
     A_lvl_idx = A_lvl_2.idx
     A_lvl_2_val = A_lvl_2.lvl.val
     B = (((ex.bodies[1]).bodies[2]).body.body.rhs.args[2]).tns.bind
-    sugar_1 = size(B)
+    sugar_1 = size((((ex.bodies[1]).bodies[2]).body.body.rhs.args[2]).tns.bind)
     B_mode1_stop = sugar_1[1]
     B_mode2_stop = sugar_1[2]
     B_mode1_stop == A_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(B_mode1_stop) != $(A_lvl_2.shape))"))
@@ -253,9 +253,6 @@ quote
     result = nothing
     C_val = 0
     for j_4 = 1:B_mode2_stop
-        sugar_2 = size(B)
-        B_mode1_stop = sugar_2[1]
-        B_mode2_stop = sugar_2[2]
         A_lvl_q = (1 - 1) * A_lvl.shape + j_4
         A_lvl_2_q = A_lvl_ptr[A_lvl_q]
         A_lvl_2_q_stop = A_lvl_ptr[A_lvl_q + 1]
@@ -278,9 +275,6 @@ quote
                         C_val = (Main).f(0.0, val) + C_val
                     end
                     A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
-                    sugar_4 = size(B)
-                    B_mode1_stop = sugar_4[1]
-                    B_mode2_stop = sugar_4[2]
                     val = B[A_lvl_2_i, j_4]
                     C_val += (Main).f(A_lvl_3_val, val)
                     A_lvl_2_q += 1
@@ -293,17 +287,11 @@ quote
                             C_val += (Main).f(0.0, val)
                         end
                         A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
-                        sugar_6 = size(B)
-                        B_mode1_stop = sugar_6[1]
-                        B_mode2_stop = sugar_6[2]
                         val = B[phase_stop_3, j_4]
                         C_val += (Main).f(A_lvl_3_val, val)
                         A_lvl_2_q += 1
                     else
                         for i_10 = i:phase_stop_3
-                            sugar_7 = size(B)
-                            B_mode1_stop = sugar_7[1]
-                            B_mode2_stop = sugar_7[2]
                             val = B[i_10, j_4]
                             C_val += (Main).f(0.0, val)
                         end
@@ -316,9 +304,6 @@ quote
         phase_start_3 = max(1, 1 + A_lvl_2_i1)
         if B_mode1_stop >= phase_start_3
             for i_12 = phase_start_3:B_mode1_stop
-                sugar_8 = size(B)
-                B_mode1_stop = sugar_8[1]
-                B_mode2_stop = sugar_8[2]
                 val = B[i_12, j_4]
                 C_val += (Main).f(0.0, val)
             end

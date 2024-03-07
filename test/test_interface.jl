@@ -1,7 +1,7 @@
 using Finch: AsArray
 
-@testset "base" begin
-    @info "Testing Julia Base Functions"
+@testset "interface" begin
+    @info "Testing Finch Interface"
     A = Tensor(SparseList(Element(0.0)), fsparse([1, 3, 5, 7, 9], [2.0, 3.0, 4.0, 5.0, 6.0], (10,)))
     B = Tensor(SparseList(Element(0.0)), A)
     @test A == B
@@ -152,4 +152,12 @@ using Finch: AsArray
         @test norm(A, 1.5) == norm(A_ref, 1.5)
         @test norm(A, Inf) == norm(A_ref, Inf)
     end
+
+    A = Tensor(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+    B = Tensor(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+    C = lazy(A)
+    D = lazy(B)
+    E = (C + D) * 0.5
+    F = compute(E)
+    @test F == A
 end
