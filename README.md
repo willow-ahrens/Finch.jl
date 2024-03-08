@@ -42,18 +42,18 @@ Finch supports a wide variety of array structure beyond sparsity. Whether you're
 | Conditionals |  `if dist[] < best_dist[]`|
 | Affine Indexing (e.g. Convolution) |  `A[i + j]`|
 
-## Who Should Use Finch.jl?
+## Why Finch.jl?
 
-### Sparse Kernel Developers:
+### Faster Sparse Kernel Development:
 If you often find yourself needing to write sparse code for unusual or specific problems that don't have existing library solutions, Finch.jl is for you. Finch lets you outline a high-level plan and then compiles it into efficient code, making your task much easier.
 
-### Custom Array Enthusiasts:
+### Customizeable Array Formats:
 If you're trying to implement a new array type (e.g. blocked, padded, ragged, etc...), Finch can help. You can use the Finch tensor interface to describe the structure of the array, and Finch will take care of creating a full implementation. This includes functionalities like getindex, map, reduce, and more, all of which will work inside other Finch kernels.
 
-### Users Seeking Convenience for Sparse Operations:
-If you need flexible and convenient support for sparse array operations, Finch.jl may be a good choice. The formats in Finch can adapt to many use cases, and it supports high-level commands like broadcast and reduce. By understanding how Finch generates implementations, you can get decent performance for a variety of problems.
+### Convenient Sparse Operations:
+If you need flexible and convenient support for sparse array operations, Finch.jl may be a good choice. The formats in Finch can adapt to many use cases, and it supports high-level commands like broadcast and reduce, as well as fused execution. By understanding how Finch generates implementations, you can get decent performance for a variety of problems.
 
-Note: Finch is currently optimized for sparse code and does not implement traditional dense optimizations. We are currently adding these features, but if you need dense performance, you may want to look at [LoopVectorization.jl](https://github.com/JuliaSIMD/LoopVectorization.jl) [Tullio.jl](https://github.com/mcabbott/Tullio.jl) or [JuliaGPU](https://github.com/JuliaGPU)
+Note: Finch is currently optimized for sparse code and does not implement traditional dense optimizations. We are currently adding these features, but if you need dense performance, you may want to look at [JuliaGPU](https://github.com/JuliaGPU)
 
 ## Quick Start: Examples
 
