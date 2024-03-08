@@ -68,7 +68,7 @@ end
 
 function short_circuit_cases(tns::VirtualScalar, ctx, op)
     if isannihilator(ctx, virtual_default(tns, ctx), op)
-        [:(tns.val == 0) => Null()]
+        [:(tns.val == 0) => Simplify(Fill(Null()))]
     else
         []
     end
@@ -227,7 +227,7 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualShortCircuitScala
 end
 
 function short_circuit_cases(tns::VirtualShortCircuitScalar, ctx, op)
-    [:(isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Null()]
+    [:(Finch.isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Simplify(Fill(Null()))]
 end
 
 mutable struct SparseShortCircuitScalar{D, Tv}# <: AbstractArray{Tv, 0}
@@ -315,5 +315,5 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualSparseShortCircui
 end
 
 function short_circuit_cases(tns::VirtualSparseShortCircuitScalar, ctx, op)
-    [:(isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Null()]
+    [:(Finch.isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Simplify(Fill(Null()))]
 end
