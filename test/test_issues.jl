@@ -485,7 +485,7 @@ using CIndices
 
     #https://github.com/willow-ahrens/Finch.jl/issues/52
     let
-        s = ShortCircuitScalar(false, true)
+        s = ShortCircuitScalar(false)
         x = Tensor(SparseList(Element(false)), [false, true, true, false])
         y = Tensor(SparseList(Element(false)), [false, true, false, true])
         check_output("issues/short_circuit.jl", @finch_code begin
@@ -506,16 +506,17 @@ using CIndices
 
         A = Tensor(Dense(SparseList(Element(false))), [false true true false; false true false false]')
 
-        t = SparseShortCircuitScalar(false, true)
+        p = ShortCircuitScalar(0)
+        P = Tensor(Dense(Element(0)))
 
         check_output("issues/short_circuit_bfs.jl", @finch_code begin
-            x .= false
+            P .= false
             for j = _
-                t .= false
+                p .= false
                 for i = _
-                    t[] |= A[i, j] && y[i]
+                    p[] <<choose(0)>>= ifelse(A[i, j] && y[i], i, 0)
                 end
-                x[j] = t[]
+                P[j] = p[]
             end
         end)
     end
