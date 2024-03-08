@@ -68,11 +68,11 @@ function get_bounds_rules(alg, shash)
         end),
 
         (@rule call(max, ~a1..., call(min, ~a2...), ~a3..., call(min, ~a4...), ~a5...) => if !(isdisjoint(a2, a4))
-            call(max, a1..., call(min, intersect(a2, a4)..., call(max, call(min, setdiff(a2, a4)...), call(min, setdiff(a4, a2)...)), a3..., a5...))
+            call(max, a1..., call(min, intersect(a2, a4)..., call(max, call(min, setdiff(a2, a4)...), call(min, setdiff(a4, a2)...))), a3..., a5...)
         end),
 
         (@rule call(min, ~a1..., call(max, ~a2...), ~a3..., call(max, ~a4...), ~a5...) => if !(isdisjoint(a2, a4))
-            call(min, a1..., call(max, intersect(a2, a4)..., call(min, call(max, setdiff(a2, a4)...), call(max, setdiff(a4, a2)...)), a3..., a5...))
+            call(min, a1..., call(max, intersect(a2, a4)..., call(min, call(max, setdiff(a2, a4)...), call(max, setdiff(a4, a2)...))), a3..., a5...)
         end),
 
         (@rule call(min, ~a1..., call(max), ~a2...) => call(min, a1..., a2...)),
@@ -106,9 +106,9 @@ function get_bounds_rules(alg, shash)
         #=        
         # this rule is great but too expensive
         (@rule call(max, ~a, call(min, ~b, ~c)) => begin
-            if query(call(<=, a, b), LowerJulia()) # a = low, b = high
+            if prove(call(<=, a, b), LowerJulia()) # a = low, b = high
               call(min, b, call(max, a, c))
-            elseif query(call(<=, a, c), LowerJulia()) # a = low, c = high
+            elseif prove(call(<=, a, c), LowerJulia()) # a = low, c = high
               call(min, c, call(max, b, a))
             end
           end), 
@@ -120,7 +120,7 @@ function get_bounds_rules(alg, shash)
     ]
 end
 
-function query(root::FinchNode, ctx; verbose = false)
+function prove(root::FinchNode, ctx; verbose = false)
     root = Rewrite(Prewalk(Fixpoint(Chain([
         @rule(cached(~a, ~b::isliteral) => b.val),
     ]))))(root)

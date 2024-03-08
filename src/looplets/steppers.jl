@@ -70,9 +70,9 @@ function stepper_body(node::Stepper, ctx, ext, ext_2)
             epilogue = next
         )
         truncated_chunk = truncate(node.chunk, ctx, ext, similar_extent(ext, getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), getunit(ext)))))
-        if query(call(<=, node.stop(ctx, ext), getstop(ext_2)), ctx)
+        if prove(call(<=, node.stop(ctx, ext), getstop(ext_2)), ctx)
             full_chunk
-        elseif query(call(>=, node.stop(ctx, ext), getstop(ext_2)), ctx)
+        elseif prove(call(>=, node.stop(ctx, ext), getstop(ext_2)), ctx)
             truncated_chunk
         else
             Switch([
@@ -100,7 +100,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
         push!(ctx.code.preamble, stepper_seek(node.val, ctx, root.ext))
     end
     
-    if style.count == 1
+    if style.count == 1 && !prove(call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)), ctx)
         body_2 = contain(ctx) do ctx_2
             push!(ctx_2.code.preamble, :($i0 = $i))
             i1 = freshen(ctx_2.code, i)
@@ -132,7 +132,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
                     $i = $(ctx_3(getstop(ext_4))) + $(ctx_3(getunit(ext_4)))
                 end
 
-                truncated_body = if query(call(>=, measure(ext_4), 0), ctx_3)  
+                truncated_body = if prove(call(>=, measure(ext_4), 0), ctx_3)  
                     truncated_body
                 else
                     quote
@@ -168,7 +168,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
             end)
         end
 
-        if query(call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)), ctx)
+        if prove(call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)), ctx)
             body_2
         else
             return quote
@@ -200,7 +200,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
                 $i = $(ctx_2(getstop(ext_4))) + $(ctx_2(getunit(ext_4)))
             end
 
-            if query(call(>=, measure(ext_4), 0), ctx_2)  
+            if prove(call(>=, measure(ext_4), 0), ctx_2)  
                 body
             else
                 quote
@@ -227,7 +227,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
             end)
         end
 
-        if query(call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)), ctx)
+        if prove(call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)), ctx)
             body_2
         else
             return quote

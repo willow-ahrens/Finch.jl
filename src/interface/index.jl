@@ -34,7 +34,7 @@ Base.getindex(arr::Tensor, inds...) = getindex_helper(arr, to_indices(arr, inds)
     N = ndims(arr)
 
     inds_ndims = ndims.(inds)
-    if sum(inds_ndims) == 0
+    if sum(inds_ndims, init=0) == 0
         return quote
             scl = Scalar($(default(arr)))
             @finch scl[] = arr[inds...]

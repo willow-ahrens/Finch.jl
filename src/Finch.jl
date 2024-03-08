@@ -24,10 +24,10 @@ export fastfinch, safefinch, debugfinch
 export Tensor
 export SparseRLE, SparseRLELevel 
 export DenseRLE, DenseRLELevel 
-export SingleRLE, SingleRLELevel
+export SparseInterval, SparseIntervalLevel
 export Sparse, SparseLevel, SparseDict
 export SparseList, SparseListLevel
-export SingleList, SingleListLevel
+export SparsePoint, SparsePointLevel
 export SparseBand, SparseBandLevel
 export SparseHash, SparseHashLevel
 export SparseCOO, SparseCOOLevel
@@ -47,7 +47,9 @@ export diagmask, lotrimask, uptrimask, bandmask, chunkmask
 export scale, products, offset, permissive, protocolize, swizzle, toeplitz, window
 export PlusOneVector
 
-export choose, minby, maxby, overwrite, initwrite, d
+export lazy, compute
+
+export choose, minby, maxby, overwrite, initwrite, filterop, d
 
 export default, AsArray
 
@@ -110,9 +112,9 @@ include("tensors/scalars.jl")
 include("tensors/levels/abstractlevel.jl")
 include("tensors/fibers.jl")
 include("tensors/levels/sparserlelevels.jl")
-include("tensors/levels/singlerlelevels.jl")
+include("tensors/levels/sparseintervallevels.jl")
 include("tensors/levels/sparselistlevels.jl")
-include("tensors/levels/singlelistlevels.jl")
+include("tensors/levels/sparsepointlevels.jl")
 include("tensors/levels/sparsehashlevels.jl")
 include("tensors/levels/sparsecoolevels.jl")
 include("tensors/levels/sparsebandlevels.jl")
@@ -140,8 +142,6 @@ include("tensors/combinators/swizzle.jl")
 include("tensors/combinators/scale.jl")
 include("tensors/combinators/product.jl")
 
-include("traits.jl")
-
 export fsparse, fsparse!, fsprand, fspzeros, ffindnz, fread, fwrite, countstored
 
 export bspread, bspwrite
@@ -149,15 +149,20 @@ export ftnsread, ftnswrite, fttread, fttwrite
 
 export moveto, postype
 
+include("FinchLogic/FinchLogic.jl")
+using .FinchLogic
+include("interface/traits.jl")
 include("interface/abstractarrays.jl")
 include("interface/abstractunitranges.jl")
-include("interface/broadcast.jl")
 include("interface/index.jl")
-include("interface/mapreduce.jl")
 include("interface/compare.jl")
 include("interface/copy.jl")
 include("interface/fsparse.jl")
 include("interface/fileio/fileio.jl")
+include("interface/compute.jl")
+include("interface/lazy.jl")
+include("interface/eager.jl")
+
 
 @static if !isdefined(Base, :get_extension)
     function __init__()

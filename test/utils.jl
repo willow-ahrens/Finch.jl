@@ -113,14 +113,14 @@ isstructequal(a::T, b::T) where {T <: DenseRLE} =
     a.right == b.right &&
     isstructequal(a.lvl, b.lvl)
 
-isstructequal(a::T, b::T) where {T <: SingleRLE} =
+isstructequal(a::T, b::T) where {T <: SparseInterval} =
     a.shape == b.shape &&
     a.ptr == b.ptr &&
     a.left == b.left &&
     a.right == b.right &&
     isstructequal(a.lvl, b.lvl)
 
-isstructequal(a::T, b::T) where {T <: SingleList} =
+isstructequal(a::T, b::T) where {T <: SparsePoint} =
     a.shape == b.shape &&
     a.ptr == b.ptr &&
     a.idx == b.idx &&

@@ -31,7 +31,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::SpikeStyle)
             @rule access(~a::isvirtual, ~i...) => access(get_spike_body(a.val, ctx, root.ext, body_ext), ~i...)
         ))(root.body)
         @assert isvirtual(root.ext)
-        if query(call(<=, measure(body_ext), 0), ctx) 
+        if prove(call(<=, measure(body_ext), 0), ctx) 
             body_expr = quote end
         else
             #TODO check body nonempty
@@ -68,9 +68,9 @@ get_spike_tail(node, ctx, ext, ext_2) = node
 get_spike_tail(node::Spike, ctx, ext, ext_2) = Run(node.tail)
 
 function truncate(node::Spike, ctx, ext, ext_2)
-    if query(call(>=, call(-, getstop(ext), getunit(ext)), getstop(ext_2)), ctx)
+    if prove(call(>=, call(-, getstop(ext), getunit(ext)), getstop(ext_2)), ctx)
         Run(node.body)
-    elseif query(call(==, getstop(ext), getstop(ext_2)), ctx)
+    elseif prove(call(==, getstop(ext), getstop(ext_2)), ctx)
         node
     else
         return Switch([

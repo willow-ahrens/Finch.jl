@@ -12,6 +12,7 @@ function bfs(edges, source=5)
     F = Tensor(SparseByteMap(Pattern()), n)
     _F = Tensor(SparseByteMap(Pattern()), n)
     @finch F[source] = true
+    F_nnz = 1
 
     V = Tensor(Dense(Element(false)), n)
     @finch V[source] = true
@@ -19,7 +20,7 @@ function bfs(edges, source=5)
     P = Tensor(Dense(Element(0)), n)
     @finch P[source] = source
 
-    while countstored(F) > 0
+    while F_nnz > 0
         @finch begin
             _F .= false
             for j=_, k=_
@@ -29,8 +30,17 @@ function bfs(edges, source=5)
                 end
             end
         end
-        @finch for k=_; V[k] |= _F[k] end
+        c = Scalar(0)
+        @finch begin
+            for k=_
+                let _f = _F[k]
+                    V[k] |= _f
+                    c[] += _f
+                end
+            end
+        end
         (F, _F) = (_F, F)
+        F_nnz = c[]
     end
     return P
 end

@@ -64,16 +64,13 @@ quote
     s = (ex.bodies[1]).body.body.lhs.tns.bind
     s_val = s.val
     A = (ex.bodies[1]).body.body.rhs.tns.bind
-    sugar_1 = size(A)
+    sugar_1 = size((ex.bodies[1]).body.body.rhs.tns.bind)
     A_mode1_stop = sugar_1[1]
     A_mode2_stop = sugar_1[2]
     @warn "Performance Warning: non-concordant traversal of A[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)"
     result = nothing
     for i_3 = 1:A_mode1_stop
         for j_3 = 1:A_mode2_stop
-            sugar_3 = size(A)
-            A_mode1_stop = sugar_3[1]
-            A_mode2_stop = sugar_3[2]
             val = A[i_3, j_3]
             s_val = val + s_val
         end

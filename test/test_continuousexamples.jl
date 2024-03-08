@@ -39,7 +39,7 @@
         point_ptr_x = [1,length(point_x)+1]
         point_ptr_y = collect(Int64, 1:length(point_y)+1)
         point_ptr_id = collect(Int64, 1:length(point_y)+1)
-        points = Tensor(SparseList{Float64}(SparseList{Float64}(SingleList{Int64}(Pattern(),
+        points = Tensor(SparseList{Float64}(SparseList{Float64}(SparsePoint{Int64}(Pattern(),
                                                               shape_id,
                                                               point_ptr_id,
                                                               point_id),
@@ -57,7 +57,7 @@
         box_y_stop = [query[1][4]]
         box_ptr_x = [1,2]
         box_ptr_y = [1,2]
-        box = Tensor(SingleRLE{Float64}(SingleRLE{Float64}(Pattern(),
+        box = Tensor(SparseInterval{Float64}(SparseInterval{Float64}(Pattern(),
                                           shape,
                                           box_ptr_y,
                                           box_y_start,
@@ -99,7 +99,7 @@
             box_y_stop = [query[i][4]]
             box_ptr_x = [1,2]
             box_ptr_y = [1,2]
-            box = Tensor(SingleRLE{Float64}(SingleRLE{Float64}(Pattern(),
+            box = Tensor(SparseInterval{Float64}(SparseInterval{Float64}(Pattern(),
                                        shape,
                                        box_ptr_y,
                                        box_y_start,
@@ -143,7 +143,7 @@
     @testset "Trilinear Interpolation on Sampled Ray" begin
         output = Tensor(SparseList(Dense(Element(Float32(0.0)))), 16, 100)
         grid = Tensor(SparseRLE{Float64}(SparseRLE{Float64}(SparseRLE{Float64}(Dense(Element(0))))), 16,16,16,27)
-        timeray = Tensor(SingleRLE{Int64}(Pattern()), 100)
+        timeray = Tensor(SparseInterval{Int64}(Pattern()), 100)
         @finch begin
             grid .= 0
             for i=realextent(4.0,12.0),j=realextent(4.0,12.0),k=realextent(4.0,12.0)

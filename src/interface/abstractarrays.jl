@@ -2,14 +2,11 @@
     ex
     eltype
     ndims
+    shape
 end
 
 function virtual_size(arr::VirtualAbstractArray, ctx::AbstractCompiler)
-    dims = map(i -> Symbol(arr.ex, :_mode, i, :_stop), 1:arr.ndims)
-    push!(ctx.code.preamble, quote
-        ($(dims...),) = size($(arr.ex))
-    end)
-    return map(i->Extent(literal(1), value(dims[i], Int)), 1:arr.ndims)
+    return arr.shape
 end
 
 function lower(arr::VirtualAbstractArray, ctx::AbstractCompiler,  ::DefaultStyle)
@@ -18,8 +15,12 @@ end
 
 function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=:tns) where {T, N}
     sym = freshen(ctx, tag)
-    push!(ctx.preamble, :($sym = $ex))
-    VirtualAbstractArray(sym, T, N)
+    dims = map(i -> Symbol(sym, :_mode, i, :_stop), 1:N)
+    push!(ctx.preamble, quote
+        $sym = $ex
+        ($(dims...),) = size($ex)
+    end)
+    VirtualAbstractArray(sym, T, N, map(i->Extent(literal(1), value(dims[i], Int)), 1:N))
 end
 
 function declare!(arr::VirtualAbstractArray, ctx::AbstractCompiler, init)
