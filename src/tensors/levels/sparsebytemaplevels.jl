@@ -257,14 +257,16 @@ function assemble_level!(lvl::VirtualSparseByteMapLevel, ctx, pos_start, pos_sto
     q_start = freshen(ctx.code, lvl.ex, :q_start)
     q_stop = freshen(ctx.code, lvl.ex, :q_stop)
     q = freshen(ctx.code, lvl.ex, :q)
+    old = freshen(ctx.code, lvl.ex, :old)
 
     quote
         $q_start = ($(ctx(pos_start)) - $(Tp(1))) * $(ctx(lvl.shape)) + $(Tp(1))
         $q_stop = $(ctx(pos_stop)) * $(ctx(lvl.shape))
         Finch.resize_if_smaller!($(lvl.ptr), $pos_stop + 1)
         Finch.fill_range!($(lvl.ptr), 0, $pos_start + 1, $pos_stop + 1)
+        $old = length($(lvl.tbl))
         Finch.resize_if_smaller!($(lvl.tbl), $q_stop)
-        Finch.fill_range!($(lvl.tbl), false, $q_start, $q_stop)
+        Finch.fill_range!($(lvl.tbl), false, $old + 1, $q_stop)
         $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(q_start, Tp), value(q_stop, Tp)), ctx))
     end
 end
@@ -410,13 +412,13 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, mode:
     tag = lvl.ex
     my_q = freshen(ctx.code, tag, :_q)
     q = pos
-
+    Ti = lvl.Ti
 
     Furlable(
         body = (ctx, ext) -> Lookup(
             body = (ctx, i) -> Thunk(
                 preamble = quote
-                    $my_q = $(ctx(q)) * $(ctx(lvl.shape)) + $(ctx(i))
+                    $my_q = ($(ctx(q)) - $(Ti(1))) * $(ctx(lvl.shape)) + $(ctx(i))
                 end,
                 body = (ctx) -> Switch([
                     value(:($(lvl.tbl)[$my_q])) => instantiate(VirtualSubFiber(lvl.lvl, pos), ctx, mode, subprotos),
