@@ -35,7 +35,7 @@ begin
             x_lvl_q = Finch.scansearch(x_lvl_idx, 1, x_lvl_q, x_lvl_q_stop - 1)
         end
         while i <= phase_stop
-            if isannihilator(Finch.DefaultAlgebra(), |, s_val)
+            if Finch.isannihilator(Finch.DefaultAlgebra(), |, s_val)
                 break
             end
             y_lvl_i = y_lvl_idx[y_lvl_q]
