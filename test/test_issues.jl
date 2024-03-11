@@ -692,4 +692,14 @@ using CIndices
             end
         end)
     end
+
+    let
+        A_hash = Tensor(SparseHash{1}(SparseHash{1}(Element(0.0))))
+        copyto!(A_hash, sprand(10, 10, 1))
+        B_hash = Tensor(SparseHash{1}(SparseHash{1}(Element(0.0))))
+        copyto!(B_hash, sprand(10, 10, 1))
+        output = Scalar(0)
+        @finch (output .= 0; for i=_, j=_ output[] += A_hash[j,i] * B_hash[follow(j), i] end)
+    end
+
 end
