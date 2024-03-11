@@ -153,11 +153,13 @@ using Finch: AsArray
         @test norm(A, Inf) == norm(A_ref, Inf)
     end
 
-    A = Tensor(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
-    B = Tensor(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
-    C = lazy(A)
-    D = lazy(B)
-    E = (C + D) * 0.5
-    F = compute(E)
-    @test F == A
+    let
+        A = Tensor(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        B = Tensor(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        C = lazy(A)
+        D = lazy(B)
+        E = (C + D) * 0.5
+        F = compute(E)
+        @test F == A
+    end
 end

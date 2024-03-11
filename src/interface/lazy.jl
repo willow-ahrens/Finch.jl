@@ -29,6 +29,7 @@ function LazyTensor{T}(arr::Base.AbstractArrayOrBroadcasted) where {T}
     LazyTensor{eltype(arr), ndims(arr)}(tns, extrude)
 end
 LazyTensor(arr::Tensor) = LazyTensor{eltype(arr)}(arr)
+LazyTensor(swizzle_arr::SwizzleArray{dims, <:Tensor}) where {dims} = permutedims(LazyTensor(swizzle_arr.body), dims)
 function LazyTensor{T}(arr::Tensor) where {T}
     name = alias(gensym(:A))
     idxs = [field(gensym(:i)) for _ in 1:ndims(arr)]
@@ -99,11 +100,11 @@ function Base.reduce(op, arg::LazyTensor{T, N}; dims=:, init = initial_value(op,
     LazyTensor{S}(identify(data), extrude)
 end
 
-struct LogicStyle{N} <: BroadcastStyle end
-Base.Broadcast.BroadcastStyle(F::Type{<:LazyTensor{T, N}}) where {T, N} = LogicStyle{N}()
+struct LazyStyle{N} <: BroadcastStyle end
+Base.Broadcast.BroadcastStyle(F::Type{<:LazyTensor{T, N}}) where {T, N} = LazyStyle{N}()
 Base.Broadcast.broadcastable(tns::LazyTensor) = tns
-Base.Broadcast.BroadcastStyle(a::LogicStyle{M}, b::LogicStyle{N}) where {M, N} = LogicStyle{max(M, N)}()
-Base.Broadcast.BroadcastStyle(a::LogicStyle{M}, b::Broadcast.AbstractArrayStyle{N}) where {M, N} = LogicStyle{max(M, N)}()
+Base.Broadcast.BroadcastStyle(a::LazyStyle{M}, b::LazyStyle{N}) where {M, N} = LazyStyle{max(M, N)}()
+Base.Broadcast.BroadcastStyle(a::LazyStyle{M}, b::Broadcast.AbstractArrayStyle{N}) where {M, N} = LazyStyle{max(M, N)}()
 
 function broadcast_to_logic(bc::Broadcast.Broadcasted)
     broadcasted(bc.f, map(broadcast_to_logic, bc.args)...)
@@ -134,17 +135,17 @@ function broadcast_to_extrude(tns::LazyTensor, n)
     get(tns.extrude, n, false)
 end
 
-function Base.materialize!(dest, bc::Broadcasted{<:LogicStyle})
+function Base.materialize!(dest, bc::Broadcasted{<:LazyStyle})
     return copyto!(dest, bc)
 end
 
-function Base.materialize(bc::Broadcasted{<:LogicStyle})
+function Base.materialize(bc::Broadcasted{<:LazyStyle})
     return copy(bc)
 end
 
-Base.copyto!(out, bc::Broadcasted{LogicStyle{N}}) where {N} = copyto!(out, copy(bc))
+Base.copyto!(out, bc::Broadcasted{LazyStyle{N}}) where {N} = copyto!(out, copy(bc))
 
-function Base.copy(bc::Broadcasted{LogicStyle{N}}) where {N}
+function Base.copy(bc::Broadcasted{LazyStyle{N}}) where {N}
     bc_lgc = broadcast_to_logic(bc)
     data = broadcast_to_query(bc_lgc, [field(gensym(:i)) for _ in 1:N])
     extrude = ntuple(n -> broadcast_to_extrude(bc_lgc, n), N)
@@ -159,8 +160,8 @@ function Base.copyto!(dst::AbstractArray, src::LazyTensor{T, N}) where {T, N}
     return LazyTensor{T, N}(reformat(immediate(dst), src.data), src.extrude)
 end
 
-Base.permutedims(arg::LazyTensor{T, 2}) where {T} = permutedims(arg, [2, 1])
-function Base.permutedims(arg::LazyTensor{T, N}, perm) where {T, N}
+permutedims(arg::LazyTensor{T, 2}) where {T} = permutedims(arg, [2, 1])
+function permutedims(arg::LazyTensor{T, N}, perm) where {T, N}
     length(perm) == N || throw(ArgumentError("permutedims given wrong number of dimensions"))
     isperm(perm) || throw(ArgumentError("permutedims given invalid permutation"))
     perm = collect(perm)
