@@ -22,11 +22,6 @@ function Base.copyto!(dst::Array, src::Tensor)
     return copyto_helper!(dst, src)
 end
 
-function permutedims(src::Tensor, perm)
-    dst = similar(src)
-    copyto!(dst, swizzle(src, perm...))
-end
-
 function Base.copyto!(dst::Union{Tensor, AbstractArray}, src::SwizzleArray{dims}) where {dims}
     ret = copyto!(swizzle(dst, invperm(dims)...), src.body)
     return ret.body

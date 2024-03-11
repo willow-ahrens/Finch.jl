@@ -153,6 +153,8 @@ struct MapRepDenseStyle end
 struct MapRepRepeatStyle end
 struct MapRepElementStyle end
 
+combine_style(a::MapRepExtrudeStyle, b::MapRepExtrudeStyle) = a
+
 combine_style(a::MapRepSparseStyle, b::MapRepExtrudeStyle) = a
 combine_style(a::MapRepSparseStyle, b::MapRepSparseStyle) = a
 combine_style(a::MapRepSparseStyle, b::MapRepDenseStyle) = a
