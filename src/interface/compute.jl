@@ -188,8 +188,12 @@ function (ctx::SuitableRep)(ex)
     elseif ex.kind === mapjoin
         ##Assumes concordant mapjoin arguments, probably okay
         output_idxs = getfields(ex, ctx.bindings)
-        args_idxs = map(getfields, ex.args, ctx.bindings)
-        args_reps = map(ctx, ex.args)
+        args_idxs = []
+        args_reps = []
+        for arg in ex.args
+            push!(args_idxs, getfields(arg, ctx.bindings))
+            push!(args_reps, ctx(arg))
+        end
         idx_to_args_styles = Dict(i => [] for i in union(args_idxs...))
         for i in eachindex(ex.args)
             idxs = args_idxs[i]
