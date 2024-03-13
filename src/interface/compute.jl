@@ -301,7 +301,7 @@ function (ctx::FinchInterpreter)(ex)
             body = loop_instance(idx, dimless, body)
         end
         body = block_instance(declare_instance(res, literal_instance(default(tns.val))), body, yieldbind_instance(res))
-        display(body) # wow it's really satisfying to uncomment this and type finch ops at the repl.
+        #display(body) # wow it's really satisfying to uncomment this and type finch ops at the repl.
         execute(body).res
     elseif @capture ex produces(~args...)
         return map(arg -> ctx.scope[arg], args)
