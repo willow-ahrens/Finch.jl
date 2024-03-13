@@ -51,6 +51,26 @@ function Base.reduce(op::Function, bc::Broadcasted{FinchStyle{N}}; dims=:, init 
     end
 end
 
+
+function tensordot(A::Tensor, B::Tensor, idxs; kw...)
+    bc_A = broadcasted(identity, A)
+    bc_B = broadcasted(identity, B)
+    tensordot(bc_A, bc_B, idxs; kw...)
+end
+
+function tensordot(bc_A::Broadcasted{FinchStyle{N1}}, bc_B::Broadcasted{FinchStyle{N2}}, idxs; mult_op=*, add_op=+, init = initial_value(mult_op, Float64)) where {N1, N2}
+    res = compute(tensordot(copy(Broadcasted{LogicStyle{N1}}(bc_A.f, bc_A.args)),
+                    copy(Broadcasted{LogicStyle{N2}}(bc_B.f, bc_B.args)),
+                    idxs; mult_op=mult_op, add_op=add_op, init=init))
+    scalar_output = idxs isa Number ? idxs >= max(N1, N2) : length(idxs[1]) == N1 && length(idxs[2]) == N2
+    if scalar_output
+        return res[]
+    else
+        return res
+    end
+end
+
+
 Base.:+(
     x::Tensor,
     y::Union{Tensor, Base.AbstractArrayOrBroadcasted, Number},
