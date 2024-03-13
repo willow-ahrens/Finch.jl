@@ -18,7 +18,7 @@ using Finch: AsArray
     A = Tensor(Dense(Element(0.0)), [0, 0, 0, 0])
     B = Tensor(Dense(Element(0.0)), [0, 0, 0, 0, 0])
     @test size(A) != size(B) && A != B
-        
+
     A = [0 0 0 0 1 0 0 1]
     B = Tensor(Dense(SparseList(Element(0))), [0 0 0 0; 1 0 0 1])
     @test size(A) != size(B) && A != B
@@ -28,7 +28,7 @@ using Finch: AsArray
     @test size(A) == size(B) && A != B
     C = Tensor(Dense(SparseList(Element(0.0))), [0 0 0 0; 1 1 0 0; 1 1 1 0])
     @test B == C
-    
+
     A = [NaN, 0.0, 3.14, 0.0]
     B = Tensor(SparseList(Element(0.0)), [NaN, 0.0, 3.14, 0.0])
     C = Tensor(SparseList(Element(0.0)), [NaN, 0.0, 3.14, 0.0])
@@ -55,7 +55,7 @@ using Finch: AsArray
             show(io, MIME("text/plain"), A[inds...])
             println(io)
         end
-        
+
         @test check_output("base/getindex.txt", String(take!(io)))
     end
 
@@ -70,7 +70,7 @@ using Finch: AsArray
         @repl io AsArray(A)
         @repl io A[9, :] = 1:12
         @repl io AsArray(A)
-        
+
         @test check_output("base/setindex.txt", String(take!(io)))
     end
 
@@ -86,7 +86,7 @@ using Finch: AsArray
         @repl io AsArray(D)
         @repl io E = ifelse.(A .== 0, 1, 2)
         @repl io AsArray(E)
-        
+
         @test check_output("base/broadcast.txt", String(take!(io)))
     end
 
@@ -101,7 +101,7 @@ using Finch: AsArray
         @repl io reduce(+, A, dims=2)
         @repl io reduce(+, A, dims=(1,2))
         @repl io reduce(+, A, dims=:)
-        
+
         @test check_output("base/reduce.txt", String(take!(io)))
     end
 
@@ -117,7 +117,7 @@ using Finch: AsArray
         @repl io countstored(A)
         @repl io A = Tensor(SparseList(Dense(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
         @repl io countstored(A)
-        
+
         @test check_output("base/countstored.txt", String(take!(io)))
     end
 
@@ -127,13 +127,13 @@ using Finch: AsArray
 
         @repl io A = Tensor(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
         @repl io A + 1
-        @repl io 1 + A 
-        @repl io A + A 
-        @repl io 2 * A 
+        @repl io 1 + A
+        @repl io A + A
+        @repl io 2 * A
         @repl io A * 3
         @repl io A / 3
         @repl io 3 / A
-        
+
         @test check_output("base/asmd.txt", String(take!(io)))
     end
 
@@ -160,4 +160,12 @@ using Finch: AsArray
     E = (C + D) * 0.5
     F = compute(E)
     @test F == A
+
+    let
+        A = Tensor(Dense(SparseList(Element(0))), [0 0 44; 11 0 0; 22 00 55; 33 0 0])
+        B = Tensor(Dense(SparseList(Element(0))), [0 0 44; 11 0 0; 22 00 55; 33 0 0])
+        c_correct = Tensor(Dense(Dense(Element(0))), [1936 0 2420 0; 0 121 242 363; 2420 242 3509 726; 0 363 726 1089])
+        c = compute(tensordot(lazy(A), lazy(B), ((2, ), (2,)), init=0))
+        @test c == c_correct
+    end
 end
