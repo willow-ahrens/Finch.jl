@@ -109,7 +109,6 @@ function tensordot(A::LazyTensor{T1, N1}, B::LazyTensor{T2, N2}, idxs; mult_op=*
     if length(A_idxs) != length(B_idxs)
         throw(ArgumentError("lists of contraction indices must be the same length for both inputs"))
     end
-    println(N1)
     if any([i > N1 for i in A_idxs]) || any([i > N2 for i in B_idxs])
         throw(ArgumentError("contraction indices cannot be greater than the number of dimensions"))
     end

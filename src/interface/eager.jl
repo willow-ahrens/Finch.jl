@@ -55,7 +55,6 @@ function tensordot(A::Tensor, B::Tensor, idxs; kw...)
     compute(tensordot(lazy(A), lazy(B), idxs; kw...))
 end
 
-
 Base.:+(
     x::Tensor,
     y::Union{Tensor, Base.AbstractArrayOrBroadcasted, Number},
