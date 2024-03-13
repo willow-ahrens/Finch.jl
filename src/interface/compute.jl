@@ -35,7 +35,7 @@ lift_subqueries = Rewrite(Fixpoint(Postwalk(Chain([
 
 function simplify_queries(bindings)
     Rewrite(Fixpoint(Postwalk(Chain([
-        (@rule aggregate(~op, ~init, ~arg) => mapjoin(op, init, arg)),
+        (@rule aggregate(~op, ~init, ~arg) => mapjoin(op, arg)),
         (@rule mapjoin(overwrite, ~lhs, ~rhs) =>
             reorder(rhs, getfields(mapjoin(overwrite, ~lhs, ~rhs), bindings)...)),
     ]))))
@@ -66,7 +66,7 @@ end
 
 function push_labels(root, bindings)
     Rewrite(Fixpoint(Postwalk(Chain([
-        (@rule reorder(mapjoin(~op, ~args...), ~idxs...) => 
+        (@rule reorder(mapjoin(~op, ~args...), ~idxs...) =>
             mapjoin(op, map(arg -> reorder(arg, ~idxs...), args)...)),
         (@rule relabel(mapjoin(~op, ~args...), ~idxs...) => begin
             idxs_2 = getfields(mapjoin(op, args...), bindings)
@@ -187,7 +187,40 @@ function (ctx::SuitableRep)(ex)
         return data_rep(ex.tns.val)
     elseif ex.kind === mapjoin
         ##Assumes concordant mapjoin arguments, probably okay
-        return map_rep(ex.op.val, map(ctx, ex.args)...)
+        output_idxs = getfields(ex, ctx.bindings)
+        args_idxs = map(getfields, ex.args, ctx.bindings)
+        args_reps = map(ctx, ex.args)
+        idx_to_args_styles = Dict(i => [] for i in union(args_idxs...))
+        for i in eachindex(ex.args)
+            idxs = args_idxs[i]
+            arg_rep =args_reps[i]
+            for idx in idxs
+                push!(idx_to_args_styles[idx], map_rep_style(arg_rep))
+                arg_rep = map_rep_child(arg_rep)
+            end
+        end
+        output_styles = []
+        for idx in output_idxs
+            args_styles = idx_to_args_styles[idx]
+            if length(args_styles) == 1
+                push!(output_styles, args_styles[1])
+            else
+                push!(output_styles, result_style(args_styles...))
+            end
+        end
+        output_def = ElementData(ex.op.val(map(default, args_reps)...), combine_eltypes(ex.op.val, (args_reps...,)))
+        for style in reverse(output_styles)
+            if typeof(style) == Finch.MapRepDenseStyle
+                output_def = DenseData(output_def)
+            elseif typeof(style) == Finch.MapRepSparseStyle
+                output_def = SparseData(output_def)
+            elseif typeof(style) == Finch.MapRepRepeatStyle
+                output_def = RepeatData(output_def)
+            elseif typeof(style) == Finch.MapRepExtrudeStyle
+                output_def = ExtrudeData(output_def)
+            end
+        end
+        return output_def
     elseif ex.kind === aggregate
         idxs = getfields(ex.arg, ctx.bindings)
         return aggregate_rep(ex.op.val, ex.init.val, ctx(ex.arg), map(idx->findfirst(isequal(idx), idxs), ex.idxs))
@@ -267,7 +300,7 @@ function (ctx::FinchInterpreter)(ex)
             body = loop_instance(idx, dimless, body)
         end
         body = block_instance(declare_instance(res, literal_instance(default(tns.val))), body, yieldbind_instance(res))
-        #display(body) # wow it's really satisfying to uncomment this and type finch ops at the repl.
+        display(body) # wow it's really satisfying to uncomment this and type finch ops at the repl.
         execute(body).res
     elseif @capture ex produces(~args...)
         return map(arg -> ctx.scope[arg], args)
