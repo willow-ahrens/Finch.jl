@@ -692,4 +692,16 @@ using CIndices
             end
         end)
     end
+
+    let
+        A_COO = fsprand(10, 10, .5)
+        A_hash = Tensor(SparseHash{1}(SparseHash{1}(Element(0.0))))
+        @finch (A_hash .= 0; for i=_, j=_ A_hash[i,j]= A_COO[i,j] end)
+        B_COO = fsprand(10, 10, .5)
+        B_hash = Tensor(SparseHash{1}(SparseHash{1}(Element(0.0))))
+        @finch (B_hash .= 0; for i=_, j=_ B_hash[i,j]= B_COO[i,j] end)
+        output = Scalar(0)
+        @finch (output .= 0; for i=_, j=_ output[] += A_hash[j,i] * B_hash[follow(j), i] end)
+    end
+
 end
