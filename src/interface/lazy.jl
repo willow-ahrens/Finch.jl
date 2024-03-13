@@ -100,7 +100,7 @@ function Base.reduce(op, arg::LazyTensor{T, N}; dims=:, init = initial_value(op,
 end
 
 # tensordot takes in two tensors `A` and `B` and performs a product and contraction
-function tensordot(A::LazyTensor{T1, N1}, B::LazyTensor{T2, N2}, idxs; mult_op=*, add_op=+, init = initial_value(mult_op, Float64)) where {T1, T2, N1, N2}
+function tensordot(A::LazyTensor{T1, N1}, B::LazyTensor{T2, N2}, idxs; mult_op=*, add_op=+, init = initial_value(add_op, Float64)) where {T1, T2, N1, N2}
     if idxs isa Number
         idxs = ([i for i in 1:idxs], [i for i in 1:idxs])
     end

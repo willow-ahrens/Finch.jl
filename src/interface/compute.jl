@@ -208,6 +208,7 @@ function (ctx::SuitableRep)(ex)
                 push!(output_styles, result_style(args_styles...))
             end
         end
+
         output_def = ElementData(ex.op.val(map(default, args_reps)...), combine_eltypes(ex.op.val, (args_reps...,)))
         for style in reverse(output_styles)
             if typeof(style) == Finch.MapRepDenseStyle
@@ -386,5 +387,6 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     prgm = propagate_copy_queries(prgm)
     prgm = format_queries(bindings)(prgm)
     prgm = normalize_names(prgm)
+    println(prgm)
     FinchInterpreter(Dict())(prgm)
 end
