@@ -387,6 +387,5 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     prgm = propagate_copy_queries(prgm)
     prgm = format_queries(bindings)(prgm)
     prgm = normalize_names(prgm)
-    println(prgm)
     FinchInterpreter(Dict())(prgm)
 end
