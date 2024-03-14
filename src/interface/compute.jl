@@ -217,7 +217,10 @@ function (ctx::SuitableRep)(ex)
     elseif ex.kind === table
         return data_rep(ex.tns.val)
     elseif ex.kind === mapjoin
-        ##Assumes concordant mapjoin arguments, probably okay
+        #This step assumes concordant mapjoin arguments, and also that the
+        #mapjoin arguments have the same number of dimensions. It's necessary to
+        #assume this because it's not possible to recursively reconstruct a
+        #total ordering of the indices as we go.
         return map_rep(ex.op.val, map(ctx, ex.args)...)
     elseif ex.kind === aggregate
         idxs = getfields(ex.arg, ctx.bindings)
