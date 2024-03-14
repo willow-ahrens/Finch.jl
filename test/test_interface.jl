@@ -170,4 +170,22 @@ using Finch: AsArray
         c = compute(tensordot(lazy(A), lazy(B), ((2, ), (2,)), init=0))
         @test c == c_correct
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/457
+    let
+        A = zeros(2, 3, 3)
+        A[1, :, :] = [1 2 3; 4 5 6; 7 8 9]
+        A[2, :, :] = [1 1 1; 2 2 2; 3 3 3]
+        perm = (2, 3, 1)
+        A_t = permutedims(A, perm)
+
+        A_tns = Tensor(Dense(Dense(Dense(Element(0.0)))), A)
+        A_sw = swizzle(A_tns, perm...)
+        A_lazy = lazy(A_sw)
+
+        A_result = compute(A_lazy)
+
+        @test Array(A_result) == A_t
+        @test permutedims(A_tns, perm) == A_t
+    end
 end

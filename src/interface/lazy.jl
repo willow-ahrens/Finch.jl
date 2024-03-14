@@ -189,8 +189,8 @@ function Base.copyto!(dst::AbstractArray, src::LazyTensor{T, N}) where {T, N}
     return LazyTensor{T, N}(reformat(immediate(dst), src.data), src.extrude)
 end
 
-permutedims(arg::LazyTensor{T, 2}) where {T} = permutedims(arg, [2, 1])
-function permutedims(arg::LazyTensor{T, N}, perm) where {T, N}
+Base.permutedims(arg::LazyTensor{T, 2}) where {T} = permutedims(arg, [2, 1])
+function Base.permutedims(arg::LazyTensor{T, N}, perm) where {T, N}
     length(perm) == N || throw(ArgumentError("permutedims given wrong number of dimensions"))
     isperm(perm) || throw(ArgumentError("permutedims given invalid permutation"))
     perm = collect(perm)
