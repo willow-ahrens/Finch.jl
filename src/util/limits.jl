@@ -193,6 +193,6 @@ for S in limit_types
     end
 end
 
-Base.promote_rule(::Type{Limit{T}}, ::Type{Limit{S}}) where {T, S} = Limit(promote_type(T, S))
+Base.promote_rule(::Type{Limit{T}}, ::Type{Limit{S}}) where {T, S} = Limit{promote_type(T, S)}
 Base.convert(::Type{Limit{T}}, i::Limit) where {T} = Limit{T}(convert(T, i.val), i.sign)
 Base.hash(x::Limit, h::UInt) = hash(typeof(x), hash(x.val, hash(x.sign, h)))
