@@ -29,6 +29,7 @@ function LazyTensor{T}(arr::Base.AbstractArrayOrBroadcasted) where {T}
     LazyTensor{eltype(arr), ndims(arr)}(tns, extrude)
 end
 LazyTensor(arr::Tensor) = LazyTensor{eltype(arr)}(arr)
+LazyTensor(swizzle_arr::SwizzleArray{dims, <:Tensor}) where {dims} = permutedims(LazyTensor(swizzle_arr.body), dims)
 function LazyTensor{T}(arr::Tensor) where {T}
     name = alias(gensym(:A))
     idxs = [field(gensym(:i)) for _ in 1:ndims(arr)]
@@ -99,11 +100,40 @@ function Base.reduce(op, arg::LazyTensor{T, N}; dims=:, init = initial_value(op,
     LazyTensor{S}(identify(data), extrude)
 end
 
-struct LogicStyle{N} <: BroadcastStyle end
-Base.Broadcast.BroadcastStyle(F::Type{<:LazyTensor{T, N}}) where {T, N} = LogicStyle{N}()
+# tensordot takes in two tensors `A` and `B` and performs a product and contraction
+function tensordot(A::LazyTensor{T1, N1}, B::LazyTensor{T2, N2}, idxs; mult_op=*, add_op=+, init = initial_value(add_op, Float64)) where {T1, T2, N1, N2}
+    if idxs isa Number
+        idxs = ([i for i in 1:idxs], [i for i in 1:idxs])
+    end
+    A_idxs = idxs[1]
+    B_idxs = idxs[2]
+    if length(A_idxs) != length(B_idxs)
+        throw(ArgumentError("lists of contraction indices must be the same length for both inputs"))
+    end
+    if any([i > N1 for i in A_idxs]) || any([i > N2 for i in B_idxs])
+        throw(ArgumentError("contraction indices cannot be greater than the number of dimensions"))
+    end
+
+    extrude = ((A.extrude[n] for n in 1:N1 if !(n in A_idxs))...,
+                (B.extrude[n] for n in 1:N2 if !(n in B_idxs))...,)
+    A_fields = [field(gensym(:i)) for _ in 1:N1]
+    B_fields = [field(gensym(:i)) for _ in 1:N2]
+    reduce_fields = []
+    for i in eachindex(A_idxs)
+        B_fields[B_idxs[i]] = A_fields[A_idxs[i]]
+        push!(reduce_fields, A_fields[A_idxs[i]])
+    end
+    AB = mapjoin(immediate(mult_op), relabel(A.data, A_fields), relabel(B.data, B_fields))
+    AB_reduce = aggregate(immediate(add_op), immediate(init), AB, reduce_fields...)
+    S = fixpoint_type(add_op, init, AB_reduce)
+    return LazyTensor{S}(identify(AB_reduce), extrude)
+end
+
+struct LazyStyle{N} <: BroadcastStyle end
+Base.Broadcast.BroadcastStyle(F::Type{<:LazyTensor{T, N}}) where {T, N} = LazyStyle{N}()
 Base.Broadcast.broadcastable(tns::LazyTensor) = tns
-Base.Broadcast.BroadcastStyle(a::LogicStyle{M}, b::LogicStyle{N}) where {M, N} = LogicStyle{max(M, N)}()
-Base.Broadcast.BroadcastStyle(a::LogicStyle{M}, b::Broadcast.AbstractArrayStyle{N}) where {M, N} = LogicStyle{max(M, N)}()
+Base.Broadcast.BroadcastStyle(a::LazyStyle{M}, b::LazyStyle{N}) where {M, N} = LazyStyle{max(M, N)}()
+Base.Broadcast.BroadcastStyle(a::LazyStyle{M}, b::Broadcast.AbstractArrayStyle{N}) where {M, N} = LazyStyle{max(M, N)}()
 
 function broadcast_to_logic(bc::Broadcast.Broadcasted)
     broadcasted(bc.f, map(broadcast_to_logic, bc.args)...)
@@ -134,17 +164,17 @@ function broadcast_to_extrude(tns::LazyTensor, n)
     get(tns.extrude, n, false)
 end
 
-function Base.materialize!(dest, bc::Broadcasted{<:LogicStyle})
+function Base.materialize!(dest, bc::Broadcasted{<:LazyStyle})
     return copyto!(dest, bc)
 end
 
-function Base.materialize(bc::Broadcasted{<:LogicStyle})
+function Base.materialize(bc::Broadcasted{<:LazyStyle})
     return copy(bc)
 end
 
-Base.copyto!(out, bc::Broadcasted{LogicStyle{N}}) where {N} = copyto!(out, copy(bc))
+Base.copyto!(out, bc::Broadcasted{LazyStyle{N}}) where {N} = copyto!(out, copy(bc))
 
-function Base.copy(bc::Broadcasted{LogicStyle{N}}) where {N}
+function Base.copy(bc::Broadcasted{LazyStyle{N}}) where {N}
     bc_lgc = broadcast_to_logic(bc)
     data = broadcast_to_query(bc_lgc, [field(gensym(:i)) for _ in 1:N])
     extrude = ntuple(n -> broadcast_to_extrude(bc_lgc, n), N)
