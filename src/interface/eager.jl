@@ -51,6 +51,10 @@ function Base.reduce(op::Function, bc::Broadcasted{FinchStyle{N}}; dims=:, init 
     end
 end
 
+function tensordot(A::Tensor, B::Tensor, idxs; kw...)
+    compute(tensordot(lazy(A), lazy(B), idxs; kw...))
+end
+
 Base.:+(
     x::Tensor,
     y::Union{Tensor, Base.AbstractArrayOrBroadcasted, Number},
@@ -112,5 +116,3 @@ function LinearAlgebra.norm(arr::FiberOrBroadcast, p::Real = 2)
         return root(sum(broadcasted(power, broadcasted(norm, arr, p), p)))
     end
 end
-
-permutedims(arr::Tensor, perm) = compute(permutedims(LazyTensor(arr), perm))

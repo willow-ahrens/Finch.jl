@@ -28,14 +28,13 @@ function Base.copyto!(dst::Union{Tensor, AbstractArray}, src::SwizzleArray{dims}
 end
 
 function Base.copyto!(dst::SwizzleArray{dims1}, src::SwizzleArray{dims2}) where {dims1, dims2}
-    println(invperm(dims2)[collect(dims1)])
-    ret = copyto!(swizzle(dst, invperm(dims2)[collect(dims1)]...), src.body)
-    return ret.body
+    ret = copyto!(swizzle(dst, invperm(dims2)...), src.body)
+    return swizzle(ret, dims2...)
 end
 
 function Base.copyto!(dst::SwizzleArray{dims}, src::Union{Tensor, AbstractArray}) where {dims}
     tmp = Tensor(SparseHash{ndims(src)}(Element(default(src))))
-    tmp = copyto_helper!(swizzle(tmp, dims...), src)
+    tmp = copyto_helper!(swizzle(tmp, dims...), src).body
     swizzle(copyto_helper!(dst.body, tmp), dims...)
 end
 

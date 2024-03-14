@@ -22,8 +22,8 @@ export @finch, @finch_program, @finch_code, @finch_kernel, value
 export fastfinch, safefinch, debugfinch
 
 export Tensor
-export SparseRLE, SparseRLELevel 
-export DenseRLE, DenseRLELevel 
+export SparseRLE, SparseRLELevel
+export DenseRLE, DenseRLELevel
 export SparseInterval, SparseIntervalLevel
 export Sparse, SparseLevel, SparseDict
 export SparseList, SparseListLevel
@@ -47,7 +47,7 @@ export diagmask, lotrimask, uptrimask, bandmask, chunkmask
 export scale, products, offset, permissive, protocolize, swizzle, toeplitz, window
 export PlusOneVector
 
-export lazy, compute
+export lazy, compute, tensordot
 
 export choose, minby, maxby, overwrite, initwrite, filterop, d
 
