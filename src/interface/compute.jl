@@ -64,8 +64,17 @@ function pretty_labels(root)
     ])))(root)
 end
 
+"""
+normalize the program to a form where reorders wrap relabels and both are pushed to the leaves of mapjoins
+"""
 function push_labels(root, bindings)
-    Rewrite(Fixpoint(Postwalk(Chain([
+    root = Rewrite(Postwalk(Chain([
+        (@rule relabel(~arg, ~idxs...) => reorder(relabel(~arg, ~idxs...), idxs...)),
+        #TODO: This statement sets the loop order, which should probably be done with more forethought as a separate step before concordization.
+        (@rule mapjoin(~args...) => reorder(mapjoin(args...), getfields(mapjoin(args...), bindings)...))
+    ])))(root)
+
+    root = Rewrite(Fixpoint(Prewalk(Chain([
         (@rule reorder(mapjoin(~op, ~args...), ~idxs...) =>
             mapjoin(op, map(arg -> reorder(arg, ~idxs...), args)...)),
         (@rule relabel(mapjoin(~op, ~args...), ~idxs...) => begin
@@ -82,13 +91,34 @@ function push_labels(root, bindings)
             idxs_4 = map(idx -> get(reidx, idx, idx), idxs_3)
             reorder(relabel(arg, idxs_4...), idxs_2...)
         end),
-        (@rule reformat(~tns, relabel(~arg, ~idxs...)) => relabel(reformat(tns, arg), idxs...)),
+    ]))))(root)
+
+    #=
+    root = Rewrite(Fixpoint(Postwalk(Chain([
         (@rule plan(~a1..., query(~b, relabel(~c, ~i...)), ~a2...) => begin
             d = alias(gensym(:A))
             bindings[d] = c
             rw = Rewrite(Postwalk(@rule b => relabel(d, i...)))
             plan(a1..., query(d, c), map(rw, a2)...)
         end),
+        (@rule plan(~a1..., query(~b, reorder(~c, ~i...)), ~a2...) => begin
+            d = alias(gensym(:A))
+            bindings[d] = c
+            rw = Rewrite(Postwalk(@rule b => reorder(d, i...)))
+            plan(a1..., query(d, c), map(rw, a2)...)
+        end),
+        #(@rule reformat(~tns, relabel(~arg, ~idxs...)) => relabel(reformat(tns, arg), idxs...)),
+    ]))))(root)
+    =#
+end
+
+#=
+function pull_reorders(root, bindings)
+    root = Rewrite(Fixpoint(Prewalk(Chain([
+        (@rule mapjoin(~args...) => reorder(mapjoin(args...), getfields(mapjoin(args...), bindings)...))
+    ]))))(root)
+    root = Rewrite(Fixpoint(Prewalk(Chain([
+        (@rule mapjoin(~a1..., reorder(~b, ~i...), ~a2...) => mapjoin(a1..., b, a2...)),
     ]))))(root)
 end
 
@@ -102,6 +132,7 @@ function push_reorders(root, bindings)
         end),
     ]))))(root)
 end
+=#
 
 pad_labels = Rewrite(Postwalk(
     @rule relabel(~arg, ~idxs...) => reorder(relabel(~arg, ~idxs...), idxs...)
@@ -187,45 +218,7 @@ function (ctx::SuitableRep)(ex)
         return data_rep(ex.tns.val)
     elseif ex.kind === mapjoin
         ##Assumes concordant mapjoin arguments, probably okay
-        output_idxs = getfields(ex, ctx.bindings)
-        args_idxs = []
-        args_reps = []
-        for arg in ex.args
-            push!(args_idxs, getfields(arg, ctx.bindings))
-            push!(args_reps, ctx(arg))
-        end
-        idx_to_args_styles = Dict(i => [] for i in union(args_idxs...))
-        for i in eachindex(ex.args)
-            idxs = args_idxs[i]
-            arg_rep =args_reps[i]
-            for idx in idxs
-                push!(idx_to_args_styles[idx], map_rep_style(arg_rep))
-                arg_rep = map_rep_child(arg_rep)
-            end
-        end
-        output_styles = []
-        for idx in output_idxs
-            args_styles = idx_to_args_styles[idx]
-            if length(args_styles) == 1
-                push!(output_styles, args_styles[1])
-            else
-                push!(output_styles, result_style(args_styles...))
-            end
-        end
-
-        output_def = ElementData(ex.op.val(map(default, args_reps)...), combine_eltypes(ex.op.val, (args_reps...,)))
-        for style in reverse(output_styles)
-            if typeof(style) == Finch.MapRepDenseStyle
-                output_def = DenseData(output_def)
-            elseif typeof(style) == Finch.MapRepSparseStyle
-                output_def = SparseData(output_def)
-            elseif typeof(style) == Finch.MapRepRepeatStyle
-                output_def = RepeatData(output_def)
-            elseif typeof(style) == Finch.MapRepExtrudeStyle
-                output_def = ExtrudeData(output_def)
-            end
-        end
-        return output_def
+        return map_rep(ex.op.val, map(ctx, ex.args)...)
     elseif ex.kind === aggregate
         idxs = getfields(ex.arg, ctx.bindings)
         return aggregate_rep(ex.op.val, ex.init.val, ctx(ex.arg), map(idx->findfirst(isequal(idx), idxs), ex.idxs))
@@ -274,7 +267,7 @@ function finch_pointwise_logic_to_program(scope, ex)
             idx in idxs_2 ? index_instance(idx.name) : first(axes(arg)[n])
         end
         access_instance(tag_instance(variable_instance(arg.name), scope[arg]), literal_instance(reader), idxs_3...)
-    elseif (@capture ex reorder(relabel(~arg::isimmediate)))
+    elseif (@capture ex reorder(relabel(~arg::isimmediate), ~idxs_2...))
         literal_instance(arg.val)
     else
         error("Unrecognized logic: $(ex)")
@@ -383,10 +376,8 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     prgm = pretty_labels(prgm)
     bindings = getbindings(prgm)
     prgm = push_labels(prgm, bindings)
-    prgm = push_reorders(prgm, bindings)
     prgm = concordize(prgm, bindings)
     prgm = fuse_reformats(prgm)
-    prgm = pad_labels(prgm)
     prgm = push_labels(prgm, bindings)
     prgm = propagate_copy_queries(prgm)
     prgm = format_queries(bindings)(prgm)

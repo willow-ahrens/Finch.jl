@@ -367,6 +367,7 @@ function getfields(node::LogicNode, bindings)
     elseif node.kind == subquery
         getfields(node.arg, bindings)
     elseif node.kind == mapjoin
+        #TODO this is wrong here: the overall order should at least be concordant with the args if the args are concordant
         return unique(vcat(map(arg -> getfields(arg, bindings), node.args)...))
     elseif node.kind == aggregate
         return setdiff(getfields(node.arg, bindings), node.idxs)
