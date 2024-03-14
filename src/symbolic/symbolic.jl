@@ -237,6 +237,8 @@ function isannihilator_by_fn(alg::AbstractAlgebra, ::typeof(maxby), x::FinchNode
     end
     return false
 end
+isannihilator(::AbstractAlgebra, ::Chooser{D}, x) where {D} = !isequal(x, D)
+#isannihilator(::AbstractAlgebra, ::InitWriter{D}, x) where {D} = !isequal(x, D)
 
 isinverse(alg) = (f, g) -> isinverse(alg, f, g)
 isinverse(alg, f::FinchNode, g::FinchNode) = isliteral(f) && isliteral(g) && isinverse(alg, f.val, g.val)

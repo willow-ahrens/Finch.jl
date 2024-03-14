@@ -251,7 +251,7 @@ function display_statement(io, mime, node, indent)
         for body in node.bodies
             print(io, " " ^ (indent + 2))
             display_statement(io, mime, body, indent + 2)
-            println()
+            println(io)
         end
         print(io, " " ^ indent, "end")
     elseif operation(node) == produces
@@ -263,7 +263,7 @@ function display_statement(io, mime, node, indent)
         if length(node.args) > 0
             display_expression(io, mime, node.args[end])
         end
-        print(")")
+        print(io, ")")
     else
         throw(ArgumentError("Expected statement but got $(operation(node))"))
     end
@@ -367,6 +367,7 @@ function getfields(node::LogicNode, bindings)
     elseif node.kind == subquery
         getfields(node.arg, bindings)
     elseif node.kind == mapjoin
+        #TODO this is wrong here: the overall order should at least be concordant with the args if the args are concordant
         return unique(vcat(map(arg -> getfields(arg, bindings), node.args)...))
     elseif node.kind == aggregate
         return setdiff(getfields(node.arg, bindings), node.idxs)

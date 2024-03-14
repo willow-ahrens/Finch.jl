@@ -51,6 +51,10 @@ function Base.reduce(op::Function, bc::Broadcasted{FinchStyle{N}}; dims=:, init 
     end
 end
 
+function tensordot(A::Tensor, B::Tensor, idxs; kw...)
+    compute(tensordot(lazy(A), lazy(B), idxs; kw...))
+end
+
 Base.:+(
     x::Tensor,
     y::Union{Tensor, Base.AbstractArrayOrBroadcasted, Number},

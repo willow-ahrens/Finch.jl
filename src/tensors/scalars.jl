@@ -68,7 +68,7 @@ end
 
 function short_circuit_cases(tns::VirtualScalar, ctx, op)
     if isannihilator(ctx, virtual_default(tns, ctx), op)
-        [:(tns.val == 0) => Null()]
+        [:(tns.val == 0) => Simplify(Fill(Null()))]
     else
         []
     end
@@ -158,14 +158,13 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualSparseScalar)
     return tns.val
 end
 
-mutable struct ShortCircuitScalar{D, Tv, B}# <: AbstractArray{Tv, 0}
+mutable struct ShortCircuitScalar{D, Tv}# <: AbstractArray{Tv, 0}
     val::Tv
 end
 
 ShortCircuitScalar(D, args...) = ShortCircuitScalar{D}(args...)
 ShortCircuitScalar{D}(args...) where {D} = ShortCircuitScalar{D, typeof(D)}(args...)
-ShortCircuitScalar{D, Tv}(B, args...) where {D, Tv} = ShortCircuitScalar{D, Tv, B}(args...)
-ShortCircuitScalar{D, Tv, B}() where {D, Tv, B} = ShortCircuitScalar{D, Tv, B}(D)
+ShortCircuitScalar{D, Tv}() where {D, Tv} = ShortCircuitScalar{D, Tv}(D)
 
 @inline Base.ndims(::Type{<:ShortCircuitScalar}) = 0
 @inline Base.size(::ShortCircuitScalar) = ()
@@ -181,20 +180,19 @@ struct VirtualShortCircuitScalar
     ex
     Tv
     D
-    B
     name
     val
 end
 
-lower(tns::VirtualShortCircuitScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($ShortCircuitScalar{$(tns.D), $(tns.Tv), $(tns.B)}($(tns.val)))
-function virtualize(ex, ::Type{ShortCircuitScalar{D, Tv, B}}, ctx, tag) where {D, Tv, B}
+lower(tns::VirtualShortCircuitScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($ShortCircuitScalar{$(tns.D), $(tns.Tv)}($(tns.val)))
+function virtualize(ex, ::Type{ShortCircuitScalar{D, Tv}}, ctx, tag) where {D, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
     push!(ctx.preamble, quote
         $sym = $ex
         $val = $sym.val
     end)
-    VirtualShortCircuitScalar(sym, Tv, D, B, tag, val)
+    VirtualShortCircuitScalar(sym, Tv, D, tag, val)
 end
 
 virtual_size(::VirtualShortCircuitScalar, ctx) = ()
@@ -229,23 +227,18 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualShortCircuitScala
 end
 
 function short_circuit_cases(tns::VirtualShortCircuitScalar, ctx, op)
-    if isannihilator(ctx.algebra, op, literal(tns.B))
-        [:($(tns.val) == $(tns.B)) => Null()]
-    else
-        []
-    end
+    [:(Finch.isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Simplify(Fill(Null()))]
 end
 
-mutable struct SparseShortCircuitScalar{D, Tv, B}# <: AbstractArray{Tv, 0}
+mutable struct SparseShortCircuitScalar{D, Tv}# <: AbstractArray{Tv, 0}
     val::Tv
     dirty::Bool
 end
 
 SparseShortCircuitScalar(D, args...) = SparseShortCircuitScalar{D}(args...)
 SparseShortCircuitScalar{D}(args...) where {D} = SparseShortCircuitScalar{D, typeof(D)}(args...)
-SparseShortCircuitScalar{D, Tv}(B, args...) where {D, Tv} = SparseShortCircuitScalar{D, Tv, B}(args...)
-SparseShortCircuitScalar{D, Tv, B}() where {D, Tv, B} = SparseShortCircuitScalar{D, Tv, B}(D, false)
-SparseShortCircuitScalar{D, Tv, B}(val) where {D, Tv, B} = SparseShortCircuitScalar{D, Tv, B}(val, true)
+SparseShortCircuitScalar{D, Tv}() where {D, Tv} = SparseShortCircuitScalar{D, Tv}(D, false)
+SparseShortCircuitScalar{D, Tv}(val) where {D, Tv} = SparseShortCircuitScalar{D, Tv}(val, true)
 
 @inline Base.ndims(::Type{<:SparseShortCircuitScalar}) = 0
 @inline Base.size(::SparseShortCircuitScalar) = ()
@@ -261,14 +254,13 @@ struct VirtualSparseShortCircuitScalar
     ex
     Tv
     D
-    B
     name
     val
     dirty
 end
 
-lower(tns::VirtualSparseShortCircuitScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($SparseShortCircuitScalar{$(tns.D), $(tns.Tv), $(tns.B)}($(tns.val), $(tns.dirty)))
-function virtualize(ex, ::Type{SparseShortCircuitScalar{D, Tv, B}}, ctx, tag) where {D, Tv, B}
+lower(tns::VirtualSparseShortCircuitScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($SparseShortCircuitScalar{$(tns.D), $(tns.Tv)}($(tns.val), $(tns.dirty)))
+function virtualize(ex, ::Type{SparseShortCircuitScalar{D, Tv}}, ctx, tag) where {D, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
     dirty = Symbol(tag, :_dirty) #TODO hmm this is risky
@@ -277,7 +269,7 @@ function virtualize(ex, ::Type{SparseShortCircuitScalar{D, Tv, B}}, ctx, tag) wh
         $val = $sym.val
         $dirty = $sym.dirty
     end)
-    VirtualSparseShortCircuitScalar(sym, Tv, D, B, tag, val, dirty)
+    VirtualSparseShortCircuitScalar(sym, Tv, D, tag, val, dirty)
 end
 
 virtual_size(::VirtualSparseShortCircuitScalar, ctx) = ()
@@ -323,9 +315,5 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualSparseShortCircui
 end
 
 function short_circuit_cases(tns::VirtualSparseShortCircuitScalar, ctx, op)
-    if isannihilator(ctx.algebra, op, literal(tns.B))
-        [:($(tns.val) == $(tns.B)) => Null()]
-    else
-        []
-    end
+    [:(Finch.isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Simplify(Fill(Null()))]
 end
