@@ -159,11 +159,10 @@ function einsum(out_idxs, args...;add_op=+, mult_op=*, init = initial_value(add_
         end
         push!(extrude, is_extruded)
     end
-    println(extrude)
-
+    out_fields_in_input_order = [s_to_idx[s_idx] for s_idx in s_idxs if s_idx in out_idxs]
     t_prod = mapjoin(immediate(mult_op), factors...)
     t_sum = aggregate(immediate(add_op), immediate(init), t_prod, reduce_fields...)
-    t_ordered = reorder(t_sum, out_fields...)
+    t_ordered = reorder(relabel(t_sum, out_fields_in_input_order...), out_fields...)
     S = fixpoint_type(add_op, init, t_ordered)
     return LazyTensor{S}(identify(t_ordered), Tuple(extrude))
 end

@@ -73,7 +73,6 @@ function push_labels(root, bindings)
         #TODO: This statement sets the loop order, which should probably be done with more forethought as a separate step before concordization.
         (@rule mapjoin(~args...) => reorder(mapjoin(args...), getfields(mapjoin(args...), bindings)...))
     ])))(root)
-
     root = Rewrite(Fixpoint(Prewalk(Chain([
         (@rule reorder(mapjoin(~op, ~args...), ~idxs...) =>
             mapjoin(op, map(arg -> reorder(arg, ~idxs...), args)...)),
@@ -92,8 +91,7 @@ function push_labels(root, bindings)
             reorder(relabel(arg, idxs_4...), idxs_2...)
         end),
     ]))))(root)
-
-    #=
+#=
     root = Rewrite(Fixpoint(Postwalk(Chain([
         (@rule plan(~a1..., query(~b, relabel(~c, ~i...)), ~a2...) => begin
             d = alias(gensym(:A))
@@ -108,8 +106,8 @@ function push_labels(root, bindings)
             plan(a1..., query(d, c), map(rw, a2)...)
         end),
         #(@rule reformat(~tns, relabel(~arg, ~idxs...)) => relabel(reformat(tns, arg), idxs...)),
-    ]))))(root)
-    =#
+    ]))))(root) =#
+
 end
 
 #=
@@ -385,10 +383,13 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     prgm = pretty_labels(prgm)
     bindings = getbindings(prgm)
     prgm = push_labels(prgm, bindings)
+    bindings = getbindings(prgm)
     prgm = concordize(prgm, bindings)
     prgm = fuse_reformats(prgm)
+    bindings = getbindings(prgm)
     prgm = push_labels(prgm, bindings)
     prgm = propagate_copy_queries(prgm)
+    bindings = getbindings(prgm)
     prgm = format_queries(bindings)(prgm)
     prgm = normalize_names(prgm)
     FinchInterpreter(Dict())(prgm)
