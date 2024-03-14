@@ -9,7 +9,7 @@ end
 Base.Broadcast.BroadcastStyle(F::Type{<:Tensor}) = FinchStyle{ndims(F)}()
 Base.Broadcast.broadcastable(fbr::Tensor) = fbr
 Base.Broadcast.BroadcastStyle(a::FinchStyle{N}, b::FinchStyle{M}) where {M, N} = FinchStyle{max(M, N)}()
-Base.Broadcast.BroadcastStyle(a::LogicStyle{M}, b::FinchStyle{N}) where {M, N} = LogicStyle{max(M, N)}()
+Base.Broadcast.BroadcastStyle(a::LazyStyle{M}, b::FinchStyle{N}) where {M, N} = LazyStyle{max(M, N)}()
 Base.Broadcast.BroadcastStyle(a::FinchStyle{N}, b::Broadcast.AbstractArrayStyle{M}) where {M, N} = FinchStyle{max(M, N)}()
 
 function Base.materialize!(dest, bc::Broadcasted{<:FinchStyle})
@@ -21,11 +21,11 @@ function Base.materialize(bc::Broadcasted{<:FinchStyle})
 end
 
 function Base.copyto!(out, bc::Broadcasted{FinchStyle{N}}) where {N}
-    compute(copyto!(out, copy(Broadcasted{LogicStyle{N}}(bc.f, bc.args))))
+    compute(copyto!(out, copy(Broadcasted{LazyStyle{N}}(bc.f, bc.args))))
 end
 
 function Base.copy(bc::Broadcasted{FinchStyle{N}}) where {N}
-    return compute(copy(Broadcasted{LogicStyle{N}}(bc.f, bc.args)))
+    return compute(copy(Broadcasted{LazyStyle{N}}(bc.f, bc.args)))
 end
 
 function Base.reduce(op, src::Tensor; kw...)
@@ -43,7 +43,7 @@ function Base.map!(dst, f, src::Tensor, args::Union{Tensor, Base.AbstractArrayOr
 end
 
 function Base.reduce(op::Function, bc::Broadcasted{FinchStyle{N}}; dims=:, init = initial_value(op, combine_eltypes(bc.f, bc.args))) where {N}
-    res = compute(reduce(op, copy(Broadcasted{LogicStyle{N}}(bc.f, bc.args)); dims=dims, init=init))
+    res = compute(reduce(op, copy(Broadcasted{LazyStyle{N}}(bc.f, bc.args)); dims=dims, init=init))
     if dims === Colon()
         return res[]
     else

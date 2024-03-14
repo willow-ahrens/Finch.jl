@@ -22,7 +22,11 @@ function Base.copyto!(dst::Array, src::Tensor)
     return copyto_helper!(dst, src)
 end
 
-function permutedims(src::Tensor, perm)
+function Base.permutedims(src::Tensor)
+    @assert ndims(src) == 2
+    permutedims(src, (2, 1))
+end
+function Base.permutedims(src::Tensor, perm)
     dst = similar(src)
     copyto!(dst, swizzle(src, perm...))
 end

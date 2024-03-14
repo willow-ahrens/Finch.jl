@@ -63,7 +63,7 @@ execute(ex) = execute(ex, NamedTuple())
         code = execute_code(:ex, ex; virtualize(:opts, opts, ctx)...)
         quote
             # try
-                @inbounds begin
+                @inbounds @fastmath begin
                     $(code |> unblock)
                 end
             # catch
@@ -229,7 +229,7 @@ function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = safe
     end |> pretty |> unresolve |> dataflow |> unquote_literals
     arg_defs = map(((key, val),) -> :($key::$(maybe_typeof(val))), args)
     striplines(:(function $fname($(arg_defs...))
-        @inbounds $(striplines(unblock(code)))
+        @inbounds @fastmath $(striplines(unblock(code)))
     end))
 end
 

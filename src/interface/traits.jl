@@ -153,6 +153,8 @@ struct MapRepDenseStyle end
 struct MapRepRepeatStyle end
 struct MapRepElementStyle end
 
+combine_style(a::MapRepExtrudeStyle, b::MapRepExtrudeStyle) = a
+
 combine_style(a::MapRepSparseStyle, b::MapRepExtrudeStyle) = a
 combine_style(a::MapRepSparseStyle, b::MapRepSparseStyle) = a
 combine_style(a::MapRepSparseStyle, b::MapRepDenseStyle) = a
@@ -184,6 +186,7 @@ map_rep_child(r::DenseData) = r.lvl
 map_rep_child(r::RepeatData) = r.lvl
 
 map_rep_def(::MapRepDenseStyle, f, args) = DenseData(map_rep_def(f, map(map_rep_child, args)))
+map_rep_def(::MapRepExtrudeStyle, f, args) = ExtrudeData(map_rep_def(f, map(map_rep_child, args)))
 
 function map_rep_def(::MapRepSparseStyle, f, args)
     lvl = map_rep_def(f, map(map_rep_child, args))
