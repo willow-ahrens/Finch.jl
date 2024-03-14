@@ -99,6 +99,35 @@ function Base.reduce(op, arg::LazyTensor{T, N}; dims=:, init = initial_value(op,
     LazyTensor{S}(identify(data), extrude)
 end
 
+# tensordot takes in two tensors `A` and `B` and performs a product and contraction
+function tensordot(A::LazyTensor{T1, N1}, B::LazyTensor{T2, N2}, idxs; mult_op=*, add_op=+, init = initial_value(add_op, Float64)) where {T1, T2, N1, N2}
+    if idxs isa Number
+        idxs = ([i for i in 1:idxs], [i for i in 1:idxs])
+    end
+    A_idxs = idxs[1]
+    B_idxs = idxs[2]
+    if length(A_idxs) != length(B_idxs)
+        throw(ArgumentError("lists of contraction indices must be the same length for both inputs"))
+    end
+    if any([i > N1 for i in A_idxs]) || any([i > N2 for i in B_idxs])
+        throw(ArgumentError("contraction indices cannot be greater than the number of dimensions"))
+    end
+
+    extrude = ((A.extrude[n] for n in 1:N1 if !(n in A_idxs))...,
+                (B.extrude[n] for n in 1:N2 if !(n in B_idxs))...,)
+    A_fields = [field(gensym(:i)) for _ in 1:N1]
+    B_fields = [field(gensym(:i)) for _ in 1:N2]
+    reduce_fields = []
+    for i in eachindex(A_idxs)
+        B_fields[B_idxs[i]] = A_fields[A_idxs[i]]
+        push!(reduce_fields, A_fields[A_idxs[i]])
+    end
+    AB = mapjoin(immediate(mult_op), relabel(A.data, A_fields), relabel(B.data, B_fields))
+    AB_reduce = aggregate(immediate(add_op), immediate(init), AB, reduce_fields...)
+    S = fixpoint_type(add_op, init, AB_reduce)
+    return LazyTensor{S}(identify(AB_reduce), extrude)
+end
+
 struct LogicStyle{N} <: BroadcastStyle end
 Base.Broadcast.BroadcastStyle(F::Type{<:LazyTensor{T, N}}) where {T, N} = LogicStyle{N}()
 Base.Broadcast.broadcastable(tns::LazyTensor) = tns

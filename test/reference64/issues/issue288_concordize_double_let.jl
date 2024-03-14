@@ -24,10 +24,10 @@ begin
             for i_9 = 1:A_mode1_stop
                 val = X[i_9, j_5]
                 for l_6 = 1:A_mode2_stop
-                    val_2 = A[i_9, l_6, k_6]
                     phase_stop = min(i_9, l_6 + -1)
                     if phase_stop >= i_9
-                        for s_5 = i_9:phase_stop
+                        for s_4 = i_9:phase_stop
+                            val_2 = A[i_9, l_6, k_6]
                             C[i_9, j_5, k_6] = val_2 * val + C[i_9, j_5, k_6]
                             C[i_9, j_5, k_6] = val * val_2 + C[i_9, j_5, k_6]
                         end
