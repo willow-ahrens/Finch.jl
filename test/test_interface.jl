@@ -153,13 +153,15 @@ using Finch: AsArray
         @test norm(A, Inf) == norm(A_ref, Inf)
     end
 
-    A = Tensor(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
-    B = Tensor(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
-    C = lazy(A)
-    D = lazy(B)
-    E = (C + D) * 0.5
-    F = compute(E)
-    @test F == A
+    let
+        A = Tensor(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        B = Tensor(Dense(SparseList(Element(0.0))), [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0])
+        C = lazy(A)
+        D = lazy(B)
+        E = (C + D) * 0.5
+        F = compute(E)
+        @test F == A
+    end
 
     let
         A = Tensor(Dense(SparseList(Element(0))), [0 0 44; 11 0 0; 22 00 55; 33 0 0])
@@ -167,5 +169,23 @@ using Finch: AsArray
         c_correct = Tensor(Dense(Dense(Element(0))), [1936 0 2420 0; 0 121 242 363; 2420 242 3509 726; 0 363 726 1089])
         c = compute(tensordot(lazy(A), lazy(B), ((2, ), (2,)), init=0))
         @test c == c_correct
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/457
+    let
+        A = zeros(2, 3, 3)
+        A[1, :, :] = [1 2 3; 4 5 6; 7 8 9]
+        A[2, :, :] = [1 1 1; 2 2 2; 3 3 3]
+        perm = (2, 3, 1)
+        A_t = permutedims(A, perm)
+
+        A_tns = Tensor(Dense(Dense(Dense(Element(0.0)))), A)
+        A_sw = swizzle(A_tns, perm...)
+        A_lazy = lazy(A_sw)
+
+        A_result = compute(A_lazy)
+
+        @test Array(A_result) == A_t
+        @test permutedims(A_tns, perm) == A_t
     end
 end
