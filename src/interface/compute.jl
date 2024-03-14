@@ -226,8 +226,14 @@ function (ctx::SuitableRep)(ex)
         idxs = getfields(ex.arg, ctx.bindings)
         return aggregate_rep(ex.op.val, ex.init.val, ctx(ex.arg), map(idx->findfirst(isequal(idx), idxs), ex.idxs))
     elseif ex.kind === reorder
+        #In this step, we need to consider that the reorder may add or permute
+        #dims. I haven't considered whether this is robust to dropping dims (it
+        #probably isn't)
         idxs = getfields(ex.arg, ctx.bindings)
-        return permutedims_rep(ctx(ex.arg), map(idx->findfirst(isequal(idx), ex.idxs), idxs))
+        perm = sortperm(idxs, by=idx->findfirst(isequal(idx), ex.idxs))
+        rep = permutedims_rep(ctx(ex.arg), perm)
+        dims = findall(idx -> idx in idxs, ex.idxs)
+        return extrude_rep(rep, dims)
     elseif ex.kind === relabel
         return ctx(ex.arg)
     elseif ex.kind === reformat
@@ -383,6 +389,7 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     prgm = fuse_reformats(prgm)
     prgm = push_labels(prgm, bindings)
     prgm = propagate_copy_queries(prgm)
+    display(prgm)
     prgm = format_queries(bindings)(prgm)
     prgm = normalize_names(prgm)
     FinchInterpreter(Dict())(prgm)
