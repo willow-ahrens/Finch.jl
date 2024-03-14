@@ -251,7 +251,7 @@ function display_statement(io, mime, node, indent)
         for body in node.bodies
             print(io, " " ^ (indent + 2))
             display_statement(io, mime, body, indent + 2)
-            println()
+            println(io)
         end
         print(io, " " ^ indent, "end")
     elseif operation(node) == produces
@@ -263,7 +263,7 @@ function display_statement(io, mime, node, indent)
         if length(node.args) > 0
             display_expression(io, mime, node.args[end])
         end
-        print(")")
+        print(io, ")")
     else
         throw(ArgumentError("Expected statement but got $(operation(node))"))
     end
