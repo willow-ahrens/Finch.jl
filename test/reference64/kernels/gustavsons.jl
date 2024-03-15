@@ -39,15 +39,14 @@ begin
         end
         w_lvl_qos_fill = 0
         w_lvl_ptr[1] = 1
-        w_lvlq_start = (1 - 1) * A_lvl_2.shape + 1
         w_lvlq_stop = 1 * A_lvl_2.shape
         Finch.resize_if_smaller!(w_lvl_ptr, 1 + 1)
         Finch.fill_range!(w_lvl_ptr, 0, 1 + 1, 1 + 1)
-        w_lvlold = length(w_lvl_tbl)
+        w_lvlold = length(w_lvl_tbl) + 1
         Finch.resize_if_smaller!(w_lvl_tbl, w_lvlq_stop)
-        Finch.fill_range!(w_lvl_tbl, false, w_lvlold + 1, w_lvlq_stop)
+        Finch.fill_range!(w_lvl_tbl, false, w_lvlold, w_lvlq_stop)
         Finch.resize_if_smaller!(w_lvl_val, w_lvlq_stop)
-        Finch.fill_range!(w_lvl_val, 0.0, w_lvlq_start, w_lvlq_stop)
+        Finch.fill_range!(w_lvl_val, 0.0, w_lvlold, w_lvlq_stop)
         A_lvl_2_q = A_lvl_ptr[A_lvl_q]
         A_lvl_2_q_stop = A_lvl_ptr[A_lvl_q + 1]
         if A_lvl_2_q < A_lvl_2_q_stop
