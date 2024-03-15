@@ -53,7 +53,7 @@ begin
                 if y_lvl_i == phase_stop_2 && A_lvl_2_i == phase_stop_2
                     A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                     y_lvl_2_val = y_lvl_val[y_lvl_q]
-                    p_val = (Finch.Chooser{0}())(p_val, ifelse(y_lvl_2_val && A_lvl_3_val, phase_stop_2, 0))
+                    p_val = (Finch.Chooser{0}())(p_val, (Core).ifelse(y_lvl_2_val && A_lvl_3_val, phase_stop_2, 0))
                     y_lvl_q += 1
                     A_lvl_2_q += 1
                 elseif A_lvl_2_i == phase_stop_2
