@@ -23,15 +23,14 @@ quote
     end
     tmp_lvl_qos_fill = 0
     tmp_lvl_ptr[1] = 1
-    tmp_lvlq_start = (1 - 1) * ref_lvl.shape + 1
     tmp_lvlq_stop = 1 * ref_lvl.shape
     Finch.resize_if_smaller!(tmp_lvl_ptr, 1 + 1)
     Finch.fill_range!(tmp_lvl_ptr, 0, 1 + 1, 1 + 1)
-    tmp_lvlold = length(tmp_lvl_tbl)
+    tmp_lvlold = length(tmp_lvl_tbl) + 1
     Finch.resize_if_smaller!(tmp_lvl_tbl, tmp_lvlq_stop)
-    Finch.fill_range!(tmp_lvl_tbl, false, tmp_lvlold + 1, tmp_lvlq_stop)
+    Finch.fill_range!(tmp_lvl_tbl, false, tmp_lvlold, tmp_lvlq_stop)
     Finch.resize_if_smaller!(tmp_lvl_val, tmp_lvlq_stop)
-    Finch.fill_range!(tmp_lvl_val, false, tmp_lvlq_start, tmp_lvlq_stop)
+    Finch.fill_range!(tmp_lvl_val, false, tmp_lvlold, tmp_lvlq_stop)
     ref_lvl_q = ref_lvl_ptr[1]
     ref_lvl_q_stop = ref_lvl_ptr[1 + 1]
     if ref_lvl_q < ref_lvl_q_stop

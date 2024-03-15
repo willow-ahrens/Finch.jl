@@ -264,10 +264,10 @@ function assemble_level!(lvl::VirtualSparseByteMapLevel, ctx, pos_start, pos_sto
         $q_stop = $(ctx(pos_stop)) * $(ctx(lvl.shape))
         Finch.resize_if_smaller!($(lvl.ptr), $pos_stop + 1)
         Finch.fill_range!($(lvl.ptr), 0, $pos_start + 1, $pos_stop + 1)
-        $old = length($(lvl.tbl))
+        $old = length($(lvl.tbl)) + 1
         Finch.resize_if_smaller!($(lvl.tbl), $q_stop)
-        Finch.fill_range!($(lvl.tbl), false, $old + 1, $q_stop)
-        $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(q_start, Tp), value(q_stop, Tp)), ctx))
+        Finch.fill_range!($(lvl.tbl), false, $old, $q_stop)
+        $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(old, Tp), value(q_stop, Tp)), ctx))
     end
 end
 
