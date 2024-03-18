@@ -719,7 +719,7 @@ using CIndices
 
         @test actual == expected
 
-        copyto!(A, A_sw)
+        copyto!(zeros(size(A_sw)...), A_sw)
 
         @test A == A_t
     end
