@@ -725,4 +725,18 @@ using CIndices
         @test B == A_t
     end
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/474
+    let
+        A = [1 2 3; 4 5 6; 7 8 9]
+        A_t = permutedims(A, (2, 1))
+        A_tns = Tensor(Dense(Dense(Element(0.0))), A)
+        A_sw = swizzle(A_tns, 2, 1)
+
+        @test prod(A_t; dims=2)[:, 1] == prod(A_sw; dims=2)
+        @test prod(A_t; dims=1)[1, :] == prod(A_sw; dims=1)
+        @test prod(A_t) == prod(A_sw)
+
+        @test tensordot(A_sw, A_sw, (2, 1)) == transpose(A * A)
+    end
+
 end
