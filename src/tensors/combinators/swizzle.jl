@@ -34,7 +34,6 @@ function Base.setindex!(arr::SwizzleArray{perm}, v, inds...) where {perm}
 end
 
 Base.size(arr::SwizzleArray{dims}) where {dims} = map(n->size(arr.body)[n], dims)
-Base.length(arr::SwizzleArray) = prod(size(arr))
 
 Base.show(io::IO, ex::SwizzleArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::SwizzleArray{dims}) where {dims}
