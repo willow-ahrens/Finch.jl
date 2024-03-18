@@ -718,10 +718,11 @@ using CIndices
         expected = broadcast(.*, A_sw, A_sw)
 
         @test actual == expected
+        
+        B = zeros(size(A_sw)...)
+        copyto!(B, A_sw)
 
-        copyto!(zeros(size(A_sw)...), A_sw)
-
-        @test A == A_t
+        @test B == A_t
     end
 
 end
