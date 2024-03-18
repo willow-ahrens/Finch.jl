@@ -718,6 +718,10 @@ using CIndices
         expected = broadcast(.*, A_sw, A_sw)
 
         @test actual == expected
+
+        copyto!(A, A_sw)
+
+        @test A == A_t
     end
 
 end
