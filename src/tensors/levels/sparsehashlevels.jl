@@ -75,17 +75,17 @@ function moveto(lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}, device) where {
     return SparseHashLevel{N, TI, Ptr, Tbl, typeof(ptr_2), typeof(srt_2), typeof(lvl_2)}(lvl_2, lvl.shape, ptr_2, tbl_2, srt_2)
 end
 
-pattern!(lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}) where {N, TI, Ptr, Tbl, Srt, Lvl} = 
+pattern!(lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}) where {N, TI, Ptr, Tbl, Srt, Lvl} =
     SparseHashLevel{N, TI}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
 
 function countstored_level(lvl::SparseHashLevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
 
-redefault!(lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}, init) where {N, TI, Ptr, Tbl, Srt, Lvl} = 
+redefault!(lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}, init) where {N, TI, Ptr, Tbl, Srt, Lvl} =
     SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
 
-Base.resize!(lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}, dims...) where {N, TI, Ptr, Tbl, Srt, Lvl} = 
+Base.resize!(lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}, dims...) where {N, TI, Ptr, Tbl, Srt, Lvl} =
     SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}(resize!(lvl.lvl,  dims[1:end-N]...), (dims[end-N + 1:end]...,), lvl.ptr, lvl.tbl, lvl.srt)
 
 function Base.show(io::IO, lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}) where {N, TI, Ptr, Tbl, Srt, Lvl}
@@ -168,7 +168,7 @@ mutable struct VirtualSparseHashLevel <: AbstractVirtualLevel
     qos_stop
     Lvl
 end
-  
+
 is_level_injective(lvl::VirtualSparseHashLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
 is_level_atomic(lvl::VirtualSparseHashLevel, ctx) = false
 
@@ -190,7 +190,7 @@ function virtual_moveto_level(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler
     virtual_moveto_level(lvl.lvl, ctx, arch)
 end
 
-function virtualize(ex, ::Type{SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}, ctx, tag=:lvl) where {N, TI, Ptr, Tbl, Srt, Lvl}  
+function virtualize(ex, ::Type{SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}, ctx, tag=:lvl) where {N, TI, Ptr, Tbl, Srt, Lvl}
     sym = freshen(ctx, tag)
 
     shape = map(n->value(:($sym.shape[$n]), Int), 1:N)
@@ -343,7 +343,7 @@ function instantiate(trv::SparseHashWalkTraversal, ctx, mode::Reader, subprotos,
             body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop),
-                    body = (ctx, ext) -> 
+                    body = (ctx, ext) ->
                         if R == 1
                             Stepper(
                                 seek = (ctx, ext) -> quote
@@ -412,6 +412,7 @@ function instantiate(trv::SparseHashFollowTraversal, ctx, mode::Reader, subproto
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
     qos = freshen(ctx.code, tag, :_q)
+    my_key = freshen(ctx.code, tag, :_key)
     Furlable(
         body = (ctx, ext) ->
             if length(coords)  + 1 < lvl.N
@@ -441,7 +442,7 @@ struct SparseHashLaminateTraversal
     dirty
     coords
 end
-    
+
 instantiate(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, mode::Updater, protos) =
     instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
 function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseHashLevel}, ctx, mode::Updater, protos)

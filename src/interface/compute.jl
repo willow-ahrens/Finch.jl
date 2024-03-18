@@ -35,7 +35,7 @@ lift_subqueries = Rewrite(Fixpoint(Postwalk(Chain([
 
 function simplify_queries(bindings)
     Rewrite(Fixpoint(Postwalk(Chain([
-        (@rule aggregate(~op, ~init, ~arg) => mapjoin(op, init, arg)),
+        (@rule aggregate(~op, ~init, ~arg) => mapjoin(op, arg)),
         (@rule mapjoin(overwrite, ~lhs, ~rhs) =>
             reorder(rhs, getfields(mapjoin(overwrite, ~lhs, ~rhs), bindings)...)),
     ]))))
@@ -64,9 +64,18 @@ function pretty_labels(root)
     ])))(root)
 end
 
+"""
+normalize the program to a form where reorders wrap relabels and both are pushed to the leaves of mapjoins
+"""
 function push_labels(root, bindings)
-    Rewrite(Fixpoint(Postwalk(Chain([
-        (@rule reorder(mapjoin(~op, ~args...), ~idxs...) => 
+    root = Rewrite(Postwalk(Chain([
+        (@rule relabel(~arg, ~idxs...) => reorder(relabel(~arg, ~idxs...), idxs...)),
+        #TODO: This statement sets the loop order, which should probably be done with more forethought as a separate step before concordization.
+        (@rule mapjoin(~args...) => reorder(mapjoin(args...), getfields(mapjoin(args...), bindings)...))
+    ])))(root)
+
+    root = Rewrite(Fixpoint(Prewalk(Chain([
+        (@rule reorder(mapjoin(~op, ~args...), ~idxs...) =>
             mapjoin(op, map(arg -> reorder(arg, ~idxs...), args)...)),
         (@rule relabel(mapjoin(~op, ~args...), ~idxs...) => begin
             idxs_2 = getfields(mapjoin(op, args...), bindings)
@@ -82,13 +91,34 @@ function push_labels(root, bindings)
             idxs_4 = map(idx -> get(reidx, idx, idx), idxs_3)
             reorder(relabel(arg, idxs_4...), idxs_2...)
         end),
-        (@rule reformat(~tns, relabel(~arg, ~idxs...)) => relabel(reformat(tns, arg), idxs...)),
+    ]))))(root)
+
+    #=
+    root = Rewrite(Fixpoint(Postwalk(Chain([
         (@rule plan(~a1..., query(~b, relabel(~c, ~i...)), ~a2...) => begin
             d = alias(gensym(:A))
             bindings[d] = c
             rw = Rewrite(Postwalk(@rule b => relabel(d, i...)))
             plan(a1..., query(d, c), map(rw, a2)...)
         end),
+        (@rule plan(~a1..., query(~b, reorder(~c, ~i...)), ~a2...) => begin
+            d = alias(gensym(:A))
+            bindings[d] = c
+            rw = Rewrite(Postwalk(@rule b => reorder(d, i...)))
+            plan(a1..., query(d, c), map(rw, a2)...)
+        end),
+        #(@rule reformat(~tns, relabel(~arg, ~idxs...)) => relabel(reformat(tns, arg), idxs...)),
+    ]))))(root)
+    =#
+end
+
+#=
+function pull_reorders(root, bindings)
+    root = Rewrite(Fixpoint(Prewalk(Chain([
+        (@rule mapjoin(~args...) => reorder(mapjoin(args...), getfields(mapjoin(args...), bindings)...))
+    ]))))(root)
+    root = Rewrite(Fixpoint(Prewalk(Chain([
+        (@rule mapjoin(~a1..., reorder(~b, ~i...), ~a2...) => mapjoin(a1..., b, a2...)),
     ]))))(root)
 end
 
@@ -102,6 +132,7 @@ function push_reorders(root, bindings)
         end),
     ]))))(root)
 end
+=#
 
 pad_labels = Rewrite(Postwalk(
     @rule relabel(~arg, ~idxs...) => reorder(relabel(~arg, ~idxs...), idxs...)
@@ -186,14 +217,23 @@ function (ctx::SuitableRep)(ex)
     elseif ex.kind === table
         return data_rep(ex.tns.val)
     elseif ex.kind === mapjoin
-        ##Assumes concordant mapjoin arguments, probably okay
+        #This step assumes concordant mapjoin arguments, and also that the
+        #mapjoin arguments have the same number of dimensions. It's necessary to
+        #assume this because it's not possible to recursively reconstruct a
+        #total ordering of the indices as we go.
         return map_rep(ex.op.val, map(ctx, ex.args)...)
     elseif ex.kind === aggregate
         idxs = getfields(ex.arg, ctx.bindings)
         return aggregate_rep(ex.op.val, ex.init.val, ctx(ex.arg), map(idx->findfirst(isequal(idx), idxs), ex.idxs))
     elseif ex.kind === reorder
+        #In this step, we need to consider that the reorder may add or permute
+        #dims. I haven't considered whether this is robust to dropping dims (it
+        #probably isn't)
         idxs = getfields(ex.arg, ctx.bindings)
-        return permutedims_rep(ctx(ex.arg), map(idx->findfirst(isequal(idx), ex.idxs), idxs))
+        perm = sortperm(idxs, by=idx->findfirst(isequal(idx), ex.idxs))
+        rep = permutedims_rep(ctx(ex.arg), perm)
+        dims = findall(idx -> idx in idxs, ex.idxs)
+        return extrude_rep(rep, dims)
     elseif ex.kind === relabel
         return ctx(ex.arg)
     elseif ex.kind === reformat
@@ -368,10 +408,8 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     prgm = pretty_labels(prgm)
     bindings = getbindings(prgm)
     prgm = push_labels(prgm, bindings)
-    prgm = push_reorders(prgm, bindings)
     prgm = concordize(prgm, bindings)
     prgm = fuse_reformats(prgm)
-    prgm = pad_labels(prgm)
     prgm = push_labels(prgm, bindings)
     prgm = propagate_copy_queries(prgm)
     prgm = format_queries(bindings)(prgm)
