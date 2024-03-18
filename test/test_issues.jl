@@ -704,4 +704,20 @@ using CIndices
         @finch (output .= 0; for i=_, j=_ output[] += A_hash[j,i] * B_hash[follow(j), i] end)
     end
 
+    let
+        A = zeros(2, 3, 3)
+        A[1, :, :] = [1 2 3; 4 5 6; 7 8 9]
+        A[2, :, :] = [1 1 1; 2 2 2; 3 3 3]
+        perm = (2, 3, 1)
+        A_t = permutedims(A, perm)
+
+        A_tns = Tensor(Dense(Dense(Dense(Element(0.0)))), A)
+        A_sw = swizzle(A_tns, perm...)
+
+        actual = broadcast(.*, A_t, A_t)
+        expected = broadcast(.*, A_sw, A_sw)
+
+        @test actual == expected
+    end
+
 end
