@@ -11,7 +11,14 @@ end
 LazyTensor{T}(data, extrude::NTuple{N, Bool}) where {T, N} = LazyTensor{T, N}(data, extrude)
 
 Base.ndims(::Type{LazyTensor{T, N}}) where {T, N} = N
+Base.ndims(tns::LazyTensor) = ndims(typeof(tns))
 Base.eltype(::Type{<:LazyTensor{T}}) where {T} = T
+Base.eltype(tns::LazyTensor) = eltype(typeof(tns))
+
+Base.size(::LazyTensor) =
+    throw(ErrorException("Base.size is not supported for LazyTensor. Call `compute()` first."))
+
+Base.getindex(::LazyTensor, i...) = throw(ErrorException("Lazy indexing is not supported. Call `compute()` first."))
 
 function identify(data)
     lhs = alias(gensym(:A))
@@ -38,6 +45,8 @@ function LazyTensor{T}(arr::Tensor) where {T}
     LazyTensor{eltype(arr), ndims(arr)}(tns, extrude)
 end
 LazyTensor(data::LazyTensor) = data
+
+swizzle(arr::LazyTensor, dims...) = permutedims(arr, dims)
 
 Base.sum(arr::LazyTensor; kwargs...) = reduce(+, arr; kwargs...)
 Base.prod(arr::LazyTensor; kwargs...) = reduce(*, arr; kwargs...)
@@ -197,6 +206,7 @@ function Base.permutedims(arg::LazyTensor{T, N}, perm) where {T, N}
     idxs = [field(gensym(:i)) for _ in 1:N]
     return LazyTensor{T, N}(reorder(relabel(arg.data, idxs...), idxs[perm]...), arg.extrude[perm])
 end
+Base.permutedims(arr::SwizzleArray, perm) = swizzle(arr, perm...)
 
 Base.:+(
     x::LazyTensor,
