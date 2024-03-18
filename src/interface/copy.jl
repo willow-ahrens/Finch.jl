@@ -31,17 +31,12 @@ function Base.permutedims(src::Tensor, perm)
     copyto!(dst, swizzle(src, perm...))
 end
 
-# I'm not sure if this is the right way for specializing types (breaking Union from below) but
-# without it there's:
-# MethodError: copyto!(::Vector{Float64}, ::Finch.SwizzleArray{(2, 3, 1), Tensor{DenseLevel{Int64,
-#   DenseLevel{Int64, DenseLevel{Int64, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}}}}}) is ambiguous.
-#
 function Base.copyto!(dst::AbstractArray, src::SwizzleArray{dims}) where {dims}
     ret = copyto!(swizzle(dst, invperm(dims)...), src.body)
     return ret.body
 end
 
-function Base.copyto!(dst::Union{Tensor, AbstractArray}, src::SwizzleArray{dims}) where {dims}
+function Base.copyto!(dst::Tensor, src::SwizzleArray{dims}) where {dims}
     ret = copyto!(swizzle(dst, invperm(dims)...), src.body)
     return ret.body
 end
