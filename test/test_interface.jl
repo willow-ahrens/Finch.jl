@@ -193,7 +193,7 @@ using Finch: AsArray
     let
         A = zeros(2, 3, 3)
         A_tns = Tensor(Dense(Dense(Dense(Element(0.0)))), A)
-        A_sw = swizzle(A_tns, perm...)
+        A_sw = swizzle(A_tns, 2, 3, 1)
 
         @test compute(A) === A
         @test compute(A_tns) === A_tns
