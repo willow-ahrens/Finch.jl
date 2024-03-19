@@ -365,15 +365,9 @@ Compute the value of a lazy tensor. The result is the argument itself, or a
 tuple of arguments if multiple arguments are passed.
 """
 compute(args...; kwargs...) = compute(args; kwargs...)
-compute(arg; ctx=default_optimizer) = maybe_compute((arg,), ctx)[1]
-compute(args::Tuple; ctx=default_optimizer) = maybe_compute(args, ctx)
-function maybe_compute(args::Tuple, ctx)
-    if any(islazy, args)
-        compute_impl(map(tologic, args), ctx)
-    else
-        args
-    end
-end
+compute(arg; kwargs...) = compute((arg,); kwargs...)[1]
+compute(args::Tuple; ctx=default_optimizer) = compute_impl(map(lazy, args), ctx)
+
 function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     args = collect(args)
     vars = map(arg -> alias(gensym(:A)), args)
