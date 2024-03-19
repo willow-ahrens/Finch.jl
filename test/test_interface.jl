@@ -188,4 +188,15 @@ using Finch: AsArray
         @test Array(A_result) == A_t
         @test permutedims(A_tns, perm) == A_t
     end
+
+    #
+    let
+        A = zeros(2, 3, 3)
+        A_tns = Tensor(Dense(Dense(Dense(Element(0.0)))), A)
+        A_sw = swizzle(A_tns, perm...)
+
+        @test compute(A) === A
+        @test compute(A_tns) === A_tns
+        @test compute(A_sw) === A_sw
+    end
 end
