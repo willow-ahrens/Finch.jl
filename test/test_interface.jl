@@ -171,6 +171,14 @@ using Finch: AsArray
         @test c == c_correct
     end
 
+    let
+        A = lazy(Tensor(Dense(SparseList(Element(0))), [0 0 44; 11 0 0; 22 00 55; 33 0 0]))
+        B = lazy(Tensor(Dense(SparseList(Element(0))), [0 0 44; 11 0 0; 22 00 55; 33 0 0]'))
+        c_correct = Tensor(Dense(Dense(Element(0))), [1936 0 2420 0; 0 121 242 363; 2420 242 3509 726; 0 363 726 1089])
+        c = compute(sum(A[:, :, nothing] .* B[nothing, :, :], dims=[2]))
+        @test c == c_correct
+    end
+
     #https://github.com/willow-ahrens/Finch.jl/issues/457
     let
         A = zeros(2, 3, 3)
