@@ -276,7 +276,7 @@ function finch_pointwise_logic_to_program(scope, ex)
             idx in idxs_2 ? index_instance(idx.name) : first(axes(arg)[n])
         end
         access_instance(tag_instance(variable_instance(arg.name), scope[arg]), literal_instance(reader), idxs_3...)
-    elseif (@capture ex reorder(relabel(~arg::isimmediate), ~idxs_2...))
+    elseif (@capture ex reorder(relabel(~arg::isimmediate), ~idxs...))
         literal_instance(arg.val)
     else
         error("Unrecognized logic: $(ex)")
@@ -358,6 +358,28 @@ is fused with the execution of `z + 1`.
 """
 lazy(arg) = LazyTensor(arg)
 
+function propagate_map_queries(root)
+    rets = []
+    for node in PostOrderDFS(root)
+        if @capture node produces(~args...)
+            append!(rets, args)
+        end
+    end
+    props = Dict()
+    for node in PostOrderDFS(root)
+        if @capture node query(~a, mapjoin(~op, ~args...))
+            if !(a in rets)
+                props[a] = mapjoin(op, args...)
+            end
+        end
+    end
+    Rewrite(Prewalk(Chain([
+        (a -> if haskey(props, a) props[a] end),
+        (@rule query(~a, ~b) => if haskey(props, a) plan() end),
+        (@rule plan(~a1..., plan(), ~a2...) => plan(a1..., a2...)),
+    ])))(root)
+end
+
 """
     compute(args..., ctx=default_optimizer) -> Any
 
@@ -382,6 +404,7 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     bindings = getbindings(prgm)
     prgm = simplify_queries(bindings)(prgm)
     prgm = propagate_copy_queries(prgm)
+    prgm = propagate_map_queries(prgm)
     prgm = pretty_labels(prgm)
     bindings = getbindings(prgm)
     prgm = push_labels(prgm, bindings)
