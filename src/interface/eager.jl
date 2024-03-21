@@ -31,9 +31,12 @@ function Base.copy(bc::Broadcasted{FinchStyle{N}}) where {N}
 end
 
 function Base.reduce(op, src::Tensor; kw...)
-    bc = broadcasted(identity, src)
     reduce(op, broadcasted(identity, src); kw...)
 end
+function Base.reduce(op, src::SwizzleArray; kw...)
+    reduce(op, broadcasted(identity, src); kw...)
+end
+
 function Base.mapreduce(f, op, src::Tensor, args::Union{Tensor, Base.AbstractArrayOrBroadcasted, Number}...; kw...)
     reduce(op, broadcasted(f, src, args...); kw...)
 end
@@ -54,6 +57,9 @@ function Base.reduce(op::Function, bc::Broadcasted{FinchStyle{N}}; dims=:, init 
 end
 
 function tensordot(A::Tensor, B::Tensor, idxs; kw...)
+    compute(tensordot(lazy(A), lazy(B), idxs; kw...))
+end
+function tensordot(A::SwizzleArray, B::SwizzleArray, idxs; kw...)
     compute(tensordot(lazy(A), lazy(B), idxs; kw...))
 end
 
@@ -92,7 +98,7 @@ Base.:-(x::Tensor, y::Tensor) = map(-, x, y)
 Base.:/(x::Tensor, y::Number) = map(/, x, y)
 Base.:/(x::Number, y::Tensor) = map(\, y, x)
 
-const FiberOrBroadcast = Union{<:Tensor, <:Broadcasted{FinchStyle{N}} where N}
+const FiberOrBroadcast = Union{<:Tensor, <:SwizzleArray, <:Broadcasted{FinchStyle{N}} where N}
 
 Base.sum(arr::FiberOrBroadcast; kwargs...) = reduce(+, arr; kwargs...)
 Base.prod(arr::FiberOrBroadcast; kwargs...) = reduce(*, arr; kwargs...)
