@@ -69,6 +69,8 @@ end
 
 table_isdefined(tbl::DictTable{Ti, Tp}, p) where {Ti, Tp} = p + 1 <= length(tbl.ptr)
 
+table_pos(tbl::DictTable{Ti, Tp}, p) where {Ti, Tp} = tbl.ptr[p + 1]
+
 table_query(tbl::DictTable{Ti, Tp}, p) where {Ti, Tp} = (p, tbl.ptr[p], tbl.ptr[p + 1])
 
 subtable_init(tbl::DictTable{Ti}, (p, start, stop)) where {Ti} = start < stop ? (tbl.idx[start], tbl.idx[stop - 1], start) : (Ti(1), Ti(0), start)
@@ -176,18 +178,7 @@ end
 
 function countstored_level(lvl::SparseLevel, pos)
     pos == 0 && return countstored_level(lvl.lvl, pos)
-    subtbl = table_query(lvl.tbl, pos)
-    start, stop, state = subtable_init(lvl.tbl, subtbl)
-    if start <= stop
-        i, qos = subtable_get(lvl.tbl, subtbl, state)
-        if i < stop
-            i, state = subtable_seek(lvl.tbl, subtbl, state, start, stop)
-            i, qos = subtable_get(lvl.tbl, subtbl, state)
-        end
-        countstored_level(lvl.lvl, qos)
-    else
-        0
-    end
+    countstored_level(lvl.lvl, table_pos(lvl.tbl, pos) - 1)
 end
 
 pattern!(lvl::SparseLevel{Ti}) where {Ti} = 
