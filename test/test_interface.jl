@@ -196,4 +196,11 @@ using Finch: AsArray
         @test Array(A_result) == A_t
         @test permutedims(A_tns, perm) == A_t
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/481
+    let
+        r = fsprand(1, 10, 10, 0.01)
+        r_tns = Tensor(Dense(Dense(Dense(Element(0.0)))), r)
+        @test r_tns + r_tns == 2 * r_tns
+    end
 end
