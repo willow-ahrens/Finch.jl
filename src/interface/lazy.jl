@@ -213,7 +213,8 @@ Base.copyto!(out, bc::Broadcasted{LazyStyle{N}}) where {N} = copyto!(out, copy(b
 
 function Base.copy(bc::Broadcasted{LazyStyle{N}}) where {N}
     bc_lgc = broadcast_to_logic(bc)
-    data = broadcast_to_query(bc_lgc, [field(gensym(:i)) for _ in 1:N])
+    idxs = [field(gensym(:i)) for _ in 1:N]
+    data = reorder(broadcast_to_query(bc_lgc, idxs), idxs)
     extrude = ntuple(n -> broadcast_to_extrude(bc_lgc, n), N)
     return LazyTensor{eltype(bc)}(identify(data), extrude)
 end
