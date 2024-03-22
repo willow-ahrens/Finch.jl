@@ -10,6 +10,9 @@ mutable struct LazyTensor{T, N}
 end
 LazyTensor{T}(data, extrude::NTuple{N, Bool}) where {T, N} = LazyTensor{T, N}(data, extrude)
 
+islazy(arg) = false
+islazy(arg::LazyTensor) = true
+
 Base.ndims(::Type{LazyTensor{T, N}}) where {T, N} = N
 Base.ndims(tns::LazyTensor) = ndims(typeof(tns))
 Base.eltype(::Type{<:LazyTensor{T}}) where {T} = T

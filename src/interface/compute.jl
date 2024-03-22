@@ -386,9 +386,10 @@ end
 Compute the value of a lazy tensor. The result is the argument itself, or a
 tuple of arguments if multiple arguments are passed.
 """
-compute(args...; ctx=default_optimizer) = compute(arg, default_optimizer)
-compute(arg; ctx=default_optimizer) = compute_impl((arg,), ctx)[1]
-compute(args::Tuple; ctx=default_optimizer) = compute_impl(args, ctx)
+compute(args...; kwargs...) = compute(args; kwargs...)
+compute(arg; kwargs...) = compute((arg,); kwargs...)[1]
+compute(args::Tuple; ctx=default_optimizer) = compute_impl(map(lazy, args), ctx)
+
 function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     args = collect(args)
     vars = map(arg -> alias(gensym(:A)), args)
