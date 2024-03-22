@@ -741,6 +741,6 @@ using CIndices
 
     let
         D = Tensor(Dense{Int64}(Sparse{Int64}(Element{0.0, Float64, Int64}([0.4550140005294436, 0.6850107897370502, 0.4426087218562376, 0.24735950954269276, 0.05888493126676229, 0.5646016165775413, 0.0316029017824437]), 5, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}([1, 3, 5, 8, 8, 8], [2, 5, 2, 3, 1, 2, 3], [1, 2, 3, 4, 5, 6, 7], Dict((3, 2) => 6, (1, 2) => 1, (3, 1) => 5, (3, 3) => 7, (2, 2) => 3, (2, 3) => 4, (1, 5) => 2))), 5))
-        @test countstored(D) = 7
+        @test countstored(D) == 7
     end
 end
