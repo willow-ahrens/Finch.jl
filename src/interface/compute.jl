@@ -224,16 +224,20 @@ function (ctx::SuitableRep)(ex)
         return map_rep(ex.op.val, map(ctx, ex.args)...)
     elseif ex.kind === aggregate
         idxs = getfields(ex.arg, ctx.bindings)
-        return aggregate_rep(ex.op.val, ex.init.val, ctx(ex.arg), map(idx->findfirst(isequal(idx), idxs), ex.idxs))
+        return aggregate_rep(ex.op.val, ex.init.val, ctx(ex.arg), map(idx->findfirst(isequal(idx), idxs), intersect(ex.idxs, idxs)))
     elseif ex.kind === reorder
-        #In this step, we need to consider that the reorder may add or permute
-        #dims. I haven't considered whether this is robust to dropping dims (it
-        #probably isn't)
+        #This step is so messy because the reorder may add or subtract dims, and
+        #our permutedims_rep function can't handle that so we have to first
+        #drop, then permute, then add dimensions.
         idxs = getfields(ex.arg, ctx.bindings)
-        perm = sortperm(idxs, by=idx->findfirst(isequal(idx), ex.idxs))
-        rep = permutedims_rep(ctx(ex.arg), perm)
-        dims = findall(idx -> idx in idxs, ex.idxs)
-        return extrude_rep(rep, dims)
+        rep = ctx(ex.arg)
+        rep = aggregate_rep(initwrite(default(rep)), default(rep), rep, findall(idx -> !(idx in ex.idxs), idxs))
+        idxs = intersect(idxs, ex.idxs)
+        dims = map(idx->findfirst(isequal(idx), ex.idxs), idxs)
+        perm = sortperm(dims)
+        rep = permutedims_rep(rep, perm)
+        dims = dims[perm]
+        return pad_data_rep(extrude_rep(rep, dims), length(ex.idxs))
     elseif ex.kind === relabel
         return ctx(ex.arg)
     elseif ex.kind === reformat
@@ -271,11 +275,12 @@ using Finch.FinchNotation: block_instance, declare_instance, call_instance, loop
 function finch_pointwise_logic_to_program(scope, ex)
     if @capture ex mapjoin(~op, ~args...)
         call_instance(literal_instance(op.val), map(arg -> finch_pointwise_logic_to_program(scope, arg), args)...)
-    elseif (@capture ex reorder(relabel(~arg::isalias, ~idxs_1...), ~idxs_2...)) && issubsequence(idxs_1, idxs_2)
+    elseif (@capture ex reorder(relabel(~arg::isalias, ~idxs_1...), ~idxs_2...)) && issubsequence(intersect(idxs_1, idxs_2), idxs_2)
+        tns = scope[arg]
         idxs_3 = map(enumerate(idxs_1)) do (n, idx)
-            idx in idxs_2 ? index_instance(idx.name) : first(axes(arg)[n])
+            idx in idxs_2 ? index_instance(idx.name) : first(axes(tns)[n])
         end
-        access_instance(tag_instance(variable_instance(arg.name), scope[arg]), literal_instance(reader), idxs_3...)
+        access_instance(tag_instance(variable_instance(arg.name), tns), literal_instance(reader), idxs_3...)
     elseif (@capture ex reorder(relabel(~arg::isimmediate), ~idxs...))
         literal_instance(arg.val)
     else
@@ -307,7 +312,7 @@ function (ctx::FinchInterpreter)(ex)
             body = loop_instance(idx, dimless, body)
         end
         body = block_instance(declare_instance(res, literal_instance(default(tns.val))), body, yieldbind_instance(res))
-        #display(body) # wow it's really satisfying to uncomment this and type finch ops at the repl.
+        display(body) # wow it's really satisfying to uncomment this and type finch ops at the repl.
         execute(body).res
     elseif @capture ex produces(~args...)
         return map(arg -> ctx.scope[arg], args)
@@ -410,6 +415,7 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     prgm = push_labels(prgm, bindings)
     prgm = concordize(prgm, bindings)
     prgm = fuse_reformats(prgm)
+    bindings = getbindings(prgm)
     prgm = push_labels(prgm, bindings)
     prgm = propagate_copy_queries(prgm)
     bindings = getbindings(prgm)
