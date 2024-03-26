@@ -47,7 +47,7 @@ export diagmask, lotrimask, uptrimask, bandmask, chunkmask
 export scale, products, offset, permissive, protocolize, swizzle, toeplitz, window
 export PlusOneVector
 
-export lazy, compute, tensordot
+export lazy, compute, tensordot, einsum
 
 export choose, minby, maxby, overwrite, initwrite, filterop, d
 
