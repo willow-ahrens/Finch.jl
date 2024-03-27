@@ -2,7 +2,7 @@ using Base.Broadcast: Broadcasted
 
 """
     SparseData(lvl)
-    
+
 Represents a tensor `A` where `A[:, ..., :, i]` is sometimes entirely default(lvl)
 and is sometimes represented by `lvl`.
 """
@@ -17,7 +17,7 @@ Base.eltype(fbr::SparseData) = eltype(fbr.lvl)
 
 """
     RepeatData(lvl)
-    
+
 Represents a tensor `A` where `A[:, ..., :, i]` is sometimes entirely default(lvl)
 and is sometimes represented by repeated runs of `lvl`.
 """
@@ -32,7 +32,7 @@ Base.eltype(fbr::RepeatData) = eltype(fbr.lvl)
 
 """
     DenseData(lvl)
-    
+
 Represents a tensor `A` where each `A[:, ..., :, i]` is represented by `lvl`.
 """
 struct DenseData
@@ -46,7 +46,7 @@ Base.eltype(fbr::DenseData) = eltype(fbr.lvl)
 
 """
     ExtrudeData(lvl)
-    
+
 Represents a tensor `A` where `A[:, ..., :, 1]` is the only slice, and is represented by `lvl`.
 """
 struct ExtrudeData
@@ -59,7 +59,7 @@ Base.eltype(fbr::ExtrudeData) = eltype(fbr.lvl)
 
 """
     HollowData(lvl)
-    
+
 Represents a tensor which is represented by `lvl` but is sometimes entirely `default(lvl)`.
 """
 struct HollowData
@@ -73,7 +73,7 @@ Base.eltype(fbr::HollowData) = eltype(fbr.lvl)
 
 """
     ElementData(default, eltype)
-    
+
 Represents a scalar element of type `eltype` and default `default`.
 """
 struct ElementData
@@ -332,7 +332,7 @@ rep_construct_hollow(fbr::RepeatData, protos) = Tensor(construct_level_rep(fbr, 
 rep_construct_hollow(fbr::SparseData, protos) = Tensor(construct_level_rep(fbr, protos...))
 rep_construct(fbr, protos) = Tensor(construct_level_rep(fbr, protos...))
 
-construct_level_rep(fbr::SparseData, proto::Union{Nothing, typeof(walk), typeof(extrude)}, protos...) = SparseDict(construct_level_rep(fbr.lvl, protos...))
+construct_level_rep(fbr::SparseData, proto::Union{Nothing, typeof(walk), typeof(extrude)}, protos...) = SparseList(construct_level_rep(fbr.lvl, protos...))
 construct_level_rep(fbr::SparseData, proto::Union{typeof(laminate)}, protos...) = SparseDict(construct_level_rep(fbr.lvl, protos...))
 construct_level_rep(fbr::RepeatData, proto::Union{Nothing, typeof(walk), typeof(extrude)}, protos...) = SparseRLE(construct_level_rep(fbr.lvl, protos...))
 construct_level_rep(fbr::RepeatData, proto::Union{typeof(laminate)}, protos...) = SparseDict(construct_level_rep(fbr.lvl, protos...))
