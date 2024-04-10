@@ -10,7 +10,7 @@ using RewriteTools
 using RewriteTools.Rewriters
 using Base.Iterators
 using Base: @kwdef
-using Random: randsubseq, AbstractRNG, default_rng
+using Random: AbstractRNG, default_rng, randexp
 using PrecompileTools
 using Compat
 using DataStructures

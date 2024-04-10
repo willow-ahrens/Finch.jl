@@ -130,6 +130,47 @@ end
 
 fsprandn(args...) = fsprand(args..., randn)
 
+## randsubseq & randsubseq! copied from Random/src/misc.jl
+
+randsubseq(r::AbstractRNG, A::AbstractArray{T}, p::Real) where {T} =
+    randsubseq!(r, T[], A, p)
+
+# Fill S (resized as needed) with a random subsequence of A, where
+# each element of A is included in S with independent probability p.
+function randsubseq!(r::AbstractRNG, S::AbstractArray, A::AbstractArray, p::Real)
+    Base.require_one_based_indexing(S, A)
+    0 <= p <= 1 || throw(ArgumentError("probability $p not in [0,1]"))
+    n = prod(size(A), init=Int64(1))  # length
+    p == 1 && return copyto!(resize!(S, n), A)
+    empty!(S)
+    p == 0 && return S
+    nexpected = p * n
+    sizehint!(S, round(Int64, nexpected + 5*sqrt(nexpected)))
+    if p > 0.15
+        for i = 1:n
+            rand(r) <= p && push!(S, A[i])
+        end
+    else
+        L = -1 / log1p(-p)
+        i = Int64(0)
+        while true
+            s = randexp(r) * L
+            s >= n - i && return S
+            # draft
+            s = ceil(Int64, s)
+            i += s
+            index_ = ()
+            i_tmp = i
+            for dim_size in size(A)
+                index_ = (index_..., i_tmp % dim_size + 1)
+                i_tmp = fld(i_tmp, dim_size)
+            end
+            push!(S, A[index_...])
+        end
+    end
+    return S
+end
+
 """
     fspzeros([type], M::Tuple)
 
