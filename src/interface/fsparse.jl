@@ -191,9 +191,9 @@ function fsprand_erdos_renyi_gilbert(r::AbstractRNG, T, M::Tuple, p::AbstractFlo
     n = prod(M, init=1.0)
     q = 1 - p
     #We wish to sample nnz from binomial(n, p).
-    if n <= typemax(Int64)*(1 - eps())
+    if n <= typemax(Int)*(1 - eps())
         #Ideally, n is representable as an Int
-        _n = prod(M, init=Int64(1))
+        _n = Int(prod(M))
         nnz = rand(r, Binomial(_n, p))
     else
         #Otherwise we approximate
