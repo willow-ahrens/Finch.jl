@@ -747,5 +747,19 @@ using SparseArrays
     #https://github.com/willow-ahrens/Finch.jl/issues/488
     let
         M = Tensor(Dense(SparseList(Element(0.0))), fsprand(1_000_000, 1_000_000, 1e-05));
+
+        expected(f) = sum([f() for _ = 1:100_000])/100_000.0
+
+        t = 1_000_000
+        @test 0.5 < expected(() -> countstored(fsprand(t, t, t, t, 1.0/t/t/t/t))) < 1.5
+        @test 8.5 < expected(() -> countstored(fsprand(t, t, t, t, 9.0/t/t/t/t))) < 9.5
+        @test 10.5 < expected(() -> countstored(fsprand(t, t, t, t, 11.0/t/t/t/t))) < 11.5
+
+        @test 99.5 < expected(() -> countstored(fsprand(10, 10, 1.0))) < 100.5
+        @test 49.5 < expected(() -> countstored(fsprand(10, 10, 0.5))) < 50.5
+
+        @test countstored(fsprand(10, 10, 50)) == 50
+        @test countstored(fsprand(10, 10, 100)) == 100
+        @test countstored(fsprand(t, t, t, t, 100)) == 100
     end
 end
