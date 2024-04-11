@@ -80,7 +80,7 @@ Create a random sparse tensor of size `m` in COO format. There are two cases:
     also `p`).
     - If `p` is an integer, exactly `p` nonzeros are distributed uniformly at
     random throughout the tensor (and hence the density of nonzeros is exactly
-    `p / prod(m)`).
+    `p / prod(M)`).
 Nonzero values are sampled from the distribution specified by `rfn` and have the
 type `type`. The uniform distribution is used in case `rfn` is not specified.
 The optional `rng` argument specifies a random number generator.
@@ -126,26 +126,13 @@ function fsprand_erdos_renyi_sample_knuth(r::AbstractRNG, M::Tuple, nnz::Int)
     I = ntuple(n -> Vector{typeof(M[n])}(undef, nnz), N)
 
     k = 1
-    function init(n, i...)
-        if n == 0
-            for m = 1:N
-                I[m][k] = i[m]
-            end
-            k += 1
-        else
-            for i_n = 1:M[n]
-                init(n - 1, i_n, i...)
-                if k > nnz
-                    break
-                end
-            end
-        end
-    end
-    init(N)
-
     function sample(n, p::Float64, i...)
         if n == 0
-            if rand(r) * p < k 
+            if k <= nnz
+                for m = 1:N
+                    I[m][k] = i[m]
+                end
+            elseif rand(r) * p < k 
                 l = rand(r, 1:nnz)
                 for m = 1:N
                     I[m][l] = i[m]
@@ -156,9 +143,6 @@ function fsprand_erdos_renyi_sample_knuth(r::AbstractRNG, M::Tuple, nnz::Int)
             m = M[n]
             for i_n = 1:m
                 sample(n - 1, ((p - 1) * m) + i_n, i_n, i...)
-                if k > nnz
-                    break
-                end
             end
         end
     end
@@ -179,7 +163,7 @@ function fsprand_erdos_renyi_sample_self_avoid(r::AbstractRNG, M::Tuple, nnz::In
         i = ntuple(n -> rand(r, 1:M[n]), N)
         push!(S, i)       
         if length(S) > k
-            k = length(S)
+            k += 1
             for m = 1:N
                 I[m][k] = i[m]
             end
