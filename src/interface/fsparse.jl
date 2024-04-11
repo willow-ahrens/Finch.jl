@@ -72,14 +72,18 @@ function fsparse!_impl(I::Tuple, V, shape = map(maximum, I))
 end
 
 """
-    fsprand([rng],[type], M..., p::AbstractFloat,[rfn])
+    fsprand([rng],[type], M..., p, [rfn])
 
-Create a random sparse tensor of size `m` in COO format, in which the
-probability of any element being nonzero is independently given by `p` (and
-hence the mean density of nonzeros is also exactly `p`). Nonzero values are
-sampled from the distribution specified by `rfn` and have the type `type`. The
-uniform distribution is used in case `rfn` is not specified. The optional `rng`
-argument specifies a random number generator.
+Create a random sparse tensor of size `m` in COO format. There are two cases:
+    - If `p` is floating point, the probability of any element being nonzero is
+    independently given by `p` (and hence the expected density of nonzeros is
+    also `p`).
+    - If `p` is an integer, exactly `p` nonzeros are distributed uniformly at
+    random throughout the tensor (and hence the density of nonzeros is exactly
+    `p / prod(m)`).
+Nonzero values are sampled from the distribution specified by `rfn` and have the
+type `type`. The uniform distribution is used in case `rfn` is not specified.
+The optional `rng` argument specifies a random number generator.
 
 See also: (`sprand`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.sprand)
 
