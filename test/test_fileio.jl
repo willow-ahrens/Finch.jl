@@ -2,7 +2,6 @@ using Pkg
 @testset "fileio" begin
     if haskey(Pkg.project().dependencies, "HDF5")
         using HDF5
-        using CIndices
         @info "Testing HDF5 fileio"
         @testset "h5 binsparse" begin
             mktempdir() do f
@@ -60,7 +59,6 @@ using Pkg
 
     if haskey(Pkg.project().dependencies, "NPZ")
         using NPZ
-        using CIndices
         @info "Testing NPY fileio"
         @testset "npy binsparse" begin
             mktempdir() do f

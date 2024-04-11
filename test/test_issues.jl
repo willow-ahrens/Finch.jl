@@ -1,5 +1,4 @@
 using SparseArrays
-using CIndices
 
 @testset "issues" begin
     @info "Testing Github Issues"

@@ -10,12 +10,12 @@ using RewriteTools
 using RewriteTools.Rewriters
 using Base.Iterators
 using Base: @kwdef
-using Random: AbstractRNG, default_rng, randexp
+using Random: AbstractRNG, default_rng, randexp, randperm
 using PrecompileTools
 using Compat
 using DataStructures
 using JSON
-using CIndices
+using Distributions: Binomial, Normal, Poisson
 
 export @finch, @finch_program, @finch_code, @finch_kernel, value
 
