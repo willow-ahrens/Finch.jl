@@ -71,8 +71,8 @@ end
 is_injective(tns::VirtualFiber, ctx) = is_level_injective(tns.lvl, ctx)
 is_atomic(tns::VirtualFiber, ctx) = is_level_atomic(tns.lvl, ctx)
 
-function virtualize(ex, ::Type{<:Tensor{Lvl}}, ctx, tag=freshen(ctx, :tns)) where {Lvl}
-    lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
+function virtualize(ctx, ex, ::Type{<:Tensor{Lvl}}, tag=freshen(ctx, :tns)) where {Lvl}
+    lvl = virtualize(ctx, :($ex.lvl), Lvl, Symbol(tag, :_lvl))
     VirtualFiber(lvl)
 end
 lower(fbr::VirtualFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(Tensor($(ctx(fbr.lvl))))
@@ -92,9 +92,9 @@ mutable struct VirtualSubFiber{Lvl} <: AbstractVirtualFiber{Lvl}
     lvl::Lvl
     pos
 end
-function virtualize(ex, ::Type{<:SubFiber{Lvl, Pos}}, ctx, tag=freshen(ctx, :tns)) where {Lvl, Pos}
-    lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
-    pos = virtualize(:($ex.pos), Pos, ctx)
+function virtualize(ctx, ex, ::Type{<:SubFiber{Lvl, Pos}}, tag=freshen(ctx, :tns)) where {Lvl, Pos}
+    lvl = virtualize(ctx, :($ex.lvl), Lvl, Symbol(tag, :_lvl))
+    pos = virtualize(ctx, :($ex.pos), Pos)
     VirtualSubFiber(lvl, pos)
 end
 lower(fbr::VirtualSubFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(SubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
@@ -196,10 +196,10 @@ mutable struct VirtualHollowSubFiber{Lvl}
     pos
     dirty
 end
-function virtualize(ex, ::Type{<:HollowSubFiber{Lvl, Pos, Dirty}}, ctx, tag=freshen(ctx, :tns)) where {Lvl, Pos, Dirty}
-    lvl = virtualize(:($ex.lvl), Lvl, ctx, Symbol(tag, :_lvl))
-    pos = virtualize(:($ex.pos), Pos, ctx)
-    dirty = virtualize(:($ex.dirty), Dirty, ctx)
+function virtualize(ctx, ex, ::Type{<:HollowSubFiber{Lvl, Pos, Dirty}}, tag=freshen(ctx, :tns)) where {Lvl, Pos, Dirty}
+    lvl = virtualize(ctx, :($ex.lvl), Lvl, Symbol(tag, :_lvl))
+    pos = virtualize(ctx, :($ex.pos), Pos)
+    dirty = virtualize(ctx, :($ex.dirty), Dirty)
     VirtualHollowSubFiber(lvl, pos, dirty)
 end
 lower(fbr::VirtualHollowSubFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(HollowSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
@@ -315,7 +315,7 @@ countstored(arr::Array) = length(arr)
 
 @staged function assemble!(lvl)
     contain(LowerJulia()) do ctx
-        lvl = virtualize(:lvl, lvl, ctx.code)
+        lvl = virtualize(ctx.code, :lvl, lvl)
         def = literal(virtual_level_default(lvl))
         lvl = declare_level!(lvl, ctx, literal(0), def)
         push!(ctx.code.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))

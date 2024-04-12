@@ -150,7 +150,7 @@ is_level_atomic(lvl::VirtualDenseRLELevel, ctx) = false
 
 postype(lvl::VirtualDenseRLELevel) = postype(lvl.lvl)
 
-function virtualize(ex, ::Type{DenseRLELevel{Ti, Ptr, Right, merge, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Right, merge, Lvl}
+function virtualize(ctx, ex, ::Type{DenseRLELevel{Ti, Ptr, Right, merge, Lvl}}, tag=:lvl) where {Ti, Ptr, Right, merge, Lvl}
     #Invariants of the level (Read Mode):
     # 1. right[ptr[p]:ptr[p + 1] - 1] is the sorted list of right endpoints of the runs
     #
@@ -176,8 +176,8 @@ function virtualize(ex, ::Type{DenseRLELevel{Ti, Ptr, Right, merge, Lvl}}, ctx, 
     end)
     i_prev = freshen(ctx, tag, :_i_prev)
     prev_pos = freshen(ctx, sym, :_prev_pos)
-    lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    buf = virtualize(:($sym.buf), Lvl, ctx, sym)
+    lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
+    buf = virtualize(ctx, :($sym.buf), Lvl, sym)
     VirtualDenseRLELevel(lvl_2, sym, Ti, shape, qos_fill, qos_stop, ptr, right, buf, prev_pos, i_prev, merge)
 end
 

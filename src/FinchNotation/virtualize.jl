@@ -1,58 +1,58 @@
 #TODO delete this line and figure this out with finch_leaf_instance
-Finch.virtualize(ex, (@nospecialize T), ctx) = value(ex, T)
+Finch.virtualize(ctx, ex, (@nospecialize T)) = value(ex, T)
 
-Finch.virtualize(ex, ::Type{FinchNotation.LiteralInstance{val}}, ctx) where {val} = literal(val)
-function Finch.virtualize(ex, ::Type{FinchNotation.IndexInstance{name}}, ctx) where {name}
+Finch.virtualize(ctx, ex, ::Type{FinchNotation.LiteralInstance{val}}) where {val} = literal(val)
+function Finch.virtualize(ctx, ex, ::Type{FinchNotation.IndexInstance{name}}) where {name}
     freshen(ctx, name)
     index(name)
 end
-Finch.virtualize(ex, ::Type{FinchNotation.DefineInstance{Lhs, Rhs, Body}}, ctx) where {Lhs, Rhs, Body} = define(virtualize(:($ex.lhs), Lhs, ctx), virtualize(:($ex.rhs), Rhs, ctx), virtualize(:($ex.body), Body, ctx))
-Finch.virtualize(ex, ::Type{FinchNotation.DeclareInstance{Tns, Init}}, ctx) where {Tns, Init} = declare(virtualize(:($ex.tns), Tns, ctx), virtualize(:($ex.init), Init, ctx))
-Finch.virtualize(ex, ::Type{FinchNotation.FreezeInstance{Tns}}, ctx) where {Tns} = freeze(virtualize(:($ex.tns), Tns, ctx))
-Finch.virtualize(ex, ::Type{FinchNotation.ThawInstance{Tns}}, ctx) where {Tns} = thaw(virtualize(:($ex.tns), Tns, ctx))
-function Finch.virtualize(ex, ::Type{FinchNotation.BlockInstance{Bodies}}, ctx) where {Bodies}
+Finch.virtualize(ctx, ex, ::Type{FinchNotation.DefineInstance{Lhs, Rhs, Body}}) where {Lhs, Rhs, Body} = define(virtualize(ctx, :($ex.lhs), Lhs), virtualize(ctx, :($ex.rhs), Rhs), virtualize(ctx, :($ex.body), Body))
+Finch.virtualize(ctx, ex, ::Type{FinchNotation.DeclareInstance{Tns, Init}}) where {Tns, Init} = declare(virtualize(ctx, :($ex.tns), Tns), virtualize(ctx, :($ex.init), Init))
+Finch.virtualize(ctx, ex, ::Type{FinchNotation.FreezeInstance{Tns}}) where {Tns} = freeze(virtualize(ctx, :($ex.tns), Tns))
+Finch.virtualize(ctx, ex, ::Type{FinchNotation.ThawInstance{Tns}}) where {Tns} = thaw(virtualize(ctx, :($ex.tns), Tns))
+function Finch.virtualize(ctx, ex, ::Type{FinchNotation.BlockInstance{Bodies}}) where {Bodies}
     bodies = map(enumerate(Bodies.parameters)) do (n, Body)
-        virtualize(:($ex.bodies[$n]), Body, ctx)
+        virtualize(ctx, :($ex.bodies[$n]), Body)
     end
     block(bodies...)
 end
-function Finch.virtualize(ex, ::Type{FinchNotation.SieveInstance{Cond, Body}}, ctx) where {Cond, Body}
-    cond = virtualize(:($ex.cond), Cond, ctx)
-    body = virtualize(:($ex.body), Body, ctx)
+function Finch.virtualize(ctx, ex, ::Type{FinchNotation.SieveInstance{Cond, Body}}) where {Cond, Body}
+    cond = virtualize(ctx, :($ex.cond), Cond)
+    body = virtualize(ctx, :($ex.body), Body)
     sieve(cond, body)
 end
-function Finch.virtualize(ex, ::Type{FinchNotation.LoopInstance{Idx, Ext, Body}}, ctx) where {Idx, Ext, Body}
-    idx = virtualize(:($ex.idx), Idx, ctx)
-    ext = virtualize(:($ex.ext), Ext, ctx)
-    body = virtualize(:($ex.body), Body, ctx)
+function Finch.virtualize(ctx, ex, ::Type{FinchNotation.LoopInstance{Idx, Ext, Body}}) where {Idx, Ext, Body}
+    idx = virtualize(ctx, :($ex.idx), Idx)
+    ext = virtualize(ctx, :($ex.ext), Ext)
+    body = virtualize(ctx, :($ex.body), Body)
     loop(idx, ext, body)
 end
-function Finch.virtualize(ex, ::Type{FinchNotation.AssignInstance{Lhs, Op, Rhs}}, ctx) where {Lhs, Op, Rhs}
-    assign(virtualize(:($ex.lhs), Lhs, ctx), virtualize(:($ex.op), Op, ctx), virtualize(:($ex.rhs), Rhs, ctx))
+function Finch.virtualize(ctx, ex, ::Type{FinchNotation.AssignInstance{Lhs, Op, Rhs}}) where {Lhs, Op, Rhs}
+    assign(virtualize(ctx, :($ex.lhs), Lhs), virtualize(ctx, :($ex.op), Op), virtualize(ctx, :($ex.rhs), Rhs))
 end
-function Finch.virtualize(ex, ::Type{FinchNotation.CallInstance{Op, Args}}, ctx) where {Op, Args}
-    op = virtualize(:($ex.op), Op, ctx)
+function Finch.virtualize(ctx, ex, ::Type{FinchNotation.CallInstance{Op, Args}}) where {Op, Args}
+    op = virtualize(ctx, :($ex.op), Op)
     args = map(enumerate(Args.parameters)) do (n, Arg)
-        virtualize(:($ex.args[$n]), Arg, ctx)
+        virtualize(ctx, :($ex.args[$n]), Arg)
     end
     call(op, args...)
 end
-function Finch.virtualize(ex, ::Type{FinchNotation.AccessInstance{Tns, Mode, Idxs}}, ctx) where {Tns, Mode, Idxs}
-    tns = virtualize(:($ex.tns), Tns, ctx)
+function Finch.virtualize(ctx, ex, ::Type{FinchNotation.AccessInstance{Tns, Mode, Idxs}}) where {Tns, Mode, Idxs}
+    tns = virtualize(ctx, :($ex.tns), Tns)
     idxs = map(enumerate(Idxs.parameters)) do (n, Idx)
-        virtualize(:($ex.idxs[$n]), Idx, ctx)
+        virtualize(ctx, :($ex.idxs[$n]), Idx)
     end
-    access(tns, virtualize(:($ex.mode), Mode, ctx), idxs...)
+    access(tns, virtualize(ctx, :($ex.mode), Mode), idxs...)
 end
-Finch.virtualize(ex, ::Type{FinchNotation.VariableInstance{tag}}, ctx) where {tag} = variable(tag)
-function Finch.virtualize(ex, ::Type{FinchNotation.TagInstance{Var, Bind}}, ctx) where {Var, Bind}
-    var = virtualize(:($ex.var), Var, ctx)
-    bind = virtualize(:($ex.bind), Bind, ctx, var.name)
+Finch.virtualize(ctx, ex, ::Type{FinchNotation.VariableInstance{tag}}) where {tag} = variable(tag)
+function Finch.virtualize(ctx, ex, ::Type{FinchNotation.TagInstance{Var, Bind}}) where {Var, Bind}
+    var = virtualize(ctx, :($ex.var), Var)
+    bind = virtualize(ctx, :($ex.bind), Bind, var.name)
     tag(var, bind)
 end
-function Finch.virtualize(ex, ::Type{FinchNotation.YieldBindInstance{Args}}, ctx) where {Args}
+function Finch.virtualize(ctx, ex, ::Type{FinchNotation.YieldBindInstance{Args}}) where {Args}
     args = map(enumerate(Args.parameters)) do (n, Arg)
-        virtualize(:($ex.args[$n]), Arg, ctx)
+        virtualize(ctx, :($ex.args[$n]), Arg)
     end
     yieldbind(args...)
 end

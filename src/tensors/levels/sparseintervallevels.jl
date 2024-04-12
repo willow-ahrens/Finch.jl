@@ -148,7 +148,7 @@ is_level_concurrent(lvl::VirtualSparseIntervalLevel, ctx) = [false, is_level_con
 is_level_atomic(lvl::VirtualSparseIntervalLevel, ctx) = false
   
 
-function virtualize(ex, ::Type{SparseIntervalLevel{Ti, Ptr, Left, Right, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Left, Right, Lvl}
+function virtualize(ctx, ex, ::Type{SparseIntervalLevel{Ti, Ptr, Left, Right, Lvl}}, tag=:lvl) where {Ti, Ptr, Left, Right, Lvl}
     sym = freshen(ctx, tag)
     ptr = freshen(ctx, tag, :_ptr)
     left = freshen(ctx, tag, :_left)
@@ -159,7 +159,7 @@ function virtualize(ex, ::Type{SparseIntervalLevel{Ti, Ptr, Left, Right, Lvl}}, 
         $left = $sym.left
         $right = $sym.right
     end)
-    lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
+    lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)
     qos_stop = freshen(ctx, sym, :_qos_stop)

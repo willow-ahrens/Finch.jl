@@ -65,7 +65,7 @@ function lower(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler,  ::DefaultSty
     return arr.ex
 end
 
-function Finch.virtualize(ex, ::Type{<:SparseMatrixCSC{Tv, Ti}}, ctx, tag=:tns) where {Tv, Ti}
+function Finch.virtualize(ctx, ex, ::Type{<:SparseMatrixCSC{Tv, Ti}}, tag=:tns) where {Tv, Ti}
     sym = freshen(ctx, tag)
     push!(ctx.preamble, quote
         $sym = $ex
@@ -176,7 +176,7 @@ function lower(arr::VirtualSparseVector, ctx::AbstractCompiler,  ::DefaultStyle)
     return arr.ex
 end
 
-function Finch.virtualize(ex, ::Type{<:SparseVector{Tv, Ti}}, ctx, tag=:tns) where {Tv, Ti}
+function Finch.virtualize(ctx, ex, ::Type{<:SparseVector{Tv, Ti}}, tag=:tns) where {Tv, Ti}
     sym = freshen(ctx, tag)
     push!(ctx.preamble, quote
         $sym = $ex

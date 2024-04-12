@@ -39,8 +39,8 @@ Base.summary(io::IO, ex::VirtualToeplitzArray) = print(io, "VToeplitz($(summary(
 
 FinchNotation.finch_leaf(x::VirtualToeplitzArray) = virtual(x)
 
-function virtualize(ex, ::Type{ToeplitzArray{dim, Body}}, ctx) where {dim, Body}
-    VirtualToeplitzArray(virtualize(:($ex.body), Body, ctx), dim)
+function virtualize(ctx, ex, ::Type{ToeplitzArray{dim, Body}}) where {dim, Body}
+    VirtualToeplitzArray(virtualize(ctx, :($ex.body), Body), dim)
 end
 
 """

@@ -151,7 +151,7 @@ is_level_atomic(lvl::VirtualSparseRLELevel, ctx) = false
 
 postype(lvl::VirtualSparseRLELevel) = postype(lvl.lvl)
 
-function virtualize(ex, ::Type{SparseRLELevel{Ti, Ptr, Left, Right, merge, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Left, Right, merge, Lvl}
+function virtualize(ctx, ex, ::Type{SparseRLELevel{Ti, Ptr, Left, Right, merge, Lvl}}, tag=:lvl) where {Ti, Ptr, Left, Right, merge, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)
@@ -169,8 +169,8 @@ function virtualize(ex, ::Type{SparseRLELevel{Ti, Ptr, Left, Right, merge, Lvl}}
         $buf = $sym.buf
     end)
     prev_pos = freshen(ctx, sym, :_prev_pos)
-    lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
-    buf = virtualize(:($sym.buf), Lvl, ctx, sym)
+    lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
+    buf = virtualize(ctx, :($sym.buf), Lvl, sym)
     VirtualSparseRLELevel(lvl_2, sym, Ti, shape, qos_fill, qos_stop, ptr, left, right, buf, merge, prev_pos)
 end
 function lower(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, ::DefaultStyle)

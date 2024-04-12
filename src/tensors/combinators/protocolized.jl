@@ -29,11 +29,11 @@ Base.summary(io::IO, ex::VirtualProtocolizedArray) = print(io, "VProtocolized($(
 
 FinchNotation.finch_leaf(x::VirtualProtocolizedArray) = virtual(x)
 
-function virtualize(ex, ::Type{ProtocolizedArray{Protos, Body}}, ctx) where {Protos, Body}
+function virtualize(ctx, ex, ::Type{ProtocolizedArray{Protos, Body}}) where {Protos, Body}
     protos = map(enumerate(Protos.parameters)) do (n, param)
-        virtualize(:($ex.protos[$n]), param, ctx)
+        virtualize(ctx, :($ex.protos[$n]), param)
     end
-    VirtualProtocolizedArray(virtualize(:($ex.body), Body, ctx), protos)
+    VirtualProtocolizedArray(virtualize(ctx, :($ex.body), Body), protos)
 end
 
 """

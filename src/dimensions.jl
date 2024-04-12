@@ -1,6 +1,6 @@
 FinchNotation.finch_leaf(x::Dimensionless) = virtual(x)
 FinchNotation.finch_leaf_instance(x::Dimensionless) = value_instance(x)
-virtualize(ex, ::Type{Dimensionless}, ctx) = dimless
+virtualize(ctx, ex, ::Type{Dimensionless}) = dimless
 
 getstart(::Dimensionless) = error("asked for start of dimensionless range")
 getstop(::Dimensionless) = error("asked for stop of dimensionless range")

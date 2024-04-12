@@ -109,13 +109,13 @@ end
 is_level_injective(lvl::VirtualDenseLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
 is_level_atomic(lvl::VirtualDenseLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
 
-function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
+function virtualize(ctx, ex, ::Type{DenseLevel{Ti, Lvl}}, tag=:lvl) where {Ti, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Ti)
     push!(ctx.preamble, quote
         $sym = $ex
     end)
-    lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
+    lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
     VirtualDenseLevel(lvl_2, sym, Ti, shape)
 end
 function lower(lvl::VirtualDenseLevel, ctx::AbstractCompiler, ::DefaultStyle)

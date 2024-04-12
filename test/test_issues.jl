@@ -115,7 +115,7 @@ using CIndices
             return a+b+c
         end
         struct MyAlgebra115 <: Finch.AbstractAlgebra end
-        Finch.virtualize(ex, ::Type{MyAlgebra115}, ::Finch.JuliaContext) = MyAlgebra115()
+        Finch.virtualize(::Finch.JuliaContext, ex, ::Type{MyAlgebra115}) = MyAlgebra115()
         t = Tensor(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Tensor(SparseList(SparseList(Element(0.0)))), B))

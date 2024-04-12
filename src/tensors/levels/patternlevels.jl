@@ -88,7 +88,7 @@ is_level_injective(::VirtualPatternLevel, ctx) = []
 is_level_atomic(lvl::VirtualPatternLevel, ctx) = true
 
 lower(lvl::VirtualPatternLevel, ctx::AbstractCompiler, ::DefaultStyle) = :(PatternLevel())
-virtualize(ex, ::Type{PatternLevel{Tp}}, ctx) where {Tp} = VirtualPatternLevel(Tp)
+virtualize(ctx, ex, ::Type{PatternLevel{Tp}}) where {Tp} = VirtualPatternLevel(Tp)
 
 virtual_level_resize!(lvl::VirtualPatternLevel, ctx) = lvl
 virtual_level_size(::VirtualPatternLevel, ctx) = ()

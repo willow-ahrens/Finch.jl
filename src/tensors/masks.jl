@@ -13,7 +13,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::DiagMask)
     print(io, "diagmask")
 end
 
-virtualize(ex, ::Type{DiagMask}, ctx) = diagmask
+virtualize(ctx, ex, ::Type{DiagMask}) = diagmask
 FinchNotation.finch_leaf(x::DiagMask) = virtual(x)
 Finch.virtual_size(::DiagMask, ctx) = (dimless, dimless)
 
@@ -55,7 +55,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::UpTriMask)
     print(io, "uptrimask")
 end
 
-virtualize(ex, ::Type{UpTriMask}, ctx) = uptrimask
+virtualize(ctx, ex, ::Type{UpTriMask}) = uptrimask
 FinchNotation.finch_leaf(x::UpTriMask) = virtual(x)
 Finch.virtual_size(::UpTriMask, ctx) = (dimless, dimless)
 
@@ -95,7 +95,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::LoTriMask)
     print(io, "lotrimask")
 end
 
-virtualize(ex, ::Type{LoTriMask}, ctx) = lotrimask
+virtualize(ctx, ex, ::Type{LoTriMask}) = lotrimask
 FinchNotation.finch_leaf(x::LoTriMask) = virtual(x)
 Finch.virtual_size(::LoTriMask, ctx) = (dimless, dimless)
 
@@ -135,7 +135,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::BandMask)
     print(io, "bandmask")
 end
 
-virtualize(ex, ::Type{BandMask}, ctx) = bandmask
+virtualize(ctx, ex, ::Type{BandMask}) = bandmask
 FinchNotation.finch_leaf(x::BandMask) = virtual(x)
 Finch.virtual_size(::BandMask, ctx) = (dimless, dimless, dimless)
 
@@ -181,7 +181,7 @@ struct VirtualSplitMask
     P
 end
 
-function virtualize(ex, ::Type{SplitMask}, ctx)
+function virtualize(ctx, ex, ::Type{SplitMask})
     return VirtualSplitMask(value(:($ex.P), Int))
 end
 
@@ -228,10 +228,10 @@ struct VirtualChunkMask
     dim
 end
 
-function virtualize(ex, ::Type{ChunkMask{Dim}}, ctx) where {Dim}
+function virtualize(ctx, ex, ::Type{ChunkMask{Dim}}) where {Dim}
     return VirtualChunkMask(
         value(:($ex.b), Int),
-        virtualize(:($ex.dim), Dim, ctx))
+        virtualize(ctx, :($ex.dim), Dim))
 end
 
 """

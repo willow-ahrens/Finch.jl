@@ -27,11 +27,11 @@ Base.summary(io::IO, ex::VirtualScaleArray) = print(io, "VScale($(summary(ex.bod
 
 FinchNotation.finch_leaf(x::VirtualScaleArray) = virtual(x)
 
-function virtualize(ex, ::Type{ScaleArray{Scale, Body}}, ctx) where {Scale, Body}
+function virtualize(ctx, ex, ::Type{ScaleArray{Scale, Body}}) where {Scale, Body}
     scale = map(enumerate(Scale.parameters)) do (n, param)
-        virtualize(:($ex.scale[$n]), param, ctx)
+        virtualize(ctx, :($ex.scale[$n]), param)
     end
-    VirtualScaleArray(virtualize(:($ex.body), Body, ctx), scale)
+    VirtualScaleArray(virtualize(ctx, :($ex.body), Body), scale)
 end
 
 """

@@ -190,7 +190,7 @@ function virtual_moveto_level(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler
     virtual_moveto_level(lvl.lvl, ctx, arch)
 end
 
-function virtualize(ex, ::Type{SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}, ctx, tag=:lvl) where {N, TI, Ptr, Tbl, Srt, Lvl}
+function virtualize(ctx, ex, ::Type{SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}, tag=:lvl) where {N, TI, Ptr, Tbl, Srt, Lvl}
     sym = freshen(ctx, tag)
 
     shape = map(n->value(:($sym.shape[$n]), Int), 1:N)
@@ -208,7 +208,7 @@ function virtualize(ex, ::Type{SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}, ctx,
         $tbl = $ex.tbl
         $srt = $ex.srt
     end)
-    lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
+    lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
     VirtualSparseHashLevel(lvl_2, sym, N, TI, ptr, tbl, srt, shape, qos_fill, qos_stop, Lvl)
 end
 function lower(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, ::DefaultStyle)

@@ -92,7 +92,7 @@ is_level_atomic(lvl::VirtualElementLevel, ctx) = false
 
 lower(lvl::VirtualElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex
 
-function virtualize(ex, ::Type{ElementLevel{D, Tv, Tp, Val}}, ctx, tag=:lvl) where {D, Tv, Tp, Val}
+function virtualize(ctx, ex, ::Type{ElementLevel{D, Tv, Tp, Val}}, tag=:lvl) where {D, Tv, Tp, Val}
     sym = freshen(ctx, tag)
     val = freshen(ctx, tag, :_val)
     push!(ctx.preamble, quote

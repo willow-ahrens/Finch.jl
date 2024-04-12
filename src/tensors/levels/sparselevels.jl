@@ -256,7 +256,7 @@ end
 is_level_injective(lvl::VirtualSparseLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
 is_level_atomic(lvl::VirtualSparseLevel, ctx) = false
 
-function virtualize(ex, ::Type{SparseLevel{Ti, Tbl, Lvl}}, ctx, tag=:lvl) where {Ti, Tbl, Lvl}
+function virtualize(ctx, ex, ::Type{SparseLevel{Ti, Tbl, Lvl}}, tag=:lvl) where {Ti, Tbl, Lvl}
     sym = freshen(ctx, tag)
     tbl = freshen(ctx, tag, :_tbl)
     qos_stop = freshen(ctx, tag, :_qos_stop)
@@ -265,7 +265,7 @@ function virtualize(ex, ::Type{SparseLevel{Ti, Tbl, Lvl}}, ctx, tag=:lvl) where 
         $tbl = $sym.tbl
         $qos_stop = table_length($tbl)
     end)
-    lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
+    lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
     shape = value(:($sym.shape), Int)
     VirtualSparseLevel(lvl_2, sym, Ti, tbl, shape, qos_stop)
 end

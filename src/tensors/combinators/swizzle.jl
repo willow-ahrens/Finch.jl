@@ -59,8 +59,8 @@ Base.summary(io::IO, ex::VirtualSwizzleArray) = print(io, "VSwizzle($(summary(ex
 
 FinchNotation.finch_leaf(x::VirtualSwizzleArray) = virtual(x)
 
-function virtualize(ex, ::Type{SwizzleArray{dims, Body}}, ctx) where {dims, Body}
-    VirtualSwizzleArray(virtualize(:($ex.body), Body, ctx), dims)
+function virtualize(ctx, ex, ::Type{SwizzleArray{dims, Body}}) where {dims, Body}
+    VirtualSwizzleArray(virtualize(ctx, :($ex.body), Body), dims)
 end
 
 """

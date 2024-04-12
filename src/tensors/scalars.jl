@@ -25,7 +25,7 @@ struct VirtualScalar
 end
 
 lower(tns::VirtualScalar, ctx::AbstractCompiler, ::DefaultStyle) = tns.ex
-function virtualize(ex, ::Type{Scalar{D, Tv}}, ctx, tag) where {D, Tv}
+function virtualize(ctx, ex, ::Type{Scalar{D, Tv}}, tag) where {D, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
     push!(ctx.preamble, quote
@@ -104,7 +104,7 @@ struct VirtualSparseScalar
 end
 
 lower(tns::VirtualSparseScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($SparseScalar{$(tns.D), $(tns.Tv)}($(tns.val), $(tns.dirty)))
-function virtualize(ex, ::Type{SparseScalar{D, Tv}}, ctx, tag) where {D, Tv}
+function virtualize(ctx, ex, ::Type{SparseScalar{D, Tv}}, tag) where {D, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
     dirty = Symbol(tag, :_dirty) #TODO hmm this is risky
@@ -185,7 +185,7 @@ struct VirtualShortCircuitScalar
 end
 
 lower(tns::VirtualShortCircuitScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($ShortCircuitScalar{$(tns.D), $(tns.Tv)}($(tns.val)))
-function virtualize(ex, ::Type{ShortCircuitScalar{D, Tv}}, ctx, tag) where {D, Tv}
+function virtualize(ctx, ex, ::Type{ShortCircuitScalar{D, Tv}}, tag) where {D, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
     push!(ctx.preamble, quote
@@ -260,7 +260,7 @@ struct VirtualSparseShortCircuitScalar
 end
 
 lower(tns::VirtualSparseShortCircuitScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($SparseShortCircuitScalar{$(tns.D), $(tns.Tv)}($(tns.val), $(tns.dirty)))
-function virtualize(ex, ::Type{SparseShortCircuitScalar{D, Tv}}, ctx, tag) where {D, Tv}
+function virtualize(ctx, ex, ::Type{SparseShortCircuitScalar{D, Tv}}, tag) where {D, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
     dirty = Symbol(tag, :_dirty) #TODO hmm this is risky

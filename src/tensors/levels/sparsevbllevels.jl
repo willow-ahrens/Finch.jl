@@ -151,7 +151,7 @@ is_level_atomic(lvl::VirtualSparseVBLLevel, ctx) = false
 postype(lvl::VirtualSparseVBLLevel) = postype(lvl.lvl)
 
 
-function virtualize(ex, ::Type{SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Idx, Ofs, Lvl}
+function virtualize(ctx, ex, ::Type{SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}}, tag=:lvl) where {Ti, Ptr, Idx, Ofs, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)
@@ -169,7 +169,7 @@ function virtualize(ex, ::Type{SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}}, ctx, tag
         $ofs = $sym.ofs
     end)
     prev_pos = freshen(ctx, sym, :_prev_pos)
-    lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
+    lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
     VirtualSparseVBLLevel(lvl_2, sym, Ti, shape, qos_fill, qos_stop, ros_fill, ros_stop, dirty, ptr, idx, ofs, prev_pos)
 end
 function lower(lvl::VirtualSparseVBLLevel, ctx::AbstractCompiler, ::DefaultStyle)

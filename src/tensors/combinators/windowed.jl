@@ -27,15 +27,15 @@ Base.summary(io::IO, ex::VirtualWindowedArray) = print(io, "VWindowed($(summary(
 
 FinchNotation.finch_leaf(x::VirtualWindowedArray) = virtual(x)
 
-function virtualize(ex, ::Type{WindowedArray{Dims, Body}}, ctx) where {Dims, Body}
+function virtualize(ctx, ex, ::Type{WindowedArray{Dims, Body}}) where {Dims, Body}
     dims = map(enumerate(Dims.parameters)) do (n, param)
         if param === Nothing
             nothing
         else
-            virtualize(:($ex.dims[$n]), param, ctx)
+            virtualize(ctx, :($ex.dims[$n]), param)
         end
     end
-    VirtualWindowedArray(virtualize(:($ex.body), Body, ctx), dims)
+    VirtualWindowedArray(virtualize(ctx, :($ex.body), Body), dims)
 end
 
 """

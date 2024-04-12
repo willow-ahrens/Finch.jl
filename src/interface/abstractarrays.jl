@@ -13,7 +13,7 @@ function lower(arr::VirtualAbstractArray, ctx::AbstractCompiler,  ::DefaultStyle
     return arr.ex
 end
 
-function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=:tns) where {T, N}
+function virtualize(ctx, ex, ::Type{<:AbstractArray{T, N}}, tag=:tns) where {T, N}
     sym = freshen(ctx, tag)
     dims = map(i -> Symbol(sym, :_mode, i, :_stop), 1:N)
     push!(ctx.preamble, quote

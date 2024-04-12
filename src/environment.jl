@@ -31,16 +31,16 @@ end
 end
 
 """
-    virtualize(ex, T, ctx, [tag])
+    virtualize(ctx, ex, T, [tag])
 
 Return the virtual program corresponding to the Julia expression `ex` of type
 `T` in the `JuliaContext` `ctx`. Implementaters may support the optional `tag`
 argument is used to name the resulting virtual variable.
 """
-virtualize(ex, T, ctx, tag) = virtualize(ex, T, ctx)
-function virtualize(ex, T::Type{NamedTuple{names, args}}, ctx) where {names, args}
+virtualize(ctx, ex, T, tag) = virtualize(ctx, ex, T)
+function virtualize(ctx, ex, T::Type{NamedTuple{names, args}}) where {names, args}
     Dict(map(zip(names, args.parameters)) do (name, arg)
-        name => virtualize(:($ex.$(QuoteNode(name))), arg, ctx, name)
+        name => virtualize(ctx, :($ex.$(QuoteNode(name))), arg, name)
     end...)
 end
 

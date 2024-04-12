@@ -1,13 +1,13 @@
 abstract type CompileMode end
 struct DebugFinch <: CompileMode end
 const debugfinch = DebugFinch()
-virtualize(ex, ::Type{DebugFinch}, ctx) = DebugFinch()
+virtualize(ctx, ex, ::Type{DebugFinch}) = DebugFinch()
 struct SafeFinch <: CompileMode end
 const safefinch = SafeFinch()
-virtualize(ex, ::Type{SafeFinch}, ctx) = SafeFinch()
+virtualize(ctx, ex, ::Type{SafeFinch}) = SafeFinch()
 struct FastFinch <: CompileMode end
 const fastfinch = FastFinch()
-virtualize(ex, ::Type{FastFinch}, ctx) = FastFinch()
+virtualize(ctx, ex, ::Type{FastFinch}) = FastFinch()
 
 issafe(::DebugFinch) = true
 issafe(::SafeFinch) = true
@@ -60,7 +60,7 @@ execute(ex) = execute(ex, NamedTuple())
 
 @staged function execute(ex, opts)
     contain(JuliaContext()) do ctx
-        code = execute_code(:ex, ex; virtualize(:opts, opts, ctx)...)
+        code = execute_code(:ex, ex; virtualize(ctx, :opts, opts)...)
         quote
             # try
                 @inbounds @fastmath begin
@@ -78,7 +78,7 @@ end
 function execute_code(ex, T; algebra = DefaultAlgebra(), mode = safefinch, ctx = LowerJulia(algebra = algebra, mode=mode))
     code = contain(ctx) do ctx_2
         prgm = nothing
-        prgm = virtualize(ex, T, ctx_2.code)
+        prgm = virtualize(ctx_2.code, ex, T)
         lower_global(prgm, ctx_2)
     end
 end
@@ -223,7 +223,7 @@ function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = safe
     maybe_typeof(x) = x isa Type ? x : typeof(x)
     code = contain(ctx) do ctx_2
         foreach(args) do (key, val)
-            ctx_2.bindings[variable(key)] = finch_leaf(virtualize(key, maybe_typeof(val), ctx_2.code, key))
+            ctx_2.bindings[variable(key)] = finch_leaf(virtualize(ctx_2.code, key, maybe_typeof(val), key))
         end
         execute_code(:UNREACHABLE, prgm, algebra = algebra, mode = mode, ctx = ctx_2)
     end |> pretty |> unresolve |> dataflow |> unquote_literals

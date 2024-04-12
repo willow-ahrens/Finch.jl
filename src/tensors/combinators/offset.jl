@@ -27,11 +27,11 @@ Base.summary(io::IO, ex::VirtualOffsetArray) = print(io, "VOffset($(summary(ex.b
 
 FinchNotation.finch_leaf(x::VirtualOffsetArray) = virtual(x)
 
-function virtualize(ex, ::Type{OffsetArray{Delta, Body}}, ctx) where {Delta, Body}
+function virtualize(ctx, ex, ::Type{OffsetArray{Delta, Body}}) where {Delta, Body}
     delta = map(enumerate(Delta.parameters)) do (n, param)
-        virtualize(:($ex.delta[$n]), param, ctx)
+        virtualize(ctx, :($ex.delta[$n]), param)
     end
-    VirtualOffsetArray(virtualize(:($ex.body), Body, ctx), delta)
+    VirtualOffsetArray(virtualize(ctx, :($ex.body), Body), delta)
 end
 
 """

@@ -29,8 +29,8 @@ Base.summary(io::IO, ex::VirtualPermissiveArray) = print(io, "VPermissive($(summ
 
 FinchNotation.finch_leaf(x::VirtualPermissiveArray) = virtual(x)
 
-function virtualize(ex, ::Type{PermissiveArray{dims, Body}}, ctx) where {dims, Body}
-    VirtualPermissiveArray(virtualize(:($ex.body), Body, ctx), dims)
+function virtualize(ctx, ex, ::Type{PermissiveArray{dims, Body}}) where {dims, Body}
+    VirtualPermissiveArray(virtualize(ctx, :($ex.body), Body), dims)
 end
 
 """

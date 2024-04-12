@@ -36,8 +36,8 @@ Base.summary(io::IO, ex::VirtualProductArray) = print(io, "VProduct($(summary(ex
 
 FinchNotation.finch_leaf(x::VirtualProductArray) = virtual(x)
 
-function virtualize(ex, ::Type{ProductArray{dim, Body}}, ctx) where {dim, Body}
-    VirtualProductArray(virtualize(:($ex.body), Body, ctx), dim)
+function virtualize(ctx, ex, ::Type{ProductArray{dim, Body}}) where {dim, Body}
+    VirtualProductArray(virtualize(ctx, :($ex.body), Body), dim)
 end
 
 """

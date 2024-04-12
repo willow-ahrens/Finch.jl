@@ -115,13 +115,13 @@ is_level_atomic(lvl::VirtualSparseTriangleLevel, ctx) = is_level_atomic(lvl.lvl,
 
 postype(lvl::VirtualSparseTriangleLevel) = postype(lvl.lvl)
 
-function virtualize(ex, ::Type{SparseTriangleLevel{N, Ti, Lvl}}, ctx, tag=:lvl) where {N, Ti, Lvl}
+function virtualize(ctx, ex, ::Type{SparseTriangleLevel{N, Ti, Lvl}}, tag=:lvl) where {N, Ti, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     push!(ctx.preamble, quote
         $sym = $ex
     end)
-    lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
+    lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
     VirtualSparseTriangleLevel(lvl_2, sym, N, Ti, shape)
 end
 function lower(lvl::VirtualSparseTriangleLevel, ctx::AbstractCompiler, ::DefaultStyle)
