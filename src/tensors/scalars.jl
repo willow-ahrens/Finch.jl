@@ -42,18 +42,18 @@ virtual_eltype(tns::VirtualScalar, ctx) = tns.Tv
 
 FinchNotation.finch_leaf(x::VirtualScalar) = virtual(x)
 
-function declare!(tns::VirtualScalar, ctx, init)
+function declare!(ctx, tns::VirtualScalar, init)
     push!(ctx.code.preamble, quote
         $(tns.val) = $(ctx(init))
     end)
     tns
 end
 
-function thaw!(tns::VirtualScalar, ctx)
+function thaw!(ctx, tns::VirtualScalar)
     return tns
 end
 
-function freeze!(tns::VirtualScalar, ctx)
+function freeze!(ctx, tns::VirtualScalar)
     push!(ctx.code.preamble, quote
         $(tns.ex).val = $(ctx(tns.val))
     end)
@@ -66,7 +66,7 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualScalar)
     return tns.val
 end
 
-function short_circuit_cases(tns::VirtualScalar, ctx, op)
+function short_circuit_cases(ctx, tns::VirtualScalar, op)
     if isannihilator(ctx, virtual_default(ctx, tns), op)
         [:(tns.val == 0) => Simplify(Fill(Null()))]
     else
@@ -121,7 +121,7 @@ virtual_size(ctx, ::VirtualSparseScalar) = ()
 virtual_default(ctx, tns::VirtualSparseScalar) = tns.D
 virtual_eltype(tns::VirtualSparseScalar, ctx) = tns.Tv
 
-function declare!(tns::VirtualSparseScalar, ctx, init)
+function declare!(ctx, tns::VirtualSparseScalar, init)
     push!(ctx.code.preamble, quote
         $(tns.val) = $(ctx(init))
         $(tns.dirty) = false
@@ -129,11 +129,11 @@ function declare!(tns::VirtualSparseScalar, ctx, init)
     tns
 end
 
-function thaw!(tns::VirtualSparseScalar, ctx)
+function thaw!(ctx, tns::VirtualSparseScalar)
     return tns
 end
 
-function freeze!(tns::VirtualSparseScalar, ctx)
+function freeze!(ctx, tns::VirtualSparseScalar)
     push!(ctx.code.preamble, quote
         $(tns.ex).val = $(ctx(tns.val))
     end)
@@ -202,18 +202,18 @@ virtual_eltype(tns::VirtualShortCircuitScalar, ctx) = tns.Tv
 
 FinchNotation.finch_leaf(x::VirtualShortCircuitScalar) = virtual(x)
 
-function declare!(tns::VirtualShortCircuitScalar, ctx, init)
+function declare!(ctx, tns::VirtualShortCircuitScalar, init)
     push!(ctx.code.preamble, quote
         $(tns.val) = $(ctx(init))
     end)
     tns
 end
 
-function thaw!(tns::VirtualShortCircuitScalar, ctx)
+function thaw!(ctx, tns::VirtualShortCircuitScalar)
     return tns
 end
 
-function freeze!(tns::VirtualShortCircuitScalar, ctx)
+function freeze!(ctx, tns::VirtualShortCircuitScalar)
     push!(ctx.code.preamble, quote
         $(tns.ex).val = $(ctx(tns.val))
     end)
@@ -226,7 +226,7 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualShortCircuitScala
     return tns.val
 end
 
-function short_circuit_cases(tns::VirtualShortCircuitScalar, ctx, op)
+function short_circuit_cases(ctx, tns::VirtualShortCircuitScalar, op)
     [:(Finch.isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Simplify(Fill(Null()))]
 end
 
@@ -277,7 +277,7 @@ virtual_size(ctx, ::VirtualSparseShortCircuitScalar) = ()
 virtual_default(ctx, tns::VirtualSparseShortCircuitScalar) = tns.D
 virtual_eltype(tns::VirtualSparseShortCircuitScalar, ctx) = tns.Tv
 
-function declare!(tns::VirtualSparseShortCircuitScalar, ctx, init)
+function declare!(ctx, tns::VirtualSparseShortCircuitScalar, init)
     push!(ctx.code.preamble, quote
         $(tns.val) = $(ctx(init))
         $(tns.dirty) = false
@@ -285,11 +285,11 @@ function declare!(tns::VirtualSparseShortCircuitScalar, ctx, init)
     tns
 end
 
-function thaw!(tns::VirtualSparseShortCircuitScalar, ctx)
+function thaw!(ctx, tns::VirtualSparseShortCircuitScalar)
     return tns
 end
 
-function freeze!(tns::VirtualSparseShortCircuitScalar, ctx)
+function freeze!(ctx, tns::VirtualSparseShortCircuitScalar)
     push!(ctx.code.preamble, quote
         $(tns.ex).val = $(ctx(tns.val))
     end)
@@ -314,6 +314,6 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualSparseShortCircui
     return tns.val
 end
 
-function short_circuit_cases(tns::VirtualSparseShortCircuitScalar, ctx, op)
+function short_circuit_cases(ctx, tns::VirtualSparseShortCircuitScalar, op)
     [:(Finch.isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Simplify(Fill(Null()))]
 end

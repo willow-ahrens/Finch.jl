@@ -73,7 +73,7 @@ function Finch.virtualize(ctx, ex, ::Type{<:SparseMatrixCSC{Tv, Ti}}, tag=:tns) 
     VirtualSparseMatrixCSC(sym, Tv, Ti)
 end
 
-function Finch.declare!(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, init)
+function Finch.declare!(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC, init)
     throw(FinchProtocolError("Finch does not support writes to SparseMatrixCSC"))
 end
 
@@ -184,7 +184,7 @@ function Finch.virtualize(ctx, ex, ::Type{<:SparseVector{Tv, Ti}}, tag=:tns) whe
     VirtualSparseVector(sym, Tv, Ti)
 end
 
-function Finch.declare!(arr::VirtualSparseVector, ctx::AbstractCompiler, init)
+function Finch.declare!(ctx::AbstractCompiler, arr::VirtualSparseVector, init)
     throw(FinchProtocolError("Finch does not support writes to SparseVector"))
 end
 

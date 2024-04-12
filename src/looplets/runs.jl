@@ -72,7 +72,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::AcceptRunStyle)
     if root.kind === loop
         body = Rewrite(Postwalk(
             @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin
-                a_2 = get_acceptrun_body(a.val, ctx, root.ext)
+                a_2 = get_acceptrun_body(ctx, a.val, root.ext)
                 if a_2 != nothing
                     access(a_2, m, i...)
                 else
@@ -94,7 +94,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::AcceptRunStyle)
     end
 end
 
-get_acceptrun_body(node, ctx, ext) = nothing
-get_acceptrun_body(node::AcceptRun, ctx, ext) = node.body(ctx, ext)
+get_acceptrun_body(ctx, node, ext) = nothing
+get_acceptrun_body(ctx, node::AcceptRun, ext) = node.body(ctx, ext)
 
 get_point_body(node::AcceptRun, ctx, ext, idx) = node.body(ctx, similar_extent(ext,idx,idx))

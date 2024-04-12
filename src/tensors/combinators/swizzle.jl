@@ -47,8 +47,8 @@ struct VirtualSwizzleArray <: AbstractVirtualCombinator
     dims
 end
 
-#is_injective(lvl::VirtualSwizzleArray, ctx) = is_injective(lvl.body, ctx)
-#is_atomic(lvl::VirtualSwizzleArray, ctx) = is_atomic(lvl.body, ctx)
+#is_injective(ctx, lvl::VirtualSwizzleArray) = is_injective(ctx, lvl.body)
+#is_atomic(ctx, lvl::VirtualSwizzleArray) = is_atomic(ctx, lvl.body)
 
 Base.show(io::IO, ex::VirtualSwizzleArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualSwizzleArray)
@@ -74,7 +74,7 @@ Create a `SwizzleArray` to transpose any tensor `tns` such that
 swizzle(body, dims::Int...) = SwizzleArray(body, dims)
 swizzle(body::SwizzleArray{dims}, dims_2::Int...) where {dims} = SwizzleArray(body.body, ntuple(n-> dims[dims_2[n]], ndims(body)))
 
-function virtual_call(::typeof(swizzle), ctx, body, dims...)
+function virtual_call(ctx, ::typeof(swizzle), body, dims...)
     @assert All(isliteral)(dims)
     VirtualSwizzleArray(body, map(dim -> dim.val, collect(dims)))
 end
@@ -99,8 +99,8 @@ function instantiate(arr::VirtualSwizzleArray, ctx, mode, protos)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualSwizzleArray) = ctx(node.body)
-function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::VirtualSwizzleArray)
-    stylize_access(node, ctx, tns.body)
+function stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualSwizzleArray)
+    stylize_access(ctx, node, tns.body)
 end
 
 getroot(tns::VirtualSwizzleArray) = getroot(tns.body)

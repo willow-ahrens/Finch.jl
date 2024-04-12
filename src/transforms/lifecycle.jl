@@ -9,7 +9,7 @@ struct LifecycleError
     msg
 end
 
-function open_scope(prgm, ctx::LifecycleVisitor)
+function open_scope(ctx::LifecycleVisitor, prgm)
     ctx_2 = LifecycleVisitor(;kwfields(ctx)..., uses=Dict())
     close_scope(prgm, ctx_2)
 end
@@ -61,11 +61,11 @@ end
 
 function (ctx::LifecycleVisitor)(node::FinchNode)
     if node.kind === loop 
-        open_stmt(loop(node.idx, ctx(node.ext), open_scope(node.body, ctx)), ctx)
+        open_stmt(loop(node.idx, ctx(node.ext), open_scope(ctx, node.body)), ctx)
     elseif node.kind === sieve
-        open_stmt(sieve(ctx(node.cond), open_scope(node.body, ctx)), ctx)
+        open_stmt(sieve(ctx(node.cond), open_scope(ctx, node.body)), ctx)
     elseif node.kind === define
-        open_stmt(define(node.lhs, ctx(node.rhs), open_scope(node.body, ctx)), ctx)
+        open_stmt(define(node.lhs, ctx(node.rhs), open_scope(ctx, node.body)), ctx)
     elseif node.kind === declare
         ctx.scoped_uses[node.tns] = ctx.uses
         if get(ctx.modes, node.tns, reader) === updater 

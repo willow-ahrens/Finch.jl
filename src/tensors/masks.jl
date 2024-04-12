@@ -243,7 +243,7 @@ that this specializes each column for the cases where `i < b * (j - 1)`, `b * (j
 """
 function chunkmask end
 
-function Finch.virtual_call(::typeof(chunkmask), ctx, b, dim)
+function Finch.virtual_call(ctx, ::typeof(chunkmask), b, dim)
     if dim.kind === virtual
         return VirtualChunkMask(b, dim.val)
     end

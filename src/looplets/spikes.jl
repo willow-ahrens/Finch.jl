@@ -28,7 +28,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::SpikeStyle)
     if root.kind === loop
         body_ext = similar_extent(root.ext, getstart(root.ext), call(-, getstop(root.ext), getunit(root.ext)))
         root_body = Rewrite(Postwalk(
-            @rule access(~a::isvirtual, ~i...) => access(get_spike_body(a.val, ctx, root.ext, body_ext), ~i...)
+            @rule access(~a::isvirtual, ~i...) => access(get_spike_body(ctx, a.val, root.ext, body_ext), ~i...)
         ))(root.body)
         @assert isvirtual(root.ext)
         if prove(call(<=, measure(body_ext), 0), ctx) 
@@ -46,7 +46,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::SpikeStyle)
         
         tail_ext = similar_extent(root.ext, getstop(root.ext), getstop(root.ext))
         root_tail = Rewrite(Postwalk(
-            @rule access(~a::isvirtual, ~i...) => access(get_spike_tail(a.val, ctx, root.ext, tail_ext), ~i...)
+            @rule access(~a::isvirtual, ~i...) => access(get_spike_tail(ctx, a.val, root.ext, tail_ext), ~i...)
         ))(root.body)
         tail_expr = contain(ctx) do ctx_2
             (ctx_2)(loop(
@@ -61,13 +61,13 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::SpikeStyle)
     end
 end
 
-get_spike_body(node, ctx, ext, ext_2) = node
-get_spike_body(node::Spike, ctx, ext, ext_2) = Run(node.body)
+get_spike_body(ctx, node, ext, ext_2) = node
+get_spike_body(ctx, node::Spike, ext, ext_2) = Run(node.body)
 
-get_spike_tail(node, ctx, ext, ext_2) = node
-get_spike_tail(node::Spike, ctx, ext, ext_2) = Run(node.tail)
+get_spike_tail(ctx, node, ext, ext_2) = node
+get_spike_tail(ctx, node::Spike, ext, ext_2) = Run(node.tail)
 
-function truncate(node::Spike, ctx, ext, ext_2)
+function truncate(ctx, node::Spike, ext, ext_2)
     if prove(call(>=, call(-, getstop(ext), getunit(ext)), getstop(ext_2)), ctx)
         Run(node.body)
     elseif prove(call(==, getstop(ext), getstop(ext_2)), ctx)

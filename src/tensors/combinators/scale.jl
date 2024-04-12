@@ -15,8 +15,8 @@ struct VirtualScaleArray <: AbstractVirtualCombinator
     scale
 end
 
-is_injective(lvl::VirtualScaleArray, ctx) = is_injective(lvl.body, ctx)
-is_atomic(lvl::VirtualScaleArray, ctx) = is_atomic(lvl.body, ctx)
+is_injective(ctx, lvl::VirtualScaleArray) = is_injective(ctx, lvl.body)
+is_atomic(ctx, lvl::VirtualScaleArray) = is_atomic(ctx, lvl.body)
 
 Base.show(io::IO, ex::VirtualScaleArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualScaleArray)
@@ -43,7 +43,7 @@ delta...]`.  The dimensions declared by an OffsetArray are shifted, so that
 tensors with real-valued dimensions.
 """
 scale(body, delta...) = ScaleArray(body, delta)
-function virtual_call(::typeof(scale), ctx, body, scale...)
+function virtual_call(ctx, ::typeof(scale), body, scale...)
     VirtualScaleArray(body, scale)
 end
 unwrap(arr::VirtualScaleArray) = call(scale, unwrap(ctx, arr.body, var), arr.scale...)
@@ -69,8 +69,8 @@ function instantiate(arr::VirtualScaleArray, ctx, mode, protos)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualScaleArray) = ctx(node.body)
-function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::VirtualScaleArray)
-    stylize_access(node, ctx, tns.body)
+function stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualScaleArray)
+    stylize_access(ctx, node, tns.body)
 end
 
 function popdim(node::VirtualScaleArray)
@@ -81,7 +81,7 @@ function popdim(node::VirtualScaleArray)
     end
 end
 
-truncate(node::VirtualScaleArray, ctx, ext, ext_2) = VirtualScaleArray(truncate(node.body, ctx, scaledim(ext, node.scale[end]), scaledim(ext_2, node.scale[end])), node.scale)
+truncate(ctx, node::VirtualScaleArray, ext, ext_2) = VirtualScaleArray(truncate(ctx, node.body, scaledim(ext, node.scale[end]), scaledim(ext_2, node.scale[end])), node.scale)
 
 function get_point_body(node::VirtualScaleArray, ctx, ext, idx)
     body_2 = get_point_body(node.body, ctx, scaledim(ext, node.scale[end]), call(*, idx, node.scale[end]))
@@ -103,8 +103,8 @@ function get_run_body(node::VirtualScaleArray, ctx, ext)
     end
 end
 
-function get_acceptrun_body(node::VirtualScaleArray, ctx, ext)
-    body_2 = get_acceptrun_body(node.body, ctx, scaledim(ext, node.scale[end]))
+function get_acceptrun_body(ctx, node::VirtualScaleArray, ext)
+    body_2 = get_acceptrun_body(ctx, node.body, scaledim(ext, node.scale[end]))
     if body_2 === nothing
         return nothing
     else
@@ -118,11 +118,11 @@ function (ctx::SequenceVisitor)(node::VirtualScaleArray)
     end
 end
 
-phase_body(node::VirtualScaleArray, ctx, ext, ext_2) = VirtualScaleArray(phase_body(node.body, ctx, scaledim(ext, node.scale[end]), scaledim(ext_2, node.scale[end])), node.scale)
-phase_range(node::VirtualScaleArray, ctx, ext) = scaledim(phase_range(node.body, ctx, scaledim(ext, node.scale[end])), call(/, 1.0f0, node.scale[end]))
+phase_body(ctx, node::VirtualScaleArray, ext, ext_2) = VirtualScaleArray(phase_body(ctx, node.body, scaledim(ext, node.scale[end]), scaledim(ext_2, node.scale[end])), node.scale)
+phase_range(ctx, node::VirtualScaleArray, ext) = scaledim(phase_range(ctx, node.body, scaledim(ext, node.scale[end])), call(/, 1.0f0, node.scale[end]))
 
-get_spike_body(node::VirtualScaleArray, ctx, ext, ext_2) = VirtualScaleArray(get_spike_body(node.body, ctx, scaledim(ext, node.scale[end]), scaledim(ext_2, node.scale[end])), node.scale)
-get_spike_tail(node::VirtualScaleArray, ctx, ext, ext_2) = VirtualScaleArray(get_spike_tail(node.body, ctx, scaledim(ext, node.scale[end]), scaledim(ext_2, node.scale[end])), node.scale)
+get_spike_body(ctx, node::VirtualScaleArray, ext, ext_2) = VirtualScaleArray(get_spike_body(ctx, node.body, scaledim(ext, node.scale[end]), scaledim(ext_2, node.scale[end])), node.scale)
+get_spike_tail(ctx, node::VirtualScaleArray, ext, ext_2) = VirtualScaleArray(get_spike_tail(ctx, node.body, scaledim(ext, node.scale[end]), scaledim(ext_2, node.scale[end])), node.scale)
 
 visit_fill(node, tns::VirtualScaleArray) = visit_fill(node, tns.body)
 visit_simplify(node::VirtualScaleArray) = VirtualScaleArray(visit_simplify(node.body), node.scale)
@@ -131,24 +131,24 @@ visit_simplify(node::VirtualScaleArray) = VirtualScaleArray(visit_simplify(node.
     guard => VirtualScaleArray(body, node.scale)
 end
 
-stepper_range(node::VirtualScaleArray, ctx, ext) = scaledim(stepper_range(node.body, ctx, scaledim(ext, node.scale[end])), call(/, 1.0f0, node.scale[end]))
-stepper_body(node::VirtualScaleArray, ctx, ext, ext_2) = VirtualScaleArray(stepper_body(node.body, ctx, scaledim(ext, node.scale[end]), scaledim(ext_2, node.scale[end])), node.scale)
-stepper_seek(node::VirtualScaleArray, ctx, ext) = stepper_seek(node.body, ctx, scaledim(ext, node.scale[end]))
+stepper_range(ctx, node::VirtualScaleArray, ext) = scaledim(stepper_range(ctx, node.body, scaledim(ext, node.scale[end])), call(/, 1.0f0, node.scale[end]))
+stepper_body(ctx, node::VirtualScaleArray, ext, ext_2) = VirtualScaleArray(stepper_body(ctx, node.body, scaledim(ext, node.scale[end]), scaledim(ext_2, node.scale[end])), node.scale)
+stepper_seek(ctx, node::VirtualScaleArray, ext) = stepper_seek(ctx, node.body, scaledim(ext, node.scale[end]))
 
-jumper_range(node::VirtualScaleArray, ctx, ext) = scaledim(jumper_range(node.body, ctx, scaledim(ext, node.scale[end])), call(/, 1.0f0, node.scale[end]))
-jumper_body(node::VirtualScaleArray, ctx, ext, ext_2) = VirtualScaleArray(jumper_body(node.body, ctx, scaledim(ext, node.scale[end]), scaledim(ext_2, node.scale[end])), node.scale)
-jumper_seek(node::VirtualScaleArray, ctx, ext) = jumper_seek(node.body, ctx, scaledim(ext, node.scale[end]))
+jumper_range(ctx, node::VirtualScaleArray, ext) = scaledim(jumper_range(ctx, node.body, scaledim(ext, node.scale[end])), call(/, 1.0f0, node.scale[end]))
+jumper_body(ctx, node::VirtualScaleArray, ext, ext_2) = VirtualScaleArray(jumper_body(ctx, node.body, scaledim(ext, node.scale[end]), scaledim(ext_2, node.scale[end])), node.scale)
+jumper_seek(ctx, node::VirtualScaleArray, ext) = jumper_seek(ctx, node.body, scaledim(ext, node.scale[end]))
 
-function short_circuit_cases(node::VirtualScaleArray, ctx, op)
-    map(short_circuit_cases(node.body, ctx, op)) do (guard, body)
+function short_circuit_cases(ctx, node::VirtualScaleArray, op)
+    map(short_circuit_cases(ctx, node.body, op)) do (guard, body)
         guard => VirtualScaleArray(body, node.scale)
     end
 end
 
 getroot(tns::VirtualScaleArray) = getroot(tns.body)
 
-function unfurl(tns::VirtualScaleArray, ctx, ext, mode, protos...)
-    VirtualScaleArray(unfurl(tns.body, ctx, scaledim(ext, tns.scale[end]), mode, protos...), tns.scale)
+function unfurl(ctx, tns::VirtualScaleArray, ext, mode, protos...)
+    VirtualScaleArray(unfurl(ctx, tns.body, scaledim(ext, tns.scale[end]), mode, protos...), tns.scale)
 end
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualScaleArray)

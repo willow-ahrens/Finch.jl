@@ -15,8 +15,8 @@ struct VirtualOffsetArray <: AbstractVirtualCombinator
     delta
 end
 
-is_injective(lvl::VirtualOffsetArray, ctx) = is_injective(lvl.body, ctx)
-is_atomic(lvl::VirtualOffsetArray, ctx) = is_atomic(lvl.body, ctx)
+is_injective(ctx, lvl::VirtualOffsetArray) = is_injective(ctx, lvl.body)
+is_atomic(ctx, lvl::VirtualOffsetArray) = is_atomic(ctx, lvl.body)
 
 Base.show(io::IO, ex::VirtualOffsetArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualOffsetArray)
@@ -41,7 +41,7 @@ Create an `OffsetArray` such that `offset(tns, delta...)[i...] == tns[i .+ delta
 The dimensions declared by an OffsetArray are shifted, so that `size(offset(tns, delta...)) == size(tns) .+ delta`.
 """
 offset(body, delta...) = OffsetArray(body, delta)
-function virtual_call(::typeof(offset), ctx, body, delta...)
+function virtual_call(ctx, ::typeof(offset), body, delta...)
     VirtualOffsetArray(body, delta)
 end
 
@@ -68,8 +68,8 @@ function instantiate(arr::VirtualOffsetArray, ctx, mode, protos)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualOffsetArray) = ctx(node.body)
-function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::VirtualOffsetArray)
-    stylize_access(node, ctx, tns.body)
+function stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualOffsetArray)
+    stylize_access(ctx, node, tns.body)
 end
 
 function popdim(node::VirtualOffsetArray)
@@ -80,7 +80,7 @@ function popdim(node::VirtualOffsetArray)
     end
 end
 
-truncate(node::VirtualOffsetArray, ctx, ext, ext_2) = VirtualOffsetArray(truncate(node.body, ctx, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
+truncate(ctx, node::VirtualOffsetArray, ext, ext_2) = VirtualOffsetArray(truncate(ctx, node.body, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
 
 function get_point_body(node::VirtualOffsetArray, ctx, ext, idx)
     body_2 = get_point_body(node.body, ctx, shiftdim(ext, node.delta[end]), call(+, idx, node.delta[end]))
@@ -102,8 +102,8 @@ function get_run_body(node::VirtualOffsetArray, ctx, ext)
     end
 end
 
-function get_acceptrun_body(node::VirtualOffsetArray, ctx, ext)
-    body_2 = get_acceptrun_body(node.body, ctx, shiftdim(ext, node.delta[end]))
+function get_acceptrun_body(ctx, node::VirtualOffsetArray, ext)
+    body_2 = get_acceptrun_body(ctx, node.body, shiftdim(ext, node.delta[end]))
     if body_2 === nothing
         return nothing
     else
@@ -117,11 +117,11 @@ function (ctx::SequenceVisitor)(node::VirtualOffsetArray)
     end
 end
 
-phase_body(node::VirtualOffsetArray, ctx, ext, ext_2) = VirtualOffsetArray(phase_body(node.body, ctx, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
-phase_range(node::VirtualOffsetArray, ctx, ext) = shiftdim(phase_range(node.body, ctx, shiftdim(ext, node.delta[end])), call(-, node.delta[end]))
+phase_body(ctx, node::VirtualOffsetArray, ext, ext_2) = VirtualOffsetArray(phase_body(ctx, node.body, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
+phase_range(ctx, node::VirtualOffsetArray, ext) = shiftdim(phase_range(ctx, node.body, shiftdim(ext, node.delta[end])), call(-, node.delta[end]))
 
-get_spike_body(node::VirtualOffsetArray, ctx, ext, ext_2) = VirtualOffsetArray(get_spike_body(node.body, ctx, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
-get_spike_tail(node::VirtualOffsetArray, ctx, ext, ext_2) = VirtualOffsetArray(get_spike_tail(node.body, ctx, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
+get_spike_body(ctx, node::VirtualOffsetArray, ext, ext_2) = VirtualOffsetArray(get_spike_body(ctx, node.body, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
+get_spike_tail(ctx, node::VirtualOffsetArray, ext, ext_2) = VirtualOffsetArray(get_spike_tail(ctx, node.body, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
 
 visit_fill(node, tns::VirtualOffsetArray) = visit_fill(node, tns.body)
 visit_simplify(node::VirtualOffsetArray) = VirtualOffsetArray(visit_simplify(node.body), node.delta)
@@ -130,24 +130,24 @@ visit_simplify(node::VirtualOffsetArray) = VirtualOffsetArray(visit_simplify(nod
     guard => VirtualOffsetArray(body, node.delta)
 end
 
-stepper_range(node::VirtualOffsetArray, ctx, ext) = shiftdim(stepper_range(node.body, ctx, shiftdim(ext, node.delta[end])), call(-, node.delta[end]))
-stepper_body(node::VirtualOffsetArray, ctx, ext, ext_2) = VirtualOffsetArray(stepper_body(node.body, ctx, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
-stepper_seek(node::VirtualOffsetArray, ctx, ext) = stepper_seek(node.body, ctx, shiftdim(ext, node.delta[end]))
+stepper_range(ctx, node::VirtualOffsetArray, ext) = shiftdim(stepper_range(ctx, node.body, shiftdim(ext, node.delta[end])), call(-, node.delta[end]))
+stepper_body(ctx, node::VirtualOffsetArray, ext, ext_2) = VirtualOffsetArray(stepper_body(ctx, node.body, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
+stepper_seek(ctx, node::VirtualOffsetArray, ext) = stepper_seek(ctx, node.body, shiftdim(ext, node.delta[end]))
 
-jumper_range(node::VirtualOffsetArray, ctx, ext) = shiftdim(jumper_range(node.body, ctx, shiftdim(ext, node.delta[end])), call(-, node.delta[end]))
-jumper_body(node::VirtualOffsetArray, ctx, ext, ext_2) = VirtualOffsetArray(jumper_body(node.body, ctx, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
-jumper_seek(node::VirtualOffsetArray, ctx, ext) = jumper_seek(node.body, ctx, shiftdim(ext, node.delta[end]))
+jumper_range(ctx, node::VirtualOffsetArray, ext) = shiftdim(jumper_range(ctx, node.body, shiftdim(ext, node.delta[end])), call(-, node.delta[end]))
+jumper_body(ctx, node::VirtualOffsetArray, ext, ext_2) = VirtualOffsetArray(jumper_body(ctx, node.body, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
+jumper_seek(ctx, node::VirtualOffsetArray, ext) = jumper_seek(ctx, node.body, shiftdim(ext, node.delta[end]))
 
-function short_circuit_cases(node::VirtualOffsetArray, ctx, op)
-    map(short_circuit_cases(node.body, ctx, op)) do (guard, body)
+function short_circuit_cases(ctx, node::VirtualOffsetArray, op)
+    map(short_circuit_cases(ctx, node.body, op)) do (guard, body)
         guard => VirtualOffsetArray(body, node.delta)
     end
 end
 
 getroot(tns::VirtualOffsetArray) = getroot(tns.body)
 
-function unfurl(tns::VirtualOffsetArray, ctx, ext, mode, protos...)
-    VirtualOffsetArray(unfurl(tns.body, ctx, shiftdim(ext, tns.delta[end]), mode, protos...), tns.delta)
+function unfurl(ctx, tns::VirtualOffsetArray, ext, mode, protos...)
+    VirtualOffsetArray(unfurl(ctx, tns.body, shiftdim(ext, tns.delta[end]), mode, protos...), tns.delta)
 end
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualOffsetArray)

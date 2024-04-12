@@ -35,7 +35,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::LookupStyle)
                     end
                 end
             ))(root.body)
-            open_scope(body_3, ctx_2)
+            open_scope(ctx_2, body_3)
         end
         @assert isvirtual(root.ext)
 

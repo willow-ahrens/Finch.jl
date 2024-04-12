@@ -144,9 +144,9 @@ mutable struct VirtualDenseRLELevel <: AbstractVirtualLevel
     merge
 end
 
-is_level_injective(lvl::VirtualDenseRLELevel, ctx) = [false, is_level_injective(lvl.lvl, ctx)...]
+is_level_injective(ctx, lvl::VirtualDenseRLELevel) = [false, is_level_injective(ctx, lvl.lvl)...]
 is_level_concurrent(lvl::VirtualDenseRLELevel, ctx) = [false, is_level_concurrent(lvl.lvl, ctx)...]
-is_level_atomic(lvl::VirtualDenseRLELevel, ctx) = false
+is_level_atomic(ctx, lvl::VirtualDenseRLELevel) = false
 
 postype(lvl::VirtualDenseRLELevel) = postype(lvl.lvl)
 
@@ -196,19 +196,19 @@ end
 
 Base.summary(lvl::VirtualDenseRLELevel) = "DenseRLE($(summary(lvl.lvl)))"
 
-function virtual_level_size(lvl::VirtualDenseRLELevel, ctx)
+function virtual_level_size(ctx, lvl::VirtualDenseRLELevel)
     ext = make_extent(lvl.Ti, literal(lvl.Ti(1.0)), lvl.shape)
-    (virtual_level_size(lvl.lvl, ctx)..., ext)
+    (virtual_level_size(ctx, lvl.lvl)..., ext)
 end
 
-function virtual_level_resize!(lvl::VirtualDenseRLELevel, ctx, dims...)
+function virtual_level_resize!(ctx, lvl::VirtualDenseRLELevel, dims...)
     lvl.shape = getstop(dims[end])
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-1]...)
-    lvl.buf = virtual_level_resize!(lvl.buf, ctx, dims[1:end-1]...)
+    lvl.lvl = virtual_level_resize!(ctx, lvl.lvl, dims[1:end-1]...)
+    lvl.buf = virtual_level_resize!(ctx, lvl.buf, dims[1:end-1]...)
     lvl
 end
 
-function virtual_moveto_level(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, arch)
+function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualDenseRLELevel, arch)
     ptr_2 = freshen(ctx.code, lvl.ptr)
     right_2 = freshen(ctx.code, lvl.right)
     push!(ctx.code.preamble, quote
@@ -221,29 +221,29 @@ function virtual_moveto_level(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, 
         $(lvl.ptr) = $ptr_2
         $(lvl.right) = $right_2
     end)
-    virtual_moveto_level(lvl.lvl, ctx, arch)
-    virtual_moveto_level(lvl.buf, ctx, arch)
+    virtual_moveto_level(ctx, lvl.lvl, arch)
+    virtual_moveto_level(ctx, lvl.buf, arch)
 end
 
 virtual_level_eltype(lvl::VirtualDenseRLELevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualDenseRLELevel) = virtual_level_default(lvl.lvl)
 
-function declare_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos, init)
+function declare_level!(ctx::AbstractCompiler, lvl::VirtualDenseRLELevel, pos, init)
     Tp = postype(lvl)
     Ti = lvl.Ti
     qos = call(-, call(getindex, :($(lvl.ptr)), call(+, pos, 1)), 1)
-    unit = ctx(get_smallest_measure(virtual_level_size(lvl, ctx)[end]))
+    unit = ctx(get_smallest_measure(virtual_level_size(ctx, lvl)[end]))
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
         $(lvl.i_prev) = $(Ti(1)) - $unit
         $(lvl.prev_pos) = $(Tp(1))
     end)
-    lvl.buf = declare_level!(lvl.buf, ctx, qos, init)
+    lvl.buf = declare_level!(ctx, lvl.buf, qos, init)
     return lvl
 end
 
-function assemble_level!(lvl::VirtualDenseRLELevel, ctx, pos_start, pos_stop)
+function assemble_level!(ctx, lvl::VirtualDenseRLELevel, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
@@ -253,10 +253,10 @@ function assemble_level!(lvl::VirtualDenseRLELevel, ctx, pos_start, pos_stop)
 end
 
 #=
-function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_stop)
+function freeze_level!(ctx::AbstractCompiler, lvl::VirtualDenseRLELevel, pos_stop)
     (lvl.buf, lvl.lvl) = (lvl.lvl, lvl.buf)
     p = freshen(ctx.code, :p)
-    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(ctx, pos_stop)))
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
         resize!($(lvl.ptr), $pos_stop + 1)
@@ -266,21 +266,21 @@ function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_sto
         $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
         resize!($(lvl.right), $qos_stop)
     end)
-    lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
+    lvl.lvl = freeze_level!(ctx, lvl.lvl, value(qos_stop))
     return lvl
 end
 =#
 
-function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_stop)
+function freeze_level!(ctx::AbstractCompiler, lvl::VirtualDenseRLELevel, pos_stop)
     Tp = postype(lvl)
     p = freshen(ctx.code, :p)
-    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(ctx, pos_stop)))
     Ti = lvl.Ti
     pos_2 = freshen(ctx.code, tag, :_pos)
     qos_stop = lvl.qos_stop
     qos_fill = lvl.qos_fill
     qos = freshen(ctx.code, :qos)
-    unit = ctx(get_smallest_measure(virtual_level_size(lvl, ctx)[end]))
+    unit = ctx(get_smallest_measure(virtual_level_size(ctx, lvl)[end]))
     push!(ctx.code.preamble, quote
         $qos = $(lvl.qos_fill)
         #if we did not write something to finish out the last run, we need to fill that in
@@ -291,7 +291,7 @@ function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_sto
             $qos_stop = $qos
             Finch.resize_if_smaller!($(lvl.right), $qos_stop)
             Finch.fill_range!($(lvl.right), $(ctx(lvl.shape)), $qos_fill + 1, $qos_stop)
-            $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, call(+, value(qos_fill, Tp), Tp(1)), value(qos_stop, Tp)), ctx))
+            $(contain(ctx_2->assemble_level!(ctx_2, lvl.buf, call(+, value(qos_fill, Tp), Tp(1)), value(qos_stop, Tp)), ctx))
         end
         resize!($(lvl.ptr), $pos_stop + 1)
         for $p = 1:$pos_stop
@@ -300,8 +300,8 @@ function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_sto
         $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
     end)
     if lvl.merge
-        lvl.buf = freeze_level!(lvl.buf, ctx, value(qos_stop))
-        lvl.lvl = declare_level!(lvl.lvl, ctx, literal(1), literal(virtual_level_default(lvl.buf)))
+        lvl.buf = freeze_level!(ctx, lvl.buf, value(qos_stop))
+        lvl.lvl = declare_level!(ctx, lvl.lvl, literal(1), literal(virtual_level_default(lvl.buf)))
         p = freshen(ctx.code, :p)
         q = freshen(ctx.code, :q)
         q_head = freshen(ctx.code, :q_head)
@@ -309,7 +309,7 @@ function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_sto
         q_2 = freshen(ctx.code, :q_2)
         checkval = freshen(ctx.code, :check)
         push!(ctx.code.preamble, quote
-            $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(1, Tp), value(qos_stop, Tp)), ctx))
+            $(contain(ctx_2->assemble_level!(ctx_2, lvl.lvl, value(1, Tp), value(qos_stop, Tp)), ctx))
             $q = 1
             $q_2 = 1
             for $p = 1:$pos_stop
@@ -324,7 +324,7 @@ function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_sto
                             right = variable(freshen(ctx.code, :right))
                             ctx_2.bindings[right] = virtual(VirtualSubFiber(lvl.buf, call(+, value(q, Tp), Tp(1))))
                             check = VirtualScalar(:UNREACHABLE, Bool, false, :check, checkval)
-                            exts = virtual_level_size(lvl.buf, ctx_2)
+                            exts = virtual_level_size(ctx_2, lvl.buf)
                             inds = [index(freshen(ctx_2.code, :i, n)) for n = 1:length(exts)]
                             prgm = assign(access(check, updater), and, call(isequal, access(left, reader, inds...), access(right, reader, inds...)))
                             for (ind, ext) in zip(inds, exts)
@@ -345,7 +345,7 @@ function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_sto
                         ctx_2.bindings[src] = virtual(VirtualSubFiber(lvl.buf, value(q_head, Tp)))
                         dst = variable(freshen(ctx.code, :dst))
                         ctx_2.bindings[dst] = virtual(VirtualSubFiber(lvl.lvl, value(q_2, Tp)))
-                        exts = virtual_level_size(lvl.buf, ctx_2)
+                        exts = virtual_level_size(ctx_2, lvl.buf)
                         inds = [index(freshen(ctx_2.code, :i, n)) for n = 1:length(exts)]
                         prgm = assign(access(dst, updater, inds...), initwrite(virtual_level_default(lvl.lvl)), access(src, reader, inds...))
                         for (ind, ext) in zip(inds, exts)
@@ -362,27 +362,27 @@ function freeze_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_sto
             resize!($(lvl.right), $q_2 - 1)
             $qos_stop = $q_2 - 1
         end)
-        lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
-        lvl.buf = declare_level!(lvl.buf, ctx, literal(1), literal(virtual_level_default(lvl.buf)))
-        lvl.buf = freeze_level!(lvl.buf, ctx, literal(0))
+        lvl.lvl = freeze_level!(ctx, lvl.lvl, value(qos_stop))
+        lvl.buf = declare_level!(ctx, lvl.buf, literal(1), literal(virtual_level_default(lvl.buf)))
+        lvl.buf = freeze_level!(ctx, lvl.buf, literal(0))
         return lvl
     else
         push!(ctx.code.preamble, quote
             resize!($(lvl.right), $qos_stop)
         end)
         (lvl.buf, lvl.lvl) = (lvl.lvl, lvl.buf)
-        lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
+        lvl.lvl = freeze_level!(ctx, lvl.lvl, value(qos_stop))
         return lvl
     end
 end
 
-function thaw_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_stop)
+function thaw_level!(ctx::AbstractCompiler, lvl::VirtualDenseRLELevel, pos_stop)
     error("Thaw is not yet implemented for DenseRLE level. To implement, we need to cache the last written qos as a Ref{Int}, then reconstruct prev_pos and i_prev from the ptr and right arrays")
     #=
     p = freshen(ctx.code, :p)
-    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(ctx, pos_stop)))
     qos_stop = freshen(ctx.code, :qos_stop)
-    unit = ctx(get_smallest_measure(virtual_level_size(lvl, ctx)[end]))
+    unit = ctx(get_smallest_measure(virtual_level_size(ctx, lvl)[end]))
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(lvl.ptr)[$pos_stop + 1] - 1
         $(lvl.qos_stop) = $(lvl.qos_fill)
@@ -394,7 +394,7 @@ function thaw_level!(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, pos_stop)
         end
     end)
     (lvl.lvl, lvl.buf) = (lvl.buf, lvl.lvl)
-    lvl.buf = thaw_level!(lvl.buf, ctx, value(qos_stop))
+    lvl.buf = thaw_level!(ctx, lvl.buf, value(qos_stop))
     return lvl
     =#
 end
@@ -459,7 +459,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, ctx, mode
     qos_stop = lvl.qos_stop
     dirty = freshen(ctx.code, tag, :dirty)
     pos_2 = freshen(ctx.code, tag, :_pos)
-    unit = ctx(get_smallest_measure(virtual_level_size(lvl, ctx)[end]))
+    unit = ctx(get_smallest_measure(virtual_level_size(ctx, lvl)[end]))
     qos_2 = freshen(ctx.code, tag, :_qos_2)
     qos_set = freshen(ctx.code, tag, :_qos_set)
     qos_3 = freshen(ctx.code, tag, :_qos_3)
@@ -496,7 +496,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, ctx, mode
                             end
                             Finch.resize_if_smaller!($(lvl.right), $qos_stop)
                             Finch.fill_range!($(lvl.right), $(ctx(lvl.shape)), $qos_2, $qos_stop)
-                            $(contain(ctx_2->assemble_level!(lvl.buf, ctx_2, value(qos_2, Tp), value(qos_stop, Tp)), ctx))
+                            $(contain(ctx_2->assemble_level!(ctx_2, lvl.buf, value(qos_2, Tp), value(qos_stop, Tp)), ctx))
                         end
                         $dirty = false
                     end,

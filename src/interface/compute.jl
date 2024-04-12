@@ -160,7 +160,7 @@ function withsubsequence(a, b)
     view(b, findall(idx -> idx in a, b)) .= a
 end
 
-function concordize(root, bindings)
+function concordize(bindings, root)
     needed_swizzles = Dict()
     root = Rewrite(Postwalk(
         @rule reorder(relabel(~a::isalias, ~idxs_2...), ~idxs...) => begin
@@ -408,7 +408,7 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     prgm = pretty_labels(prgm)
     bindings = getbindings(prgm)
     prgm = push_labels(prgm, bindings)
-    prgm = concordize(prgm, bindings)
+    prgm = concordize(bindings, prgm)
     prgm = fuse_reformats(prgm)
     prgm = push_labels(prgm, bindings)
     prgm = propagate_copy_queries(prgm)

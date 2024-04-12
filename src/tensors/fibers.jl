@@ -68,8 +68,8 @@ mutable struct VirtualFiber{Lvl} <: AbstractVirtualFiber{Lvl}
     lvl::Lvl
 end
 
-is_injective(tns::VirtualFiber, ctx) = is_level_injective(tns.lvl, ctx)
-is_atomic(tns::VirtualFiber, ctx) = is_level_atomic(tns.lvl, ctx)
+is_injective(ctx, tns::VirtualFiber) = is_level_injective(ctx, tns.lvl)
+is_atomic(ctx, tns::VirtualFiber) = is_level_atomic(ctx, tns.lvl)
 
 function virtualize(ctx, ex, ::Type{<:Tensor{Lvl}}, tag=freshen(ctx, :tns)) where {Lvl}
     lvl = virtualize(ctx, :($ex.lvl), Lvl, Symbol(tag, :_lvl))
@@ -109,9 +109,9 @@ FinchNotation.finch_leaf(x::VirtualSubFiber) = virtual(x)
 @inline default(::AbstractFiber{Lvl}) where {Lvl} = level_default(Lvl)
 @inline default(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = level_default(Lvl)
 
-virtual_size(ctx, tns::AbstractVirtualFiber) = virtual_level_size(tns.lvl, ctx)
+virtual_size(ctx, tns::AbstractVirtualFiber) = virtual_level_size(ctx, tns.lvl)
 function virtual_resize!(ctx, tns::AbstractVirtualFiber, dims...)
-    tns.lvl = virtual_level_resize!(tns.lvl, ctx, dims...)
+    tns.lvl = virtual_level_resize!(ctx, tns.lvl, dims...)
     tns
 end
 virtual_eltype(tns::AbstractVirtualFiber, ctx) = virtual_level_eltype(tns.lvl)
@@ -167,9 +167,9 @@ function Base.show(io::IO, key::RangeLabel)
     end
 end
 
-function declare!(fbr::VirtualFiber, ctx::AbstractCompiler, init)
-    lvl = declare_level!(fbr.lvl, ctx, literal(1), init)
-    push!(ctx.code.preamble, assemble_level!(lvl, ctx, literal(1), literal(1))) #TODO this feels unnecessary?
+function declare!(ctx::AbstractCompiler, fbr::VirtualFiber, init)
+    lvl = declare_level!(ctx, fbr.lvl, literal(1), init)
+    push!(ctx.code.preamble, assemble_level!(ctx, lvl, literal(1), literal(1))) #TODO this feels unnecessary?
     fbr = VirtualFiber(lvl)
 end
 
@@ -177,12 +177,12 @@ function instantiate(fbr::VirtualFiber, ctx::AbstractCompiler, mode, protos)
     return Unfurled(fbr, instantiate(VirtualSubFiber(fbr.lvl, literal(1)), ctx, mode, protos))
 end
 
-function virtual_moveto(fbr::VirtualFiber, ctx::AbstractCompiler, arch)
-    virtual_moveto_level(fbr.lvl, ctx, arch)
+function virtual_moveto(ctx::AbstractCompiler, fbr::VirtualFiber, arch)
+    virtual_moveto_level(ctx, fbr.lvl, arch)
 end
 
-function virtual_moveto(fbr::VirtualSubFiber, ctx::AbstractCompiler, arch)
-    virtual_moveto_level(fbr.lvl, ctx, arch)
+function virtual_moveto(ctx::AbstractCompiler, fbr::VirtualSubFiber, arch)
+    virtual_moveto_level(ctx, fbr.lvl, arch)
 end
 
 struct HollowSubFiber{Lvl, Pos, Dirty} <: AbstractFiber{Lvl}
@@ -205,8 +205,8 @@ end
 lower(fbr::VirtualHollowSubFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(HollowSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
 FinchNotation.finch_leaf(x::VirtualHollowSubFiber) = virtual(x)
 
-function virtual_moveto(fbr::VirtualHollowSubFiber, ctx::AbstractCompiler, arch)
-    return VirtualHollowSubFiber(virtual_moveto_level(fbr.lvl, ctx, arch), fbr.pos, fbr.dirty)
+function virtual_moveto(ctx::AbstractCompiler, fbr::VirtualHollowSubFiber, arch)
+    return VirtualHollowSubFiber(virtual_moveto_level(ctx, fbr.lvl, arch), fbr.pos, fbr.dirty)
 end
 
 """
@@ -247,13 +247,13 @@ Base.resize!(fbr::Tensor, dims...) = Tensor(resize!(fbr.lvl, dims...))
 data_rep(fbr::Tensor) = data_rep(typeof(fbr))
 data_rep(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = data_rep_level(Lvl)
 
-function freeze!(fbr::VirtualFiber, ctx::AbstractCompiler)
-    return VirtualFiber(freeze_level!(fbr.lvl, ctx, literal(1)))
+function freeze!(ctx::AbstractCompiler, fbr::VirtualFiber)
+    return VirtualFiber(freeze_level!(ctx, fbr.lvl, literal(1)))
 end
 
-thaw_level!(lvl, ctx, pos) = throw(FinchProtocolError("cannot modify $(typeof(lvl)) in place (forgot to declare with .= ?)"))
-function thaw!(fbr::VirtualFiber, ctx::AbstractCompiler)
-    return VirtualFiber(thaw_level!(fbr.lvl, ctx, literal(1)))
+thaw_level!(ctx, lvl, pos) = throw(FinchProtocolError("cannot modify $(typeof(lvl)) in place (forgot to declare with .= ?)"))
+function thaw!(ctx::AbstractCompiler, fbr::VirtualFiber)
+    return VirtualFiber(thaw_level!(ctx, fbr.lvl, literal(1)))
 end
 
 supports_reassembly(lvl) = false
@@ -317,9 +317,9 @@ countstored(arr::Array) = length(arr)
     contain(LowerJulia()) do ctx
         lvl = virtualize(ctx.code, :lvl, lvl)
         def = literal(virtual_level_default(lvl))
-        lvl = declare_level!(lvl, ctx, literal(0), def)
-        push!(ctx.code.preamble, assemble_level!(lvl, ctx, literal(1), literal(1)))
-        lvl = freeze_level!(lvl, ctx, literal(1))
+        lvl = declare_level!(ctx, lvl, literal(0), def)
+        push!(ctx.code.preamble, assemble_level!(ctx, lvl, literal(1), literal(1)))
+        lvl = freeze_level!(ctx, lvl, literal(1))
         ctx(lvl)
     end
 end

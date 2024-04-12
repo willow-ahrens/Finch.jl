@@ -110,8 +110,8 @@ mutable struct VirtualSparseTriangleLevel <: AbstractVirtualLevel
     shape
 end
 
-is_level_injective(lvl::VirtualSparseTriangleLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
-is_level_atomic(lvl::VirtualSparseTriangleLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
+is_level_injective(ctx, lvl::VirtualSparseTriangleLevel) = [is_level_injective(ctx, lvl.lvl)..., (true for _ in 1:lvl.N)...]
+is_level_atomic(ctx, lvl::VirtualSparseTriangleLevel) = is_level_atomic(ctx, lvl.lvl)
 
 postype(lvl::VirtualSparseTriangleLevel) = postype(lvl.lvl)
 
@@ -135,51 +135,51 @@ end
 
 Base.summary(lvl::VirtualSparseTriangleLevel) = "SparseTriangle$(lvl.N)}($(summary(lvl.lvl)))"
 
-function virtual_level_size(lvl::VirtualSparseTriangleLevel, ctx)
+function virtual_level_size(ctx, lvl::VirtualSparseTriangleLevel)
     ext = map((i) -> Extent(literal(lvl.Ti(1)), lvl.shape), 1:lvl.N)
-    (virtual_level_size(lvl.lvl, ctx)..., ext...)
+    (virtual_level_size(ctx, lvl.lvl)..., ext...)
 end
 
-function virtual_level_resize!(lvl::VirtualSparseTriangleLevel, ctx, dims...)
+function virtual_level_resize!(ctx, lvl::VirtualSparseTriangleLevel, dims...)
     lvl.shape = getstop(dims[end])
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-lvl.N]...)
+    lvl.lvl = virtual_level_resize!(ctx, lvl.lvl, dims[1:end-lvl.N]...)
     lvl
 end
 
 virtual_level_eltype(lvl::VirtualSparseTriangleLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseTriangleLevel) = virtual_level_default(lvl.lvl)
 
-function virtual_moveto_level(lvl::VirtualSparseTriangleLevel, ctx::AbstractCompiler, arch)
-    virtual_moveto_level(lvl.lvl, ctx, arch)
+function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualSparseTriangleLevel, arch)
+    virtual_moveto_level(ctx, lvl.lvl, arch)
 end
 
-function declare_level!(lvl::VirtualSparseTriangleLevel, ctx::AbstractCompiler, pos, init)
+function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseTriangleLevel, pos, init)
     # qos = virtual_simplex(lvl.N, ctx, lvl.shape)
     qos = call(*, pos, virtual_simplex(lvl.N, ctx, lvl.shape))
-    lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
+    lvl.lvl = declare_level!(ctx, lvl.lvl, qos, init)
     return lvl
 end
 
-function assemble_level!(lvl::VirtualSparseTriangleLevel, ctx, pos_start, pos_stop)
+function assemble_level!(ctx, lvl::VirtualSparseTriangleLevel, pos_start, pos_stop)
     fbr_count = virtual_simplex(lvl.N, ctx, lvl.shape)
     qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), fbr_count), 1)
     qos_stop = call(*, pos_stop, fbr_count)
     qos_stop = call(*, pos_stop, fbr_count)
-    assemble_level!(lvl.lvl, ctx, qos_start, qos_stop)
+    assemble_level!(ctx, lvl.lvl, qos_start, qos_stop)
 end
 
 supports_reassembly(::VirtualSparseTriangleLevel) = true
-function reassemble_level!(lvl::VirtualSparseTriangleLevel, ctx, pos_start, pos_stop)
+function reassemble_level!(ctx, lvl::VirtualSparseTriangleLevel, pos_start, pos_stop)
     fbr_count = virtual_simplex(lvl.N, ctx, lvl.shape)
     qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), fbr_count), 1)
     qos_stop = call(*, pos_stop, fbr_count)
-    reassemble_level!(lvl.lvl, ctx, qos_start, qos_stop)
+    reassemble_level!(ctx, lvl.lvl, qos_start, qos_stop)
     lvl
 end
 
-function freeze_level!(lvl::VirtualSparseTriangleLevel, ctx::AbstractCompiler, pos)
+function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseTriangleLevel, pos)
     qos = call(*, pos, virtual_simplex(lvl.N, ctx, lvl.shape))
-    lvl.lvl = freeze_level!(lvl.lvl, ctx, qos)
+    lvl.lvl = freeze_level!(ctx, lvl.lvl, qos)
     return lvl
 end
 
@@ -188,7 +188,7 @@ function virtual_simplex(d, ctx, n)
     for i in 1:d
         res = call(*, call(+, n, d - i), res)
     end
-    return simplify(call(fld, res, factorial(d)), ctx)
+    return simplify(ctx, call(fld, res, factorial(d)))
 end
 
 struct SparseTriangleFollowTraversal

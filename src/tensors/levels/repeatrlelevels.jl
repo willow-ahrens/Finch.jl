@@ -133,8 +133,8 @@ mutable struct VirtualRepeatRLELevel <: AbstractVirtualLevel
     dirty
     prev_pos
 end
-is_level_injective(::VirtualRepeatRLELevel, ctx) = [false]
-is_level_atomic(lvl::VirtualRepeatRLELevel, ctx) = false
+is_level_injective(ctx, ::VirtualRepeatRLELevel) = [false]
+is_level_atomic(ctx, lvl::VirtualRepeatRLELevel) = false
 
 function virtualize(ctx, ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}}, tag=:lvl) where {D, Ti, Tp, Tv, Ptr, Idx, Val}
     sym = freshen(ctx, tag)
@@ -167,12 +167,12 @@ end
 
 Base.summary(lvl::VirtualRepeatRLELevel) = "RepeatRLE($(lvl.D))"
 
-function virtual_level_size(lvl::VirtualRepeatRLELevel, ctx)
+function virtual_level_size(ctx, lvl::VirtualRepeatRLELevel)
     ext = Extent(literal(lvl.Ti(1)), lvl.shape)
     (ext,)
 end
 
-function virtual_level_resize!(lvl::VirtualRepeatRLELevel, ctx, dim)
+function virtual_level_resize!(ctx, lvl::VirtualRepeatRLELevel, dim)
     lvl.shape = getstop(dim)
     lvl
 end
@@ -181,7 +181,7 @@ virtual_level_default(lvl::VirtualRepeatRLELevel) = lvl.D
 virtual_level_eltype(lvl::VirtualRepeatRLELevel) = lvl.Tv
 postype(lvl::VirtualRepeatRLELevel) = lvl.Tp
 
-function virtual_moveto_level(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, arch)
+function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualRepeatRLELevel, arch)
     ptr_2 = freshen(ctx.code, lvl.ptr)
     idx_2 = freshen(ctx.code, lvl.idx)
     val_2 = freshen(ctx.code, lvl.val)
@@ -198,10 +198,10 @@ function virtual_moveto_level(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler,
         $(lvl.idx) = $idx_2
         $(lvl.val) = $val_2
     end)
-    virtual_moveto_level(lvl.lvl, ctx, arch)
+    virtual_moveto_level(ctx, lvl.lvl, arch)
 end
 
-function declare_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, mode, init)
+function declare_level!(ctx::AbstractCompiler, lvl::VirtualRepeatRLELevel, mode, init)
     init == literal(lvl.D) || throw(FinchProtocolError("Cannot initialize RepeatRLE Levels to non-default values"))
     Tp = lvl.Tp
     Ti = lvl.Ti
@@ -218,7 +218,7 @@ function declare_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, mode,
     return lvl
 end
 
-function assemble_level!(lvl::VirtualRepeatRLELevel, ctx, pos_start, pos_stop)
+function assemble_level!(ctx, lvl::VirtualRepeatRLELevel, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_stop, pos_stop))
     quote
@@ -227,7 +227,7 @@ function assemble_level!(lvl::VirtualRepeatRLELevel, ctx, pos_start, pos_stop)
     end
 end
 
-function freeze_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, pos_stop)
+function freeze_level!(ctx::AbstractCompiler, lvl::VirtualRepeatRLELevel, pos_stop)
     Tp = lvl.Tp
     Ti = lvl.Ti
     p = freshen(ctx.code, :p)

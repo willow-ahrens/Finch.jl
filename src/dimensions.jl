@@ -45,12 +45,12 @@ end
     stop
 end
 
-function virtual_call(::typeof(extent), ctx, start, stop)
+function virtual_call(ctx, ::typeof(extent), start, stop)
     if isfoldable(start) && isfoldable(stop)
         Extent(start, stop)
     end
 end
-function virtual_call(::typeof(realextent), ctx, start, stop)
+function virtual_call(ctx, ::typeof(realextent), start, stop)
     if isfoldable(start) && isfoldable(stop)
         ContinuousExtent(start, stop)
     end
@@ -130,14 +130,14 @@ end
 
 parallel(dim, device=CPU(nthreads())) = ParallelDimension(dim, device)
 
-function virtual_call(::typeof(parallel), ctx, ext)
+function virtual_call(ctx, ::typeof(parallel), ext)
     if ext.kind === virtual
         n = cache!(ctx, :n, value(:(Threads.nthreads()), Int))
-        virtual_call(parallel, ctx, ext, finch_leaf(VirtualCPU(nothing, n)))
+        virtual_call(ctx, parallel, ext, finch_leaf(VirtualCPU(nothing, n)))
     end
 end
 
-function virtual_call(::typeof(parallel), ctx, ext, device)
+function virtual_call(ctx, ::typeof(parallel), ext, device)
     device = resolve(device, ctx) #TODO this feels broken
     if ext.kind === virtual
         ParallelDimension(ext.val, device)

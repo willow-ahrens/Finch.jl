@@ -186,7 +186,7 @@ combine_style(a::SimplifyStyle, b::SimplifyStyle) = a
 
 function lower(root, ctx::AbstractCompiler,  ::SimplifyStyle)
     root = Rewrite(Prewalk((x) -> if x.kind === virtual visit_simplify(x.val) end))(root)
-    root = simplify(root, ctx)
+    root = simplify(ctx, root)
     ctx(root)
 end
 
@@ -204,7 +204,7 @@ function visit_simplify(node::FinchNode)
     end
 end
 
-function simplify(root, ctx)
+function simplify(ctx, root)
     Rewrite(Fixpoint(Chain([
         Prewalk(Fixpoint(Chain(ctx.program_rules))),
         #these rules are non-customizeable:

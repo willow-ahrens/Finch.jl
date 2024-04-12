@@ -44,7 +44,7 @@ function (ctx::ThunkVisitor)(node::FinchNode)
         ctx(node.val)
     elseif node.kind === access && node.tns.kind === virtual
         #TODO this case morally shouldn't exist
-        thunk_access(node, ctx, node.tns.val)
+        thunk_access(ctx, node, node.tns.val)
     elseif istree(node)
         similarterm(node, operation(node), map(ctx, arguments(node)))
     else
@@ -52,7 +52,7 @@ function (ctx::ThunkVisitor)(node::FinchNode)
     end
 end
 
-thunk_access(node, ctx, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
+thunk_access(ctx, node, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
 function (ctx::ThunkVisitor)(node::Thunk)
     push!(ctx.ctx.code.preamble, node.preamble)

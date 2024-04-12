@@ -2,12 +2,12 @@ abstract type AbstractTensor end
 abstract type AbstractVirtualTensor end
 
 """
-    declare!(tns, ctx, init)
+    declare!(ctx, tns, init)
 
 Declare the read-only virtual tensor `tns` in the context `ctx` with a starting value of `init` and return it.
 Afterwards the tensor is update-only.
 """
-declare!(tns, ctx, init) = @assert virtual_default(ctx, tns) == init
+declare!(ctx, tns, init) = @assert virtual_default(ctx, tns) == init
 
 """
     instantiate(tns, ctx, mode, protos)
@@ -30,7 +30,7 @@ function instantiate(tns, ctx, mode, subprotos, protos...)
 end
 
 """
-    freeze!(tns, ctx)
+    freeze!(ctx, tns)
 
 Freeze the update-only virtual tensor `tns` in the context `ctx` and return it.
 This may involve trimming any excess overallocated memory.  Afterwards, the
@@ -39,12 +39,12 @@ tensor is read-only.
 function freeze! end
 
 """
-    thaw!(tns, ctx)
+    thaw!(ctx, tns)
 
 Thaw the read-only virtual tensor `tns` in the context `ctx` and return it. Afterwards,
 the tensor is update-only.
 """
-thaw!(tns, ctx) = throw(FinchProtocolError("cannot modify $(typeof(tns)) in place (forgot to declare with .= ?)"))
+thaw!(ctx, tns) = throw(FinchProtocolError("cannot modify $(typeof(tns)) in place (forgot to declare with .= ?)"))
 
 """
     default(arr)
@@ -105,7 +105,7 @@ and copies the data in to it, according to the `device` trait.
 function moveto end
 
 """
-    virtual_moveto(arr, device)
+    virtual_moveto(device, arr)
 
 If the virtual array is not on the given device, copy the array to that device. This
 function may modify underlying data arrays, but cannot change the virtual itself. This

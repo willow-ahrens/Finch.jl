@@ -34,7 +34,7 @@ function (ctx::SwitchVisitor)(node)
         map(product(map(ctx, arguments(node))...)) do case
             guards = map(first, case)
             bodies = map(last, case)
-            return simplify(call(and, guards...), ctx.ctx) => similarterm(node, operation(node), collect(bodies))
+            return simplify(ctx.ctx, call(and, guards...)) => similarterm(node, operation(node), collect(bodies))
         end
     else
         [(literal(true) => node)]
@@ -48,7 +48,7 @@ function (ctx::SwitchVisitor)(node::FinchNode)
         map(product(map(ctx, arguments(node))...)) do case
             guards = map(first, case)
             bodies = map(last, case)
-            return simplify(call(and, guards...), ctx.ctx) => similarterm(node, operation(node), collect(bodies))
+            return simplify(ctx.ctx, call(and, guards...)) => similarterm(node, operation(node), collect(bodies))
         end
     else
         [(literal(true) => node)]

@@ -87,8 +87,8 @@ mutable struct VirtualElementLevel <: AbstractVirtualLevel
     val
 end
 
-is_level_injective(::VirtualElementLevel, ctx) = []
-is_level_atomic(lvl::VirtualElementLevel, ctx) = false
+is_level_injective(ctx, ::VirtualElementLevel) = []
+is_level_atomic(ctx, lvl::VirtualElementLevel) = false
 
 lower(lvl::VirtualElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex
 
@@ -104,30 +104,30 @@ end
 
 Base.summary(lvl::VirtualElementLevel) = "Element($(lvl.D))"
 
-virtual_level_resize!(lvl::VirtualElementLevel, ctx) = lvl
-virtual_level_size(::VirtualElementLevel, ctx) = ()
+virtual_level_resize!(ctx, lvl::VirtualElementLevel) = lvl
+virtual_level_size(ctx, ::VirtualElementLevel) = ()
 virtual_level_eltype(lvl::VirtualElementLevel) = lvl.Tv
 virtual_level_default(lvl::VirtualElementLevel) = lvl.D
 
 postype(lvl::VirtualElementLevel) = lvl.Tp
 
-function declare_level!(lvl::VirtualElementLevel, ctx, pos, init)
+function declare_level!(ctx, lvl::VirtualElementLevel, pos, init)
     init == literal(lvl.D) || throw(FinchProtocolError("Cannot initialize Element Levels to non-default values (have $init expected $(lvl.D))"))
     lvl
 end
 
-function freeze_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, pos)
+function freeze_level!(ctx::AbstractCompiler, lvl::VirtualElementLevel, pos)
     push!(ctx.code.preamble, quote
         resize!($(lvl.val), $(ctx(pos)))
     end)
     return lvl
 end
 
-thaw_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, pos) = lvl
+thaw_level!(ctx::AbstractCompiler, lvl::VirtualElementLevel, pos) = lvl
 
-function assemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
-    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
-    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
+function assemble_level!(ctx, lvl::VirtualElementLevel, pos_start, pos_stop)
+    pos_start = cache!(ctx, :pos_start, simplify(ctx, pos_start))
+    pos_stop = cache!(ctx, :pos_stop, simplify(ctx, pos_stop))
     quote
         Finch.resize_if_smaller!($(lvl.val), $(ctx(pos_stop)))
         Finch.fill_range!($(lvl.val), $(lvl.D), $(ctx(pos_start)), $(ctx(pos_stop)))
@@ -135,16 +135,16 @@ function assemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
 end
 
 supports_reassembly(::VirtualElementLevel) = true
-function reassemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
-    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
-    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
+function reassemble_level!(ctx, lvl::VirtualElementLevel, pos_start, pos_stop)
+    pos_start = cache!(ctx, :pos_start, simplify(ctx, pos_start))
+    pos_stop = cache!(ctx, :pos_stop, simplify(ctx, pos_stop))
     push!(ctx.code.preamble, quote
         Finch.fill_range!($(lvl.val), $(lvl.D), $(ctx(pos_start)), $(ctx(pos_stop)))
     end)
     lvl
 end
 
-function virtual_moveto_level(lvl::VirtualElementLevel, ctx::AbstractCompiler, arch)
+function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualElementLevel, arch)
     val_2 = freshen(ctx.code, :val)
     push!(ctx.code.preamble, quote
         $val_2 = $(lvl.val)

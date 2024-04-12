@@ -23,15 +23,15 @@ function virtualize(ctx, ex, ::Type{<:AbstractArray{T, N}}, tag=:tns) where {T, 
     VirtualAbstractArray(sym, T, N, map(i->Extent(literal(1), value(dims[i], Int)), 1:N))
 end
 
-function declare!(arr::VirtualAbstractArray, ctx::AbstractCompiler, init)
+function declare!(ctx::AbstractCompiler, arr::VirtualAbstractArray, init)
     push!(ctx.code.preamble, quote
         fill!($(arr.ex), $(ctx(init)))
     end)
     arr
 end
 
-freeze!(arr::VirtualAbstractArray, ctx::AbstractCompiler) = arr
-thaw!(arr::VirtualAbstractArray, ctx::AbstractCompiler) = arr
+freeze!(ctx::AbstractCompiler, arr::VirtualAbstractArray) = arr
+thaw!(ctx::AbstractCompiler, arr::VirtualAbstractArray) = arr
 
 function instantiate(arr::VirtualAbstractArray, ctx::AbstractCompiler, mode, subprotos, protos...)
     val = freshen(ctx.code, :val)
@@ -66,7 +66,7 @@ FinchNotation.finch_leaf(x::VirtualAbstractArray) = virtual(x)
 virtual_default(ctx, ::VirtualAbstractArray) = 0
 virtual_eltype(ctx, tns::VirtualAbstractArray) = tns.eltype
 
-function virtual_moveto(vec::VirtualAbstractArray, ctx, device)
+function virtual_moveto(ctx, vec::VirtualAbstractArray, device)
     ex = freshen(ctx.code, vec.ex)
     push!(ctx.code.preamble, quote
         $ex = $(vec.ex)
@@ -114,5 +114,5 @@ Base.getindex(arr::AsArray{T, N}, i::Vararg{Any, N}) where {T, N} = arr.fbr[i...
 Base.setindex!(arr::AsArray{T, N}, v, i::Vararg{Int, N}) where {T, N} = arr.fbr[i...] = v
 Base.setindex!(arr::AsArray{T, N}, v, i::Vararg{Any, N}) where {T, N} = arr.fbr[i...] = v
 
-is_injective(tns::VirtualAbstractArray, ctx) = [true for _ in tns.ndims]
-is_atomic(tns::VirtualAbstractArray, ctx) = true
+is_injective(ctx, tns::VirtualAbstractArray) = [true for _ in tns.ndims]
+is_atomic(ctx, tns::VirtualAbstractArray) = true

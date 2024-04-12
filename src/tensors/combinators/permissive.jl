@@ -17,8 +17,8 @@ struct VirtualPermissiveArray <: AbstractVirtualCombinator
     dims
 end
 
-is_injective(lvl::VirtualPermissiveArray, ctx) = is_injective(lvl.body, ctx)
-is_atomic(lvl::VirtualPermissiveArray, ctx) = is_atomic(lvl.body, ctx)
+is_injective(ctx, lvl::VirtualPermissiveArray) = is_injective(ctx, lvl.body)
+is_atomic(ctx, lvl::VirtualPermissiveArray) = is_atomic(ctx, lvl.body)
 
 Base.show(io::IO, ex::VirtualPermissiveArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualPermissiveArray)
@@ -51,7 +51,7 @@ More formally,
 ```
 """
 permissive(body, dims...) = PermissiveArray(body, dims)
-function virtual_call(::typeof(permissive), ctx, body, dims...)
+function virtual_call(ctx, ::typeof(permissive), body, dims...)
     @assert All(isliteral)(dims)
     VirtualPermissiveArray(body, map(dim -> dim.val, dims))
 end
@@ -75,8 +75,8 @@ function instantiate(arr::VirtualPermissiveArray, ctx, mode, protos)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualPermissiveArray) = ctx(node.body)
-function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::VirtualPermissiveArray)
-    stylize_access(node, ctx, tns.body)
+function stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualPermissiveArray)
+    stylize_access(ctx, node, tns.body)
 end
 
 function popdim(node::VirtualPermissiveArray)
@@ -87,7 +87,7 @@ function popdim(node::VirtualPermissiveArray)
     end
 end
 
-truncate(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(truncate(node.body, ctx, ext, ext_2), node.dims)
+truncate(ctx, node::VirtualPermissiveArray, ext, ext_2) = VirtualPermissiveArray(truncate(ctx, node.body, ext, ext_2), node.dims)
 
 function get_point_body(node::VirtualPermissiveArray, ctx, ext, idx)
     body_2 = get_point_body(node.body, ctx, ext, idx)
@@ -109,8 +109,8 @@ function get_run_body(node::VirtualPermissiveArray, ctx, ext)
     end
 end
 
-function get_acceptrun_body(node::VirtualPermissiveArray, ctx, ext)
-    body_2 = get_acceptrun_body(node.body, ctx, ext)
+function get_acceptrun_body(ctx, node::VirtualPermissiveArray, ext)
+    body_2 = get_acceptrun_body(ctx, node.body, ext)
     if body_2 === nothing
         return nothing
     else
@@ -124,11 +124,11 @@ function (ctx::SequenceVisitor)(node::VirtualPermissiveArray)
     end
 end
 
-phase_body(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(phase_body(node.body, ctx, ext, ext_2), node.dims)
-phase_range(node::VirtualPermissiveArray, ctx, ext) = phase_range(node.body, ctx, ext)
+phase_body(ctx, node::VirtualPermissiveArray, ext, ext_2) = VirtualPermissiveArray(phase_body(ctx, node.body, ext, ext_2), node.dims)
+phase_range(ctx, node::VirtualPermissiveArray, ext) = phase_range(ctx, node.body, ext)
 
-get_spike_body(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(get_spike_body(node.body, ctx, ext, ext_2), node.dims)
-get_spike_tail(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(get_spike_tail(node.body, ctx, ext, ext_2), node.dims)
+get_spike_body(ctx, node::VirtualPermissiveArray, ext, ext_2) = VirtualPermissiveArray(get_spike_body(ctx, node.body, ext, ext_2), node.dims)
+get_spike_tail(ctx, node::VirtualPermissiveArray, ext, ext_2) = VirtualPermissiveArray(get_spike_tail(ctx, node.body, ext, ext_2), node.dims)
 
 visit_fill(node, tns::VirtualPermissiveArray) = visit_fill(node, tns.body)
 visit_simplify(node::VirtualPermissiveArray) = VirtualPermissiveArray(visit_simplify(node.body), node.dims)
@@ -137,24 +137,24 @@ visit_simplify(node::VirtualPermissiveArray) = VirtualPermissiveArray(visit_simp
     guard => VirtualPermissiveArray(body, node.dims)
 end
 
-stepper_range(node::VirtualPermissiveArray, ctx, ext) = stepper_range(node.body, ctx, ext)
-stepper_body(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(stepper_body(node.body, ctx, ext, ext_2), node.dims)
-stepper_seek(node::VirtualPermissiveArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
+stepper_range(ctx, node::VirtualPermissiveArray, ext) = stepper_range(ctx, node.body, ext)
+stepper_body(ctx, node::VirtualPermissiveArray, ext, ext_2) = VirtualPermissiveArray(stepper_body(ctx, node.body, ext, ext_2), node.dims)
+stepper_seek(ctx, node::VirtualPermissiveArray, ext) = stepper_seek(ctx, node.body, ext)
 
-jumper_range(node::VirtualPermissiveArray, ctx, ext) = jumper_range(node.body, ctx, ext)
-jumper_body(node::VirtualPermissiveArray, ctx, ext, ext_2) = VirtualPermissiveArray(jumper_body(node.body, ctx, ext, ext_2), node.dims)
-jumper_seek(node::VirtualPermissiveArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
+jumper_range(ctx, node::VirtualPermissiveArray, ext) = jumper_range(ctx, node.body, ext)
+jumper_body(ctx, node::VirtualPermissiveArray, ext, ext_2) = VirtualPermissiveArray(jumper_body(ctx, node.body, ext, ext_2), node.dims)
+jumper_seek(ctx, node::VirtualPermissiveArray, ext) = jumper_seek(ctx, node.body, ext)
 
-function short_circuit_cases(node::VirtualPermissiveArray, ctx, op)
-    map(short_circuit_cases(node.body, ctx, op)) do (guard, body)
+function short_circuit_cases(ctx, node::VirtualPermissiveArray, op)
+    map(short_circuit_cases(ctx, node.body, op)) do (guard, body)
         guard => VirtualPermissiveArray(body, node.dims)
     end
 end
 
 getroot(tns::VirtualPermissiveArray) = getroot(tns.body)
 
-function unfurl(tns::VirtualPermissiveArray, ctx, ext, mode, protos...)
-    tns_2 = unfurl(tns.body, ctx, ext, mode, protos...)
+function unfurl(ctx, tns::VirtualPermissiveArray, ext, mode, protos...)
+    tns_2 = unfurl(ctx, tns.body, ext, mode, protos...)
     dims = virtual_size(ctx, tns.body)
     garb = (mode === reader) ? Fill(literal(missing)) : Fill(Null())
     if tns.dims[end] && dims[end] != dimless
@@ -168,7 +168,7 @@ function unfurl(tns::VirtualPermissiveArray, ctx, ext, mode, protos...)
                     ),
                     Phase(
                         stop = (ctx, ext_2) -> getstop(dims[end]),
-                        body = (ctx, ext_2) -> truncate(tns_2, ctx, dims[end], ext_2)
+                        body = (ctx, ext_2) -> truncate(ctx, tns_2, dims[end], ext_2)
                     ),
                     Phase(
                         body = (ctx, ext_2) -> Run(garb),

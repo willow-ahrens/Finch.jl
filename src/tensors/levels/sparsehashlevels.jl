@@ -169,10 +169,10 @@ mutable struct VirtualSparseHashLevel <: AbstractVirtualLevel
     Lvl
 end
 
-is_level_injective(lvl::VirtualSparseHashLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
-is_level_atomic(lvl::VirtualSparseHashLevel, ctx) = false
+is_level_injective(ctx, lvl::VirtualSparseHashLevel) = [is_level_injective(ctx, lvl.lvl)..., (true for _ in 1:lvl.N)...]
+is_level_atomic(ctx, lvl::VirtualSparseHashLevel) = false
 
-function virtual_moveto_level(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, arch)
+function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualSparseHashLevel, arch)
     ptr_2 = freshen(ctx.code, lvl.ptr)
     push!(ctx.code.preamble, quote
         $ptr_2 = $(lvl.ptr)
@@ -187,7 +187,7 @@ function virtual_moveto_level(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler
         $(lvl.tbl) = $tbl_2
         $(lvl.srt) = $srt_2
     end)
-    virtual_moveto_level(lvl.lvl, ctx, arch)
+    virtual_moveto_level(ctx, lvl.lvl, arch)
 end
 
 function virtualize(ctx, ex, ::Type{SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}, tag=:lvl) where {N, TI, Ptr, Tbl, Srt, Lvl}
@@ -225,14 +225,14 @@ end
 
 Base.summary(lvl::VirtualSparseHashLevel) = "SparseHash$(lvl.N)}($(summary(lvl.lvl)))"
 
-function virtual_level_size(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler)
+function virtual_level_size(ctx::AbstractCompiler, lvl::VirtualSparseHashLevel)
     ext = map((ti, stop)->Extent(literal(ti(1)), stop), lvl.TI.parameters, lvl.shape)
-    (virtual_level_size(lvl.lvl, ctx)..., ext...)
+    (virtual_level_size(ctx, lvl.lvl)..., ext...)
 end
 
-function virtual_level_resize!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, dims...)
+function virtual_level_resize!(ctx::AbstractCompiler, lvl::VirtualSparseHashLevel, dims...)
     lvl.shape = map(getstop, dims[end-lvl.N+1:end])
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-lvl.N]...)
+    lvl.lvl = virtual_level_resize!(ctx, lvl.lvl, dims[1:end-lvl.N]...)
     lvl
 end
 
@@ -241,7 +241,7 @@ virtual_level_default(lvl::VirtualSparseHashLevel) = virtual_level_default(lvl.l
 
 postype(lvl::VirtualSparseHashLevel) = postype(lvl.lvl)
 
-function declare_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos, init)
+function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseHashLevel, pos, init)
     TI = lvl.TI
     Tp = postype(lvl)
 
@@ -251,11 +251,11 @@ function declare_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos,
         empty!($(lvl.tbl))
         empty!($(lvl.srt))
     end)
-    lvl.lvl = declare_level!(lvl.lvl, ctx, literal(Tp(0)), init)
+    lvl.lvl = declare_level!(ctx, lvl.lvl, literal(Tp(0)), init)
     return lvl
 end
 
-function thaw_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos)
+function thaw_level!(ctx::AbstractCompiler, lvl::VirtualSparseHashLevel, pos)
     TI = lvl.TI
     Tp = postype(lvl)
     p = freshen(ctx.code, lvl.ex, :_p)
@@ -267,11 +267,11 @@ function thaw_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos)
         end
         $(lvl.ptr)[1] = 1
     end)
-    lvl.lvl = thaw_level!(lvl.lvl, ctx, value(lvl.qos_fill, Tp))
+    lvl.lvl = thaw_level!(ctx, lvl.lvl, value(lvl.qos_fill, Tp))
     return lvl
 end
 
-function assemble_level!(lvl::VirtualSparseHashLevel, ctx, pos_start, pos_stop)
+function assemble_level!(ctx, lvl::VirtualSparseHashLevel, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
@@ -282,9 +282,9 @@ end
 
 hashkeycmp(((pos, idx), qos),) = (pos, reverse(idx)...)
 
-function freeze_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos_stop)
+function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseHashLevel, pos_stop)
     p = freshen(ctx.code, :p)
-    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(ctx, pos_stop)))
     qos_stop = lvl.qos_stop
     push!(ctx.code.preamble, quote
         resize!($(lvl.srt), length($(lvl.tbl)))
@@ -296,7 +296,7 @@ function freeze_level!(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, pos_s
         end
         $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
     end)
-    lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
+    lvl.lvl = freeze_level!(ctx, lvl.lvl, value(qos_stop))
     return lvl
 end
 
@@ -474,7 +474,7 @@ function instantiate(trv::SparseHashLaminateTraversal, ctx, mode::Updater, subpr
                             $qos = get($(lvl.tbl), $my_key, $(qos_fill) + $(Tp(1)))
                             if $qos > $qos_stop
                                 $qos_stop = max($qos_stop << 1, 1)
-                                $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, Tp), value(qos_stop, Tp)), ctx))
+                                $(contain(ctx_2->assemble_level!(ctx_2, lvl.lvl, value(qos, Tp), value(qos_stop, Tp)), ctx))
                             end
                             $dirty = false
                         end,

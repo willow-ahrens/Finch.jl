@@ -33,7 +33,7 @@ function instantiate(arr::VirtualAbstractUnitRange, ctx, mode::Reader, subprotos
     )
 end
 
-function declare!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, init)
+function declare!(ctx::AbstractCompiler, arr::VirtualAbstractUnitRange, init)
     throw(FinchProtocolError("$(arr.arrtype) is not writeable"))
 end
 

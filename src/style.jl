@@ -17,7 +17,7 @@ function (ctx::Stylize)(node::FinchNode)
     if node.kind === virtual
         return ctx(node.val)
     elseif node.kind === access
-        return mapreduce(ctx, result_style, arguments(node); init=stylize_access(node, ctx, node.tns))
+        return mapreduce(ctx, result_style, arguments(node); init=stylize_access(ctx, node, node.tns))
     elseif istree(node)
         return mapreduce(ctx, result_style, arguments(node); init=DefaultStyle())
     else
@@ -25,8 +25,8 @@ function (ctx::Stylize)(node::FinchNode)
     end
 end
 
-stylize_access(node, ctx, @nospecialize tns) = DefaultStyle()
-stylize_access(node, ctx, tns::FinchNode) = stylize_access(node, ctx, resolve(tns, ctx))
+stylize_access(ctx, node, @nospecialize tns) = DefaultStyle()
+stylize_access(ctx, node, tns::FinchNode) = stylize_access(ctx, node, resolve(tns, ctx))
 
 @nospecialize
 

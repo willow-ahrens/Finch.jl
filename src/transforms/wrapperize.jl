@@ -208,7 +208,7 @@ function get_wrapper_rules(alg, depth, ctx)
 end
 
 """
-    wrapperize(root, ctx)
+    wrapperize(ctx, root)
 
 Convert index expressions in the program `root` to wrapper arrays, according to
 the rules in `get_wrapper_rules`. By default, the following transformations are
@@ -230,13 +230,13 @@ expression like `A[i + j]`. Thus, `for i=:,j=:; ... A[i + j]` will result in
 resulting raw indices may participate in dimensionalization according to the
 semantics of the wrapper.
 """
-function wrapperize(root, ctx::AbstractCompiler)
+function wrapperize(ctx::AbstractCompiler, root)
     depth = depth_calculator(root)
     root = unwrap_roots(root, ctx)
     root = Rewrite(Fixpoint(Chain([
         Postwalk(Fixpoint(Chain(get_wrapper_rules(ctx.algebra, depth, ctx))))
     ])))(root)
-    evaluate_partial(root, ctx)
+    evaluate_partial(ctx, root)
 end
 
 function unwrap(ctx, x, var)

@@ -12,26 +12,26 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Phase)
     print(io, "Phase()")
 end
 
-function phase_range(node::FinchNode, ctx, ext)
+function phase_range(ctx, node::FinchNode, ext)
     if @capture node access(~tns::isvirtual, ~i...)
-        phase_range(tns.val, ctx, ext)
+        phase_range(ctx, tns.val, ext)
     else
         return dimless
     end
 end
 
-phase_range(node, ctx, ext) = dimless
-phase_range(node::Phase, ctx, ext) = node.range(ctx, ext)
+phase_range(ctx, node, ext) = dimless
+phase_range(ctx, node::Phase, ext) = node.range(ctx, ext)
 
-function phase_body(node::FinchNode, ctx, ext, ext_2)
+function phase_body(ctx, node::FinchNode, ext, ext_2)
     if @capture node access(~tns::isvirtual, ~m, ~i...)
-        access(phase_body(tns.val, ctx, ext, ext_2), m, i...)
+        access(phase_body(ctx, tns.val, ext, ext_2), m, i...)
     else
         return node
     end
 end
-phase_body(node::Phase, ctx, ext, ext_2) = node.body(ctx, ext_2)
-phase_body(node, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
+phase_body(ctx, node::Phase, ext, ext_2) = node.body(ctx, ext_2)
+phase_body(ctx, node, ext, ext_2) = truncate(ctx, node, ext, ext_2)
 
 abstract type PhaseStyle end
 struct SequencePhaseStyle <: PhaseStyle end
@@ -61,13 +61,13 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
 
         body = root.body
 
-        ext_2 = mapreduce((node)->phase_range(node, ctx, root.ext), (a, b) -> phase_op(style)(ctx, a, b), PostOrderDFS(body))
+        ext_2 = mapreduce((node)->phase_range(ctx, node, root.ext), (a, b) -> phase_op(style)(ctx, a, b), PostOrderDFS(body))
 
         ext_3 = virtual_intersect(ctx, root.ext.val, ext_2)
 
         ext_4 = cache_dim!(ctx, :phase, ext_3)
 
-        body = Rewrite(Postwalk(node->phase_body(node, ctx, root.ext, ext_4)))(body)
+        body = Rewrite(Postwalk(node->phase_body(ctx, node, root.ext, ext_4)))(body)
         body = quote
             $i0 = $i
             $(contain(ctx) do ctx_4

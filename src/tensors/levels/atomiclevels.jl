@@ -93,9 +93,9 @@ postype(lvl:: AtomicLevel) = postype(lvl.lvl)
 
 postype(lvl:: VirtualAtomicLevel) = postype(lvl.lvl)
 
-is_level_injective(lvl::VirtualAtomicLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
+is_level_injective(ctx, lvl::VirtualAtomicLevel) = [is_level_injective(ctx, lvl.lvl)..., true]
 is_level_concurrent(lvl::VirtualAtomicLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
-is_level_atomic(lvl::VirtualAtomicLevel, ctx) = true
+is_level_atomic(ctx, lvl::VirtualAtomicLevel) = true
 
 function lower(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, ::DefaultStyle)
     quote
@@ -116,20 +116,20 @@ function virtualize(ctx, ex, ::Type{AtomicLevel{AVal, Lvl}}, tag=:lvl) where {AV
 end
 
 Base.summary(lvl::VirtualAtomicLevel) = "Atomic($(lvl.Lvl))"
-virtual_level_resize!(lvl::VirtualAtomicLevel, ctx, dims...) = (lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims...); lvl)
-virtual_level_size(lvl::VirtualAtomicLevel, ctx) = virtual_level_size(lvl.lvl, ctx)
-virtual_level_size(x, ctx) = error(string("Not defined for", x))
+virtual_level_resize!(ctx, lvl::VirtualAtomicLevel, dims...) = (lvl.lvl = virtual_level_resize!(ctx, lvl.lvl, dims...); lvl)
+virtual_level_size(ctx, lvl::VirtualAtomicLevel) = virtual_level_size(ctx, lvl.lvl)
+virtual_level_size(ctx, x) = error(string("Not defined for", x))
 virtual_level_eltype(lvl::VirtualAtomicLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualAtomicLevel) = virtual_level_default(lvl.lvl)
 
-function declare_level!(lvl::VirtualAtomicLevel, ctx, pos, init)
-    lvl.lvl = declare_level!(lvl.lvl, ctx, pos, init)
+function declare_level!(ctx, lvl::VirtualAtomicLevel, pos, init)
+    lvl.lvl = declare_level!(ctx, lvl.lvl, pos, init)
     return lvl
 end
 
-function assemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
-    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
-    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
+function assemble_level!(ctx, lvl::VirtualAtomicLevel, pos_start, pos_stop)
+    pos_start = cache!(ctx, :pos_start, simplify(ctx, pos_start))
+    pos_stop = cache!(ctx, :pos_stop, simplify(ctx, pos_stop))
     idx = freshen(ctx.code, :idx)
     lockVal = freshen(ctx.code, :lock)
     push!(ctx.code.preamble, quote 
@@ -138,13 +138,13 @@ function assemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
                 $(lvl.locks)[$idx] = make_lock(eltype($(lvl.AVal)))
               end
           end)
-    assemble_level!(lvl.lvl, ctx, pos_start, pos_stop)
+    assemble_level!(ctx, lvl.lvl, pos_start, pos_stop)
 end
 
 supports_reassembly(lvl::VirtualAtomicLevel) = supports_reassembly(lvl.lvl)
-function reassemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
-    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
-    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
+function reassemble_level!(ctx, lvl::VirtualAtomicLevel, pos_start, pos_stop)
+    pos_start = cache!(ctx, :pos_start, simplify(ctx, pos_start))
+    pos_stop = cache!(ctx, :pos_stop, simplify(ctx, pos_stop))
     idx = freshen(ctx.code, :idx)
     lockVal = freshen(ctx.code, :lock)
     push!(ctx.code.preamble, quote 
@@ -153,25 +153,25 @@ function reassemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
                 $lvl.locks[$idx] = Finch.make_lock(eltype($(lvl.AVal)))
               end
           end)
-    reassemble_level!(lvl.lvl, ctx, pos_start, pos_stop)
+    reassemble_level!(ctx, lvl.lvl, pos_start, pos_stop)
     lvl
 end
 
-function freeze_level!(lvl::VirtualAtomicLevel, ctx, pos)
+function freeze_level!(ctx, lvl::VirtualAtomicLevel, pos)
     idx = freshen(ctx.code, :idx)
     push!(ctx.code.preamble, quote
         resize!($(lvl.locks), $(ctx(pos)))
     end)
-    lvl.lvl = freeze_level!(lvl.lvl, ctx, pos)
+    lvl.lvl = freeze_level!(ctx, lvl.lvl, pos)
     return lvl
 end
 
-function thaw_level!(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, pos)
-    lvl.lvl = thaw_level!(lvl.lvl, ctx, pos)
+function thaw_level!(ctx::AbstractCompiler, lvl::VirtualAtomicLevel, pos)
+    lvl.lvl = thaw_level!(ctx, lvl.lvl, pos)
     return lvl
 end
 
-function virtual_moveto_level(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, arch)
+function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualAtomicLevel, arch)
     #Add for seperation level too.
     atomics = freshen(ctx.code, :locksArray)
 
@@ -182,7 +182,7 @@ function virtual_moveto_level(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, ar
     push!(ctx.code.epilogue, quote
         $(lvl.locks) = $atomics
     end)
-    virtual_moveto_level(lvl.lvl, ctx, arch)
+    virtual_moveto_level(ctx, lvl.lvl, arch)
 end
 
 function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Reader, protos)
