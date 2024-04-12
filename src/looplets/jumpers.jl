@@ -17,7 +17,7 @@ end
 FinchNotation.finch_leaf(x::Jumper) = virtual(x)
 
 (ctx::Stylize{<:AbstractCompiler})(node::Jumper) = ctx.root.kind === loop ? JumperStyle() : DefaultStyle()
-instantiate(tns::Jumper, ctx, mode, protos) = tns
+instantiate(ctx, tns::Jumper, mode, protos) = tns
 
 combine_style(a::DefaultStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::LookupStyle, b::JumperStyle) = JumperStyle()
@@ -85,7 +85,7 @@ function jumper_body(ctx, node::Jumper, ext, ext_2)
     end
 end
 
-function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
+function lower(ctx::AbstractCompiler, root::FinchNode, style::JumperStyle)
     root.kind === loop || error("unimplemented")
     
     i = getname(root.idx)
@@ -119,7 +119,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
             $i = $(ctx_2(getstop(ext_4))) + $(ctx_2(getunit(ext_4)))
         end
 
-        if prove(call(>=, measure(ext_4), 0), ctx_2)  
+        if prove(ctx_2, call(>=, measure(ext_4), 0))  
             body
         else
             quote
@@ -133,7 +133,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
 
     @assert isvirtual(root.ext)
 
-    if prove(call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)), ctx)
+    if prove(ctx, call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)))
         body_2
     else
         return quote

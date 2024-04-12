@@ -19,7 +19,7 @@ end
 FinchNotation.finch_leaf(x::Stepper) = virtual(x)
 
 (ctx::Stylize{<:AbstractCompiler})(node::Stepper) = ctx.root.kind === loop ? StepperStyle() : DefaultStyle()
-instantiate(tns::Stepper, ctx, mode, protos) = tns
+instantiate(ctx, tns::Stepper, mode, protos) = tns
 combine_style(a::DefaultStyle, b::StepperStyle) = b
 combine_style(a::LookupStyle, b::StepperStyle) = b
 combine_style(a::StepperStyle, b::SequenceStyle) = SequenceStyle()
@@ -70,9 +70,9 @@ function stepper_body(ctx, node::Stepper, ext, ext_2)
             epilogue = next
         )
         truncated_chunk = truncate(ctx, node.chunk, ext, similar_extent(ext, getstart(ext_2), bound_above!(getstop(ext_2), call(-, getstop(ext), getunit(ext)))))
-        if prove(call(<=, node.stop(ctx, ext), getstop(ext_2)), ctx)
+        if prove(ctx, call(<=, node.stop(ctx, ext), getstop(ext_2)))
             full_chunk
-        elseif prove(call(>=, node.stop(ctx, ext), getstop(ext_2)), ctx)
+        elseif prove(ctx, call(>=, node.stop(ctx, ext), getstop(ext_2)))
             truncated_chunk
         else
             Switch([
@@ -85,7 +85,7 @@ function stepper_body(ctx, node::Stepper, ext, ext_2)
     end
 end
 
-function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
+function lower(ctx::AbstractCompiler, root::FinchNode, style::StepperStyle)
     root.kind === loop || error("unimplemented")
     
     i = getname(root.idx)
@@ -100,7 +100,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
         push!(ctx.code.preamble, stepper_seek(ctx, node.val, root.ext))
     end
     
-    if style.count == 1 && !prove(call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)), ctx)
+    if style.count == 1 && !prove(ctx, call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)))
         body_2 = contain(ctx) do ctx_2
             push!(ctx_2.code.preamble, :($i0 = $i))
             i1 = freshen(ctx_2.code, i)
@@ -132,7 +132,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
                     $i = $(ctx_3(getstop(ext_4))) + $(ctx_3(getunit(ext_4)))
                 end
 
-                truncated_body = if prove(call(>=, measure(ext_4), 0), ctx_3)  
+                truncated_body = if prove(ctx_3, call(>=, measure(ext_4), 0))  
                     truncated_body
                 else
                     quote
@@ -168,7 +168,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
             end)
         end
 
-        if prove(call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)), ctx)
+        if prove(ctx, call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)))
             body_2
         else
             return quote
@@ -200,7 +200,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
                 $i = $(ctx_2(getstop(ext_4))) + $(ctx_2(getunit(ext_4)))
             end
 
-            if prove(call(>=, measure(ext_4), 0), ctx_2)  
+            if prove(ctx_2, call(>=, measure(ext_4), 0))  
                 body
             else
                 quote
@@ -227,7 +227,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::StepperStyle)
             end)
         end
 
-        if prove(call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)), ctx)
+        if prove(ctx, call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)))
             body_2
         else
             return quote

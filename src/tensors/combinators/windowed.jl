@@ -56,7 +56,7 @@ end
 
 unwrap(ctx, arr::VirtualWindowedArray, var) = call(window, unwrap(ctx, arr.body, var), arr.delta...)
 
-lower(tns::VirtualWindowedArray, ctx::AbstractCompiler, ::DefaultStyle) = :(WindowedArray($(ctx(tns.body)), $(tns.dims)))
+lower(ctx::AbstractCompiler, tns::VirtualWindowedArray, ::DefaultStyle) = :(WindowedArray($(ctx(tns.body)), $(tns.dims)))
 
 function virtual_size(ctx::AbstractCompiler, arr::VirtualWindowedArray)
     something.(arr.dims, virtual_size(ctx, arr.body))
@@ -67,8 +67,8 @@ end
 
 virtual_default(ctx::AbstractCompiler, arr::VirtualWindowedArray) = virtual_default(ctx, arr.body)
 
-function instantiate(arr::VirtualWindowedArray, ctx, mode, protos)
-    VirtualWindowedArray(instantiate(arr.body, ctx, mode, protos), arr.dims)
+function instantiate(ctx, arr::VirtualWindowedArray, mode, protos)
+    VirtualWindowedArray(instantiate(ctx, arr.body, mode, protos), arr.dims)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualWindowedArray) = ctx(node.body)

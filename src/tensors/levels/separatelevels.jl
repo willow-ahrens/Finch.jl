@@ -92,7 +92,7 @@ is_level_injective(ctx, ::VirtualSeparateLevel) = [is_level_injective(ctx, lvl.l
 is_level_concurrent(::VirtualSeparateLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
 is_level_atomic(ctx, lvl::VirtualSeparateLevel) = is_level_atomic(ctx, lvl.lvl)
 
-function lower(lvl::VirtualSeparateLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualSeparateLevel, ::DefaultStyle)
     quote
         $SeparateLevel{$(lvl.Lvl), $(lvl.Val)}($(ctx(lvl.lvl)), $(lvl.ex).val)
     end
@@ -177,7 +177,7 @@ function thaw_level!(ctx::AbstractCompiler, lvl::VirtualSeparateLevel, pos)
     return lvl
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualSeparateLevel}, ctx, mode::Reader, protos)
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSeparateLevel}, mode::Reader, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     isnulltest = freshen(ctx.code, tag, :_nulltest)
@@ -187,12 +187,12 @@ function instantiate(fbr::VirtualSubFiber{VirtualSeparateLevel}, ctx, mode::Read
     return body = Thunk(
         body = (ctx) -> begin
             lvl_2 = virtualize(ctx.code, :($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, sym)
-            instantiate(VirtualSubFiber(lvl_2, literal(1)), ctx, mode, protos)
+            instantiate(ctx, VirtualSubFiber(lvl_2, literal(1)), mode, protos)
         end,
     )
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualSeparateLevel}, ctx, mode::Updater, protos)
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSeparateLevel}, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     sym = freshen(ctx.code, :pointer_to_lvl)
@@ -202,7 +202,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSeparateLevel}, ctx, mode::Upda
             lvl_2 = virtualize(ctx.code, :($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, sym)
             lvl_2 = thaw_level!(ctx, lvl_2, literal(1))
             push!(ctx.code.preamble, assemble_level!(ctx, lvl_2, literal(1), literal(1)))
-            res = instantiate(VirtualSubFiber(lvl_2, literal(1)), ctx, mode, protos)
+            res = instantiate(ctx, VirtualSubFiber(lvl_2, literal(1)), mode, protos)
             push!(ctx.code.epilogue, 
                 contain(ctx) do ctx_2
                     lvl_2 = freeze_level!(ctx_2, lvl_2, literal(1))
@@ -213,7 +213,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSeparateLevel}, ctx, mode::Upda
         end
     )
 end
-function instantiate(fbr::VirtualHollowSubFiber{VirtualSeparateLevel}, ctx, mode::Updater, protos)
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSeparateLevel}, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     sym = freshen(ctx.code, :pointer_to_lvl)
@@ -223,7 +223,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSeparateLevel}, ctx, mode
             lvl_2 = virtualize(ctx.code, :($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, sym)
             lvl_2 = thaw_level!(ctx, lvl_2, literal(1))
             push!(ctx.code.preamble, assemble_level!(ctx, lvl_2, literal(1), literal(1)))
-            res = instantiate(VirtualHollowSubFiber(lvl_2, literal(1), fbr.dirty), ctx, mode, protos)
+            res = instantiate(ctx, VirtualHollowSubFiber(lvl_2, literal(1), fbr.dirty), mode, protos)
             push!(ctx.code.epilogue, 
                 contain(ctx) do ctx_2
                     lvl_2 = freeze_level!(ctx_2, lvl_2, literal(1))

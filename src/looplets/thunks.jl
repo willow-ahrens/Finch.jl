@@ -13,7 +13,7 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::Thunk)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Thunk) = ThunkStyle()
-instantiate(tns::Thunk, ctx, mode, protos) = tns
+instantiate(ctx, tns::Thunk, mode, protos) = tns
 combine_style(a::DefaultStyle, b::ThunkStyle) = ThunkStyle()
 combine_style(a::ThunkStyle, b::ThunkStyle) = ThunkStyle()
 combine_style(a::ThunkStyle, b::SimplifyStyle) = ThunkStyle()
@@ -30,7 +30,7 @@ function (ctx::ThunkVisitor)(node)
     end
 end
 
-function lower(node, ctx::AbstractCompiler,  ::ThunkStyle)
+function lower(ctx::AbstractCompiler, node, ::ThunkStyle)
     contain(ctx) do ctx2
         node = (ThunkVisitor(ctx2))(node)
         contain(ctx2) do ctx3

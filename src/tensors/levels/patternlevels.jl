@@ -87,7 +87,7 @@ end
 is_level_injective(ctx, ::VirtualPatternLevel) = []
 is_level_atomic(ctx, lvl::VirtualPatternLevel) = true
 
-lower(lvl::VirtualPatternLevel, ctx::AbstractCompiler, ::DefaultStyle) = :(PatternLevel())
+lower(ctx::AbstractCompiler, lvl::VirtualPatternLevel, ::DefaultStyle) = :(PatternLevel())
 virtualize(ctx, ex, ::Type{PatternLevel{Tp}}) where {Tp} = VirtualPatternLevel(Tp)
 
 virtual_level_resize!(ctx, lvl::VirtualPatternLevel) = lvl
@@ -109,15 +109,15 @@ thaw_level!(ctx, lvl::VirtualPatternLevel, pos) = lvl
 assemble_level!(ctx, lvl::VirtualPatternLevel, pos_start, pos_stop) = quote end
 reassemble_level!(ctx, lvl::VirtualPatternLevel, pos_start, pos_stop) = quote end
 
-instantiate(::VirtualSubFiber{VirtualPatternLevel}, ctx, mode::Reader, protos) = Fill(true)
+instantiate(ctx, ::VirtualSubFiber{VirtualPatternLevel}, mode::Reader, protos) = Fill(true)
 
-function instantiate(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx, mode::Updater, protos)
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualPatternLevel}, mode::Updater, protos)
     val = freshen(ctx.code, :null)
     push!(ctx.code.preamble, :($val = false))
     VirtualScalar(nothing, Bool, false, gensym(), val)
 end
 
-function instantiate(fbr::VirtualHollowSubFiber{VirtualPatternLevel}, ctx, mode::Updater, protos)
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualPatternLevel}, mode::Updater, protos)
     VirtualScalar(nothing, Bool, false, gensym(), fbr.dirty)
 end
 

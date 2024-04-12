@@ -60,7 +60,7 @@ end
 
 unwrap(ctx, arr::VirtualToeplitzArray, var) = call(toeplitz, unwrap(ctx, arr.body, var), arr.dim)
 
-lower(tns::VirtualToeplitzArray, ctx::AbstractCompiler, ::DefaultStyle) = :(ToeplitzArray($(ctx(tns.body)), $(tns.dim)))
+lower(ctx::AbstractCompiler, tns::VirtualToeplitzArray, ::DefaultStyle) = :(ToeplitzArray($(ctx(tns.body)), $(tns.dim)))
 
 function virtual_size(ctx::AbstractCompiler, arr::VirtualToeplitzArray)
     dims = virtual_size(ctx, arr.body)
@@ -70,8 +70,8 @@ function virtual_resize!(ctx::AbstractCompiler, arr::VirtualToeplitzArray, dims.
     virtual_resize!(ctx, arr.body, dims[1:arr.dim - 1]..., dimless, dims[arr.dim + 2:end]...)
 end
 
-function instantiate(arr::VirtualToeplitzArray, ctx, mode, protos)
-    VirtualToeplitzArray(instantiate(arr.body, ctx, mode, [protos[1:arr.dim]; protos[arr.dim + 2:end]]), arr.dim)
+function instantiate(ctx, arr::VirtualToeplitzArray, mode, protos)
+    VirtualToeplitzArray(instantiate(ctx, arr.body, mode, [protos[1:arr.dim]; protos[arr.dim + 2:end]]), arr.dim)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualToeplitzArray) = ctx(node.body)

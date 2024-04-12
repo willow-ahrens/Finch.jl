@@ -14,13 +14,13 @@ FinchNotation.finch_leaf(x::Lookup) = virtual(x)
 struct LookupStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Lookup) = ctx.root.kind === loop ? LookupStyle() : DefaultStyle()
-instantiate(tns::Lookup, ctx, mode, protos) = tns
+instantiate(ctx, tns::Lookup, mode, protos) = tns
 combine_style(a::DefaultStyle, b::LookupStyle) = LookupStyle()
 combine_style(a::ThunkStyle, b::LookupStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::LookupStyle) = a
 combine_style(a::LookupStyle, b::LookupStyle) = LookupStyle()
 
-function lower(root::FinchNode, ctx::AbstractCompiler,  ::LookupStyle)
+function lower(ctx::AbstractCompiler, root::FinchNode, ::LookupStyle)
     if root.kind === loop
         idx_sym = freshen(ctx.code, root.idx.name)
         body = contain(ctx) do ctx_2
@@ -40,7 +40,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::LookupStyle)
         @assert isvirtual(root.ext)
 
         target = is_continuous_extent(root.ext) ? 0 : 1
-        if prove(call(==, measure(root.ext.val), target), ctx)
+        if prove(ctx, call(==, measure(root.ext.val), target))
             return quote
                 $idx_sym = $(ctx(getstart(root.ext)))
                 $body

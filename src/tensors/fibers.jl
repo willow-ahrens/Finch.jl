@@ -75,7 +75,7 @@ function virtualize(ctx, ex, ::Type{<:Tensor{Lvl}}, tag=freshen(ctx, :tns)) wher
     lvl = virtualize(ctx, :($ex.lvl), Lvl, Symbol(tag, :_lvl))
     VirtualFiber(lvl)
 end
-lower(fbr::VirtualFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(Tensor($(ctx(fbr.lvl))))
+lower(ctx::AbstractCompiler, fbr::VirtualFiber, ::DefaultStyle) = :(Tensor($(ctx(fbr.lvl))))
 FinchNotation.finch_leaf(x::VirtualFiber) = virtual(x)
 
 """
@@ -97,7 +97,7 @@ function virtualize(ctx, ex, ::Type{<:SubFiber{Lvl, Pos}}, tag=freshen(ctx, :tns
     pos = virtualize(ctx, :($ex.pos), Pos)
     VirtualSubFiber(lvl, pos)
 end
-lower(fbr::VirtualSubFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(SubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
+lower(ctx::AbstractCompiler, fbr::VirtualSubFiber, ::DefaultStyle) = :(SubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
 FinchNotation.finch_leaf(x::VirtualSubFiber) = virtual(x)
 
 @inline Base.ndims(::AbstractFiber{Lvl}) where {Lvl} = level_ndims(Lvl)
@@ -173,8 +173,8 @@ function declare!(ctx::AbstractCompiler, fbr::VirtualFiber, init)
     fbr = VirtualFiber(lvl)
 end
 
-function instantiate(fbr::VirtualFiber, ctx::AbstractCompiler, mode, protos)
-    return Unfurled(fbr, instantiate(VirtualSubFiber(fbr.lvl, literal(1)), ctx, mode, protos))
+function instantiate(ctx::AbstractCompiler, fbr::VirtualFiber, mode, protos)
+    return Unfurled(fbr, instantiate(ctx, VirtualSubFiber(fbr.lvl, literal(1)), mode, protos))
 end
 
 function virtual_moveto(ctx::AbstractCompiler, fbr::VirtualFiber, arch)
@@ -202,7 +202,7 @@ function virtualize(ctx, ex, ::Type{<:HollowSubFiber{Lvl, Pos, Dirty}}, tag=fres
     dirty = virtualize(ctx, :($ex.dirty), Dirty)
     VirtualHollowSubFiber(lvl, pos, dirty)
 end
-lower(fbr::VirtualHollowSubFiber, ctx::AbstractCompiler, ::DefaultStyle) = :(HollowSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
+lower(ctx::AbstractCompiler, fbr::VirtualHollowSubFiber, ::DefaultStyle) = :(HollowSubFiber($(ctx(fbr.lvl)), $(ctx(fbr.pos))))
 FinchNotation.finch_leaf(x::VirtualHollowSubFiber) = virtual(x)
 
 function virtual_moveto(ctx::AbstractCompiler, fbr::VirtualHollowSubFiber, arch)

@@ -9,7 +9,7 @@ function virtual_size(ctx::AbstractCompiler, arr::VirtualAbstractArray)
     return arr.shape
 end
 
-function lower(arr::VirtualAbstractArray, ctx::AbstractCompiler,  ::DefaultStyle)
+function lower(ctx::AbstractCompiler, arr::VirtualAbstractArray, ::DefaultStyle)
     return arr.ex
 end
 
@@ -33,7 +33,7 @@ end
 freeze!(ctx::AbstractCompiler, arr::VirtualAbstractArray) = arr
 thaw!(ctx::AbstractCompiler, arr::VirtualAbstractArray) = arr
 
-function instantiate(arr::VirtualAbstractArray, ctx::AbstractCompiler, mode, subprotos, protos...)
+function instantiate(ctx::AbstractCompiler, arr::VirtualAbstractArray, mode, subprotos, protos...)
     val = freshen(ctx.code, :val)
     function nest(idx...)
         if length(idx) == arr.ndims

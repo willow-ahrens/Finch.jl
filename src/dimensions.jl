@@ -138,7 +138,7 @@ function virtual_call(ctx, ::typeof(parallel), ext)
 end
 
 function virtual_call(ctx, ::typeof(parallel), ext, device)
-    device = resolve(device, ctx) #TODO this feels broken
+    device = resolve(ctx, device) #TODO this feels broken
     if ext.kind === virtual
         ParallelDimension(ext.val, device)
     end

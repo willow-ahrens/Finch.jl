@@ -58,7 +58,7 @@ end
 
 unwrap(ctx, arr::VirtualPermissiveArray, var) = call(permissive, unwrap(ctx, arr.body, var), arr.dims...)
 
-lower(tns::VirtualPermissiveArray, ctx::AbstractCompiler, ::DefaultStyle) = :(PermissiveArray($(ctx(tns.body)), $(tns.dims)))
+lower(ctx::AbstractCompiler, tns::VirtualPermissiveArray, ::DefaultStyle) = :(PermissiveArray($(ctx(tns.body)), $(tns.dims)))
 
 function virtual_size(ctx::AbstractCompiler, arr::VirtualPermissiveArray)
     ifelse.(arr.dims, (dimless,), virtual_size(ctx, arr.body))
@@ -70,8 +70,8 @@ end
 
 virtual_default(ctx::AbstractCompiler, arr::VirtualPermissiveArray) = virtual_default(ctx, arr.body)
 
-function instantiate(arr::VirtualPermissiveArray, ctx, mode, protos)
-    VirtualPermissiveArray(instantiate(arr.body, ctx, mode, protos), arr.dims)
+function instantiate(ctx, arr::VirtualPermissiveArray, mode, protos)
+    VirtualPermissiveArray(instantiate(ctx, arr.body, mode, protos), arr.dims)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualPermissiveArray) = ctx(node.body)

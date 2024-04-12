@@ -31,7 +31,7 @@ virtual_size(ctx, tns::Unfurled) = virtual_size(ctx, tns.arr)[1 : end - tns.ndim
 virtual_resize!(ctx, tns::Unfurled, dims...) = virtual_resize!(ctx, tns.arr, dims...) # TODO SHOULD NOT HAPPEN BREAKS LIFECYCLES
 virtual_default(ctx, tns::Unfurled) = virtual_default(ctx, tns.arr)
 
-instantiate(tns::Unfurled, ctx, mode, protos) = tns
+instantiate(ctx, tns::Unfurled, mode, protos) = tns
 
 (ctx::Stylize{<:AbstractCompiler})(node::Unfurled) = ctx(node.body)
 function stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::Unfurled)
@@ -116,7 +116,7 @@ function short_circuit_cases(ctx, tns::Unfurled, op)
     end
 end
 
-function lower(node::Unfurled, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, node::Unfurled, ::DefaultStyle)
     ctx(node.body)
 end
 

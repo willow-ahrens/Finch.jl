@@ -24,7 +24,7 @@ struct VirtualScalar
     val
 end
 
-lower(tns::VirtualScalar, ctx::AbstractCompiler, ::DefaultStyle) = tns.ex
+lower(ctx::AbstractCompiler, tns::VirtualScalar, ::DefaultStyle) = tns.ex
 function virtualize(ctx, ex, ::Type{Scalar{D, Tv}}, tag) where {D, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
@@ -59,7 +59,7 @@ function freeze!(ctx, tns::VirtualScalar)
     end)
     return tns
 end
-instantiate(tns::VirtualScalar, ctx, mode, subprotos) = tns
+instantiate(ctx, tns::VirtualScalar, mode, subprotos) = tns
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualScalar)
     @assert isempty(node.idxs)
@@ -103,7 +103,7 @@ struct VirtualSparseScalar
     dirty
 end
 
-lower(tns::VirtualSparseScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($SparseScalar{$(tns.D), $(tns.Tv)}($(tns.val), $(tns.dirty)))
+lower(ctx::AbstractCompiler, tns::VirtualSparseScalar, ::DefaultStyle) = :($SparseScalar{$(tns.D), $(tns.Tv)}($(tns.val), $(tns.dirty)))
 function virtualize(ctx, ex, ::Type{SparseScalar{D, Tv}}, tag) where {D, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
@@ -140,8 +140,8 @@ function freeze!(ctx, tns::VirtualSparseScalar)
     return tns
 end
 
-instantiate(tns::VirtualSparseScalar, ctx, mode::Updater, subprotos) = tns
-function instantiate(tns::VirtualSparseScalar, ctx, mode::Reader, subprotos)
+instantiate(ctx, tns::VirtualSparseScalar, mode::Updater, subprotos) = tns
+function instantiate(ctx, tns::VirtualSparseScalar, mode::Reader, subprotos)
     Switch(
         tns.dirty => tns,
         true => Simplify(Fill(tns.D)),
@@ -184,7 +184,7 @@ struct VirtualShortCircuitScalar
     val
 end
 
-lower(tns::VirtualShortCircuitScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($ShortCircuitScalar{$(tns.D), $(tns.Tv)}($(tns.val)))
+lower(ctx::AbstractCompiler, tns::VirtualShortCircuitScalar, ::DefaultStyle) = :($ShortCircuitScalar{$(tns.D), $(tns.Tv)}($(tns.val)))
 function virtualize(ctx, ex, ::Type{ShortCircuitScalar{D, Tv}}, tag) where {D, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
@@ -219,7 +219,7 @@ function freeze!(ctx, tns::VirtualShortCircuitScalar)
     end)
     return tns
 end
-instantiate(tns::VirtualShortCircuitScalar, ctx, mode, subprotos) = tns
+instantiate(ctx, tns::VirtualShortCircuitScalar, mode, subprotos) = tns
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualShortCircuitScalar)
     @assert isempty(node.idxs)
@@ -259,7 +259,7 @@ struct VirtualSparseShortCircuitScalar
     dirty
 end
 
-lower(tns::VirtualSparseShortCircuitScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($SparseShortCircuitScalar{$(tns.D), $(tns.Tv)}($(tns.val), $(tns.dirty)))
+lower(ctx::AbstractCompiler, tns::VirtualSparseShortCircuitScalar, ::DefaultStyle) = :($SparseShortCircuitScalar{$(tns.D), $(tns.Tv)}($(tns.val), $(tns.dirty)))
 function virtualize(ctx, ex, ::Type{SparseShortCircuitScalar{D, Tv}}, tag) where {D, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
@@ -296,8 +296,8 @@ function freeze!(ctx, tns::VirtualSparseShortCircuitScalar)
     return tns
 end
 
-instantiate(tns::VirtualSparseShortCircuitScalar, ctx, mode::Updater, subprotos) = tns
-function instantiate(tns::VirtualSparseShortCircuitScalar, ctx, mode::Reader, subprotos)
+instantiate(ctx, tns::VirtualSparseShortCircuitScalar, mode::Updater, subprotos) = tns
+function instantiate(ctx, tns::VirtualSparseShortCircuitScalar, mode::Reader, subprotos)
     Switch([
         value(tns.dirty, Bool) => tns,
         true => Simplify(Fill(tns.D)),

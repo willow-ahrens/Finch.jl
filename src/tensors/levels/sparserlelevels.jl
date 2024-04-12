@@ -173,7 +173,7 @@ function virtualize(ctx, ex, ::Type{SparseRLELevel{Ti, Ptr, Left, Right, merge, 
     buf = virtualize(ctx, :($sym.buf), Lvl, sym)
     VirtualSparseRLELevel(lvl_2, sym, Ti, shape, qos_fill, qos_stop, ptr, left, right, buf, merge, prev_pos)
 end
-function lower(lvl::VirtualSparseRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualSparseRLELevel, ::DefaultStyle)
     quote
         $SparseRLELevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
@@ -386,7 +386,7 @@ function thaw_level!(ctx::AbstractCompiler, lvl::VirtualSparseRLELevel, pos_stop
     return lvl
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseRLELevel}, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
     Tp = postype(lvl)
@@ -431,7 +431,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, mode::Rea
                                 ),
                                 Phase(
                                     body = (ctx,ext) -> Run(
-                                        body = Simplify(instantiate(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, mode, subprotos))
+                                        body = Simplify(instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q)), mode, subprotos))
                                     )
                                 )
                             ]),
@@ -450,10 +450,10 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, mode::Rea
 end
 
 
-instantiate(fbr::VirtualSubFiber{VirtualSparseRLELevel}, ctx, mode::Updater, protos) = 
-    instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
+instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseRLELevel}, mode::Updater, protos) = 
+    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), mode, protos)
 
-function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseRLELevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseRLELevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
     Tp = postype(lvl)
@@ -485,7 +485,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseRLELevel}, ctx, mod
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.buf, value(qos, Tp), dirty), ctx, mode, subprotos),
+                    body = (ctx) -> instantiate(ctx, VirtualHollowSubFiber(lvl.buf, value(qos, Tp), dirty), mode, subprotos),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true

@@ -57,7 +57,7 @@ end
 
 unwrap(ctx, arr::VirtualProductArray, var) = call(products, unwrap(ctx, arr.body, var), arr.dim)
 
-lower(tns::VirtualProductArray, ctx::AbstractCompiler, ::DefaultStyle) = :(ProductArray($(ctx(tns.body)), $(tns.dim)))
+lower(ctx::AbstractCompiler, tns::VirtualProductArray, ::DefaultStyle) = :(ProductArray($(ctx(tns.body)), $(tns.dim)))
 
 #virtual_size(ctx::AbstractCompiler, arr::Fill) = (dimless,) # this is needed for multidimensional convolution..
 #virtual_size(ctx::AbstractCompiler, arr::Simplify) = (dimless,)

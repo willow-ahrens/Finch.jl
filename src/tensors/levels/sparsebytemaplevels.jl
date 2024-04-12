@@ -160,7 +160,7 @@ function virtualize(ctx, ex, ::Type{SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}},
     lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
     VirtualSparseByteMapLevel(lvl_2, sym, Ti, ptr, tbl, srt, shape, qos_fill, qos_stop)
 end
-function lower(lvl::VirtualSparseByteMapLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualSparseByteMapLevel, ::DefaultStyle)
     quote
         $SparseByteMapLevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
@@ -299,7 +299,7 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseByteMapLevel, po
     return lvl
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -338,7 +338,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, mode:
                             body = Fill(virtual_level_default(lvl)),
                             tail = Thunk(
                                 preamble = :($my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i),
-                                body = (ctx) -> instantiate(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, mode, subprotos),
+                                body = (ctx) -> instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), mode, subprotos),
                             ),
                         ),
                         next = (ctx, ext) -> :($my_r += $(Tp(1))),
@@ -352,7 +352,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, mode:
     )
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, mode::Reader, subprotos, ::typeof(gallop))
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode::Reader, subprotos, ::typeof(gallop))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -392,7 +392,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, mode:
                             body = Fill(virtual_level_default(lvl)),
                             tail = Thunk(
                                 preamble = :($my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i),
-                                body = (ctx) -> instantiate(VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), ctx, mode, subprotos),
+                                body = (ctx) -> instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), mode, subprotos),
                             ),
                         ),
                         next = (ctx, ext) -> :($my_r += $(Tp(1)))
@@ -407,7 +407,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, mode:
 end
 
 
-function instantiate(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, mode::Reader, subprotos, ::typeof(follow))
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode::Reader, subprotos, ::typeof(follow))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     my_q = freshen(ctx.code, tag, :_q)
@@ -421,7 +421,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, mode:
                     $my_q = ($(ctx(q)) - $(Ti(1))) * $(ctx(lvl.shape)) + $(ctx(i))
                 end,
                 body = (ctx) -> Switch([
-                    value(:($(lvl.tbl)[$my_q])) => instantiate(VirtualSubFiber(lvl.lvl, pos), ctx, mode, subprotos),
+                    value(:($(lvl.tbl)[$my_q])) => instantiate(ctx, VirtualSubFiber(lvl.lvl, pos), mode, subprotos),
                     literal(true) => Fill(virtual_level_default(lvl))
                 ])
             )
@@ -429,9 +429,9 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, mode:
     )
 end
 
-instantiate(fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, ctx, mode::Updater, protos) = 
-    instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
-function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseByteMapLevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude), typeof(laminate)})
+instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode::Updater, protos) = 
+    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), mode, protos)
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseByteMapLevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude), typeof(laminate)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
@@ -445,7 +445,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseByteMapLevel}, ctx,
                     $my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $(ctx(idx))
                     $dirty = false
                 end,
-                body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.lvl, value(my_q, lvl.Ti), dirty), ctx, mode, subprotos),
+                body = (ctx) -> instantiate(ctx, VirtualHollowSubFiber(lvl.lvl, value(my_q, lvl.Ti), dirty), mode, subprotos),
                 epilogue = quote
                     if $dirty
                         $(fbr.dirty) = true

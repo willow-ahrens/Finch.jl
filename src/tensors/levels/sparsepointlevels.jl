@@ -160,7 +160,7 @@ function virtualize(ctx, ex, ::Type{SparsePointLevel{Ti, Ptr, Idx, Lvl}}, tag=:l
     prev_pos = freshen(ctx, sym, :_prev_pos)
     VirtualSparsePointLevel(lvl_2, sym, Ti, ptr, idx, shape, qos_fill, qos_stop, prev_pos)
 end
-function lower(lvl::VirtualSparsePointLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualSparsePointLevel, ::DefaultStyle)
     quote
         $SparsePointLevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
@@ -268,7 +268,7 @@ function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualSparsePointLeve
     virtual_moveto_level(ctx, lvl.lvl, arch)
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualSparsePointLevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparsePointLevel}, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
@@ -294,7 +294,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparsePointLevel}, ctx, mode::R
                     stop = (ctx, ext) -> value(my_i),
                     body = (ctx, ext) -> truncate(ctx, Spike(
                             body = Fill(virtual_level_default(lvl)),
-                            tail = instantiate(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, mode, subprotos)), similar_extent(ext, getstart(ext), value(my_i)), ext)
+                            tail = instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Ti)), mode, subprotos)), similar_extent(ext, getstart(ext), value(my_i)), ext)
                 ),
                 Phase(
                     stop = (ctx, ext) -> lvl.shape,
@@ -306,10 +306,10 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparsePointLevel}, ctx, mode::R
     )
 end
 
-instantiate(fbr::VirtualSubFiber{VirtualSparsePointLevel}, ctx, mode::Updater, protos) = begin
-    instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
+instantiate(ctx, fbr::VirtualSubFiber{VirtualSparsePointLevel}, mode::Updater, protos) = begin
+    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), mode, protos)
 end
-function instantiate(fbr::VirtualHollowSubFiber{VirtualSparsePointLevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparsePointLevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
@@ -339,7 +339,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparsePointLevel}, ctx, m
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), ctx, mode, subprotos),
+                    body = (ctx) -> instantiate(ctx, VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), mode, subprotos),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true

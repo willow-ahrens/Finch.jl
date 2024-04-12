@@ -166,7 +166,7 @@ function virtualize(ctx, ex, ::Type{SparseIntervalLevel{Ti, Ptr, Left, Right, Lv
     prev_pos = freshen(ctx, sym, :_prev_pos)
     VirtualSparseIntervalLevel(lvl_2, sym, Ti, ptr, left, right, shape, qos_fill, qos_stop, prev_pos)
 end
-function lower(lvl::VirtualSparseIntervalLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualSparseIntervalLevel, ::DefaultStyle)
     quote
         $SparseIntervalLevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
@@ -259,7 +259,7 @@ function thaw_level!(ctx::AbstractCompiler, lvl::VirtualSparseIntervalLevel, pos
     return lvl
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
     Tp = postype(lvl) 
@@ -291,7 +291,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, ctx, mode
                 ),
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop, lvl.Ti),
-                    body = (ctx, ext) -> Run(Simplify(instantiate(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, mode, subprotos))),
+                    body = (ctx, ext) -> Run(Simplify(instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q)), mode, subprotos))),
                 ),
                 Phase(
                     stop = (ctx, ext) -> lvl.shape,
@@ -302,10 +302,10 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, ctx, mode
     )
 end
 
-instantiate(fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, ctx, mode::Updater, protos) = 
-    instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
+instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, mode::Updater, protos) = 
+    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), mode, protos)
 
-function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseIntervalLevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseIntervalLevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
     Tp = postype(lvl) 
@@ -334,7 +334,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseIntervalLevel}, ctx
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), ctx, mode, subprotos),
+                    body = (ctx) -> instantiate(ctx, VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), mode, subprotos),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true

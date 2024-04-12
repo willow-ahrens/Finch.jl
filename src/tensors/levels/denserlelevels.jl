@@ -181,7 +181,7 @@ function virtualize(ctx, ex, ::Type{DenseRLELevel{Ti, Ptr, Right, merge, Lvl}}, 
     VirtualDenseRLELevel(lvl_2, sym, Ti, shape, qos_fill, qos_stop, ptr, right, buf, prev_pos, i_prev, merge)
 end
 
-function lower(lvl::VirtualDenseRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualDenseRLELevel, ::DefaultStyle)
     quote
         $DenseRLELevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
@@ -399,7 +399,7 @@ function thaw_level!(ctx::AbstractCompiler, lvl::VirtualDenseRLELevel, pos_stop)
     =#
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualDenseRLELevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualDenseRLELevel}, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
@@ -432,7 +432,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualDenseRLELevel}, ctx, mode::Read
                 preamble = :($my_i = $(lvl.right)[$my_q]),
                 stop = (ctx, ext) -> value(my_i),
                 chunk = Run(
-                    body = Simplify(instantiate(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, mode, subprotos))
+                    body = Simplify(instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q)), mode, subprotos))
                 ),
                 next = (ctx, ext) -> :($my_q += $(Tp(1)))
             )
@@ -440,8 +440,8 @@ function instantiate(fbr::VirtualSubFiber{VirtualDenseRLELevel}, ctx, mode::Read
     )
 end
 
-instantiate(fbr::VirtualSubFiber{VirtualDenseRLELevel}, ctx, mode::Updater, protos) = 
-    instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
+instantiate(ctx, fbr::VirtualSubFiber{VirtualDenseRLELevel}, mode::Updater, protos) = 
+    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), mode, protos)
 
 #Invariants of the level (Write Mode):
 # 1. prevpos is the last position written (initially 0)
@@ -449,7 +449,7 @@ instantiate(fbr::VirtualSubFiber{VirtualDenseRLELevel}, ctx, mode::Updater, prot
 # 3. for all p in 1:prevpos-1, ptr[p] is the number of runs in that position
 # 4. qos_fill is the position of the last index written
 
-function instantiate(fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
     Tp = postype(lvl)
@@ -500,7 +500,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, ctx, mode
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.buf, value(qos_3, Tp), dirty), ctx, mode, subprotos),
+                    body = (ctx) -> instantiate(ctx, VirtualHollowSubFiber(lvl.buf, value(qos_3, Tp), dirty), mode, subprotos),
                     epilogue = quote
                         if $dirty
                             $(lvl.right)[$qos] = $(ctx(getstart(ext))) - $unit

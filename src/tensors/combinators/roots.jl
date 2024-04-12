@@ -1,35 +1,35 @@
 
-virtual_size(ctx, tns::FinchNode) = virtual_size(ctx, resolve(tns, ctx))
-virtual_resize!(ctx, tns::FinchNode, dims...) = virtual_resize!(ctx, resolve(tns, ctx), dims...)
-virtual_default(ctx, tns::FinchNode) = virtual_default(ctx, resolve(tns, ctx))
+virtual_size(ctx, tns::FinchNode) = virtual_size(ctx, resolve(ctx, tns))
+virtual_resize!(ctx, tns::FinchNode, dims...) = virtual_resize!(ctx, resolve(ctx, tns), dims...)
+virtual_default(ctx, tns::FinchNode) = virtual_default(ctx, resolve(ctx, tns))
 
 function stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::FinchNode)
-    stylize_access(ctx, node, resolve(tns, ctx.ctx))
+    stylize_access(ctx, node, resolve(ctx.ctx, tns))
 end
 
-function instantiate(tns::FinchNode, ctx::AbstractCompiler, mode, protos)
+function instantiate(ctx::AbstractCompiler, tns::FinchNode, mode, protos)
     if tns.kind === virtual
-        return instantiate(tns.val, ctx, mode, protos)
+        return instantiate(ctx, tns.val, mode, protos)
     elseif tns.kind === variable
-        return Unfurled(tns, instantiate(resolve(tns, ctx), ctx, mode, protos))
+        return Unfurled(tns, instantiate(ctx, resolve(ctx, tns), mode, protos))
     else
         return tns
     end
 end
 
-declare!(ctx::AbstractCompiler, tns::FinchNode, init) = declare!(ctx, resolve(tns, ctx), init)
-thaw!(ctx::AbstractCompiler, tns::FinchNode) = thaw!(ctx, resolve(tns, ctx))
-freeze!(ctx::AbstractCompiler, tns::FinchNode) = freeze!(ctx, resolve(tns, ctx))
+declare!(ctx::AbstractCompiler, tns::FinchNode, init) = declare!(ctx, resolve(ctx, tns), init)
+thaw!(ctx::AbstractCompiler, tns::FinchNode) = thaw!(ctx, resolve(ctx, tns))
+freeze!(ctx::AbstractCompiler, tns::FinchNode) = freeze!(ctx, resolve(ctx, tns))
 
 function unfurl(ctx, tns::FinchNode, ext, mode, protos...)
-    unfurl(ctx, resolve(tns, ctx), ext, mode, protos...)
+    unfurl(ctx, resolve(ctx, tns), ext, mode, protos...)
 end
 
 lower_access(ctx::AbstractCompiler, node, tns::FinchNode) = 
-    lower_access(ctx, node, resolve(tns, ctx))
+    lower_access(ctx, node, resolve(ctx, tns))
 
-is_injective(ctx, lvl::FinchNode) = is_injective(ctx, resolve(lvl, ctx))
-is_atomic(ctx, lvl::FinchNode) = is_atomic(ctx, resolve(lvl, ctx))
+is_injective(ctx, lvl::FinchNode) = is_injective(ctx, resolve(ctx, lvl))
+is_atomic(ctx, lvl::FinchNode) = is_atomic(ctx, resolve(ctx, lvl))
 
 function getroot(node::FinchNode)
     if node.kind === virtual

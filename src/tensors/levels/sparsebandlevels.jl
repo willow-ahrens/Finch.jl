@@ -163,7 +163,7 @@ function virtualize(ctx, ex, ::Type{SparseBandLevel{Ti, Ptr, Idx, Ofs, Lvl}}, ta
     lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
     VirtualSparseBandLevel(lvl_2, sym, Ti, shape, qos_fill, qos_stop, ros_fill, ros_stop, dirty, ptr, idx, ofs, prev_pos)
 end
-function lower(lvl::VirtualSparseBandLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualSparseBandLevel, ::DefaultStyle)
     quote
         $SparseBandLevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
@@ -260,7 +260,7 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseBandLevel, pos_s
     return lvl
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualSparseBandLevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseBandLevel}, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
@@ -301,7 +301,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseBandLevel}, ctx, mode::Re
                     body = (ctx, ext) -> Lookup(
                         body = (ctx, i) -> Thunk(
                             preamble = :($my_q = $my_q_ofs + $(ctx(i))),
-                            body = (ctx) -> instantiate(VirtualSubFiber(lvl.lvl, value(my_q, Tp)), ctx, mode, subprotos),
+                            body = (ctx) -> instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Tp)), mode, subprotos),
                         )
                     )
                 ),
@@ -313,9 +313,9 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseBandLevel}, ctx, mode::Re
     )
 end
 
-instantiate(fbr::VirtualSubFiber{VirtualSparseBandLevel}, ctx, mode::Updater, protos) =
-    instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
-function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseBandLevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseBandLevel}, mode::Updater, protos) =
+    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), mode, protos)
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseBandLevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
@@ -370,7 +370,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseBandLevel}, ctx, mo
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), ctx, mode, subprotos),
+                    body = (ctx) -> instantiate(ctx, VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), mode, subprotos),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true

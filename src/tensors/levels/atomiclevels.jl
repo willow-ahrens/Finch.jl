@@ -97,7 +97,7 @@ is_level_injective(ctx, lvl::VirtualAtomicLevel) = [is_level_injective(ctx, lvl.
 is_level_concurrent(lvl::VirtualAtomicLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
 is_level_atomic(ctx, lvl::VirtualAtomicLevel) = true
 
-function lower(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualAtomicLevel, ::DefaultStyle)
     quote
         $AtomicLevel{$(lvl.AVal), $(lvl.Lvl)}($(ctx(lvl.lvl)), $(lvl.locks))
     end
@@ -185,23 +185,23 @@ function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualAtomicLevel, ar
     virtual_moveto_level(ctx, lvl.lvl, arch)
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Reader, protos)
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualAtomicLevel}, mode::Reader, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     # lvlp = freshen(ctx.code, lvl.ex, :_lvl)
     # sym = freshen(ctx.code, lvl.ex, :_after_atomic_lvl)
     return body = Thunk(
         body = (ctx) -> begin
-            instantiate(VirtualSubFiber(lvl.lvl, pos), ctx, mode, protos)
+            instantiate(ctx, VirtualSubFiber(lvl.lvl, pos), mode, protos)
         end,
     )
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Updater, protos)
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualAtomicLevel}, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     sym = freshen(ctx.code, lvl.ex, :after_atomic_lvl)
     atomicData = freshen(ctx.code, lvl.ex, :atomicArraysAcc)
     lockVal = freshen(ctx.code, lvl.ex, :lockVal) 
-    dev = lower(virtual_get_device(ctx.code.task), ctx, DefaultStyle())
+    dev = lower(ctx, virtual_get_device(ctx.code.task), DefaultStyle())
     return Thunk(
         preamble = quote  
             $atomicData =  get_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
@@ -209,19 +209,19 @@ function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Update
         end,
         body =  (ctx) -> begin
             lvl_2 = lvl.lvl
-            update = instantiate(VirtualSubFiber(lvl_2, pos), ctx, mode, protos)
+            update = instantiate(ctx, VirtualSubFiber(lvl_2, pos), mode, protos)
             return update
         end,
         epilogue = quote 
             release_lock!($dev, $atomicData) end 
     )
 end
-function instantiate(fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, ctx, mode::Updater, protos)
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     sym = freshen(ctx.code, lvl.ex, :after_atomic_lvl)
     atomicData = freshen(ctx.code, lvl.ex, :atomicArrays)
     lockVal = freshen(ctx.code, lvl.ex, :lockVal)
-    dev = lower(virtual_get_device(ctx.code.task), ctx, DefaultStyle())
+    dev = lower(ctx, virtual_get_device(ctx.code.task), DefaultStyle())
     return Thunk(
         preamble = quote  
             $atomicData =  get_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
@@ -229,7 +229,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, ctx, mode::
         end,
         body =  (ctx) -> begin
             lvl_2 = lvl.lvl
-            update = instantiate(VirtualHollowSubFiber(lvl_2, pos, fbr.dirty), ctx, mode, protos)
+            update = instantiate(ctx, VirtualHollowSubFiber(lvl_2, pos, fbr.dirty), mode, protos)
             return update
         end,
         epilogue = quote 

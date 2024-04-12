@@ -47,7 +47,7 @@ function virtualize(ctx, ex, ::Type{CPU})
     end)
     VirtualCPU(sym, virtualize(ctx, :($sym.n), Int))
 end
-lower(device::VirtualCPU, ctx::AbstractCompiler, ::DefaultStyle) =
+lower(ctx::AbstractCompiler, device::VirtualCPU, ::DefaultStyle) =
     something(device.ex, :(CPU($(ctx(device.n)))))
 
 FinchNotation.finch_leaf(device::VirtualCPU) = virtual(device)
@@ -58,7 +58,7 @@ get_device(::Serial) = CPU(1)
 get_task(::Serial) = nothing
 struct VirtualSerial <: AbstractVirtualTask end
 virtualize(ctx, ex, ::Type{Serial}) = VirtualSerial()
-lower(task::VirtualSerial, ctx::AbstractCompiler, ::DefaultStyle) = :(Serial())
+lower(ctx::AbstractCompiler, task::VirtualSerial, ::DefaultStyle) = :(Serial())
 FinchNotation.finch_leaf(device::VirtualSerial) = virtual(device)
 virtual_get_device(::VirtualSerial) = VirtualCPU(nothing, 1)
 virtual_get_task(::VirtualSerial) = nothing
@@ -125,7 +125,7 @@ function virtualize(ctx, ex, ::Type{CPUThread{Parent}}) where {Parent}
         virtualize(ctx, :($sym.parent), Parent)
     )
 end
-lower(task::VirtualCPUThread, ctx::AbstractCompiler, ::DefaultStyle) = :(CPUThread($(ctx(task.tid)), $(ctx(task.dev)), $(ctx(task.parent))))
+lower(ctx::AbstractCompiler, task::VirtualCPUThread, ::DefaultStyle) = :(CPUThread($(ctx(task.tid)), $(ctx(task.dev)), $(ctx(task.parent))))
 FinchNotation.finch_leaf(device::VirtualCPUThread) = virtual(device)
 virtual_get_device(task::VirtualCPUThread) = task.dev
 virtual_get_task(task::VirtualCPUThread) = task.parent

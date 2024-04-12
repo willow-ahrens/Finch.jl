@@ -156,7 +156,7 @@ function virtualize(ctx, ex, ::Type{SparseListLevel{Ti, Ptr, Idx, Lvl}}, tag=:lv
     prev_pos = freshen(ctx, sym, :_prev_pos)
     VirtualSparseListLevel(lvl_2, sym, Ti, ptr, idx, shape, qos_fill, qos_stop, prev_pos)
 end
-function lower(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualSparseListLevel, ::DefaultStyle)
     quote
         $SparseListLevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
@@ -264,7 +264,7 @@ function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualSparseListLevel
     virtual_moveto_level(ctx, lvl.lvl, arch)
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
@@ -300,7 +300,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, mode::Re
                         stop = (ctx, ext) -> value(my_i),
                         chunk = Spike(
                             body = Fill(virtual_level_default(lvl)),
-                            tail = Simplify(instantiate(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, mode, subprotos))
+                            tail = Simplify(instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Ti)), mode, subprotos))
                         ),
                         next = (ctx, ext) -> :($my_q += $(Tp(1))) 
                     )
@@ -313,7 +313,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, mode::Re
     )
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, mode::Reader, subprotos, ::typeof(gallop))
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Reader, subprotos, ::typeof(gallop))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
@@ -352,7 +352,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, mode::Re
                         stop = (ctx, ext) -> value(my_i2),
                         chunk =  Spike(
                             body = Fill(virtual_level_default(lvl)),
-                            tail = instantiate(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, mode, subprotos),
+                            tail = instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Ti)), mode, subprotos),
                         ),
                         next = (ctx, ext) -> :($my_q += $(Tp(1))),
                     )  
@@ -365,10 +365,10 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, mode::Re
     )
 end
 
-instantiate(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, mode::Updater, protos) = begin
-    instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
+instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Updater, protos) = begin
+    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), mode, protos)
 end
-function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseListLevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseListLevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
@@ -397,7 +397,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseListLevel}, ctx, mo
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), ctx, mode, subprotos),
+                    body = (ctx) -> instantiate(ctx, VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), mode, subprotos),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true

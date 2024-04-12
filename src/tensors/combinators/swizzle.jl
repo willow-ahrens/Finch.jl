@@ -80,7 +80,7 @@ function virtual_call(ctx, ::typeof(swizzle), body, dims...)
 end
 unwrap(ctx, arr::VirtualSwizzleArray, var) = call(swizzle, unwrap(ctx, arr.body, var), arr.dims...)
 
-lower(tns::VirtualSwizzleArray, ctx::AbstractCompiler, ::DefaultStyle) = :(SwizzleArray($(ctx(tns.body)), $((tns.dims...,))))
+lower(ctx::AbstractCompiler, tns::VirtualSwizzleArray, ::DefaultStyle) = :(SwizzleArray($(ctx(tns.body)), $((tns.dims...,))))
 
 function virtual_default(ctx::AbstractCompiler, arr::VirtualSwizzleArray)
     virtual_default(ctx, arr.body)
@@ -94,8 +94,8 @@ function virtual_resize!(ctx::AbstractCompiler, arr::VirtualSwizzleArray, dims..
     virtual_resize!(ctx, arr.body, dims[invperm(arr.dims)]...)
 end
 
-function instantiate(arr::VirtualSwizzleArray, ctx, mode, protos)
-    VirtualSwizzleArray(instantiate(arr.body, ctx, mode, protos), arr.dims)
+function instantiate(ctx, arr::VirtualSwizzleArray, mode, protos)
+    VirtualSwizzleArray(instantiate(ctx, arr.body, mode, protos), arr.dims)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualSwizzleArray) = ctx(node.body)

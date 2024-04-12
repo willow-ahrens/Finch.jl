@@ -90,7 +90,7 @@ end
 is_level_injective(ctx, ::VirtualElementLevel) = []
 is_level_atomic(ctx, lvl::VirtualElementLevel) = false
 
-lower(lvl::VirtualElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex
+lower(ctx::AbstractCompiler, lvl::VirtualElementLevel, ::DefaultStyle) = lvl.ex
 
 function virtualize(ctx, ex, ::Type{ElementLevel{D, Tv, Tp, Val}}, tag=:lvl) where {D, Tv, Tp, Val}
     sym = freshen(ctx, tag)
@@ -155,7 +155,7 @@ function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualElementLevel, a
     end)
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualElementLevel}, ctx, mode::Reader, protos)
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualElementLevel}, mode::Reader, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     val = freshen(ctx.code, lvl.ex, :_val)
     return Thunk(
@@ -166,12 +166,12 @@ function instantiate(fbr::VirtualSubFiber{VirtualElementLevel}, ctx, mode::Reade
     )
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualElementLevel}, ctx, mode::Updater, protos)
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualElementLevel}, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     VirtualScalar(nothing, lvl.Tv, lvl.D, gensym(), :($(lvl.val)[$(ctx(pos))]))
 end
 
-function instantiate(fbr::VirtualHollowSubFiber{VirtualElementLevel}, ctx, mode::Updater, protos)
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualElementLevel}, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     VirtualSparseScalar(nothing, lvl.Tv, lvl.D, gensym(), :($(lvl.val)[$(ctx(pos))]), fbr.dirty)
 end

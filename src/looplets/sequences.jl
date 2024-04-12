@@ -12,7 +12,7 @@ FinchNotation.finch_leaf(x::Sequence) = virtual(x)
 struct SequenceStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Sequence) = ctx.root.kind === loop ? SequenceStyle() : DefaultStyle()
-instantiate(tns::Sequence, ctx, mode, protos) = tns
+instantiate(ctx, tns::Sequence, mode, protos) = tns
 combine_style(a::DefaultStyle, b::SequenceStyle) = SequenceStyle()
 combine_style(a::LookupStyle, b::SequenceStyle) = SequenceStyle()
 combine_style(a::ThunkStyle, b::SequenceStyle) = ThunkStyle()
@@ -24,7 +24,7 @@ combine_style(a::SequenceStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::SpikeStyle, b::SequenceStyle) = SequenceStyle()
 combine_style(a::SequenceStyle, b::PhaseStyle) = b
 
-function lower(root::FinchNode, ctx::AbstractCompiler,  ::SequenceStyle)
+function lower(ctx::AbstractCompiler, root::FinchNode, ::SequenceStyle)
     if root.kind === loop
         phases = SequenceVisitor(ctx, root.idx, root.ext)(root.body)
         

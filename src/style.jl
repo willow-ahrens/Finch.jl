@@ -26,7 +26,7 @@ function (ctx::Stylize)(node::FinchNode)
 end
 
 stylize_access(ctx, node, @nospecialize tns) = DefaultStyle()
-stylize_access(ctx, node, tns::FinchNode) = stylize_access(ctx, node, resolve(tns, ctx))
+stylize_access(ctx, node, tns::FinchNode) = stylize_access(ctx, node, resolve(ctx, tns))
 
 @nospecialize
 

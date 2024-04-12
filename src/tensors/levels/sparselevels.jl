@@ -269,7 +269,7 @@ function virtualize(ctx, ex, ::Type{SparseLevel{Ti, Tbl, Lvl}}, tag=:lvl) where 
     shape = value(:($sym.shape), Int)
     VirtualSparseLevel(lvl_2, sym, Ti, tbl, shape, qos_stop)
 end
-function lower(lvl::VirtualSparseLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualSparseLevel, ::DefaultStyle)
     quote
         $SparseLevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
@@ -354,7 +354,7 @@ function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualSparseLevel, ar
     virtual_moveto_level(ctx, lvl.lvl, arch)
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualSparseLevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseLevel}, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
@@ -385,7 +385,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseLevel}, ctx, mode::Reader
                         stop = (ctx, ext) -> value(my_i),
                         chunk = Spike(
                             body = Fill(virtual_level_default(lvl)),
-                            tail = Simplify(instantiate(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, mode, subprotos))
+                            tail = Simplify(instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Ti)), mode, subprotos))
                         ),
                         next = (ctx, ext) -> :($state = subtable_next($(lvl.tbl), $subtbl, $state)) 
                     )
@@ -398,10 +398,10 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseLevel}, ctx, mode::Reader
     )
 end
 
-instantiate(fbr::VirtualSubFiber{VirtualSparseLevel}, ctx, mode::Updater, protos) = begin
-    instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
+instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseLevel}, mode::Updater, protos) = begin
+    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), mode, protos)
 end
-function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseLevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseLevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
@@ -425,7 +425,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseLevel}, ctx, mode::
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), ctx, mode, subprotos),
+                    body = (ctx) -> instantiate(ctx, VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), mode, subprotos),
                     epilogue = quote
                         if $dirty
                             subtable_commit($(lvl.tbl), $subtbl, $qos, $(ctx(idx)))

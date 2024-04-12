@@ -184,7 +184,7 @@ struct SimplifyStyle end
 combine_style(a::SimplifyStyle, b::SimplifyStyle) = a
 
 
-function lower(root, ctx::AbstractCompiler,  ::SimplifyStyle)
+function lower(ctx::AbstractCompiler, root, ::SimplifyStyle)
     root = Rewrite(Prewalk((x) -> if x.kind === virtual visit_simplify(x.val) end))(root)
     root = simplify(ctx, root)
     ctx(root)

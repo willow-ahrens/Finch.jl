@@ -118,7 +118,7 @@ function virtualize(ctx, ex, ::Type{DenseLevel{Ti, Lvl}}, tag=:lvl) where {Ti, L
     lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
     VirtualDenseLevel(lvl_2, sym, Ti, shape)
 end
-function lower(lvl::VirtualDenseLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualDenseLevel, ::DefaultStyle)
     quote
         $DenseLevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
@@ -183,12 +183,12 @@ struct DenseTraversal
     subfiber_ctr
 end
 
-instantiate(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, mode, protos) =
-    instantiate(DenseTraversal(fbr, VirtualSubFiber), ctx, mode, protos)
-instantiate(fbr::VirtualHollowSubFiber{VirtualDenseLevel}, ctx, mode, protos) =
-    instantiate(DenseTraversal(fbr, (lvl, pos) -> VirtualHollowSubFiber(lvl, pos, fbr.dirty)), ctx, mode, protos)
+instantiate(ctx, fbr::VirtualSubFiber{VirtualDenseLevel}, mode, protos) =
+    instantiate(ctx, DenseTraversal(fbr, VirtualSubFiber), mode, protos)
+instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualDenseLevel}, mode, protos) =
+    instantiate(ctx, DenseTraversal(fbr, (lvl, pos) -> VirtualHollowSubFiber(lvl, pos, fbr.dirty)), mode, protos)
 
-function instantiate(trv::DenseTraversal, ctx, mode, subprotos, ::Union{typeof(defaultread), typeof(follow), typeof(defaultupdate), typeof(laminate), typeof(extrude)})
+function instantiate(ctx, trv::DenseTraversal, mode, subprotos, ::Union{typeof(defaultread), typeof(follow), typeof(defaultupdate), typeof(laminate), typeof(extrude)})
     (lvl, pos) = (trv.fbr.lvl, trv.fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -201,7 +201,7 @@ function instantiate(trv::DenseTraversal, ctx, mode, subprotos, ::Union{typeof(d
                 preamble = quote
                     $q = ($(ctx(pos)) - $(Ti(1))) * $(ctx(lvl.shape)) + $(ctx(i))
                 end,
-                body = (ctx) -> instantiate(trv.subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, mode, subprotos)
+                body = (ctx) -> instantiate(ctx, trv.subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), mode, subprotos)
             )
         )
     )

@@ -5,7 +5,7 @@
     range = (ctx, ext) -> similar_extent(ext, something(start(ctx, ext), getstart(ext)), something(stop(ctx, ext), getstop(ext)))
 end
 FinchNotation.finch_leaf(x::Phase) = virtual(x)
-instantiate(tns::Phase, ctx, mode, protos) = tns
+instantiate(ctx, tns::Phase, mode, protos) = tns
 
 Base.show(io::IO, ex::Phase) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::Phase)
@@ -54,7 +54,7 @@ combine_style(a::AcceptRunStyle, b::PhaseStyle) = b
 combine_style(a::SwitchStyle, b::PhaseStyle) = a
 combine_style(a::ThunkStyle, b::PhaseStyle) = a
 
-function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
+function lower(ctx::AbstractCompiler, root::FinchNode, style::PhaseStyle)
     if root.kind === loop
         i = getname(root.idx)
         i0=freshen(ctx.code, i)
@@ -82,7 +82,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::PhaseStyle)
         end
 
 
-        if prove(call(>=, measure(ext_4), 0), ctx)  
+        if prove(ctx, call(>=, measure(ext_4), 0))  
             return body
         else
             return quote

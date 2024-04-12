@@ -14,14 +14,14 @@ FinchNotation.finch_leaf(x::Run) = virtual(x)
 struct RunStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Run) = ctx.root.kind === loop ? RunStyle() : DefaultStyle()
-instantiate(tns::Run, ctx, mode, protos) = tns
+instantiate(ctx, tns::Run, mode, protos) = tns
 combine_style(a::DefaultStyle, b::RunStyle) = RunStyle()
 combine_style(a::LookupStyle, b::RunStyle) = RunStyle()
 combine_style(a::ThunkStyle, b::RunStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::RunStyle) = a
 combine_style(a::RunStyle, b::RunStyle) = RunStyle()
 
-function lower(root::FinchNode, ctx::AbstractCompiler,  ::RunStyle)
+function lower(ctx::AbstractCompiler, root::FinchNode, ::RunStyle)
     if root.kind === loop
         root = Rewrite(Postwalk(
             @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin
@@ -68,7 +68,7 @@ combine_style(a::SimplifyStyle, b::AcceptRunStyle) = a
 combine_style(a::AcceptRunStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::RunStyle, b::AcceptRunStyle) = RunStyle()
 
-function lower(root::FinchNode, ctx::AbstractCompiler,  ::AcceptRunStyle)
+function lower(ctx::AbstractCompiler, root::FinchNode, ::AcceptRunStyle)
     if root.kind === loop
         body = Rewrite(Postwalk(
             @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin

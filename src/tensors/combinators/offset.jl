@@ -47,7 +47,7 @@ end
 
 unwrap(ctx, arr::VirtualOffsetArray, var) = call(offset, unwrap(ctx, arr.body, var), arr.delta...)
 
-lower(tns::VirtualOffsetArray, ctx::AbstractCompiler, ::DefaultStyle) = :(OffsetArray($(ctx(tns.body)), $(ctx(tns.delta))))
+lower(ctx::AbstractCompiler, tns::VirtualOffsetArray, ::DefaultStyle) = :(OffsetArray($(ctx(tns.body)), $(ctx(tns.delta))))
 
 function virtual_size(ctx::AbstractCompiler, arr::VirtualOffsetArray)
     map(zip(virtual_size(ctx, arr.body), arr.delta)) do (dim, delta)
@@ -63,8 +63,8 @@ end
 
 virtual_default(ctx::AbstractCompiler, arr::VirtualOffsetArray) = virtual_default(ctx, arr.body)
 
-function instantiate(arr::VirtualOffsetArray, ctx, mode, protos)
-    VirtualOffsetArray(instantiate(arr.body, ctx, mode, protos), arr.delta)
+function instantiate(ctx, arr::VirtualOffsetArray, mode, protos)
+    VirtualOffsetArray(instantiate(ctx, arr.body, mode, protos), arr.delta)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualOffsetArray) = ctx(node.body)

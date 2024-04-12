@@ -52,7 +52,7 @@ function virtual_call(ctx, ::typeof(protocolize), body, protos...)
 end
 unwrap(ctx, arr::VirtualProtocolizedArray, var) = call(protocolize, unwrap(ctx, arr.body, var), arr.protos...)
 
-function lower(tns::VirtualProtocolizedArray, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, tns::VirtualProtocolizedArray, ::DefaultStyle)
     error()
     :(ProtocolizedArray($(ctx(tns.body)), $(ctx(tns.protos))))
 end
@@ -64,8 +64,8 @@ function virtual_resize!(ctx::AbstractCompiler, arr::VirtualProtocolizedArray, d
     virtual_resize!(ctx, arr.body, dim)
 end
 
-function instantiate(arr::VirtualProtocolizedArray, ctx, mode, protos)
-    VirtualProtocolizedArray(instantiate(arr.body, ctx, mode, map(something, arr.protos, protos)), arr.protos)
+function instantiate(ctx, arr::VirtualProtocolizedArray, mode, protos)
+    VirtualProtocolizedArray(instantiate(ctx, arr.body, mode, map(something, arr.protos, protos)), arr.protos)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualProtocolizedArray) = ctx(node.body)

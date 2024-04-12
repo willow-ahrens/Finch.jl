@@ -154,7 +154,7 @@ function virtualize(ctx, ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}
     prev_pos = freshen(ctx, sym, :_prev_pos)
     VirtualRepeatRLELevel(sym, D, Ti, Tp, Tv, ptr, idx, val, shape, ros_fill, qos_stop, dirty, prev_pos)
 end
-function lower(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualRepeatRLELevel, ::DefaultStyle)
     quote
         $RepeatRLELevel{$(lvl.D), $(lvl.Ti), $(lvl.Tp), $(lvl.Tv)}(
             $(ctx(lvl.shape)),
@@ -249,7 +249,7 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualRepeatRLELevel, pos_st
     return lvl
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualRepeatRLELevel}, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -288,9 +288,9 @@ function instantiate(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, mode::Rea
     )
 end
 
-instantiate(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, mode::Updater, protos) = 
-    instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
-function instantiate(fbr::VirtualHollowSubFiber{VirtualRepeatRLELevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+instantiate(ctx, fbr::VirtualSubFiber{VirtualRepeatRLELevel}, mode::Updater, protos) = 
+    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), mode, protos)
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualRepeatRLELevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp

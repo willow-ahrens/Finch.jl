@@ -211,7 +211,7 @@ function virtualize(ctx, ex, ::Type{SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}},
     lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
     VirtualSparseHashLevel(lvl_2, sym, N, TI, ptr, tbl, srt, shape, qos_fill, qos_stop, Lvl)
 end
-function lower(lvl::VirtualSparseHashLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualSparseHashLevel, ::DefaultStyle)
     quote
         $SparseHashLevel{$(lvl.N), $(lvl.TI)}(
             $(ctx(lvl.lvl)),
@@ -307,16 +307,16 @@ struct SparseHashWalkTraversal
     stop
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, mode::Reader, subprotos, proto::Union{typeof(defaultread), typeof(walk)})
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseHashLevel}, mode::Reader, subprotos, proto::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     Tp = postype(lvl)
     start = value(:($(lvl.ptr)[$(ctx(pos))]), Tp)
     stop = value(:($(lvl.ptr)[$(ctx(pos)) + 1]), Tp)
 
-    instantiate(SparseHashWalkTraversal(lvl, lvl.N, start, stop), ctx, mode, [subprotos..., proto])
+    instantiate(ctx, SparseHashWalkTraversal(lvl, lvl.N, start, stop), mode, [subprotos..., proto])
 end
 
-function instantiate(trv::SparseHashWalkTraversal, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate(ctx, trv::SparseHashWalkTraversal, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, R, start, stop) = (trv.lvl, trv.R, trv.start, trv.stop)
     tag = lvl.ex
     TI = lvl.TI
@@ -355,7 +355,7 @@ function instantiate(trv::SparseHashWalkTraversal, ctx, mode::Reader, subprotos,
                                 stop =  (ctx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Fill(virtual_level_default(lvl)),
-                                    tail = instantiate(VirtualSubFiber(lvl.lvl, value(:($(lvl.ex).srt[$my_q][2]))), ctx, mode, subprotos),
+                                    tail = instantiate(ctx, VirtualSubFiber(lvl.lvl, value(:($(lvl.ex).srt[$my_q][2]))), mode, subprotos),
                                 ),
                                 next = (ctx, ext) -> :($my_q += $(Tp(1)))
                             )
@@ -376,7 +376,7 @@ function instantiate(trv::SparseHashWalkTraversal, ctx, mode::Reader, subprotos,
                                 stop = (ctx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Fill(virtual_level_default(lvl)),
-                                    tail = instantiate(SparseHashWalkTraversal(lvl, R - 1, value(my_q, Tp), value(my_q_step, Tp)), ctx, mode, subprotos),
+                                    tail = instantiate(ctx, SparseHashWalkTraversal(lvl, R - 1, value(my_q, Tp), value(my_q_step, Tp)), mode, subprotos),
                                 ),
                                 next = (ctx, ext) -> :($my_q = $my_q_step)
                             )
@@ -397,15 +397,15 @@ struct SparseHashFollowTraversal
 end
 
 
-function instantiate(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, mode::Reader, subprotos, proto::typeof(follow))
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseHashLevel}, mode::Reader, subprotos, proto::typeof(follow))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     TI = lvl.TI
     Tp = postype(lvl)
-    return instantiate(SparseHashFollowTraversal(lvl, pos, ()), ctx, mode, subprotos, proto)
+    return instantiate(ctx, SparseHashFollowTraversal(lvl, pos, ()), mode, subprotos, proto)
 end
 
-function instantiate(trv::SparseHashFollowTraversal, ctx, mode::Reader, subprotos, ::typeof(follow))
+function instantiate(ctx, trv::SparseHashFollowTraversal, mode::Reader, subprotos, ::typeof(follow))
     (lvl, pos, coords) = (trv.lvl, trv.pos, trv.coords)
     TI = lvl.TI
     Tp = postype(lvl)
@@ -417,7 +417,7 @@ function instantiate(trv::SparseHashFollowTraversal, ctx, mode::Reader, subproto
         body = (ctx, ext) ->
             if length(coords)  + 1 < lvl.N
                 Lookup(
-                    body = (ctx, i) -> instantiate(SparseHashFollowTraversal(lvl, pos, (i, coords...)), ctx, mode, subprotos)
+                    body = (ctx, i) -> instantiate(ctx, SparseHashFollowTraversal(lvl, pos, (i, coords...)), mode, subprotos)
                 )
             else
                 Lookup(
@@ -427,7 +427,7 @@ function instantiate(trv::SparseHashFollowTraversal, ctx, mode::Reader, subproto
                             $qos = get($(lvl.tbl), $my_key, 0)
                         end,
                         body = (ctx) -> Switch([
-                            value(:($qos != 0)) => instantiate(VirtualSubFiber(lvl.lvl, value(qos, Tp)), ctx, mode, subprotos),
+                            value(:($qos != 0)) => instantiate(ctx, VirtualSubFiber(lvl.lvl, value(qos, Tp)), mode, subprotos),
                             literal(true) => Fill(virtual_level_default(lvl))
                         ])
                     )
@@ -443,14 +443,14 @@ struct SparseHashLaminateTraversal
     coords
 end
 
-instantiate(fbr::VirtualSubFiber{VirtualSparseHashLevel}, ctx, mode::Updater, protos) =
-    instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
-function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseHashLevel}, ctx, mode::Updater, protos)
+instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseHashLevel}, mode::Updater, protos) =
+    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), mode, protos)
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseHashLevel}, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    instantiate(SparseHashLaminateTraversal(lvl, pos, fbr.dirty, ()), ctx, mode, protos)
+    instantiate(ctx, SparseHashLaminateTraversal(lvl, pos, fbr.dirty, ()), mode, protos)
 end
 
-function instantiate(trv::SparseHashLaminateTraversal, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+function instantiate(ctx, trv::SparseHashLaminateTraversal, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos, fbr_dirty, coords) = (trv.lvl, trv.pos, trv.dirty, trv.coords)
     tag = lvl.ex
     TI = lvl.TI
@@ -464,7 +464,7 @@ function instantiate(trv::SparseHashLaminateTraversal, ctx, mode::Updater, subpr
         body = (ctx, ext) ->
             if length(coords) + 1 < lvl.N
                 Lookup(
-                    body = (ctx, i) -> instantiate(SparseHashLaminateTraversal(lvl, pos, fbr_dirty, (i, coords...)), ctx, mode, subprotos)
+                    body = (ctx, i) -> instantiate(ctx, SparseHashLaminateTraversal(lvl, pos, fbr_dirty, (i, coords...)), mode, subprotos)
                 )
             else
                 Lookup(
@@ -478,7 +478,7 @@ function instantiate(trv::SparseHashLaminateTraversal, ctx, mode::Updater, subpr
                             end
                             $dirty = false
                         end,
-                        body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.lvl, qos, dirty), ctx, mode, subprotos),
+                        body = (ctx) -> instantiate(ctx, VirtualHollowSubFiber(lvl.lvl, qos, dirty), mode, subprotos),
                         epilogue = quote
                             if $dirty
                                 $(fbr_dirty) = true

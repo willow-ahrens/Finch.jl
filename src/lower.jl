@@ -26,8 +26,8 @@ StaticHash() = StaticHash(Dict{Tuple{Any, DataType}, UInt}())
 (h::StaticHash)(x) = get!(h.counts, (x, typeof(x)), UInt(length(h.counts)))
 
 (ctx::AbstractCompiler)(root) = ctx(root, Stylize(root, ctx)(root))
-(ctx::AbstractCompiler)(root, style) = lower(root, ctx, style)
-#(ctx::AbstractCompiler)(root, style) = (println(); println(); display(root); display(style); lower(root, ctx, style))
+(ctx::AbstractCompiler)(root, style) = lower(ctx, root, style)
+#(ctx::AbstractCompiler)(root, style) = (println(); println(); display(root); display(style); lower(ctx, root, style))
 
 function open_scope(ctx::AbstractCompiler, prgm)
     ctx_2 = shallowcopy(ctx)
@@ -51,14 +51,14 @@ function cache!(ctx::AbstractCompiler, var, val)
     return cached(value(var, Any), literal(val))
 end
 
-resolve(node, ctx) = node
-function resolve(node::FinchNode, ctx::AbstractCompiler)
+resolve(ctx, node) = node
+function resolve(ctx::AbstractCompiler, node::FinchNode)
     if node.kind === virtual
         return node.val
     elseif node.kind === variable
-        return resolve(ctx.bindings[node], ctx)
+        return resolve(ctx, ctx.bindings[node])
     elseif node.kind === index
-        return resolve(ctx.bindings[node], ctx)
+        return resolve(ctx, ctx.bindings[node])
     else
         error("unimplemented $node")
     end
@@ -66,7 +66,7 @@ end
 
 (ctx::AbstractCompiler)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
 
-function lower(root, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, root, ::DefaultStyle)
     node = finch_leaf(root)
     if node.kind === virtual
         error("don't know how to lower $root")
@@ -74,7 +74,7 @@ function lower(root, ctx::AbstractCompiler, ::DefaultStyle)
     ctx(node)
 end
 
-function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, root::FinchNode, ::DefaultStyle)
     if root.kind === value
         return root.val
     elseif root.kind === index
@@ -142,7 +142,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         #arguably, the declare, freeze, or thaw nodes should never reach this case but we'll leave that alone for now
         quote end
     elseif root.kind === access
-        return lower_access(ctx, root, resolve(root.tns, ctx))
+        return lower_access(ctx, root, resolve(ctx, root.tns))
     elseif root.kind === call
         root = simplify(ctx, root)
         if root.kind === call 
@@ -263,7 +263,7 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
 
     bindings_2 = copy(ctx.bindings)
     for tns in setdiff(used_in_scope, decl_in_scope)
-        virtual_moveto(ctx, resolve(tns, ctx), device)
+        virtual_moveto(ctx, resolve(ctx, tns), device)
     end
 
     return quote
@@ -273,7 +273,7 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
                 contain(ctx_2, task=subtask) do ctx_3
                     bindings_2 = copy(ctx_3.bindings)
                     for tns in intersect(used_in_scope, decl_in_scope)
-                        virtual_moveto(ctx_3, resolve(tns, ctx_3), subtask)
+                        virtual_moveto(ctx_3, resolve(ctx_3, tns), subtask)
                     end
                     contain(ctx_3, bindings=bindings_2) do ctx_4
                         ctx_4(instantiate!(ctx_4, root_2))

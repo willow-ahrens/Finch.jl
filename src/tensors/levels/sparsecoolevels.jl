@@ -177,7 +177,7 @@ function virtualize(ctx, ex, ::Type{SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}}, tag=:
     prev_coord = map(n->freshen(ctx, sym, :_prev_coord_, n), 1:N)
     VirtualSparseCOOLevel(lvl_2, sym, N, TI, ptr, tbl, Lvl, shape, qos_fill, qos_stop, prev_pos)
 end
-function lower(lvl::VirtualSparseCOOLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualSparseCOOLevel, ::DefaultStyle)
     quote
         $SparseCOOLevel{$(lvl.N), $(lvl.TI)}(
             $(ctx(lvl.lvl)),
@@ -280,16 +280,16 @@ struct SparseCOOWalkTraversal
     stop
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, mode::Reader, protos)
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseCOOLevel}, mode::Reader, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     Tp = postype(lvl)
     start = value(:($(lvl.ptr)[$(ctx(pos))]), Tp)
     stop = value(:($(lvl.ptr)[$(ctx(pos)) + 1]), Tp)
 
-    instantiate(SparseCOOWalkTraversal(lvl, lvl.N, start, stop), ctx, mode, protos)
+    instantiate(ctx, SparseCOOWalkTraversal(lvl, lvl.N, start, stop), mode, protos)
 end
 
-function instantiate(trv::SparseCOOWalkTraversal, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate(ctx, trv::SparseCOOWalkTraversal, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, R, start, stop) = (trv.lvl, trv.R, trv.start, trv.stop)
     tag = lvl.ex
     TI = lvl.TI
@@ -328,7 +328,7 @@ function instantiate(trv::SparseCOOWalkTraversal, ctx, mode::Reader, subprotos, 
                                 stop =  (ctx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Fill(virtual_level_default(lvl)),
-                                    tail = instantiate(VirtualSubFiber(lvl.lvl, my_q), ctx, mode, subprotos),
+                                    tail = instantiate(ctx, VirtualSubFiber(lvl.lvl, my_q), mode, subprotos),
                                 ),
                                 next = (ctx, ext) -> :($my_q += $(Tp(1)))
                             )
@@ -349,7 +349,7 @@ function instantiate(trv::SparseCOOWalkTraversal, ctx, mode::Reader, subprotos, 
                                 stop = (ctx, ext) -> value(my_i),
                                 chunk = Spike(
                                     body = Fill(virtual_level_default(lvl)),
-                                    tail = instantiate(SparseCOOWalkTraversal(lvl, R - 1, value(my_q, Tp), value(my_q_step, Tp)), ctx, mode, subprotos),
+                                    tail = instantiate(ctx, SparseCOOWalkTraversal(lvl, R - 1, value(my_q, Tp), value(my_q_step, Tp)), mode, subprotos),
                                 ),
                                 next = (ctx, ext) -> :($my_q = $my_q_step)
                             )
@@ -371,9 +371,9 @@ struct SparseCOOExtrudeTraversal
     prev_coord
 end
 
-instantiate(fbr::VirtualSubFiber{VirtualSparseCOOLevel}, ctx, mode::Updater, protos) =
-    instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
-function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseCOOLevel}, ctx, mode::Updater, protos)
+instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseCOOLevel}, mode::Updater, protos) =
+    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), mode, protos)
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseCOOLevel}, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     TI = lvl.TI
@@ -393,7 +393,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseCOOLevel}, ctx, mod
                 end
             end)
         end,
-        body = (ctx) -> instantiate(SparseCOOExtrudeTraversal(lvl, qos, fbr.dirty, [], prev_coord), ctx, mode, protos),
+        body = (ctx) -> instantiate(ctx, SparseCOOExtrudeTraversal(lvl, qos, fbr.dirty, [], prev_coord), mode, protos),
         epilogue = quote
             $(lvl.ptr)[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
             $(if issafe(ctx.mode)
@@ -408,7 +408,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseCOOLevel}, ctx, mod
     )
 end
 
-function instantiate(trv::SparseCOOExtrudeTraversal, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+function instantiate(ctx, trv::SparseCOOExtrudeTraversal, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, qos, fbr_dirty, coords) = (trv.lvl, trv.qos, trv.fbr_dirty, trv.coords)
     TI = lvl.TI
     Tp = postype(lvl)
@@ -418,7 +418,7 @@ function instantiate(trv::SparseCOOExtrudeTraversal, ctx, mode::Updater, subprot
         body = (ctx, ext) -> 
             if length(coords) + 1 < lvl.N
                 Lookup(
-                    body = (ctx, i) -> instantiate(SparseCOOExtrudeTraversal(lvl, qos, fbr_dirty, (i, coords...), trv.prev_coord), ctx, mode, subprotos),
+                    body = (ctx, i) -> instantiate(ctx, SparseCOOExtrudeTraversal(lvl, qos, fbr_dirty, (i, coords...), trv.prev_coord), mode, subprotos),
                 )
             else
                 dirty = freshen(ctx.code, :dirty)
@@ -434,7 +434,7 @@ function instantiate(trv::SparseCOOExtrudeTraversal, ctx, mode::Updater, subprot
                             end
                             $dirty = false
                         end,
-                        body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), ctx, mode, subprotos),
+                        body = (ctx) -> instantiate(ctx, VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), mode, subprotos),
                         epilogue = begin
                             coords_2 = map(ctx, (idx, coords...))
                             quote

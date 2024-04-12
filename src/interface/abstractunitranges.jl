@@ -5,7 +5,7 @@
     eltype
 end
 
-function lower(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler,  ::DefaultStyle)
+function lower(ctx::AbstractCompiler, arr::VirtualAbstractUnitRange, ::DefaultStyle)
     return arr.ex
 end
 
@@ -22,7 +22,7 @@ end
 
 virtual_resize!(ctx::AbstractCompiler, arr::VirtualAbstractUnitRange, idx_dim) = arr
 
-function instantiate(arr::VirtualAbstractUnitRange, ctx, mode::Reader, subprotos, proto::typeof(defaultread))
+function instantiate(ctx, arr::VirtualAbstractUnitRange, mode::Reader, subprotos, proto::typeof(defaultread))
     Unfurled(
         arr = arr,
         body = Furlable(
@@ -37,7 +37,7 @@ function declare!(ctx::AbstractCompiler, arr::VirtualAbstractUnitRange, init)
     throw(FinchProtocolError("$(arr.arrtype) is not writeable"))
 end
 
-instantiate(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, mode::Updater, protos...) = 
+instantiate(ctx::AbstractCompiler, arr::VirtualAbstractUnitRange, mode::Updater, protos...) = 
     throw(FinchProtocolError("$(arr.arrtype) is not writeable"))
 
 FinchNotation.finch_leaf(x::VirtualAbstractUnitRange) = virtual(x)

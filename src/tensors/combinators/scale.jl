@@ -48,7 +48,7 @@ function virtual_call(ctx, ::typeof(scale), body, scale...)
 end
 unwrap(arr::VirtualScaleArray) = call(scale, unwrap(ctx, arr.body, var), arr.scale...)
 
-lower(tns::VirtualScaleArray, ctx::AbstractCompiler, ::DefaultStyle) = :(ScaleArray($(ctx(tns.body)), $(ctx(tns.scale))))
+lower(ctx::AbstractCompiler, tns::VirtualScaleArray, ::DefaultStyle) = :(ScaleArray($(ctx(tns.body)), $(ctx(tns.scale))))
 
 function virtual_size(ctx::AbstractCompiler, arr::VirtualScaleArray)
     map(zip(virtual_size(ctx, arr.body), arr.scale)) do (dim, scale)
@@ -64,8 +64,8 @@ end
 
 virtual_default(ctx::AbstractCompiler, arr::VirtualScaleArray) = virtual_default(ctx, arr.body)
 
-function instantiate(arr::VirtualScaleArray, ctx, mode, protos)
-    VirtualScaleArray(instantiate(arr.body, ctx, mode, protos), arr.scale)
+function instantiate(ctx, arr::VirtualScaleArray, mode, protos)
+    VirtualScaleArray(instantiate(ctx, arr.body, mode, protos), arr.scale)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualScaleArray) = ctx(node.body)
