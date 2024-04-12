@@ -60,8 +60,8 @@ end
 function virtual_size(ctx::AbstractCompiler, arr::VirtualProtocolizedArray)
     virtual_size(ctx, arr.body)
 end
-function virtual_resize!(arr::VirtualProtocolizedArray, ctx::AbstractCompiler, dim)
-    virtual_resize!(arr.body, ctx, dim)
+function virtual_resize!(ctx::AbstractCompiler, arr::VirtualProtocolizedArray, dim)
+    virtual_resize!(ctx, arr.body, dim)
 end
 
 function instantiate(arr::VirtualProtocolizedArray, ctx, mode, protos)

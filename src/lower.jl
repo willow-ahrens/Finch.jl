@@ -118,7 +118,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
                 ctx.modes[head.tns] = updater
             else
                 preamble = contain(ctx) do ctx_2
-                    ctx_2(instantiate!(head, ctx_2))
+                    ctx_2(instantiate!(ctx_2, head))
                 end
             end
 
@@ -276,7 +276,7 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
                         virtual_moveto(resolve(tns, ctx_3), ctx_3, subtask)
                     end
                     contain(ctx_3, bindings=bindings_2) do ctx_4
-                        ctx_4(instantiate!(root_2, ctx_4))
+                        ctx_4(instantiate!(ctx_4, root_2))
                     end
                 end
             end)

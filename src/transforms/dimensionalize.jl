@@ -81,7 +81,7 @@ function (ctx::DeclareDimensions)(node::FinchNode)
             end
             #TODO tns ignored here
             shape = map(resolvedim, shape)
-            tns = virtual_resize!(node.tns, ctx.ctx, shape...)
+            tns = virtual_resize!(ctx.ctx, node.tns, shape...)
             delete!(ctx.hints, node.tns)
         end
         node

@@ -90,8 +90,8 @@ function virtual_size(ctx::AbstractCompiler, arr::VirtualSwizzleArray)
     virtual_size(ctx, arr.body)[arr.dims]
 end
 
-function virtual_resize!(arr::VirtualSwizzleArray, ctx::AbstractCompiler, dims...)
-    virtual_resize!(arr.body, ctx, dims[invperm(arr.dims)]...)
+function virtual_resize!(ctx::AbstractCompiler, arr::VirtualSwizzleArray, dims...)
+    virtual_resize!(ctx, arr.body, dims[invperm(arr.dims)]...)
 end
 
 function instantiate(arr::VirtualSwizzleArray, ctx, mode, protos)

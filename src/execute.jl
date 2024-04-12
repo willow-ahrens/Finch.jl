@@ -14,12 +14,12 @@ issafe(::SafeFinch) = true
 issafe(::FastFinch) = false
 
 """
-    instantiate!(prgm, ctx)
+    instantiate!(ctx, prgm)
 
 A transformation to instantiate readers and updaters before executing an
 expression.
 """
-function instantiate!(prgm, ctx) 
+function instantiate!(ctx, prgm) 
     prgm = InstantiateTensors(ctx=ctx)(prgm)
     return prgm
 end
@@ -102,7 +102,7 @@ function lower_global(prgm, ctx)
                 prgm = concordize(prgm, ctx_2)
                 prgm = evaluate_partial(prgm, ctx_2)
                 prgm = simplify(prgm, ctx_2) #appears necessary
-                prgm = instantiate!(prgm, ctx_2)
+                prgm = instantiate!(ctx_2, prgm)
                 contain(ctx_2) do ctx_3
                     ctx_3(prgm)
                 end

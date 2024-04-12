@@ -55,11 +55,11 @@ function virtual_size(ctx::AbstractCompiler, arr::VirtualScaleArray)
         scaledim(dim, call(/, 1.0f0, scale))
     end
 end
-function virtual_resize!(arr::VirtualScaleArray, ctx::AbstractCompiler, dims...)
+function virtual_resize!(ctx::AbstractCompiler, arr::VirtualScaleArray, dims...)
     dims_2 = map(zip(dims, arr.scale)) do (dim, scale)
         scaledim(dim, scale)
     end
-    virtual_resize!(arr.body, ctx, dims_2...)
+    virtual_resize!(ctx, arr.body, dims_2...)
 end
 
 virtual_default(ctx::AbstractCompiler, arr::VirtualScaleArray) = virtual_default(ctx, arr.body)

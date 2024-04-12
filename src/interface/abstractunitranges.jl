@@ -20,7 +20,7 @@ function virtual_size(ctx::AbstractCompiler, arr::VirtualAbstractUnitRange)
     return [Extent(literal(1), value(:(length($(arr.ex))), Int)),]
 end
 
-virtual_resize!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, idx_dim) = arr
+virtual_resize!(ctx::AbstractCompiler, arr::VirtualAbstractUnitRange, idx_dim) = arr
 
 function instantiate(arr::VirtualAbstractUnitRange, ctx, mode::Reader, subprotos, proto::typeof(defaultread))
     Unfurled(

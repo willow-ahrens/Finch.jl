@@ -66,8 +66,8 @@ function virtual_size(ctx::AbstractCompiler, arr::VirtualToeplitzArray)
     dims = virtual_size(ctx, arr.body)
     return (dims[1:arr.dim - 1]..., dimless, dimless, dims[arr.dim + 1:end]...)
 end
-function virtual_resize!(arr::VirtualToeplitzArray, ctx::AbstractCompiler, dims...)
-    virtual_resize!(arr.body, ctx, dims[1:arr.dim - 1]..., dimless, dims[arr.dim + 2:end]...)
+function virtual_resize!(ctx::AbstractCompiler, arr::VirtualToeplitzArray, dims...)
+    virtual_resize!(ctx, arr.body, dims[1:arr.dim - 1]..., dimless, dims[arr.dim + 2:end]...)
 end
 
 function instantiate(arr::VirtualToeplitzArray, ctx, mode, protos)

@@ -64,8 +64,8 @@ function virtual_size(ctx::AbstractCompiler, arr::VirtualPermissiveArray)
     ifelse.(arr.dims, (dimless,), virtual_size(ctx, arr.body))
 end
 
-function virtual_resize!(arr::VirtualPermissiveArray, ctx::AbstractCompiler, dims...)
-    virtual_resize!(arr.body, ctx, ifelse.(arr.dims, virtual_size(ctx, arr.body), dim))
+function virtual_resize!(ctx::AbstractCompiler, arr::VirtualPermissiveArray, dims...)
+    virtual_resize!(ctx, arr.body, ifelse.(arr.dims, virtual_size(ctx, arr.body), dim))
 end
 
 virtual_default(ctx::AbstractCompiler, arr::VirtualPermissiveArray) = virtual_default(ctx, arr.body)

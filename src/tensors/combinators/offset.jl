@@ -54,11 +54,11 @@ function virtual_size(ctx::AbstractCompiler, arr::VirtualOffsetArray)
         shiftdim(dim, call(-, delta))
     end
 end
-function virtual_resize!(arr::VirtualOffsetArray, ctx::AbstractCompiler, dims...)
+function virtual_resize!(ctx::AbstractCompiler, arr::VirtualOffsetArray, dims...)
     dims_2 = map(zip(dims, arr.delta)) do (dim, delta)
         shiftdim(dim, delta)
     end
-    virtual_resize!(arr.body, ctx, dims_2...)
+    virtual_resize!(ctx, arr.body, dims_2...)
 end
 
 virtual_default(ctx::AbstractCompiler, arr::VirtualOffsetArray) = virtual_default(ctx, arr.body)

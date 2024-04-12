@@ -61,8 +61,8 @@ lower(tns::VirtualWindowedArray, ctx::AbstractCompiler, ::DefaultStyle) = :(Wind
 function virtual_size(ctx::AbstractCompiler, arr::VirtualWindowedArray)
     something.(arr.dims, virtual_size(ctx, arr.body))
 end
-function virtual_resize!(arr::VirtualWindowedArray, ctx::AbstractCompiler, dims...)
-    virtual_resize!(arr.body, ctx, something.(arr.dims, dims)...)
+function virtual_resize!(ctx::AbstractCompiler, arr::VirtualWindowedArray, dims...)
+    virtual_resize!(ctx, arr.body, something.(arr.dims, dims)...)
 end
 
 virtual_default(ctx::AbstractCompiler, arr::VirtualWindowedArray) = virtual_default(ctx, arr.body)

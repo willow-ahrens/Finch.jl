@@ -110,7 +110,7 @@ FinchNotation.finch_leaf(x::VirtualSubFiber) = virtual(x)
 @inline default(::Type{<:AbstractFiber{Lvl}}) where {Lvl} = level_default(Lvl)
 
 virtual_size(ctx, tns::AbstractVirtualFiber) = virtual_level_size(tns.lvl, ctx)
-function virtual_resize!(tns::AbstractVirtualFiber, ctx, dims...)
+function virtual_resize!(ctx, tns::AbstractVirtualFiber, dims...)
     tns.lvl = virtual_level_resize!(tns.lvl, ctx, dims...)
     tns
 end

@@ -68,7 +68,7 @@ Return the element type of the virtual tensor `arr`.
 """
 function virtual_eltype end
 
-function virtual_resize!(tns, ctx, dims...)
+function virtual_resize!(ctx, tns, dims...)
     for (dim, ref) in zip(dims, virtual_size(ctx, tns))
         if dim !== dimless && ref !== dimless #TODO this should be a function like checkdim or something haha
             push!(ctx.code.preamble, quote
@@ -89,7 +89,7 @@ function similar in spirit to `Base.axes`.
 function virtual_size end
 
 """
-    virtual_resize!(tns, ctx, dims...)
+    virtual_resize!(ctx, tns, dims...)
 
 Resize `tns` in the context `ctx`. This is a
 function similar in spirit to `Base.resize!`.
