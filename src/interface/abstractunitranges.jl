@@ -16,7 +16,7 @@ function virtualize(ctx, ex, arrtype::Type{<:AbstractUnitRange{T}}, tag=:tns) wh
     VirtualAbstractUnitRange(sym, target, arrtype, T)
 end
 
-function virtual_size(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler)
+function virtual_size(ctx::AbstractCompiler, arr::VirtualAbstractUnitRange)
     return [Extent(literal(1), value(:(length($(arr.ex))), Int)),]
 end
 
@@ -42,5 +42,5 @@ instantiate(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, mode::Updater,
 
 FinchNotation.finch_leaf(x::VirtualAbstractUnitRange) = virtual(x)
 
-virtual_default(::VirtualAbstractUnitRange, ctx) = 0
-virtual_eltype(tns::VirtualAbstractUnitRange, ctx) = tns.eltype
+virtual_default(ctx, ::VirtualAbstractUnitRange) = 0
+virtual_eltype(ctx, tns::VirtualAbstractUnitRange) = tns.eltype

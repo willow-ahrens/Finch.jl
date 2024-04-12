@@ -49,8 +49,8 @@ unwrap(ctx, arr::VirtualOffsetArray, var) = call(offset, unwrap(ctx, arr.body, v
 
 lower(tns::VirtualOffsetArray, ctx::AbstractCompiler, ::DefaultStyle) = :(OffsetArray($(ctx(tns.body)), $(ctx(tns.delta))))
 
-function virtual_size(arr::VirtualOffsetArray, ctx::AbstractCompiler)
-    map(zip(virtual_size(arr.body, ctx), arr.delta)) do (dim, delta)
+function virtual_size(ctx::AbstractCompiler, arr::VirtualOffsetArray)
+    map(zip(virtual_size(ctx, arr.body), arr.delta)) do (dim, delta)
         shiftdim(dim, call(-, delta))
     end
 end
@@ -61,7 +61,7 @@ function virtual_resize!(arr::VirtualOffsetArray, ctx::AbstractCompiler, dims...
     virtual_resize!(arr.body, ctx, dims_2...)
 end
 
-virtual_default(arr::VirtualOffsetArray, ctx::AbstractCompiler) = virtual_default(arr.body, ctx)
+virtual_default(ctx::AbstractCompiler, arr::VirtualOffsetArray) = virtual_default(ctx, arr.body)
 
 function instantiate(arr::VirtualOffsetArray, ctx, mode, protos)
     VirtualOffsetArray(instantiate(arr.body, ctx, mode, protos), arr.delta)

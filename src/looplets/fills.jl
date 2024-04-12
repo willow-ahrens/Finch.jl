@@ -4,7 +4,7 @@ struct Fill
 end
 
 FinchNotation.finch_leaf(x::Fill) = virtual(x)
-virtual_default(f::Fill, ctx) = f.body
+virtual_default(ctx, f::Fill) = f.body
 
 struct FillStyle end
 

@@ -15,7 +15,7 @@ end
 
 virtualize(ctx, ex, ::Type{DiagMask}) = diagmask
 FinchNotation.finch_leaf(x::DiagMask) = virtual(x)
-Finch.virtual_size(::DiagMask, ctx) = (dimless, dimless)
+Finch.virtual_size(ctx, ::DiagMask) = (dimless, dimless)
 
 function instantiate(arr::DiagMask, ctx, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
     Unfurled(
@@ -57,7 +57,7 @@ end
 
 virtualize(ctx, ex, ::Type{UpTriMask}) = uptrimask
 FinchNotation.finch_leaf(x::UpTriMask) = virtual(x)
-Finch.virtual_size(::UpTriMask, ctx) = (dimless, dimless)
+Finch.virtual_size(ctx, ::UpTriMask) = (dimless, dimless)
 
 function instantiate(arr::UpTriMask, ctx, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
     Unfurled(
@@ -97,7 +97,7 @@ end
 
 virtualize(ctx, ex, ::Type{LoTriMask}) = lotrimask
 FinchNotation.finch_leaf(x::LoTriMask) = virtual(x)
-Finch.virtual_size(::LoTriMask, ctx) = (dimless, dimless)
+Finch.virtual_size(ctx, ::LoTriMask) = (dimless, dimless)
 
 function instantiate(arr::LoTriMask, ctx, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
     Unfurled(
@@ -137,7 +137,7 @@ end
 
 virtualize(ctx, ex, ::Type{BandMask}) = bandmask
 FinchNotation.finch_leaf(x::BandMask) = virtual(x)
-Finch.virtual_size(::BandMask, ctx) = (dimless, dimless, dimless)
+Finch.virtual_size(ctx, ::BandMask) = (dimless, dimless, dimless)
 
 function instantiate(arr::BandMask, ctx, mode, subprotos, ::typeof(defaultread), ::typeof(defaultread), ::typeof(defaultread))
     Unfurled(
@@ -186,7 +186,7 @@ function virtualize(ctx, ex, ::Type{SplitMask})
 end
 
 FinchNotation.finch_leaf(x::VirtualSplitMask) = virtual(x)
-Finch.virtual_size(arr::VirtualSplitMask, ctx) = (dimless, Extent(literal(1), arr.P))
+Finch.virtual_size(ctx, arr::VirtualSplitMask) = (dimless, Extent(literal(1), arr.P))
 
 function instantiate(arr::VirtualSplitMask, ctx, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
     Unfurled(
@@ -250,7 +250,7 @@ function Finch.virtual_call(::typeof(chunkmask), ctx, b, dim)
 end
 
 FinchNotation.finch_leaf(x::VirtualChunkMask) = virtual(x)
-Finch.virtual_size(arr::VirtualChunkMask, ctx) = (arr.dim, Extent(literal(1), call(cld, measure(arr.dim), arr.b)))
+Finch.virtual_size(ctx, arr::VirtualChunkMask) = (arr.dim, Extent(literal(1), call(cld, measure(arr.dim), arr.b)))
 
 function instantiate(arr::VirtualChunkMask, ctx, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
     Unfurled(

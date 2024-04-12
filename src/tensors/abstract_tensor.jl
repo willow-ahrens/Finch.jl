@@ -7,7 +7,7 @@ abstract type AbstractVirtualTensor end
 Declare the read-only virtual tensor `tns` in the context `ctx` with a starting value of `init` and return it.
 Afterwards the tensor is update-only.
 """
-declare!(tns, ctx, init) = @assert virtual_default(tns, ctx) == init
+declare!(tns, ctx, init) = @assert virtual_default(ctx, tns) == init
 
 """
     instantiate(tns, ctx, mode, protos)
@@ -69,7 +69,7 @@ Return the element type of the virtual tensor `arr`.
 function virtual_eltype end
 
 function virtual_resize!(tns, ctx, dims...)
-    for (dim, ref) in zip(dims, virtual_size(tns, ctx))
+    for (dim, ref) in zip(dims, virtual_size(ctx, tns))
         if dim !== dimless && ref !== dimless #TODO this should be a function like checkdim or something haha
             push!(ctx.code.preamble, quote
                 $(ctx(getstart(dim))) == $(ctx(getstart(ref))) || throw(DimensionMismatch("mismatched dimension start"))
@@ -81,7 +81,7 @@ function virtual_resize!(tns, ctx, dims...)
 end
 
 """
-    virtual_size(tns, ctx)
+    virtual_size(ctx, tns)
 
 Return a tuple of the dimensions of `tns` in the context `ctx`. This is a
 function similar in spirit to `Base.axes`.

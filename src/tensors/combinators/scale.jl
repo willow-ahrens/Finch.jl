@@ -50,8 +50,8 @@ unwrap(arr::VirtualScaleArray) = call(scale, unwrap(ctx, arr.body, var), arr.sca
 
 lower(tns::VirtualScaleArray, ctx::AbstractCompiler, ::DefaultStyle) = :(ScaleArray($(ctx(tns.body)), $(ctx(tns.scale))))
 
-function virtual_size(arr::VirtualScaleArray, ctx::AbstractCompiler)
-    map(zip(virtual_size(arr.body, ctx), arr.scale)) do (dim, scale)
+function virtual_size(ctx::AbstractCompiler, arr::VirtualScaleArray)
+    map(zip(virtual_size(ctx, arr.body), arr.scale)) do (dim, scale)
         scaledim(dim, call(/, 1.0f0, scale))
     end
 end
@@ -62,7 +62,7 @@ function virtual_resize!(arr::VirtualScaleArray, ctx::AbstractCompiler, dims...)
     virtual_resize!(arr.body, ctx, dims_2...)
 end
 
-virtual_default(arr::VirtualScaleArray, ctx::AbstractCompiler) = virtual_default(arr.body, ctx)
+virtual_default(ctx::AbstractCompiler, arr::VirtualScaleArray) = virtual_default(ctx, arr.body)
 
 function instantiate(arr::VirtualScaleArray, ctx, mode, protos)
     VirtualScaleArray(instantiate(arr.body, ctx, mode, protos), arr.scale)

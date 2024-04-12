@@ -1,7 +1,7 @@
 
-virtual_size(tns::FinchNode, ctx) = virtual_size(resolve(tns, ctx), ctx)
+virtual_size(ctx, tns::FinchNode) = virtual_size(ctx, resolve(tns, ctx))
 virtual_resize!(tns::FinchNode, ctx, dims...) = virtual_resize!(resolve(tns, ctx), ctx, dims...)
-virtual_default(tns::FinchNode, ctx) = virtual_default(resolve(tns, ctx), ctx)
+virtual_default(ctx, tns::FinchNode) = virtual_default(ctx, resolve(tns, ctx))
 
 function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::FinchNode)
     stylize_access(node, ctx, resolve(tns, ctx.ctx))

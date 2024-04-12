@@ -58,14 +58,14 @@ unwrap(ctx, arr::VirtualWindowedArray, var) = call(window, unwrap(ctx, arr.body,
 
 lower(tns::VirtualWindowedArray, ctx::AbstractCompiler, ::DefaultStyle) = :(WindowedArray($(ctx(tns.body)), $(tns.dims)))
 
-function virtual_size(arr::VirtualWindowedArray, ctx::AbstractCompiler)
-    something.(arr.dims, virtual_size(arr.body, ctx))
+function virtual_size(ctx::AbstractCompiler, arr::VirtualWindowedArray)
+    something.(arr.dims, virtual_size(ctx, arr.body))
 end
 function virtual_resize!(arr::VirtualWindowedArray, ctx::AbstractCompiler, dims...)
     virtual_resize!(arr.body, ctx, something.(arr.dims, dims)...)
 end
 
-virtual_default(arr::VirtualWindowedArray, ctx::AbstractCompiler) = virtual_default(arr.body, ctx)
+virtual_default(ctx::AbstractCompiler, arr::VirtualWindowedArray) = virtual_default(ctx, arr.body)
 
 function instantiate(arr::VirtualWindowedArray, ctx, mode, protos)
     VirtualWindowedArray(instantiate(arr.body, ctx, mode, protos), arr.dims)
@@ -152,7 +152,7 @@ getroot(tns::VirtualWindowedArray) = getroot(tns.body)
 
 function unfurl(tns::VirtualWindowedArray, ctx, ext, mode, protos...)
     if tns.dims[end] !== nothing
-        dims = virtual_size(tns.body, ctx)
+        dims = virtual_size(ctx, tns.body)
         tns_2 = unfurl(tns.body, ctx, dims[end], mode, protos...)
         truncate(tns_2, ctx, dims[end], ext)
     else

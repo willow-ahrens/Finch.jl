@@ -57,8 +57,8 @@ function lower(tns::VirtualProtocolizedArray, ctx::AbstractCompiler, ::DefaultSt
     :(ProtocolizedArray($(ctx(tns.body)), $(ctx(tns.protos))))
 end
 
-function virtual_size(arr::VirtualProtocolizedArray, ctx::AbstractCompiler)
-    virtual_size(arr.body, ctx)
+function virtual_size(ctx::AbstractCompiler, arr::VirtualProtocolizedArray)
+    virtual_size(ctx, arr.body)
 end
 function virtual_resize!(arr::VirtualProtocolizedArray, ctx::AbstractCompiler, dim)
     virtual_resize!(arr.body, ctx, dim)

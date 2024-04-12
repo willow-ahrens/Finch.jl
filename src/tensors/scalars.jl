@@ -35,9 +35,9 @@ function virtualize(ctx, ex, ::Type{Scalar{D, Tv}}, tag) where {D, Tv}
     VirtualScalar(sym, Tv, D, tag, val)
 end
 
-virtual_size(::VirtualScalar, ctx) = ()
+virtual_size(ctx, ::VirtualScalar) = ()
 
-virtual_default(tns::VirtualScalar, ctx) = tns.D
+virtual_default(ctx, tns::VirtualScalar) = tns.D
 virtual_eltype(tns::VirtualScalar, ctx) = tns.Tv
 
 FinchNotation.finch_leaf(x::VirtualScalar) = virtual(x)
@@ -67,7 +67,7 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualScalar)
 end
 
 function short_circuit_cases(tns::VirtualScalar, ctx, op)
-    if isannihilator(ctx, virtual_default(tns, ctx), op)
+    if isannihilator(ctx, virtual_default(ctx, tns), op)
         [:(tns.val == 0) => Simplify(Fill(Null()))]
     else
         []
@@ -116,9 +116,9 @@ function virtualize(ctx, ex, ::Type{SparseScalar{D, Tv}}, tag) where {D, Tv}
     VirtualSparseScalar(sym, Tv, D, tag, val, dirty)
 end
 
-virtual_size(::VirtualSparseScalar, ctx) = ()
+virtual_size(ctx, ::VirtualSparseScalar) = ()
 
-virtual_default(tns::VirtualSparseScalar, ctx) = tns.D
+virtual_default(ctx, tns::VirtualSparseScalar) = tns.D
 virtual_eltype(tns::VirtualSparseScalar, ctx) = tns.Tv
 
 function declare!(tns::VirtualSparseScalar, ctx, init)
@@ -195,9 +195,9 @@ function virtualize(ctx, ex, ::Type{ShortCircuitScalar{D, Tv}}, tag) where {D, T
     VirtualShortCircuitScalar(sym, Tv, D, tag, val)
 end
 
-virtual_size(::VirtualShortCircuitScalar, ctx) = ()
+virtual_size(ctx, ::VirtualShortCircuitScalar) = ()
 
-virtual_default(tns::VirtualShortCircuitScalar, ctx) = tns.D
+virtual_default(ctx, tns::VirtualShortCircuitScalar) = tns.D
 virtual_eltype(tns::VirtualShortCircuitScalar, ctx) = tns.Tv
 
 FinchNotation.finch_leaf(x::VirtualShortCircuitScalar) = virtual(x)
@@ -272,9 +272,9 @@ function virtualize(ctx, ex, ::Type{SparseShortCircuitScalar{D, Tv}}, tag) where
     VirtualSparseShortCircuitScalar(sym, Tv, D, tag, val, dirty)
 end
 
-virtual_size(::VirtualSparseShortCircuitScalar, ctx) = ()
+virtual_size(ctx, ::VirtualSparseShortCircuitScalar) = ()
 
-virtual_default(tns::VirtualSparseShortCircuitScalar, ctx) = tns.D
+virtual_default(ctx, tns::VirtualSparseShortCircuitScalar) = tns.D
 virtual_eltype(tns::VirtualSparseShortCircuitScalar, ctx) = tns.Tv
 
 function declare!(tns::VirtualSparseShortCircuitScalar, ctx, init)

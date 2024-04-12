@@ -62,8 +62,8 @@ unwrap(ctx, arr::VirtualToeplitzArray, var) = call(toeplitz, unwrap(ctx, arr.bod
 
 lower(tns::VirtualToeplitzArray, ctx::AbstractCompiler, ::DefaultStyle) = :(ToeplitzArray($(ctx(tns.body)), $(tns.dim)))
 
-function virtual_size(arr::VirtualToeplitzArray, ctx::AbstractCompiler)
-    dims = virtual_size(arr.body, ctx)
+function virtual_size(ctx::AbstractCompiler, arr::VirtualToeplitzArray)
+    dims = virtual_size(ctx, arr.body)
     return (dims[1:arr.dim - 1]..., dimless, dimless, dims[arr.dim + 1:end]...)
 end
 function virtual_resize!(arr::VirtualToeplitzArray, ctx::AbstractCompiler, dims...)
@@ -83,7 +83,7 @@ end
 #reflect that the child lost a dimension and perhaps update this wrapper
 #accordingly.
 function popdim(node::VirtualToeplitzArray, ctx::AbstractCompiler)
-    @assert length(virtual_size(node, ctx)) >= node.dim + 1
+    @assert length(virtual_size(ctx, node)) >= node.dim + 1
     return node
 end
 
@@ -155,7 +155,7 @@ end
 getroot(tns::VirtualToeplitzArray) = getroot(tns.body)
 
 function unfurl(tns::VirtualToeplitzArray, ctx, ext, mode, protos...)
-    if length(virtual_size(tns, ctx)) == tns.dim + 1
+    if length(virtual_size(ctx, tns)) == tns.dim + 1
         Unfurled(tns,
             Lookup(
                 body = (ctx, idx) -> VirtualPermissiveArray(VirtualOffsetArray(tns.body, ([literal(0) for _ in 1:tns.dim - 1]..., idx)), ([false for _ in 1:tns.dim - 1]..., true)), 

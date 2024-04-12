@@ -57,7 +57,7 @@ end
     Ti
 end
 
-function Finch.virtual_size(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler)
+function Finch.virtual_size(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC)
     return [Extent(literal(1),value(:($(arr.ex).m), arr.Ti)), Extent(literal(1), value(:($(arr.ex).n), arr.Ti))]
 end
 
@@ -145,8 +145,8 @@ end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseMatrixCSC) = virtual(x)
 
-Finch.virtual_default(arr::VirtualSparseMatrixCSC, ctx) = zero(arr.Tv)
-Finch.virtual_eltype(tns::VirtualSparseMatrixCSC, ctx) = tns.Tv
+Finch.virtual_default(ctx, arr::VirtualSparseMatrixCSC) = zero(arr.Tv)
+Finch.virtual_eltype(ctx, tns::VirtualSparseMatrixCSC) = tns.Tv
 
 """
     SparseVector(arr::Union{Tensor, SwizzleArray})
@@ -168,7 +168,7 @@ end
     Ti
 end
 
-function Finch.virtual_size(arr::VirtualSparseVector, ctx::AbstractCompiler)
+function Finch.virtual_size(ctx::AbstractCompiler, arr::VirtualSparseVector)
     return Any[Extent(literal(1),value(:($(arr.ex).n), arr.Ti))]
 end
 
@@ -252,8 +252,8 @@ end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseVector) = virtual(x)
 
-Finch.virtual_default(arr::VirtualSparseVector, ctx) = zero(arr.Tv)
-Finch.virtual_eltype(tns::VirtualSparseVector, ctx) = tns.Tv
+Finch.virtual_default(ctx, arr::VirtualSparseVector) = zero(arr.Tv)
+Finch.virtual_eltype(ctx, tns::VirtualSparseVector) = tns.Tv
 
 SparseArrays.nnz(fbr::Tensor) = countstored(fbr)
 

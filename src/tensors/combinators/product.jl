@@ -59,12 +59,12 @@ unwrap(ctx, arr::VirtualProductArray, var) = call(products, unwrap(ctx, arr.body
 
 lower(tns::VirtualProductArray, ctx::AbstractCompiler, ::DefaultStyle) = :(ProductArray($(ctx(tns.body)), $(tns.dim)))
 
-#virtual_size(arr::Fill, ctx::AbstractCompiler) = (dimless,) # this is needed for multidimensional convolution..
-#virtual_size(arr::Simplify, ctx::AbstractCompiler) = (dimless,)
-#virtual_size(arr::Furlable, ctx::AbstractCompiler) = (dimless,)
+#virtual_size(ctx::AbstractCompiler, arr::Fill) = (dimless,) # this is needed for multidimensional convolution..
+#virtual_size(ctx::AbstractCompiler, arr::Simplify) = (dimless,)
+#virtual_size(ctx::AbstractCompiler, arr::Furlable) = (dimless,)
 
-function virtual_size(arr::VirtualProductArray, ctx::AbstractCompiler)
-    dims = virtual_size(arr.body, ctx)
+function virtual_size(ctx::AbstractCompiler, arr::VirtualProductArray)
+    dims = virtual_size(ctx, arr.body)
     return (dims[1:arr.dim - 1]..., dimless, dimless, dims[arr.dim + 1:end]...)
 end
 function virtual_resize!(arr::VirtualProductArray, ctx::AbstractCompiler, dims...)
@@ -84,7 +84,7 @@ function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::VirtualProd
 end
 
 function popdim(node::VirtualProductArray, ctx)
-    if length(virtual_size(node, ctx)) == node.dim
+    if length(virtual_size(ctx, node)) == node.dim
         return node.body
     else
         return node
@@ -149,7 +149,7 @@ jumper_seek(node::VirtualProductArray, ctx, ext) = jumper_seek(node.body, ctx, e
 getroot(tns::VirtualProductArray) = getroot(tns.body)
 
 function unfurl(tns::VirtualProductArray, ctx, ext, mode, protos...)
-    if length(virtual_size(tns, ctx)) == tns.dim + 1
+    if length(virtual_size(ctx, tns)) == tns.dim + 1
         Unfurled(tns,
             Lookup(
                 body = (ctx, idx) -> VirtualPermissiveArray(VirtualScaleArray(tns.body, ([literal(1) for _ in 1:tns.dim - 1]..., idx)), ([false for _ in 1:tns.dim - 1]..., true)), 

@@ -5,7 +5,7 @@
     shape
 end
 
-function virtual_size(arr::VirtualAbstractArray, ctx::AbstractCompiler)
+function virtual_size(ctx::AbstractCompiler, arr::VirtualAbstractArray)
     return arr.shape
 end
 
@@ -63,8 +63,8 @@ end
 
 FinchNotation.finch_leaf(x::VirtualAbstractArray) = virtual(x)
 
-virtual_default(::VirtualAbstractArray, ctx) = 0
-virtual_eltype(tns::VirtualAbstractArray, ctx) = tns.eltype
+virtual_default(ctx, ::VirtualAbstractArray) = 0
+virtual_eltype(ctx, tns::VirtualAbstractArray) = tns.eltype
 
 function virtual_moveto(vec::VirtualAbstractArray, ctx, device)
     ex = freshen(ctx.code, vec.ex)

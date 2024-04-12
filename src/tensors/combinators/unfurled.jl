@@ -27,9 +27,9 @@ Base.summary(io::IO, ex::Unfurled) = print(io, "Unfurled($(summary(ex.arr)), $(e
 
 FinchNotation.finch_leaf(x::Unfurled) = virtual(x)
 
-virtual_size(tns::Unfurled, ctx) = virtual_size(tns.arr, ctx)[1 : end - tns.ndims]
+virtual_size(ctx, tns::Unfurled) = virtual_size(ctx, tns.arr)[1 : end - tns.ndims]
 virtual_resize!(tns::Unfurled, ctx, dims...) = virtual_resize!(tns.arr, ctx, dims...) # TODO SHOULD NOT HAPPEN BREAKS LIFECYCLES
-virtual_default(tns::Unfurled, ctx) = virtual_default(tns.arr, ctx)
+virtual_default(ctx, tns::Unfurled) = virtual_default(ctx, tns.arr)
 
 instantiate(tns::Unfurled, ctx, mode, protos) = tns
 
@@ -41,7 +41,7 @@ end
 function popdim(node::Unfurled, ctx)
     #I think this is an equivalent form, but it doesn't pop the unfurled node
     #from scalars. I'm not sure if that's good or bad.
-    @assert node.ndims + 1 <= length(virtual_size(node.arr, ctx))
+    @assert node.ndims + 1 <= length(virtual_size(ctx, node.arr))
     return Unfurled(node.arr, node.ndims + 1, node.body)
 end
 

@@ -57,7 +57,7 @@ virtual_call(f, ctx, a...) = nothing
 
 function virtual_call(::typeof(default), ctx, a) 
     if haskey(ctx.bindings, getroot(a))
-        return virtual_default(a, ctx)
+        return virtual_default(ctx, a)
     end
 end
 
