@@ -76,14 +76,13 @@ dropdefaults!(dst::Tensor, src) = dropdefaults_helper!(dst, src)
     T = eltype(dst)
     d = default(dst)
     return quote
-        tmp = Scalar{$d, $T}()
         @finch begin
             dst .= $(default(dst))
             $(Expr(:for, exts, quote
-                tmp .= $(default(dst))
-                tmp[] = src[$(idxs...)]
-                if !isequal(tmp[], $d)
-                    dst[$(idxs...)] = tmp[]
+                let tmp = src[$(idxs...)]
+                    if !isequal(tmp, $d)
+                        dst[$(idxs...)] = tmp
+                    end
                 end
             end))
         end
