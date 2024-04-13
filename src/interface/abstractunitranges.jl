@@ -5,24 +5,24 @@
     eltype
 end
 
-function lower(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler,  ::DefaultStyle)
+function lower(ctx::AbstractCompiler, arr::VirtualAbstractUnitRange, ::DefaultStyle)
     return arr.ex
 end
 
-function virtualize(ex, arrtype::Type{<:AbstractUnitRange{T}}, ctx, tag=:tns) where {T}
+function virtualize(ctx, ex, arrtype::Type{<:AbstractUnitRange{T}}, tag=:tns) where {T}
     sym = freshen(ctx, tag)
     push!(ctx.preamble, :($sym = $ex))
     target = Extent(value(:(first($sym)), T), value(:(last($sym)), T))
     VirtualAbstractUnitRange(sym, target, arrtype, T)
 end
 
-function virtual_size(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler)
+function virtual_size(ctx::AbstractCompiler, arr::VirtualAbstractUnitRange)
     return [Extent(literal(1), value(:(length($(arr.ex))), Int)),]
 end
 
-virtual_resize!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, idx_dim) = arr
+virtual_resize!(ctx::AbstractCompiler, arr::VirtualAbstractUnitRange, idx_dim) = arr
 
-function instantiate(arr::VirtualAbstractUnitRange, ctx, mode::Reader, subprotos, proto::typeof(defaultread))
+function instantiate(ctx, arr::VirtualAbstractUnitRange, mode::Reader, subprotos, proto::typeof(defaultread))
     Unfurled(
         arr = arr,
         body = Furlable(
@@ -33,14 +33,14 @@ function instantiate(arr::VirtualAbstractUnitRange, ctx, mode::Reader, subprotos
     )
 end
 
-function declare!(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, init)
+function declare!(ctx::AbstractCompiler, arr::VirtualAbstractUnitRange, init)
     throw(FinchProtocolError("$(arr.arrtype) is not writeable"))
 end
 
-instantiate(arr::VirtualAbstractUnitRange, ctx::AbstractCompiler, mode::Updater, protos...) = 
+instantiate(ctx::AbstractCompiler, arr::VirtualAbstractUnitRange, mode::Updater, protos...) = 
     throw(FinchProtocolError("$(arr.arrtype) is not writeable"))
 
 FinchNotation.finch_leaf(x::VirtualAbstractUnitRange) = virtual(x)
 
-virtual_default(::VirtualAbstractUnitRange, ctx) = 0
-virtual_eltype(tns::VirtualAbstractUnitRange, ctx) = tns.eltype
+virtual_default(ctx, ::VirtualAbstractUnitRange) = 0
+virtual_eltype(ctx, tns::VirtualAbstractUnitRange) = tns.eltype

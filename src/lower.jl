@@ -25,11 +25,11 @@ StaticHash() = StaticHash(Dict{Tuple{Any, DataType}, UInt}())
 
 (h::StaticHash)(x) = get!(h.counts, (x, typeof(x)), UInt(length(h.counts)))
 
-(ctx::AbstractCompiler)(root) = ctx(root, Stylize(root, ctx)(root))
-(ctx::AbstractCompiler)(root, style) = lower(root, ctx, style)
-#(ctx::AbstractCompiler)(root, style) = (println(); println(); display(root); display(style); lower(root, ctx, style))
+(ctx::AbstractCompiler)(root) = ctx(root, Stylize(ctx, root)(root))
+(ctx::AbstractCompiler)(root, style) = lower(ctx, root, style)
+#(ctx::AbstractCompiler)(root, style) = (println(); println(); display(root); display(style); lower(ctx, root, style))
 
-function open_scope(prgm, ctx::AbstractCompiler)
+function open_scope(ctx::AbstractCompiler, prgm)
     ctx_2 = shallowcopy(ctx)
     ctx_2.scope = Set()
     res = ctx_2(prgm)
@@ -44,21 +44,21 @@ function cache!(ctx::AbstractCompiler, var, val)
     val = finch_leaf(val)
     isconstant(val) && return val
     var = freshen(ctx.code,var)
-    val = simplify(val, ctx)
+    val = simplify(ctx, val)
     push!(ctx.code.preamble, quote
         $var = $(contain(ctx_2 -> ctx_2(val), ctx))
     end)
     return cached(value(var, Any), literal(val))
 end
 
-resolve(node, ctx) = node
-function resolve(node::FinchNode, ctx::AbstractCompiler)
+resolve(ctx, node) = node
+function resolve(ctx::AbstractCompiler, node::FinchNode)
     if node.kind === virtual
         return node.val
     elseif node.kind === variable
-        return resolve(ctx.bindings[node], ctx)
+        return resolve(ctx, ctx.bindings[node])
     elseif node.kind === index
-        return resolve(ctx.bindings[node], ctx)
+        return resolve(ctx, ctx.bindings[node])
     else
         error("unimplemented $node")
     end
@@ -66,7 +66,7 @@ end
 
 (ctx::AbstractCompiler)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
 
-function lower(root, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, root, ::DefaultStyle)
     node = finch_leaf(root)
     if node.kind === virtual
         error("don't know how to lower $root")
@@ -74,7 +74,7 @@ function lower(root, ctx::AbstractCompiler, ::DefaultStyle)
     ctx(node)
 end
 
-function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, root::FinchNode, ::DefaultStyle)
     if root.kind === value
         return root.val
     elseif root.kind === index
@@ -105,20 +105,20 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
             elseif head.kind === declare
                 @assert head.tns.kind === variable
                 @assert get(ctx.modes, head.tns, reader) === reader
-                ctx.bindings[head.tns] = declare!(ctx.bindings[head.tns], ctx, head.init) #TODO should ctx.bindings be scoped?
+                ctx.bindings[head.tns] = declare!(ctx, ctx.bindings[head.tns], head.init) #TODO should ctx.bindings be scoped?
                 push!(ctx.scope, head.tns)
                 ctx.modes[head.tns] = updater
             elseif head.kind === freeze
                 @assert ctx.modes[head.tns] === updater
-                ctx.bindings[head.tns] = freeze!(ctx.bindings[head.tns], ctx)
+                ctx.bindings[head.tns] = freeze!(ctx, ctx.bindings[head.tns])
                 ctx.modes[head.tns] = reader
             elseif head.kind === thaw
                 @assert get(ctx.modes, head.tns, reader) === reader
-                ctx.bindings[head.tns] = thaw!(ctx.bindings[head.tns], ctx)
+                ctx.bindings[head.tns] = thaw!(ctx, ctx.bindings[head.tns])
                 ctx.modes[head.tns] = updater
             else
                 preamble = contain(ctx) do ctx_2
-                    ctx_2(instantiate!(head, ctx_2))
+                    ctx_2(instantiate!(ctx_2, head))
                 end
             end
 
@@ -134,7 +134,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         ctx.bindings[root.lhs] = cache!(ctx, root.lhs.name, root.rhs)
         push!(ctx.scope, root.lhs)
         contain(ctx) do ctx_2
-            open_scope(root.body, ctx_2)
+            open_scope(ctx_2, root.body)
         end
     elseif (root.kind === declare || root.kind === freeze || root.kind === thaw)
         #these statements only apply to subsequent statements in a block
@@ -142,9 +142,9 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         #arguably, the declare, freeze, or thaw nodes should never reach this case but we'll leave that alone for now
         quote end
     elseif root.kind === access
-        return lower_access(ctx, root, resolve(root.tns, ctx))
+        return lower_access(ctx, root, resolve(ctx, root.tns))
     elseif root.kind === call
-        root = simplify(root, ctx)
+        root = simplify(ctx, root)
         if root.kind === call 
             if root.op == literal(and)
                 if isempty(root.args)
@@ -177,7 +177,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
         return quote
             if $cond
                 $(contain(ctx) do ctx_2
-                    open_scope(root.body, ctx_2)
+                    open_scope(ctx_2, root.body)
                 end)
             end
         end
@@ -186,7 +186,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler, ::DefaultStyle)
     elseif root.kind === assign
         if root.lhs.kind === access
             @assert root.lhs.mode.val === updater
-            rhs = ctx(simplify(call(root.op, root.lhs, root.rhs), ctx))
+            rhs = ctx(simplify(ctx, call(root.op, root.lhs, root.rhs)))
         else
             rhs = ctx(root.rhs)
         end
@@ -226,11 +226,11 @@ function lower_loop(ctx, root, ext)
     root_2 = Rewrite(Postwalk(@rule access(~tns, ~mode, ~idxs...) => begin
         if !isempty(idxs) && root.idx == idxs[end]
             protos = [(mode.val === reader ? defaultread : defaultupdate) for _ in idxs]
-            tns_2 = unfurl(tns, ctx, root.ext.val, mode.val, protos...)
+            tns_2 = unfurl(ctx, tns, root.ext.val, mode.val, protos...)
             access(tns_2, mode, idxs...)
         end
     end))(root)
-    return ctx(root_2, result_style(LookupStyle(), Stylize(root_2, ctx)(root_2)))
+    return ctx(root_2, result_style(LookupStyle(), Stylize(ctx, root_2)(root_2)))
 end
 
 lower_loop(ctx, root, ext::ParallelDimension) = 
@@ -263,7 +263,7 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
 
     bindings_2 = copy(ctx.bindings)
     for tns in setdiff(used_in_scope, decl_in_scope)
-        virtual_moveto(resolve(tns, ctx), ctx, device)
+        virtual_moveto(ctx, resolve(ctx, tns), device)
     end
 
     return quote
@@ -273,10 +273,10 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
                 contain(ctx_2, task=subtask) do ctx_3
                     bindings_2 = copy(ctx_3.bindings)
                     for tns in intersect(used_in_scope, decl_in_scope)
-                        virtual_moveto(resolve(tns, ctx_3), ctx_3, subtask)
+                        virtual_moveto(ctx_3, resolve(ctx_3, tns), subtask)
                     end
                     contain(ctx_3, bindings=bindings_2) do ctx_4
-                        ctx_4(instantiate!(root_2, ctx_4))
+                        ctx_4(instantiate!(ctx_4, root_2))
                     end
                 end
             end)

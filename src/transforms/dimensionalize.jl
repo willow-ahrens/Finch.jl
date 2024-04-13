@@ -36,10 +36,10 @@ function (ctx::DeclareDimensions)(node::FinchNode)
     if node.kind === access
         @assert @capture node access(~tns, ~mode, ~idxs...)
         if node.mode.val !== reader && haskey(ctx.hints, getroot(tns))
-            shape = map(suggest, virtual_size(tns, ctx.ctx))
+            shape = map(suggest, virtual_size(ctx.ctx, tns))
             push!(ctx.hints[getroot(tns)], node)
         else
-            shape = virtual_size(tns, ctx.ctx)
+            shape = virtual_size(ctx.ctx, tns)
         end
         length(idxs) > length(shape) && throw(DimensionMismatch("more indices than dimensions in $(sprint(show, MIME("text/plain"), node))"))
         length(idxs) < length(shape) && throw(DimensionMismatch("less indices than dimensions in $(sprint(show, MIME("text/plain"), node))"))
@@ -67,7 +67,7 @@ function (ctx::DeclareDimensions)(node::FinchNode)
         node
     elseif node.kind === freeze
         if haskey(ctx.hints, node.tns)
-            shape = virtual_size(node.tns, ctx.ctx)
+            shape = virtual_size(ctx.ctx, node.tns)
             shape = map(suggest, shape)
             for hint in ctx.hints[node.tns]
                 @assert @capture hint access(~tns, updater, ~idxs...)
@@ -81,7 +81,7 @@ function (ctx::DeclareDimensions)(node::FinchNode)
             end
             #TODO tns ignored here
             shape = map(resolvedim, shape)
-            tns = virtual_resize!(node.tns, ctx.ctx, shape...)
+            tns = virtual_resize!(ctx.ctx, node.tns, shape...)
             delete!(ctx.hints, node.tns)
         end
         node

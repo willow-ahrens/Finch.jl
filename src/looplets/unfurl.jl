@@ -1,4 +1,4 @@
-truncate(node, ctx, ext, ext_2) = node
+truncate(ctx, node, ext, ext_2) = node
 
 @kwdef struct Furlable
     body
@@ -13,17 +13,17 @@ FinchNotation.finch_leaf(x::Furlable) = virtual(x)
 
 
 """
-    unfurl(tns, ctx, ext, protos...)
+    unfurl(ctx, tns, ext, protos...)
     
 Return an array object (usually a looplet nest) for lowering the virtual tensor
 `tns`. `ext` is the extent of the looplet. `protos` is the list of protocols
 that should be used for each index, but one doesn't need to unfurl all the
 indices at once.
 """
-function unfurl(tns::Furlable, ctx, ext, mode, protos...)
+function unfurl(ctx, tns::Furlable, ext, mode, protos...)
     tns = tns.body(ctx, ext)
     return tns
 end
-unfurl(tns, ctx, ext, mode, protos...) = tns
+unfurl(ctx, tns, ext, mode, protos...) = tns
 
-instantiate(tns::Furlable, ctx, mode, protos) = tns
+instantiate(ctx, tns::Furlable, mode, protos) = tns

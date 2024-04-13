@@ -93,43 +93,43 @@ postype(lvl:: AtomicLevel) = postype(lvl.lvl)
 
 postype(lvl:: VirtualAtomicLevel) = postype(lvl.lvl)
 
-is_level_injective(lvl::VirtualAtomicLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
-is_level_concurrent(lvl::VirtualAtomicLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
-is_level_atomic(lvl::VirtualAtomicLevel, ctx) = true
+is_level_injective(ctx, lvl::VirtualAtomicLevel) = [is_level_injective(ctx, lvl.lvl)..., true]
+is_level_concurrent(ctx, lvl::VirtualAtomicLevel) = [is_level_concurrent(ctx, lvl.lvl)..., true]
+is_level_atomic(ctx, lvl::VirtualAtomicLevel) = true
 
-function lower(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualAtomicLevel, ::DefaultStyle)
     quote
         $AtomicLevel{$(lvl.AVal), $(lvl.Lvl)}($(ctx(lvl.lvl)), $(lvl.locks))
     end
 end
 
-function virtualize(ex, ::Type{AtomicLevel{AVal, Lvl}}, ctx, tag=:lvl) where {AVal, Lvl}
+function virtualize(ctx, ex, ::Type{AtomicLevel{AVal, Lvl}}, tag=:lvl) where {AVal, Lvl}
     sym = freshen(ctx, tag)
     atomics = freshen(ctx, tag, :_locks)
     push!(ctx.preamble, quote
             $sym = $ex
             $atomics = $ex.locks
         end)
-    lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
+    lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
     temp = VirtualAtomicLevel(lvl_2, sym, atomics, typeof(level_default(Lvl)), Val, AVal, Lvl)
     temp
 end
 
 Base.summary(lvl::VirtualAtomicLevel) = "Atomic($(lvl.Lvl))"
-virtual_level_resize!(lvl::VirtualAtomicLevel, ctx, dims...) = (lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims...); lvl)
-virtual_level_size(lvl::VirtualAtomicLevel, ctx) = virtual_level_size(lvl.lvl, ctx)
-virtual_level_size(x, ctx) = error(string("Not defined for", x))
+virtual_level_resize!(ctx, lvl::VirtualAtomicLevel, dims...) = (lvl.lvl = virtual_level_resize!(ctx, lvl.lvl, dims...); lvl)
+virtual_level_size(ctx, lvl::VirtualAtomicLevel) = virtual_level_size(ctx, lvl.lvl)
+virtual_level_size(ctx, x) = error(string("Not defined for", x))
 virtual_level_eltype(lvl::VirtualAtomicLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualAtomicLevel) = virtual_level_default(lvl.lvl)
 
-function declare_level!(lvl::VirtualAtomicLevel, ctx, pos, init)
-    lvl.lvl = declare_level!(lvl.lvl, ctx, pos, init)
+function declare_level!(ctx, lvl::VirtualAtomicLevel, pos, init)
+    lvl.lvl = declare_level!(ctx, lvl.lvl, pos, init)
     return lvl
 end
 
-function assemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
-    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
-    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
+function assemble_level!(ctx, lvl::VirtualAtomicLevel, pos_start, pos_stop)
+    pos_start = cache!(ctx, :pos_start, simplify(ctx, pos_start))
+    pos_stop = cache!(ctx, :pos_stop, simplify(ctx, pos_stop))
     idx = freshen(ctx.code, :idx)
     lockVal = freshen(ctx.code, :lock)
     push!(ctx.code.preamble, quote 
@@ -138,13 +138,13 @@ function assemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
                 $(lvl.locks)[$idx] = make_lock(eltype($(lvl.AVal)))
               end
           end)
-    assemble_level!(lvl.lvl, ctx, pos_start, pos_stop)
+    assemble_level!(ctx, lvl.lvl, pos_start, pos_stop)
 end
 
 supports_reassembly(lvl::VirtualAtomicLevel) = supports_reassembly(lvl.lvl)
-function reassemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
-    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
-    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
+function reassemble_level!(ctx, lvl::VirtualAtomicLevel, pos_start, pos_stop)
+    pos_start = cache!(ctx, :pos_start, simplify(ctx, pos_start))
+    pos_stop = cache!(ctx, :pos_stop, simplify(ctx, pos_stop))
     idx = freshen(ctx.code, :idx)
     lockVal = freshen(ctx.code, :lock)
     push!(ctx.code.preamble, quote 
@@ -153,25 +153,25 @@ function reassemble_level!(lvl::VirtualAtomicLevel, ctx, pos_start, pos_stop)
                 $lvl.locks[$idx] = Finch.make_lock(eltype($(lvl.AVal)))
               end
           end)
-    reassemble_level!(lvl.lvl, ctx, pos_start, pos_stop)
+    reassemble_level!(ctx, lvl.lvl, pos_start, pos_stop)
     lvl
 end
 
-function freeze_level!(lvl::VirtualAtomicLevel, ctx, pos)
+function freeze_level!(ctx, lvl::VirtualAtomicLevel, pos)
     idx = freshen(ctx.code, :idx)
     push!(ctx.code.preamble, quote
         resize!($(lvl.locks), $(ctx(pos)))
     end)
-    lvl.lvl = freeze_level!(lvl.lvl, ctx, pos)
+    lvl.lvl = freeze_level!(ctx, lvl.lvl, pos)
     return lvl
 end
 
-function thaw_level!(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, pos)
-    lvl.lvl = thaw_level!(lvl.lvl, ctx, pos)
+function thaw_level!(ctx::AbstractCompiler, lvl::VirtualAtomicLevel, pos)
+    lvl.lvl = thaw_level!(ctx, lvl.lvl, pos)
     return lvl
 end
 
-function virtual_moveto_level(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, arch)
+function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualAtomicLevel, arch)
     #Add for seperation level too.
     atomics = freshen(ctx.code, :locksArray)
 
@@ -182,26 +182,26 @@ function virtual_moveto_level(lvl::VirtualAtomicLevel, ctx::AbstractCompiler, ar
     push!(ctx.code.epilogue, quote
         $(lvl.locks) = $atomics
     end)
-    virtual_moveto_level(lvl.lvl, ctx, arch)
+    virtual_moveto_level(ctx, lvl.lvl, arch)
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Reader, protos)
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualAtomicLevel}, mode::Reader, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     # lvlp = freshen(ctx.code, lvl.ex, :_lvl)
     # sym = freshen(ctx.code, lvl.ex, :_after_atomic_lvl)
     return body = Thunk(
         body = (ctx) -> begin
-            instantiate(VirtualSubFiber(lvl.lvl, pos), ctx, mode, protos)
+            instantiate(ctx, VirtualSubFiber(lvl.lvl, pos), mode, protos)
         end,
     )
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Updater, protos)
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualAtomicLevel}, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     sym = freshen(ctx.code, lvl.ex, :after_atomic_lvl)
     atomicData = freshen(ctx.code, lvl.ex, :atomicArraysAcc)
     lockVal = freshen(ctx.code, lvl.ex, :lockVal) 
-    dev = lower(virtual_get_device(ctx.code.task), ctx, DefaultStyle())
+    dev = lower(ctx, virtual_get_device(ctx.code.task), DefaultStyle())
     return Thunk(
         preamble = quote  
             $atomicData =  get_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
@@ -209,19 +209,19 @@ function instantiate(fbr::VirtualSubFiber{VirtualAtomicLevel}, ctx, mode::Update
         end,
         body =  (ctx) -> begin
             lvl_2 = lvl.lvl
-            update = instantiate(VirtualSubFiber(lvl_2, pos), ctx, mode, protos)
+            update = instantiate(ctx, VirtualSubFiber(lvl_2, pos), mode, protos)
             return update
         end,
         epilogue = quote 
             release_lock!($dev, $atomicData) end 
     )
 end
-function instantiate(fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, ctx, mode::Updater, protos)
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     sym = freshen(ctx.code, lvl.ex, :after_atomic_lvl)
     atomicData = freshen(ctx.code, lvl.ex, :atomicArrays)
     lockVal = freshen(ctx.code, lvl.ex, :lockVal)
-    dev = lower(virtual_get_device(ctx.code.task), ctx, DefaultStyle())
+    dev = lower(ctx, virtual_get_device(ctx.code.task), DefaultStyle())
     return Thunk(
         preamble = quote  
             $atomicData =  get_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
@@ -229,7 +229,7 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, ctx, mode::
         end,
         body =  (ctx) -> begin
             lvl_2 = lvl.lvl
-            update = instantiate(VirtualHollowSubFiber(lvl_2, pos, fbr.dirty), ctx, mode, protos)
+            update = instantiate(ctx, VirtualHollowSubFiber(lvl_2, pos, fbr.dirty), mode, protos)
             return update
         end,
         epilogue = quote 

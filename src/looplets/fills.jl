@@ -4,13 +4,13 @@ struct Fill
 end
 
 FinchNotation.finch_leaf(x::Fill) = virtual(x)
-virtual_default(f::Fill, ctx) = f.body
+virtual_default(ctx, f::Fill) = f.body
 
 struct FillStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(::Fill) = FillStyle()
 
-instantiate(tns::Fill, ctx, mode, protos) = tns
+instantiate(ctx, tns::Fill, mode, protos) = tns
 
 combine_style(a::DefaultStyle, b::FillStyle) = FillStyle()
 combine_style(a::LookupStyle, b::FillStyle) = FillStyle()
@@ -24,7 +24,7 @@ combine_style(a::FillStyle, b::FillStyle) = FillStyle()
 combine_style(a::FillStyle, b::StepperStyle) = FillStyle()
 combine_style(a::FillStyle, b::JumperStyle) = FillStyle()
 
-function lower(root::FinchNode, ctx::AbstractCompiler, ::FillStyle)
+function lower(ctx::AbstractCompiler, root::FinchNode, ::FillStyle)
     ctx(Postwalk(@rule access(~a::isvirtual, ~m, ~i...) => visit_fill(access(a, m, i...), a.val))(root))
 end
 

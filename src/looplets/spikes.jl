@@ -15,7 +15,7 @@ FinchNotation.finch_leaf(x::Spike) = virtual(x)
 struct SpikeStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Spike) = ctx.root.kind === loop ? SpikeStyle() : DefaultStyle()
-instantiate(tns::Spike, ctx, mode, protos) = tns
+instantiate(ctx, tns::Spike, mode, protos) = tns
 combine_style(a::DefaultStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::LookupStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::RunStyle, b::SpikeStyle) = SpikeStyle()
@@ -24,14 +24,14 @@ combine_style(a::SimplifyStyle, b::SpikeStyle) = a
 combine_style(a::AcceptRunStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::SpikeStyle, b::SpikeStyle) = SpikeStyle()
 
-function lower(root::FinchNode, ctx::AbstractCompiler,  ::SpikeStyle)
+function lower(ctx::AbstractCompiler, root::FinchNode, ::SpikeStyle)
     if root.kind === loop
         body_ext = similar_extent(root.ext, getstart(root.ext), call(-, getstop(root.ext), getunit(root.ext)))
         root_body = Rewrite(Postwalk(
-            @rule access(~a::isvirtual, ~i...) => access(get_spike_body(a.val, ctx, root.ext, body_ext), ~i...)
+            @rule access(~a::isvirtual, ~i...) => access(get_spike_body(ctx, a.val, root.ext, body_ext), ~i...)
         ))(root.body)
         @assert isvirtual(root.ext)
-        if prove(call(<=, measure(body_ext), 0), ctx) 
+        if prove(ctx, call(<=, measure(body_ext), 0)) 
             body_expr = quote end
         else
             #TODO check body nonempty
@@ -46,7 +46,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::SpikeStyle)
         
         tail_ext = similar_extent(root.ext, getstop(root.ext), getstop(root.ext))
         root_tail = Rewrite(Postwalk(
-            @rule access(~a::isvirtual, ~i...) => access(get_spike_tail(a.val, ctx, root.ext, tail_ext), ~i...)
+            @rule access(~a::isvirtual, ~i...) => access(get_spike_tail(ctx, a.val, root.ext, tail_ext), ~i...)
         ))(root.body)
         tail_expr = contain(ctx) do ctx_2
             (ctx_2)(loop(
@@ -61,16 +61,16 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::SpikeStyle)
     end
 end
 
-get_spike_body(node, ctx, ext, ext_2) = node
-get_spike_body(node::Spike, ctx, ext, ext_2) = Run(node.body)
+get_spike_body(ctx, node, ext, ext_2) = node
+get_spike_body(ctx, node::Spike, ext, ext_2) = Run(node.body)
 
-get_spike_tail(node, ctx, ext, ext_2) = node
-get_spike_tail(node::Spike, ctx, ext, ext_2) = Run(node.tail)
+get_spike_tail(ctx, node, ext, ext_2) = node
+get_spike_tail(ctx, node::Spike, ext, ext_2) = Run(node.tail)
 
-function truncate(node::Spike, ctx, ext, ext_2)
-    if prove(call(>=, call(-, getstop(ext), getunit(ext)), getstop(ext_2)), ctx)
+function truncate(ctx, node::Spike, ext, ext_2)
+    if prove(ctx, call(>=, call(-, getstop(ext), getunit(ext)), getstop(ext_2)))
         Run(node.body)
-    elseif prove(call(==, getstop(ext), getstop(ext_2)), ctx)
+    elseif prove(ctx, call(==, getstop(ext), getstop(ext_2)))
         node
     else
         return Switch([

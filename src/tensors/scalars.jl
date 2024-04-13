@@ -24,8 +24,8 @@ struct VirtualScalar
     val
 end
 
-lower(tns::VirtualScalar, ctx::AbstractCompiler, ::DefaultStyle) = tns.ex
-function virtualize(ex, ::Type{Scalar{D, Tv}}, ctx, tag) where {D, Tv}
+lower(ctx::AbstractCompiler, tns::VirtualScalar, ::DefaultStyle) = tns.ex
+function virtualize(ctx, ex, ::Type{Scalar{D, Tv}}, tag) where {D, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
     push!(ctx.preamble, quote
@@ -35,39 +35,39 @@ function virtualize(ex, ::Type{Scalar{D, Tv}}, ctx, tag) where {D, Tv}
     VirtualScalar(sym, Tv, D, tag, val)
 end
 
-virtual_size(::VirtualScalar, ctx) = ()
+virtual_size(ctx, ::VirtualScalar) = ()
 
-virtual_default(tns::VirtualScalar, ctx) = tns.D
+virtual_default(ctx, tns::VirtualScalar) = tns.D
 virtual_eltype(tns::VirtualScalar, ctx) = tns.Tv
 
 FinchNotation.finch_leaf(x::VirtualScalar) = virtual(x)
 
-function declare!(tns::VirtualScalar, ctx, init)
+function declare!(ctx, tns::VirtualScalar, init)
     push!(ctx.code.preamble, quote
         $(tns.val) = $(ctx(init))
     end)
     tns
 end
 
-function thaw!(tns::VirtualScalar, ctx)
+function thaw!(ctx, tns::VirtualScalar)
     return tns
 end
 
-function freeze!(tns::VirtualScalar, ctx)
+function freeze!(ctx, tns::VirtualScalar)
     push!(ctx.code.preamble, quote
         $(tns.ex).val = $(ctx(tns.val))
     end)
     return tns
 end
-instantiate(tns::VirtualScalar, ctx, mode, subprotos) = tns
+instantiate(ctx, tns::VirtualScalar, mode, subprotos) = tns
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualScalar)
     @assert isempty(node.idxs)
     return tns.val
 end
 
-function short_circuit_cases(tns::VirtualScalar, ctx, op)
-    if isannihilator(ctx, virtual_default(tns, ctx), op)
+function short_circuit_cases(ctx, tns::VirtualScalar, op)
+    if isannihilator(ctx, virtual_default(ctx, tns), op)
         [:(tns.val == 0) => Simplify(Fill(Null()))]
     else
         []
@@ -103,8 +103,8 @@ struct VirtualSparseScalar
     dirty
 end
 
-lower(tns::VirtualSparseScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($SparseScalar{$(tns.D), $(tns.Tv)}($(tns.val), $(tns.dirty)))
-function virtualize(ex, ::Type{SparseScalar{D, Tv}}, ctx, tag) where {D, Tv}
+lower(ctx::AbstractCompiler, tns::VirtualSparseScalar, ::DefaultStyle) = :($SparseScalar{$(tns.D), $(tns.Tv)}($(tns.val), $(tns.dirty)))
+function virtualize(ctx, ex, ::Type{SparseScalar{D, Tv}}, tag) where {D, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
     dirty = Symbol(tag, :_dirty) #TODO hmm this is risky
@@ -116,12 +116,12 @@ function virtualize(ex, ::Type{SparseScalar{D, Tv}}, ctx, tag) where {D, Tv}
     VirtualSparseScalar(sym, Tv, D, tag, val, dirty)
 end
 
-virtual_size(::VirtualSparseScalar, ctx) = ()
+virtual_size(ctx, ::VirtualSparseScalar) = ()
 
-virtual_default(tns::VirtualSparseScalar, ctx) = tns.D
+virtual_default(ctx, tns::VirtualSparseScalar) = tns.D
 virtual_eltype(tns::VirtualSparseScalar, ctx) = tns.Tv
 
-function declare!(tns::VirtualSparseScalar, ctx, init)
+function declare!(ctx, tns::VirtualSparseScalar, init)
     push!(ctx.code.preamble, quote
         $(tns.val) = $(ctx(init))
         $(tns.dirty) = false
@@ -129,19 +129,19 @@ function declare!(tns::VirtualSparseScalar, ctx, init)
     tns
 end
 
-function thaw!(tns::VirtualSparseScalar, ctx)
+function thaw!(ctx, tns::VirtualSparseScalar)
     return tns
 end
 
-function freeze!(tns::VirtualSparseScalar, ctx)
+function freeze!(ctx, tns::VirtualSparseScalar)
     push!(ctx.code.preamble, quote
         $(tns.ex).val = $(ctx(tns.val))
     end)
     return tns
 end
 
-instantiate(tns::VirtualSparseScalar, ctx, mode::Updater, subprotos) = tns
-function instantiate(tns::VirtualSparseScalar, ctx, mode::Reader, subprotos)
+instantiate(ctx, tns::VirtualSparseScalar, mode::Updater, subprotos) = tns
+function instantiate(ctx, tns::VirtualSparseScalar, mode::Reader, subprotos)
     Switch(
         tns.dirty => tns,
         true => Simplify(Fill(tns.D)),
@@ -184,8 +184,8 @@ struct VirtualShortCircuitScalar
     val
 end
 
-lower(tns::VirtualShortCircuitScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($ShortCircuitScalar{$(tns.D), $(tns.Tv)}($(tns.val)))
-function virtualize(ex, ::Type{ShortCircuitScalar{D, Tv}}, ctx, tag) where {D, Tv}
+lower(ctx::AbstractCompiler, tns::VirtualShortCircuitScalar, ::DefaultStyle) = :($ShortCircuitScalar{$(tns.D), $(tns.Tv)}($(tns.val)))
+function virtualize(ctx, ex, ::Type{ShortCircuitScalar{D, Tv}}, tag) where {D, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
     push!(ctx.preamble, quote
@@ -195,38 +195,38 @@ function virtualize(ex, ::Type{ShortCircuitScalar{D, Tv}}, ctx, tag) where {D, T
     VirtualShortCircuitScalar(sym, Tv, D, tag, val)
 end
 
-virtual_size(::VirtualShortCircuitScalar, ctx) = ()
+virtual_size(ctx, ::VirtualShortCircuitScalar) = ()
 
-virtual_default(tns::VirtualShortCircuitScalar, ctx) = tns.D
+virtual_default(ctx, tns::VirtualShortCircuitScalar) = tns.D
 virtual_eltype(tns::VirtualShortCircuitScalar, ctx) = tns.Tv
 
 FinchNotation.finch_leaf(x::VirtualShortCircuitScalar) = virtual(x)
 
-function declare!(tns::VirtualShortCircuitScalar, ctx, init)
+function declare!(ctx, tns::VirtualShortCircuitScalar, init)
     push!(ctx.code.preamble, quote
         $(tns.val) = $(ctx(init))
     end)
     tns
 end
 
-function thaw!(tns::VirtualShortCircuitScalar, ctx)
+function thaw!(ctx, tns::VirtualShortCircuitScalar)
     return tns
 end
 
-function freeze!(tns::VirtualShortCircuitScalar, ctx)
+function freeze!(ctx, tns::VirtualShortCircuitScalar)
     push!(ctx.code.preamble, quote
         $(tns.ex).val = $(ctx(tns.val))
     end)
     return tns
 end
-instantiate(tns::VirtualShortCircuitScalar, ctx, mode, subprotos) = tns
+instantiate(ctx, tns::VirtualShortCircuitScalar, mode, subprotos) = tns
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualShortCircuitScalar)
     @assert isempty(node.idxs)
     return tns.val
 end
 
-function short_circuit_cases(tns::VirtualShortCircuitScalar, ctx, op)
+function short_circuit_cases(ctx, tns::VirtualShortCircuitScalar, op)
     [:(Finch.isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Simplify(Fill(Null()))]
 end
 
@@ -259,8 +259,8 @@ struct VirtualSparseShortCircuitScalar
     dirty
 end
 
-lower(tns::VirtualSparseShortCircuitScalar, ctx::AbstractCompiler, ::DefaultStyle) = :($SparseShortCircuitScalar{$(tns.D), $(tns.Tv)}($(tns.val), $(tns.dirty)))
-function virtualize(ex, ::Type{SparseShortCircuitScalar{D, Tv}}, ctx, tag) where {D, Tv}
+lower(ctx::AbstractCompiler, tns::VirtualSparseShortCircuitScalar, ::DefaultStyle) = :($SparseShortCircuitScalar{$(tns.D), $(tns.Tv)}($(tns.val), $(tns.dirty)))
+function virtualize(ctx, ex, ::Type{SparseShortCircuitScalar{D, Tv}}, tag) where {D, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
     dirty = Symbol(tag, :_dirty) #TODO hmm this is risky
@@ -272,12 +272,12 @@ function virtualize(ex, ::Type{SparseShortCircuitScalar{D, Tv}}, ctx, tag) where
     VirtualSparseShortCircuitScalar(sym, Tv, D, tag, val, dirty)
 end
 
-virtual_size(::VirtualSparseShortCircuitScalar, ctx) = ()
+virtual_size(ctx, ::VirtualSparseShortCircuitScalar) = ()
 
-virtual_default(tns::VirtualSparseShortCircuitScalar, ctx) = tns.D
+virtual_default(ctx, tns::VirtualSparseShortCircuitScalar) = tns.D
 virtual_eltype(tns::VirtualSparseShortCircuitScalar, ctx) = tns.Tv
 
-function declare!(tns::VirtualSparseShortCircuitScalar, ctx, init)
+function declare!(ctx, tns::VirtualSparseShortCircuitScalar, init)
     push!(ctx.code.preamble, quote
         $(tns.val) = $(ctx(init))
         $(tns.dirty) = false
@@ -285,19 +285,19 @@ function declare!(tns::VirtualSparseShortCircuitScalar, ctx, init)
     tns
 end
 
-function thaw!(tns::VirtualSparseShortCircuitScalar, ctx)
+function thaw!(ctx, tns::VirtualSparseShortCircuitScalar)
     return tns
 end
 
-function freeze!(tns::VirtualSparseShortCircuitScalar, ctx)
+function freeze!(ctx, tns::VirtualSparseShortCircuitScalar)
     push!(ctx.code.preamble, quote
         $(tns.ex).val = $(ctx(tns.val))
     end)
     return tns
 end
 
-instantiate(tns::VirtualSparseShortCircuitScalar, ctx, mode::Updater, subprotos) = tns
-function instantiate(tns::VirtualSparseShortCircuitScalar, ctx, mode::Reader, subprotos)
+instantiate(ctx, tns::VirtualSparseShortCircuitScalar, mode::Updater, subprotos) = tns
+function instantiate(ctx, tns::VirtualSparseShortCircuitScalar, mode::Reader, subprotos)
     Switch([
         value(tns.dirty, Bool) => tns,
         true => Simplify(Fill(tns.D)),
@@ -314,6 +314,6 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualSparseShortCircui
     return tns.val
 end
 
-function short_circuit_cases(tns::VirtualSparseShortCircuitScalar, ctx, op)
+function short_circuit_cases(ctx, tns::VirtualSparseShortCircuitScalar, op)
     [:(Finch.isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Simplify(Fill(Null()))]
 end
