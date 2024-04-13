@@ -7,7 +7,7 @@ access to the algebra `alg` and the depth lookup `depth`` One can dispatch on
 the `alg` trait to specialize the rule set for different algebras. These rules run
 after simplification so one can expect constants to be folded.
 """
-function get_wrapper_rules(depth, alg, ctx)
+function get_wrapper_rules(ctx, depth, alg)
     return [
         (@rule access(~A, ~m, ~i1..., call(~proto::isliteral, ~j), ~i2...) => if isprotocol(proto.val)
             protos = ([nothing for _ in i1]..., proto.val, [nothing for _ in i2]...)
@@ -72,7 +72,6 @@ function get_wrapper_rules(depth, alg, ctx)
             end
             call(scale, A, s3...)
         end),
-        #Jaeyeon, do we need to add this condition? It feels too restrictive, since the toeplitz should only modify j1 and j2
         (@rule access(~A, ~m, ~i1::(All(isindex))..., call(+, ~j1..., ~k, ~j2...), ~i2...) => begin
             if (!isempty(j1) || !isempty(j2))
                 k_2 = call(+, ~j1..., ~j2...)
@@ -234,7 +233,7 @@ function wrapperize(ctx::AbstractCompiler, root)
     depth = depth_calculator(root)
     root = unwrap_roots(ctx, root)
     root = Rewrite(Fixpoint(Chain([
-        Postwalk(Fixpoint(Chain(get_wrapper_rules(depth, ctx.algebra, ctx))))
+        Postwalk(Fixpoint(Chain(get_wrapper_rules(ctx, depth, ctx.algebra))))
     ])))(root)
     evaluate_partial(ctx, root)
 end
