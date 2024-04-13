@@ -89,8 +89,8 @@ end
 
 truncate(ctx, node::VirtualPermissiveArray, ext, ext_2) = VirtualPermissiveArray(truncate(ctx, node.body, ext, ext_2), node.dims)
 
-function get_point_body(node::VirtualPermissiveArray, ctx, ext, idx)
-    body_2 = get_point_body(node.body, ctx, ext, idx)
+function get_point_body(ctx, node::VirtualPermissiveArray, ext, idx)
+    body_2 = get_point_body(ctx, node.body, ext, idx)
     if body_2 === nothing
         return nothing
     else
@@ -100,8 +100,8 @@ end
 
 (ctx::ThunkVisitor)(node::VirtualPermissiveArray) = VirtualPermissiveArray(ctx(node.body), node.dims)
 
-function get_run_body(node::VirtualPermissiveArray, ctx, ext)
-    body_2 = get_run_body(node.body, ctx, ext)
+function get_run_body(ctx, node::VirtualPermissiveArray, ext)
+    body_2 = get_run_body(ctx, node.body, ext)
     if body_2 === nothing
         return nothing
     else

@@ -25,7 +25,7 @@ StaticHash() = StaticHash(Dict{Tuple{Any, DataType}, UInt}())
 
 (h::StaticHash)(x) = get!(h.counts, (x, typeof(x)), UInt(length(h.counts)))
 
-(ctx::AbstractCompiler)(root) = ctx(root, Stylize(root, ctx)(root))
+(ctx::AbstractCompiler)(root) = ctx(root, Stylize(ctx, root)(root))
 (ctx::AbstractCompiler)(root, style) = lower(ctx, root, style)
 #(ctx::AbstractCompiler)(root, style) = (println(); println(); display(root); display(style); lower(ctx, root, style))
 
@@ -230,7 +230,7 @@ function lower_loop(ctx, root, ext)
             access(tns_2, mode, idxs...)
         end
     end))(root)
-    return ctx(root_2, result_style(LookupStyle(), Stylize(root_2, ctx)(root_2)))
+    return ctx(root_2, result_style(LookupStyle(), Stylize(ctx, root_2)(root_2)))
 end
 
 lower_loop(ctx, root, ext::ParallelDimension) = 

@@ -27,7 +27,7 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::LookupStyle)
             ctx_2.bindings[root.idx] = value(idx_sym)
             body_3 = Rewrite(Postwalk(
                 @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin
-                    a_2 = get_point_body(a.val, ctx_2, root.ext.val, value(idx_sym))
+                    a_2 = get_point_body(ctx_2, a.val, root.ext.val, value(idx_sym))
                     if a_2 != nothing
                         access(a_2, m, i...)
                     else
@@ -57,6 +57,6 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::LookupStyle)
     end
 end
 
-get_point_body(node::Lookup, ctx, ext, idx) = node.body(ctx, idx)
+get_point_body(ctx, node::Lookup, ext, idx) = node.body(ctx, idx)
 
-get_point_body(node, ctx, ext, idx) = nothing
+get_point_body(ctx, node, ext, idx) = nothing

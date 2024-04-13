@@ -1,5 +1,5 @@
 """
-    get_wrapper_rules(alg, shash)
+    get_wrapper_rules(shash, alg)
 
 Return the wrapperizing rule set for Finch, which converts expressions like `A[i
 + 1]` to array combinator expressions like `OffsetArray(A, (1,))`. The rules have
@@ -7,7 +7,7 @@ access to the algebra `alg` and the depth lookup `depth`` One can dispatch on
 the `alg` trait to specialize the rule set for different algebras. These rules run
 after simplification so one can expect constants to be folded.
 """
-function get_wrapper_rules(alg, depth, ctx)
+function get_wrapper_rules(depth, alg, ctx)
     return [
         (@rule access(~A, ~m, ~i1..., call(~proto::isliteral, ~j), ~i2...) => if isprotocol(proto.val)
             protos = ([nothing for _ in i1]..., proto.val, [nothing for _ in i2]...)
@@ -232,9 +232,9 @@ semantics of the wrapper.
 """
 function wrapperize(ctx::AbstractCompiler, root)
     depth = depth_calculator(root)
-    root = unwrap_roots(root, ctx)
+    root = unwrap_roots(ctx, root)
     root = Rewrite(Fixpoint(Chain([
-        Postwalk(Fixpoint(Chain(get_wrapper_rules(ctx.algebra, depth, ctx))))
+        Postwalk(Fixpoint(Chain(get_wrapper_rules(depth, ctx.algebra, ctx))))
     ])))(root)
     evaluate_partial(ctx, root)
 end
@@ -250,7 +250,7 @@ function unwrap(ctx, x, var)
     end
 end
 
-function unwrap_roots(root, ctx)
+function unwrap_roots(ctx, root)
     #display(root)
     #display(ctx.bindings)
     tnss = unique(filter(!isnothing, map(PostOrderDFS(root)) do node

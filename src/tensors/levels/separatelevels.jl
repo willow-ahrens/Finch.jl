@@ -89,7 +89,7 @@ end
 postype(lvl:: VirtualSeparateLevel) = postype(lvl.lvl)
 
 is_level_injective(ctx, ::VirtualSeparateLevel) = [is_level_injective(ctx, lvl.lvl)..., true]
-is_level_concurrent(::VirtualSeparateLevel, ctx) = [is_level_concurrent(lvl.lvl, ctx)..., true]
+is_level_concurrent(ctx, ::VirtualSeparateLevel) = [is_level_concurrent(ctx, lvl.lvl)..., true]
 is_level_atomic(ctx, lvl::VirtualSeparateLevel) = is_level_atomic(ctx, lvl.lvl)
 
 function lower(ctx::AbstractCompiler, lvl::VirtualSeparateLevel, ::DefaultStyle)

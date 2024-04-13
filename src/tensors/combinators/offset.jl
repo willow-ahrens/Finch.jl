@@ -82,8 +82,8 @@ end
 
 truncate(ctx, node::VirtualOffsetArray, ext, ext_2) = VirtualOffsetArray(truncate(ctx, node.body, shiftdim(ext, node.delta[end]), shiftdim(ext_2, node.delta[end])), node.delta)
 
-function get_point_body(node::VirtualOffsetArray, ctx, ext, idx)
-    body_2 = get_point_body(node.body, ctx, shiftdim(ext, node.delta[end]), call(+, idx, node.delta[end]))
+function get_point_body(ctx, node::VirtualOffsetArray, ext, idx)
+    body_2 = get_point_body(ctx, node.body, shiftdim(ext, node.delta[end]), call(+, idx, node.delta[end]))
     if body_2 === nothing
         return nothing
     else
@@ -93,8 +93,8 @@ end
 
 (ctx::ThunkVisitor)(node::VirtualOffsetArray) = VirtualOffsetArray(ctx(node.body), node.delta)
 
-function get_run_body(node::VirtualOffsetArray, ctx, ext)
-    body_2 = get_run_body(node.body, ctx, shiftdim(ext, node.delta[end]))
+function get_run_body(ctx, node::VirtualOffsetArray, ext)
+    body_2 = get_run_body(ctx, node.body, shiftdim(ext, node.delta[end]))
     if body_2 === nothing
         return nothing
     else

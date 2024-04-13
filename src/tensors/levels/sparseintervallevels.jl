@@ -144,7 +144,7 @@ mutable struct VirtualSparseIntervalLevel <: AbstractVirtualLevel
 end
 
 is_level_injective(ctx, lvl::VirtualSparseIntervalLevel) = [false, is_level_injective(ctx, lvl.lvl)...]
-is_level_concurrent(lvl::VirtualSparseIntervalLevel, ctx) = [false, is_level_concurrent(lvl.lvl, ctx)...]
+is_level_concurrent(ctx, lvl::VirtualSparseIntervalLevel) = [false, is_level_concurrent(ctx, lvl.lvl)...]
 is_level_atomic(ctx, lvl::VirtualSparseIntervalLevel) = false
   
 

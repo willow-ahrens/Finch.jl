@@ -83,8 +83,8 @@ end
 
 truncate(ctx, node::VirtualProtocolizedArray, ext, ext_2) = VirtualProtocolizedArray(truncate(ctx, node.body, ext, ext_2), node.protos)
 
-function get_point_body(node::VirtualProtocolizedArray, ctx, ext, idx)
-    body_2 = get_point_body(node.body, ctx, ext, idx)
+function get_point_body(ctx, node::VirtualProtocolizedArray, ext, idx)
+    body_2 = get_point_body(ctx, node.body, ext, idx)
     if body_2 === nothing
         return nothing
     else
@@ -94,8 +94,8 @@ end
 
 (ctx::ThunkVisitor)(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(ctx(node.body), node.protos)
 
-function get_run_body(node::VirtualProtocolizedArray, ctx, ext)
-    body_2 = get_run_body(node.body, ctx, ext)
+function get_run_body(ctx, node::VirtualProtocolizedArray, ext)
+    body_2 = get_run_body(ctx, node.body, ext)
     if body_2 === nothing
         return nothing
     else

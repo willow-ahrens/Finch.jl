@@ -47,8 +47,8 @@ end
 
 truncate(ctx, node::Unfurled, ext, ext_2) = Unfurled(node.arr, node.ndims, truncate(ctx, node.body, ext, ext_2))
 
-function get_point_body(node::Unfurled, ctx, ext, idx)
-    body_2 = get_point_body(node.body, ctx, ext, idx)
+function get_point_body(ctx, node::Unfurled, ext, idx)
+    body_2 = get_point_body(ctx, node.body, ext, idx)
     if body_2 === nothing
         return nothing
     else
@@ -58,8 +58,8 @@ end
 
 (ctx::ThunkVisitor)(node::Unfurled) = Unfurled(node.arr, node.ndims, ctx(node.body))
 
-function get_run_body(node::Unfurled, ctx, ext)
-    body_2 = get_run_body(node.body, ctx, ext)
+function get_run_body(ctx, node::Unfurled, ext)
+    body_2 = get_run_body(ctx, node.body, ext)
     if body_2 === nothing
         return nothing
     else

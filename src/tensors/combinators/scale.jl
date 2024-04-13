@@ -83,8 +83,8 @@ end
 
 truncate(ctx, node::VirtualScaleArray, ext, ext_2) = VirtualScaleArray(truncate(ctx, node.body, scaledim(ext, node.scale[end]), scaledim(ext_2, node.scale[end])), node.scale)
 
-function get_point_body(node::VirtualScaleArray, ctx, ext, idx)
-    body_2 = get_point_body(node.body, ctx, scaledim(ext, node.scale[end]), call(*, idx, node.scale[end]))
+function get_point_body(ctx, node::VirtualScaleArray, ext, idx)
+    body_2 = get_point_body(ctx, node.body, scaledim(ext, node.scale[end]), call(*, idx, node.scale[end]))
     if body_2 === nothing
         return nothing
     else
@@ -94,8 +94,8 @@ end
 
 (ctx::ThunkVisitor)(node::VirtualScaleArray) = VirtualScaleArray(ctx(node.body), node.scale)
 
-function get_run_body(node::VirtualScaleArray, ctx, ext)
-    body_2 = get_run_body(node.body, ctx, scaledim(ext, node.scale[end]))
+function get_run_body(ctx, node::VirtualScaleArray, ext)
+    body_2 = get_run_body(ctx, node.body, scaledim(ext, node.scale[end]))
     if body_2 === nothing
         return nothing
     else

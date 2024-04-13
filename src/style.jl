@@ -2,8 +2,8 @@ struct DefaultStyle end
 struct UnknownStyle end
 
 @kwdef struct Stylize{Ctx}
-    root
     ctx::Ctx
+    root
 end
 
 function (ctx::Stylize)(node)

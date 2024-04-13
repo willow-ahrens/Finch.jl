@@ -25,7 +25,7 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::RunStyle)
     if root.kind === loop
         root = Rewrite(Postwalk(
             @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin
-                a_2 = get_run_body(a.val, ctx, root.ext)
+                a_2 = get_run_body(ctx, a.val, root.ext)
                 if a_2 != nothing
                     access(a_2, m, i...)
                 else
@@ -33,7 +33,7 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::RunStyle)
                 end
             end
         ))(root)
-        if Stylize(root, ctx)(root) isa RunStyle #TODO do we need this always? Can we do this generically?
+        if Stylize(ctx, root)(root) isa RunStyle #TODO do we need this always? Can we do this generically?
             error("run style couldn't lower runs")
         end
         return ctx(root)
@@ -42,8 +42,8 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::RunStyle)
     end
 end
 
-get_run_body(node, ctx, ext) = nothing
-get_run_body(node::Run, ctx, ext) = node.body
+get_run_body(ctx, node, ext) = nothing
+get_run_body(ctx, node::Run, ext) = node.body
 
 #assume ssa
 
@@ -97,4 +97,4 @@ end
 get_acceptrun_body(ctx, node, ext) = nothing
 get_acceptrun_body(ctx, node::AcceptRun, ext) = node.body(ctx, ext)
 
-get_point_body(node::AcceptRun, ctx, ext, idx) = node.body(ctx, similar_extent(ext,idx,idx))
+get_point_body(ctx, node::AcceptRun, ext, idx) = node.body(ctx, similar_extent(ext,idx,idx))

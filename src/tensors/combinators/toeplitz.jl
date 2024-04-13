@@ -89,8 +89,8 @@ end
 
 truncate(ctx, node::VirtualToeplitzArray, ext, ext_2) = VirtualToeplitzArray(truncate(ctx, node.body, ext, ext_2), node.dim)
 
-function get_point_body(node::VirtualToeplitzArray, ctx, ext, idx)
-    body_2 = get_point_body(node.body, ctx, ext, idx)
+function get_point_body(ctx, node::VirtualToeplitzArray, ext, idx)
+    body_2 = get_point_body(ctx, node.body, ext, idx)
     if body_2 === nothing
         return nothing
     else
@@ -100,8 +100,8 @@ end
 
 (ctx::ThunkVisitor)(node::VirtualToeplitzArray) = VirtualToeplitzArray(ctx(node.body), node.dim)
 
-function get_run_body(node::VirtualToeplitzArray, ctx, ext)
-    body_2 = get_run_body(node.body, ctx, ext)
+function get_run_body(ctx, node::VirtualToeplitzArray, ext)
+    body_2 = get_run_body(ctx, node.body, ext)
     if body_2 === nothing
         return nothing
     else

@@ -21,8 +21,8 @@ function is_injective(ctx, lvl::VirtualProductArray)
     sub = is_injective(ctx, lvl.body)
     return [sub[1:lvl.dim]..., false, sub[lvl.dim + 1:end]...]
 end
-function is_concurrent(lvl::VirtualProductArray, ctx)
-    sub = is_concurrent(lvl.body, ctx)
+function is_concurrent(ctx, lvl::VirtualProductArray)
+    sub = is_concurrent(ctx, lvl.body)
     return [sub[1:lvl.dim]..., false, sub[lvl.dim + 1:end]...]
 end
 is_atomic(ctx, lvl::VirtualProductArray) = is_atomic(ctx, lvl.body)
@@ -93,8 +93,8 @@ end
 
 truncate(ctx, node::VirtualProductArray, ext, ext_2) = VirtualProductArray(truncate(ctx, node.body, ext, ext_2), node.dim)
 
-function get_point_body(node::VirtualProductArray, ctx, ext, idx)
-    body_2 = get_point_body(node.body, ctx, ext, idx)
+function get_point_body(ctx, node::VirtualProductArray, ext, idx)
+    body_2 = get_point_body(ctx, node.body, ext, idx)
     if body_2 === nothing
         return nothing
     else
@@ -104,8 +104,8 @@ end
 
 (ctx::ThunkVisitor)(node::VirtualProductArray) = VirtualProductArray(ctx(node.body), node.dim)
 
-function get_run_body(node::VirtualProductArray, ctx, ext)
-    body_2 = get_run_body(node.body, ctx, ext)
+function get_run_body(ctx, node::VirtualProductArray, ext)
+    body_2 = get_run_body(ctx, node.body, ext)
     if body_2 === nothing
         return nothing
     else
