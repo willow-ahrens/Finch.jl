@@ -1,10 +1,13 @@
 abstract type CompileMode end
+
 struct DebugFinch <: CompileMode end
 const debugfinch = DebugFinch()
 virtualize(ctx, ex, ::Type{DebugFinch}) = DebugFinch()
+
 struct SafeFinch <: CompileMode end
 const safefinch = SafeFinch()
 virtualize(ctx, ex, ::Type{SafeFinch}) = SafeFinch()
+
 struct FastFinch <: CompileMode end
 const fastfinch = FastFinch()
 virtualize(ctx, ex, ::Type{FastFinch}) = FastFinch()
@@ -45,14 +48,13 @@ function (ctx::InstantiateTensors)(node::FinchNode)
         push!(ctx.escape, node.tns)
         node
     elseif (@capture node access(~tns, ~mode, ~idxs...)) && !(getroot(tns) in ctx.escape)
-        #@assert get(ctx.ctx.modes, tns, reader) === node.mode.val
         protos = [(mode.val === reader ? defaultread : defaultupdate) for _ in idxs]
         tns_2 = instantiate(ctx.ctx, tns, mode.val, protos)
         access(tns_2, mode, idxs...)
     elseif istree(node)
-        return similarterm(node, operation(node), map(ctx, arguments(node)))
+        similarterm(node, operation(node), map(ctx, arguments(node)))
     else
-        return node
+        node
     end
 end
 
@@ -62,22 +64,15 @@ execute(ex) = execute(ex, NamedTuple())
     contain(JuliaContext()) do ctx
         code = execute_code(:ex, ex; virtualize(ctx, :opts, opts)...)
         quote
-            # try
-                @inbounds @fastmath begin
-                    $(code |> unblock)
-                end
-            # catch
-            #    println("Error executing code:")
-            #    println($(QuoteNode(code |> unblock |> pretty |> unquote_literals)))
-            #    rethrow()
-            #end
+            @inbounds @fastmath begin
+                $(code |> unblock)
+            end
         end
     end
 end
 
 function execute_code(ex, T; algebra = DefaultAlgebra(), mode = safefinch, ctx = LowerJulia(algebra = algebra, mode=mode))
-    code = contain(ctx) do ctx_2
-        prgm = nothing
+    contain(ctx) do ctx_2
         prgm = virtualize(ctx_2.code, ex, T)
         lower_global(ctx_2, prgm)
     end
@@ -86,7 +81,7 @@ end
 """
     lower_global(ctx, prgm)
 
-lower the program `prgm` at global scope in the context `ctx`.
+Lower the program `prgm` at global scope in the context `ctx`.
 """
 function lower_global(ctx, prgm)
     prgm = enforce_scopes(prgm)
@@ -101,7 +96,7 @@ function lower_global(ctx, prgm)
                 prgm = dimensionalize!(prgm, ctx_2)
                 prgm = concordize(ctx_2, prgm)
                 prgm = evaluate_partial(ctx_2, prgm)
-                prgm = simplify(ctx_2, prgm) #appears necessary
+                prgm = simplify(ctx_2, prgm) # Appears necessary
                 prgm = instantiate!(ctx_2, prgm)
                 contain(ctx_2) do ctx_3
                     ctx_3(prgm)
@@ -112,53 +107,6 @@ function lower_global(ctx, prgm)
     end
 end
 
-"""
-    @finch [options...] prgm
-
-Run a finch program `prgm`. The syntax for a finch program is a set of nested
-loops, statements, and branches over pointwise array assignments. For example,
-the following program computes the sum of two arrays `A = B + C`:
-
-```julia   
-@finch begin
-    A .= 0
-    for i = _
-        A[i] = B[i] + C[i]
-    end
-    return A
-end
-```
-
-Finch programs are composed using the following syntax:
-
- - `arr .= 0`: an array declaration initializing arr to zero.
- - `arr[inds...]`: an array access, the array must be a variable and each index may be another finch expression.
- - `x + y`, `f(x, y)`: function calls, where `x` and `y` are finch expressions.
- - `arr[inds...] = ex`: an array assignment expression, setting `arr[inds]` to the value of `ex`.
- - `arr[inds...] += ex`: an incrementing array expression, adding `ex` to `arr[inds]`. `*, &, |`, are supported.
- - `arr[inds...] <<min>>= ex`: a incrementing array expression with a custom operator, e.g. `<<min>>` is the minimum operator.
- - `for i = _ body end`: a loop over the index `i`, where `_` is computed from array access with `i` in `body`.
- - `if cond body end`: a conditional branch that executes only iterations where `cond` is true.
- - `return (tnss...,)`: at global scope, exit the program and return the tensors `tnss` with their new dimensions. By default, any tensor declared in global scope is returned.
-
-Symbols are used to represent variables, and their values are taken from the environment. Loops introduce
-index variables into the scope of their bodies.
-
-Finch uses the types of the arrays and symbolic analysis to discover program
-optimizations. If `B` and `C` are sparse array types, the program will only run
-over the nonzeros of either. 
-
-Semantically, Finch programs execute every iteration. However, Finch can use
-sparsity information to reliably skip iterations when possible.
-
-`options` are optional keyword arguments:
-
- - `algebra`: the algebra to use for the program. The default is `DefaultAlgebra()`.
- - `mode`: the optimization mode to use for the program. The default is `fastfinch`.
- - `ctx`: the context to use for the program. The default is a `LowerJulia` context with the given options.
-
-See also: [`@finch_code`](@ref)
-"""
 macro finch(opts_ex...)
     length(opts_ex) >= 1 || throw(ArgumentError("Expected at least one argument to @finch(opts..., ex)"))
     (opts, ex) = (opts_ex[1:end-1], opts_ex[end])
@@ -186,13 +134,6 @@ macro finch(opts_ex...)
     thunk
 end
 
-"""
-@finch_code [options...] prgm
-
-Return the code that would be executed in order to run a finch program `prgm`.
-
-See also: [`@finch`](@ref)
-"""
 macro finch_code(opts_ex...)
     length(opts_ex) >= 1 || throw(ArgumentError("Expected at least one argument to @finch(opts..., ex)"))
     (opts, ex) = (opts_ex[1:end-1], opts_ex[end])
@@ -210,15 +151,6 @@ macro finch_code(opts_ex...)
     end
 end
 
-"""
-    finch_kernel(fname, args, prgm; options...)
-
-Return a function definition for which can execute a Finch program of
-type `prgm`. Here, `fname` is the name of the function and `args` is a
-`iterable` of argument name => type pairs.
-
-See also: [`@finch`](@ref)
-"""
 function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = safefinch, ctx = LowerJulia(algebra=algebra, mode=mode))
     maybe_typeof(x) = x isa Type ? x : typeof(x)
     code = contain(ctx) do ctx_2
@@ -233,31 +165,8 @@ function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = safe
     end))
 end
 
-"""
-    @finch_kernel [options...] fname(args...) = prgm
-
-Return a definition for a function named `fname` which executes `@finch prgm` on
-the arguments `args`. `args` should be a list of variables holding
-representative argument instances or types.
-
-See also: [`@finch`](@ref)
-"""
 macro finch_kernel(opts_def...)
     length(opts_def) >= 1 || throw(ArgumentError("expected at least one argument to @finch(opts..., def)"))
     (opts, def) = (opts_def[1:end-1], opts_def[end])
     (@capture def :function(:call(~name, ~args...), ~ex)) ||
-    (@capture def :(=)(:call(~name, ~args...), ~ex)) ||
-    throw(ArgumentError("unrecognized function definition in @finch_kernel"))
-    named_args = map(arg -> :($(QuoteNode(arg)) => $(esc(arg))), args)
-    prgm = FinchNotation.finch_parse_instance(ex)
-    for arg in args
-        prgm = quote    
-            let $(esc(arg)) = $(FinchNotation.variable_instance(arg))
-                $prgm
-            end
-        end
-    end
-    return quote
-        $finch_kernel($(QuoteNode(name)), Any[$(named_args...),], typeof($prgm); $(map(esc, opts)...))
-    end
-end
+    (@capture def :(=)(:
