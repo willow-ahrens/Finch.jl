@@ -203,4 +203,18 @@ using Finch: AsArray
         r_tns = Tensor(Dense(Dense(Dense(Element(0.0)))), r)
         @test r_tns + r_tns == 2 * r_tns
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/487
+    let
+        a = fsprand(100, 1, 0.8)
+        b = fsprand(100, 1, 0.8)
+
+        permutedims(broadcast(.+, permutedims(a, (2, 1)), permutedims(b, (2, 1))), (2, 1))  # passes
+
+        a_l = lazy(a)
+        b_l = lazy(b)
+
+        plan = permutedims(broadcast(.+, permutedims(a_l, (2, 1)), permutedims(b_l, (2, 1))), (2, 1))
+        compute(plan)  # fails
+    end
 end

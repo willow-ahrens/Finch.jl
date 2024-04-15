@@ -160,6 +160,34 @@ function withsubsequence(a, b)
     view(b, findall(idx -> idx in a, b)) .= a
 end
 
+"""
+    concordize(bindings, root)
+
+Accepts a program of the following form:
+
+```
+        TABLE := table(IMMEDIATE, FIELD...)
+       ACCESS := reorder(relabel(ALIAS, FIELD...), FIELD...)
+      COMPUTE := ACCESS |
+                 mapjoin(IMMEDIATE, COMPUTE...) |
+                 aggregate(IMMEDIATE, IMMEDIATE, COMPUTE, FIELD...) |
+                 reformat(IMMEDIATE, COMPUTE) |
+                 IMMEDIATE
+COMPUTE_QUERY := query(ALIAS, COMPUTE)
+  INPUT_QUERY := query(ALIAS, TABLE)
+         STEP := COMPUTE_QUERY | INPUT_QUERY
+         ROOT := PLAN(STEP..., produces(ALIAS...))
+```   
+
+Inserts permutation statements of the form `query(ALIAS, reorder(ALIAS,
+FIELD...))` and updates `relabel`s so that
+they match their containing `reorder`s. Modified `ACCESS` statements match the form:
+
+```
+ACCESS := reorder(relabel(ALIAS, idxs_1::FIELD...), idxs_2::FIELD...) where issubsequence(idxs_1, idxs_2)
+```
+"""
+
 function concordize(bindings, root)
     needed_swizzles = Dict()
     root = Rewrite(Postwalk(
@@ -250,15 +278,15 @@ end
 
 The finch interpreter is a simple interpreter for finch logic programs. The interpreter is
 only capable of executing programs of the form:
-REORDER = relabel(reorder(tns::isalias, idxs_1...), idxs_2...)
-ACCESS = relabel(reorder(tns::isalias, idxs_1...), idxs_2...) where issubsequence(idxs_1, idxs_2)
-IMMEDIATE = reorder(relabel(val::isimmediate))
-POINTWISE = ACCESS | mapjoin(f, arg::POINTWISE...) | IMMEDIATE
-MAPREDUCE = POINTWISE | aggregate(op, init, arg::POINTWISE, idxs...)
-TABLE = table(tns, idxs...)
-COMPUTE_QUERY = query(lhs, reformat(tns, arg::(REORDER | MAPREDUCE)))
-INPUT_QUERY = query(lhs, TABLE)
-ROOT = PLAN(args::(COMPUTE_QUERY | INPUT_QUERY | produces(args...))...)
+      REORDER := reorder(relabel(ALIAS, FIELD...), FIELD...)
+       ACCESS := reorder(relabel(ALIAS, idxs_1::FIELD...), idxs_2::FIELD...) where issubsequence(idxs_1, idxs_2)
+    POINTWISE := ACCESS | mapjoin(IMMEDIATE, POINTWISE...) | IMMEDIATE
+    MAPREDUCE := POINTWISE | aggregate(IMMEDIATE, IMMEDIATE, POINTWISE, FIELD...)
+       TABLE  := table(IMMEDIATE, FIELD...)
+COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, arg::(REORDER | MAPREDUCE)))
+  INPUT_QUERY := query(ALIAS, TABLE)
+         STEP := COMPUTE_QUERY | INPUT_QUERY
+         ROOT := PLAN(STEP..., produces(ALIAS...))
 """
 struct FinchInterpreter
     scope::Dict
