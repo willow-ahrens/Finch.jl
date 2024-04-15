@@ -762,4 +762,10 @@ using SparseArrays
         @test countstored(fsprand(10, 10, 100)) == 100
         @test countstored(fsprand(t, t, t, t, 100)) == 100
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/480
+    let
+        A = fsprand(10, 10, 0.5)
+        @test size(A[:, nothing, :]) == (10, 1, 10)
+    end
 end
