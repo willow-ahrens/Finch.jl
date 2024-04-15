@@ -128,3 +128,9 @@ end
 function Base.getindex(arr::FiberOrBroadcast, idxs::Vararg{Union{Nothing, Colon}})
     return compute(lazy(arr)[idxs...])
 end
+function Base.getindex(arr::Tensor, idxs::Vararg{Union{Nothing, Colon}})
+    return compute(lazy(arr)[idxs...])
+end
+function Base.getindex(arr::SwizzleArray, idxs::Vararg{Union{Nothing, Colon}})
+    return compute(lazy(arr)[idxs...])
+end
