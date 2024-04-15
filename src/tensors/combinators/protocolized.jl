@@ -15,8 +15,8 @@ struct VirtualProtocolizedArray <: AbstractVirtualCombinator
     protos
 end
 
-is_injective(lvl::VirtualProtocolizedArray, ctx) = is_injective(lvl.body, ctx)
-is_atomic(lvl::VirtualProtocolizedArray, ctx) = is_atomic(lvl.body, ctx)
+is_injective(ctx, lvl::VirtualProtocolizedArray) = is_injective(ctx, lvl.body)
+is_atomic(ctx, lvl::VirtualProtocolizedArray) = is_atomic(ctx, lvl.body)
 
 Base.:(==)(a::VirtualProtocolizedArray, b::VirtualProtocolizedArray) = a.body == b.body && a.protos == b.protos
 
@@ -29,11 +29,11 @@ Base.summary(io::IO, ex::VirtualProtocolizedArray) = print(io, "VProtocolized($(
 
 FinchNotation.finch_leaf(x::VirtualProtocolizedArray) = virtual(x)
 
-function virtualize(ex, ::Type{ProtocolizedArray{Protos, Body}}, ctx) where {Protos, Body}
+function virtualize(ctx, ex, ::Type{ProtocolizedArray{Protos, Body}}) where {Protos, Body}
     protos = map(enumerate(Protos.parameters)) do (n, param)
-        virtualize(:($ex.protos[$n]), param, ctx)
+        virtualize(ctx, :($ex.protos[$n]), param)
     end
-    VirtualProtocolizedArray(virtualize(:($ex.body), Body, ctx), protos)
+    VirtualProtocolizedArray(virtualize(ctx, :($ex.body), Body), protos)
 end
 
 """
@@ -46,31 +46,31 @@ dimension of a matrix `A`, we write `A[gallop(i), j]`, which becomes
 `protocolize(A, gallop, nothing)[i, j]`.
 """
 protocolize(body, protos...) = ProtocolizedArray(body, protos)
-function virtual_call(::typeof(protocolize), ctx, body, protos...)
+function virtual_call(ctx, ::typeof(protocolize), body, protos...)
     @assert All(isliteral)(protos)
     VirtualProtocolizedArray(body, map(proto -> proto.val, protos))
 end
 unwrap(ctx, arr::VirtualProtocolizedArray, var) = call(protocolize, unwrap(ctx, arr.body, var), arr.protos...)
 
-function lower(tns::VirtualProtocolizedArray, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, tns::VirtualProtocolizedArray, ::DefaultStyle)
     error()
     :(ProtocolizedArray($(ctx(tns.body)), $(ctx(tns.protos))))
 end
 
-function virtual_size(arr::VirtualProtocolizedArray, ctx::AbstractCompiler)
-    virtual_size(arr.body, ctx)
+function virtual_size(ctx::AbstractCompiler, arr::VirtualProtocolizedArray)
+    virtual_size(ctx, arr.body)
 end
-function virtual_resize!(arr::VirtualProtocolizedArray, ctx::AbstractCompiler, dim)
-    virtual_resize!(arr.body, ctx, dim)
+function virtual_resize!(ctx::AbstractCompiler, arr::VirtualProtocolizedArray, dim)
+    virtual_resize!(ctx, arr.body, dim)
 end
 
-function instantiate(arr::VirtualProtocolizedArray, ctx, mode, protos)
-    VirtualProtocolizedArray(instantiate(arr.body, ctx, mode, map(something, arr.protos, protos)), arr.protos)
+function instantiate(ctx, arr::VirtualProtocolizedArray, mode, protos)
+    VirtualProtocolizedArray(instantiate(ctx, arr.body, mode, map(something, arr.protos, protos)), arr.protos)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualProtocolizedArray) = ctx(node.body)
-function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::VirtualProtocolizedArray)
-    stylize_access(node, ctx, tns.body)
+function stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualProtocolizedArray)
+    stylize_access(ctx, node, tns.body)
 end
 
 function popdim(node::VirtualProtocolizedArray)
@@ -81,10 +81,10 @@ function popdim(node::VirtualProtocolizedArray)
     end
 end
 
-truncate(node::VirtualProtocolizedArray, ctx, ext, ext_2) = VirtualProtocolizedArray(truncate(node.body, ctx, ext, ext_2), node.protos)
+truncate(ctx, node::VirtualProtocolizedArray, ext, ext_2) = VirtualProtocolizedArray(truncate(ctx, node.body, ext, ext_2), node.protos)
 
-function get_point_body(node::VirtualProtocolizedArray, ctx, ext, idx)
-    body_2 = get_point_body(node.body, ctx, ext, idx)
+function get_point_body(ctx, node::VirtualProtocolizedArray, ext, idx)
+    body_2 = get_point_body(ctx, node.body, ext, idx)
     if body_2 === nothing
         return nothing
     else
@@ -94,8 +94,8 @@ end
 
 (ctx::ThunkVisitor)(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(ctx(node.body), node.protos)
 
-function get_run_body(node::VirtualProtocolizedArray, ctx, ext)
-    body_2 = get_run_body(node.body, ctx, ext)
+function get_run_body(ctx, node::VirtualProtocolizedArray, ext)
+    body_2 = get_run_body(ctx, node.body, ext)
     if body_2 === nothing
         return nothing
     else
@@ -103,8 +103,8 @@ function get_run_body(node::VirtualProtocolizedArray, ctx, ext)
     end
 end
 
-function get_acceptrun_body(node::VirtualProtocolizedArray, ctx, ext)
-    body_2 = get_acceptrun_body(node.body, ctx, ext)
+function get_acceptrun_body(ctx, node::VirtualProtocolizedArray, ext)
+    body_2 = get_acceptrun_body(ctx, node.body, ext)
     if body_2 === nothing
         return nothing
     else
@@ -118,11 +118,11 @@ function (ctx::SequenceVisitor)(node::VirtualProtocolizedArray)
     end
 end
 
-phase_body(node::VirtualProtocolizedArray, ctx, ext, ext_2) = VirtualProtocolizedArray(phase_body(node.body, ctx, ext, ext_2), node.protos)
-phase_range(node::VirtualProtocolizedArray, ctx, ext) = phase_range(node.body, ctx, ext)
+phase_body(ctx, node::VirtualProtocolizedArray, ext, ext_2) = VirtualProtocolizedArray(phase_body(ctx, node.body, ext, ext_2), node.protos)
+phase_range(ctx, node::VirtualProtocolizedArray, ext) = phase_range(ctx, node.body, ext)
 
-get_spike_body(node::VirtualProtocolizedArray, ctx, ext, ext_2) = VirtualProtocolizedArray(get_spike_body(node.body, ctx, ext, ext_2), node.protos)
-get_spike_tail(node::VirtualProtocolizedArray, ctx, ext, ext_2) = VirtualProtocolizedArray(get_spike_tail(node.body, ctx, ext, ext_2), node.protos)
+get_spike_body(ctx, node::VirtualProtocolizedArray, ext, ext_2) = VirtualProtocolizedArray(get_spike_body(ctx, node.body, ext, ext_2), node.protos)
+get_spike_tail(ctx, node::VirtualProtocolizedArray, ext, ext_2) = VirtualProtocolizedArray(get_spike_tail(ctx, node.body, ext, ext_2), node.protos)
 
 visit_fill(node, tns::VirtualProtocolizedArray) = visit_fill(node, tns.body)
 visit_simplify(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(visit_simplify(node.body), node.protos)
@@ -131,21 +131,21 @@ visit_simplify(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(visit_
     guard => VirtualProtocolizedArray(body, node.protos)
 end
 
-function unfurl(tns::VirtualProtocolizedArray, ctx, ext, mode, protos...)
-    VirtualProtocolizedArray(unfurl(tns.body, ctx, ext, mode, map(something, tns.protos, protos)...), tns.protos)
+function unfurl(ctx, tns::VirtualProtocolizedArray, ext, mode, protos...)
+    VirtualProtocolizedArray(unfurl(ctx, tns.body, ext, mode, map(something, tns.protos, protos)...), tns.protos)
 end
 
 
-stepper_range(node::VirtualProtocolizedArray, ctx, ext) = stepper_range(node.body, ctx, ext)
-stepper_body(node::VirtualProtocolizedArray, ctx, ext, ext_2) = VirtualProtocolizedArray(stepper_body(node.body, ctx, ext, ext_2), node.protos)
-stepper_seek(node::VirtualProtocolizedArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
+stepper_range(ctx, node::VirtualProtocolizedArray, ext) = stepper_range(ctx, node.body, ext)
+stepper_body(ctx, node::VirtualProtocolizedArray, ext, ext_2) = VirtualProtocolizedArray(stepper_body(ctx, node.body, ext, ext_2), node.protos)
+stepper_seek(ctx, node::VirtualProtocolizedArray, ext) = stepper_seek(ctx, node.body, ext)
 
-jumper_range(node::VirtualProtocolizedArray, ctx, ext) = jumper_range(node.body, ctx, ext)
-jumper_body(node::VirtualProtocolizedArray, ctx, ext, ext_2) = VirtualProtocolizedArray(jumper_body(node.body, ctx, ext, ext_2), node.protos)
-jumper_seek(node::VirtualProtocolizedArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
+jumper_range(ctx, node::VirtualProtocolizedArray, ext) = jumper_range(ctx, node.body, ext)
+jumper_body(ctx, node::VirtualProtocolizedArray, ext, ext_2) = VirtualProtocolizedArray(jumper_body(ctx, node.body, ext, ext_2), node.protos)
+jumper_seek(ctx, node::VirtualProtocolizedArray, ext) = jumper_seek(ctx, node.body, ext)
 
-function short_circuit_cases(node::VirtualProtocolizedArray, ctx, op)
-    map(short_circuit_cases(node.body, ctx, op)) do (guard, body)
+function short_circuit_cases(ctx, node::VirtualProtocolizedArray, op)
+    map(short_circuit_cases(ctx, node.body, op)) do (guard, body)
         guard => VirtualProtocolizedArray(body, node.protos)
     end
 end

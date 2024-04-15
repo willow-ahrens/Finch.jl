@@ -15,7 +15,7 @@ FinchNotation.finch_leaf(x::Switch) = virtual(x)
 struct SwitchStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Switch) = SwitchStyle()
-instantiate(tns::Switch, ctx, mode, protos) = tns
+instantiate(ctx, tns::Switch, mode, protos) = tns
 combine_style(a::DefaultStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::LookupStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::ThunkStyle, b::SwitchStyle) = ThunkStyle()
@@ -34,7 +34,7 @@ function (ctx::SwitchVisitor)(node)
         map(product(map(ctx, arguments(node))...)) do case
             guards = map(first, case)
             bodies = map(last, case)
-            return simplify(call(and, guards...), ctx.ctx) => similarterm(node, operation(node), collect(bodies))
+            return simplify(ctx.ctx, call(and, guards...)) => similarterm(node, operation(node), collect(bodies))
         end
     else
         [(literal(true) => node)]
@@ -48,7 +48,7 @@ function (ctx::SwitchVisitor)(node::FinchNode)
         map(product(map(ctx, arguments(node))...)) do case
             guards = map(first, case)
             bodies = map(last, case)
-            return simplify(call(and, guards...), ctx.ctx) => similarterm(node, operation(node), collect(bodies))
+            return simplify(ctx.ctx, call(and, guards...)) => similarterm(node, operation(node), collect(bodies))
         end
     else
         [(literal(true) => node)]
@@ -56,7 +56,7 @@ function (ctx::SwitchVisitor)(node::FinchNode)
 end
 (ctx::SwitchVisitor)(node::Switch) = node.cases
 
-function lower(stmt, ctx::AbstractCompiler,  ::SwitchStyle)
+function lower(ctx::AbstractCompiler, stmt, ::SwitchStyle)
     cases = (SwitchVisitor(ctx=ctx))(stmt)
     function nest(cases, inner=false)
         guard, body = cases[1]

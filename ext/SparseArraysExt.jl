@@ -57,15 +57,15 @@ end
     Ti
 end
 
-function Finch.virtual_size(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler)
+function Finch.virtual_size(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC)
     return [Extent(literal(1),value(:($(arr.ex).m), arr.Ti)), Extent(literal(1), value(:($(arr.ex).n), arr.Ti))]
 end
 
-function lower(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler,  ::DefaultStyle)
+function lower(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC, ::DefaultStyle)
     return arr.ex
 end
 
-function Finch.virtualize(ex, ::Type{<:SparseMatrixCSC{Tv, Ti}}, ctx, tag=:tns) where {Tv, Ti}
+function Finch.virtualize(ctx, ex, ::Type{<:SparseMatrixCSC{Tv, Ti}}, tag=:tns) where {Tv, Ti}
     sym = freshen(ctx, tag)
     push!(ctx.preamble, quote
         $sym = $ex
@@ -73,11 +73,11 @@ function Finch.virtualize(ex, ::Type{<:SparseMatrixCSC{Tv, Ti}}, ctx, tag=:tns) 
     VirtualSparseMatrixCSC(sym, Tv, Ti)
 end
 
-function Finch.declare!(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, init)
+function Finch.declare!(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC, init)
     throw(FinchProtocolError("Finch does not support writes to SparseMatrixCSC"))
 end
 
-function Finch.instantiate(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk), typeof(follow)}, ::Union{typeof(defaultread), typeof(walk)})
+function Finch.instantiate(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk), typeof(follow)}, ::Union{typeof(defaultread), typeof(walk)})
     tag = arr.ex
     Ti = arr.Ti
     my_i = freshen(ctx.code, tag, :_i)
@@ -139,14 +139,14 @@ function Finch.instantiate(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, m
     )
 end
 
-function Finch.instantiate(arr::VirtualSparseMatrixCSC, ctx::AbstractCompiler, mode::Updater, subprotos, protos...)
+function Finch.instantiate(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC, mode::Updater, subprotos, protos...)
     throw(FinchProtocolError("Finch does not support writes to SparseMatrixCSC"))
 end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseMatrixCSC) = virtual(x)
 
-Finch.virtual_default(arr::VirtualSparseMatrixCSC, ctx) = zero(arr.Tv)
-Finch.virtual_eltype(tns::VirtualSparseMatrixCSC, ctx) = tns.Tv
+Finch.virtual_default(ctx, arr::VirtualSparseMatrixCSC) = zero(arr.Tv)
+Finch.virtual_eltype(ctx, tns::VirtualSparseMatrixCSC) = tns.Tv
 
 """
     SparseVector(arr::Union{Tensor, SwizzleArray})
@@ -168,15 +168,15 @@ end
     Ti
 end
 
-function Finch.virtual_size(arr::VirtualSparseVector, ctx::AbstractCompiler)
+function Finch.virtual_size(ctx::AbstractCompiler, arr::VirtualSparseVector)
     return Any[Extent(literal(1),value(:($(arr.ex).n), arr.Ti))]
 end
 
-function lower(arr::VirtualSparseVector, ctx::AbstractCompiler,  ::DefaultStyle)
+function lower(ctx::AbstractCompiler, arr::VirtualSparseVector, ::DefaultStyle)
     return arr.ex
 end
 
-function Finch.virtualize(ex, ::Type{<:SparseVector{Tv, Ti}}, ctx, tag=:tns) where {Tv, Ti}
+function Finch.virtualize(ctx, ex, ::Type{<:SparseVector{Tv, Ti}}, tag=:tns) where {Tv, Ti}
     sym = freshen(ctx, tag)
     push!(ctx.preamble, quote
         $sym = $ex
@@ -184,11 +184,11 @@ function Finch.virtualize(ex, ::Type{<:SparseVector{Tv, Ti}}, ctx, tag=:tns) whe
     VirtualSparseVector(sym, Tv, Ti)
 end
 
-function Finch.declare!(arr::VirtualSparseVector, ctx::AbstractCompiler, init)
+function Finch.declare!(ctx::AbstractCompiler, arr::VirtualSparseVector, init)
     throw(FinchProtocolError("Finch does not support writes to SparseVector"))
 end
 
-function Finch.instantiate(arr::VirtualSparseVector, ctx::AbstractCompiler, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function Finch.instantiate(ctx::AbstractCompiler, arr::VirtualSparseVector, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     tag = arr.ex
     Ti = arr.Ti
     my_i = freshen(ctx.code, tag, :_i)
@@ -246,14 +246,14 @@ function Finch.instantiate(arr::VirtualSparseVector, ctx::AbstractCompiler, mode
     )
 end
 
-function Finch.instantiate(arr::VirtualSparseVector, ctx::AbstractCompiler, mode::Updater, subprotos)
+function Finch.instantiate(ctx::AbstractCompiler, arr::VirtualSparseVector, mode::Updater, subprotos)
     throw(FinchProtocolError("Finch does not support writes to SparseVector"))
 end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseVector) = virtual(x)
 
-Finch.virtual_default(arr::VirtualSparseVector, ctx) = zero(arr.Tv)
-Finch.virtual_eltype(tns::VirtualSparseVector, ctx) = tns.Tv
+Finch.virtual_default(ctx, arr::VirtualSparseVector) = zero(arr.Tv)
+Finch.virtual_eltype(ctx, tns::VirtualSparseVector) = tns.Tv
 
 SparseArrays.nnz(fbr::Tensor) = countstored(fbr)
 

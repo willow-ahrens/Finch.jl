@@ -110,21 +110,21 @@ mutable struct VirtualSparseTriangleLevel <: AbstractVirtualLevel
     shape
 end
 
-is_level_injective(lvl::VirtualSparseTriangleLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., (true for _ in 1:lvl.N)...]
-is_level_atomic(lvl::VirtualSparseTriangleLevel, ctx) = is_level_atomic(lvl.lvl, ctx)
+is_level_injective(ctx, lvl::VirtualSparseTriangleLevel) = [is_level_injective(ctx, lvl.lvl)..., (true for _ in 1:lvl.N)...]
+is_level_atomic(ctx, lvl::VirtualSparseTriangleLevel) = is_level_atomic(ctx, lvl.lvl)
 
 postype(lvl::VirtualSparseTriangleLevel) = postype(lvl.lvl)
 
-function virtualize(ex, ::Type{SparseTriangleLevel{N, Ti, Lvl}}, ctx, tag=:lvl) where {N, Ti, Lvl}
+function virtualize(ctx, ex, ::Type{SparseTriangleLevel{N, Ti, Lvl}}, tag=:lvl) where {N, Ti, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     push!(ctx.preamble, quote
         $sym = $ex
     end)
-    lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
+    lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
     VirtualSparseTriangleLevel(lvl_2, sym, N, Ti, shape)
 end
-function lower(lvl::VirtualSparseTriangleLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualSparseTriangleLevel, ::DefaultStyle)
     quote
         $SparseTriangleLevel{$(lvl.N), $(lvl.Ti)}(
             $(ctx(lvl.lvl)),
@@ -135,51 +135,51 @@ end
 
 Base.summary(lvl::VirtualSparseTriangleLevel) = "SparseTriangle$(lvl.N)}($(summary(lvl.lvl)))"
 
-function virtual_level_size(lvl::VirtualSparseTriangleLevel, ctx)
+function virtual_level_size(ctx, lvl::VirtualSparseTriangleLevel)
     ext = map((i) -> Extent(literal(lvl.Ti(1)), lvl.shape), 1:lvl.N)
-    (virtual_level_size(lvl.lvl, ctx)..., ext...)
+    (virtual_level_size(ctx, lvl.lvl)..., ext...)
 end
 
-function virtual_level_resize!(lvl::VirtualSparseTriangleLevel, ctx, dims...)
+function virtual_level_resize!(ctx, lvl::VirtualSparseTriangleLevel, dims...)
     lvl.shape = getstop(dims[end])
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-lvl.N]...)
+    lvl.lvl = virtual_level_resize!(ctx, lvl.lvl, dims[1:end-lvl.N]...)
     lvl
 end
 
 virtual_level_eltype(lvl::VirtualSparseTriangleLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSparseTriangleLevel) = virtual_level_default(lvl.lvl)
 
-function virtual_moveto_level(lvl::VirtualSparseTriangleLevel, ctx::AbstractCompiler, arch)
-    virtual_moveto_level(lvl.lvl, ctx, arch)
+function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualSparseTriangleLevel, arch)
+    virtual_moveto_level(ctx, lvl.lvl, arch)
 end
 
-function declare_level!(lvl::VirtualSparseTriangleLevel, ctx::AbstractCompiler, pos, init)
+function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseTriangleLevel, pos, init)
     # qos = virtual_simplex(lvl.N, ctx, lvl.shape)
     qos = call(*, pos, virtual_simplex(lvl.N, ctx, lvl.shape))
-    lvl.lvl = declare_level!(lvl.lvl, ctx, qos, init)
+    lvl.lvl = declare_level!(ctx, lvl.lvl, qos, init)
     return lvl
 end
 
-function assemble_level!(lvl::VirtualSparseTriangleLevel, ctx, pos_start, pos_stop)
+function assemble_level!(ctx, lvl::VirtualSparseTriangleLevel, pos_start, pos_stop)
     fbr_count = virtual_simplex(lvl.N, ctx, lvl.shape)
     qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), fbr_count), 1)
     qos_stop = call(*, pos_stop, fbr_count)
     qos_stop = call(*, pos_stop, fbr_count)
-    assemble_level!(lvl.lvl, ctx, qos_start, qos_stop)
+    assemble_level!(ctx, lvl.lvl, qos_start, qos_stop)
 end
 
 supports_reassembly(::VirtualSparseTriangleLevel) = true
-function reassemble_level!(lvl::VirtualSparseTriangleLevel, ctx, pos_start, pos_stop)
+function reassemble_level!(ctx, lvl::VirtualSparseTriangleLevel, pos_start, pos_stop)
     fbr_count = virtual_simplex(lvl.N, ctx, lvl.shape)
     qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), fbr_count), 1)
     qos_stop = call(*, pos_stop, fbr_count)
-    reassemble_level!(lvl.lvl, ctx, qos_start, qos_stop)
+    reassemble_level!(ctx, lvl.lvl, qos_start, qos_stop)
     lvl
 end
 
-function freeze_level!(lvl::VirtualSparseTriangleLevel, ctx::AbstractCompiler, pos)
+function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseTriangleLevel, pos)
     qos = call(*, pos, virtual_simplex(lvl.N, ctx, lvl.shape))
-    lvl.lvl = freeze_level!(lvl.lvl, ctx, qos)
+    lvl.lvl = freeze_level!(ctx, lvl.lvl, qos)
     return lvl
 end
 
@@ -188,7 +188,7 @@ function virtual_simplex(d, ctx, n)
     for i in 1:d
         res = call(*, call(+, n, d - i), res)
     end
-    return simplify(call(fld, res, factorial(d)), ctx)
+    return simplify(ctx, call(fld, res, factorial(d)))
 end
 
 struct SparseTriangleFollowTraversal
@@ -199,7 +199,7 @@ struct SparseTriangleFollowTraversal
     q
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, mode::Reader, protos)
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, mode::Reader, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -215,11 +215,11 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, mode
         preamble = quote
             $q = $(ctx(call(+, call(*, call(-, pos, lvl.Ti(1)), fbr_count), 1)))
         end,
-        body = (ctx) -> instantiate(SparseTriangleFollowTraversal(lvl, lvl.N, lvl.shape, lvl.N, value(q)), ctx, mode, protos)
+        body = (ctx) -> instantiate(ctx, SparseTriangleFollowTraversal(lvl, lvl.N, lvl.shape, lvl.N, value(q)), mode, protos)
     )
 end
 
-function instantiate(trv::SparseTriangleFollowTraversal, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(follow)})
+function instantiate(ctx, trv::SparseTriangleFollowTraversal, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(follow)})
     (lvl, d, j, n, q) = (trv.lvl, trv.d, trv.j, trv.n, trv.q)
     s = freshen(ctx.code, lvl.ex, :_s)
     if d == 1
@@ -228,7 +228,7 @@ function instantiate(trv::SparseTriangleFollowTraversal, ctx, mode::Reader, subp
                 Phase(
                     stop = (ctx, ext) -> j,
                     body = (ctx, ext) -> Lookup(
-                        body = (ctx, i) -> instantiate(VirtualSubFiber(lvl.lvl, call(+, q, -1, i)), ctx, mode, subprotos)
+                        body = (ctx, i) -> instantiate(ctx, VirtualSubFiber(lvl.lvl, call(+, q, -1, i)), mode, subprotos)
                     )
                 ),
                 Phase(
@@ -246,7 +246,7 @@ function instantiate(trv::SparseTriangleFollowTraversal, ctx, mode::Reader, subp
                             preamble = :(
                                 $s = $(ctx(call(+, q, virtual_simplex(d, ctx, call(-, i, 1)))))
                             ),
-                            body = (ctx) -> instantiate(SparseTriangleFollowTraversal(lvl, d - 1, i, n, value(s)), ctx, mode, subprotos)
+                            body = (ctx) -> instantiate(ctx, SparseTriangleFollowTraversal(lvl, d - 1, i, n, value(s)), mode, subprotos)
                         )
                     )
                 ),
@@ -267,9 +267,9 @@ struct SparseTriangleLaminateTraversal
     dirty
 end
 
-instantiate(fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, ctx, mode::Updater, protos) =
-    instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
-function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseTriangleLevel}, ctx, mode::Updater, protos)
+instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseTriangleLevel}, mode::Updater, protos) =
+    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), mode, protos)
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseTriangleLevel}, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -285,11 +285,11 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseTriangleLevel}, ctx
         preamble = quote
             $q = $(ctx(call(+, call(*, call(-, pos, lvl.Ti(1)), fbr_count), 1)))
         end,
-        body = (ctx) -> instantiate(SparseTriangleLaminateTraversal(lvl, lvl.N, lvl.shape, lvl.N, value(q), fbr.dirty), ctx, mode, protos)
+        body = (ctx) -> instantiate(ctx, SparseTriangleLaminateTraversal(lvl, lvl.N, lvl.shape, lvl.N, value(q), fbr.dirty), mode, protos)
     )
 end
 
-function instantiate(trv::SparseTriangleLaminateTraversal, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)})
+function instantiate(ctx, trv::SparseTriangleLaminateTraversal, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(laminate), typeof(extrude)})
     (lvl, d, j, n, q, dirty) = (trv.lvl, trv.d, trv.j, trv.n, trv.q, trv.dirty)
     s = freshen(ctx.code, lvl.ex, :_s)
     if d == 1
@@ -298,7 +298,7 @@ function instantiate(trv::SparseTriangleLaminateTraversal, ctx, mode::Updater, s
                 Phase(
                     stop = (ctx, ext) -> j,
                     body = (ctx, ext) -> Lookup(
-                        body = (ctx, i) -> instantiate(VirtualHollowSubFiber(lvl.lvl, call(+, q, -1, i), dirty), ctx, mode, subprotos)
+                        body = (ctx, i) -> instantiate(ctx, VirtualHollowSubFiber(lvl.lvl, call(+, q, -1, i), dirty), mode, subprotos)
                     )
                 ),
                 Phase(
@@ -316,7 +316,7 @@ function instantiate(trv::SparseTriangleLaminateTraversal, ctx, mode::Updater, s
                             preamble = :(
                                 $s = $(ctx(call(+, q, virtual_simplex(d, ctx, call(-, i, 1)))))
                             ),
-                            body = (ctx) -> instantiate(SparseTriangleLaminateTraversal(lvl, d - 1, i, n, value(s), dirty), ctx, mode, subprotos)
+                            body = (ctx) -> instantiate(ctx, SparseTriangleLaminateTraversal(lvl, d - 1, i, n, value(s), dirty), mode, subprotos)
                         )
                     )
                 ),

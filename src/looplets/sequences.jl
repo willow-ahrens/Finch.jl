@@ -12,7 +12,7 @@ FinchNotation.finch_leaf(x::Sequence) = virtual(x)
 struct SequenceStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Sequence) = ctx.root.kind === loop ? SequenceStyle() : DefaultStyle()
-instantiate(tns::Sequence, ctx, mode, protos) = tns
+instantiate(ctx, tns::Sequence, mode, protos) = tns
 combine_style(a::DefaultStyle, b::SequenceStyle) = SequenceStyle()
 combine_style(a::LookupStyle, b::SequenceStyle) = SequenceStyle()
 combine_style(a::ThunkStyle, b::SequenceStyle) = ThunkStyle()
@@ -24,7 +24,7 @@ combine_style(a::SequenceStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::SpikeStyle, b::SequenceStyle) = SequenceStyle()
 combine_style(a::SequenceStyle, b::PhaseStyle) = b
 
-function lower(root::FinchNode, ctx::AbstractCompiler,  ::SequenceStyle)
+function lower(ctx::AbstractCompiler, root::FinchNode, ::SequenceStyle)
     if root.kind === loop
         phases = SequenceVisitor(ctx, root.idx, root.ext)(root.body)
         
@@ -75,7 +75,7 @@ function (ctx::SequenceVisitor)(node::Sequence)
   prev_stop = call(-, getstart(ctx.ext), getunit(ctx.ext))
   for curr in node.phases
     curr_start = call(+, prev_stop, getunit(ctx.ext))
-    curr_stop = getstop(phase_range(curr, ctx.ctx, ctx.ext))
+    curr_stop = getstop(phase_range(ctx.ctx, curr, ctx.ext))
     push!(new_phases, Phase(body = curr.body, start = (ctx, ext) -> curr_start, stop = curr.stop)) 
     prev_stop = curr_stop
   end

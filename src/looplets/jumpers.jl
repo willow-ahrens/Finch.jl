@@ -17,7 +17,7 @@ end
 FinchNotation.finch_leaf(x::Jumper) = virtual(x)
 
 (ctx::Stylize{<:AbstractCompiler})(node::Jumper) = ctx.root.kind === loop ? JumperStyle() : DefaultStyle()
-instantiate(tns::Jumper, ctx, mode, protos) = tns
+instantiate(ctx, tns::Jumper, mode, protos) = tns
 
 combine_style(a::DefaultStyle, b::JumperStyle) = JumperStyle()
 combine_style(a::LookupStyle, b::JumperStyle) = JumperStyle()
@@ -31,20 +31,20 @@ combine_style(a::JumperStyle, b::SequenceStyle) = SequenceStyle()
 combine_style(a::ThunkStyle, b::JumperStyle) = ThunkStyle()
 combine_style(a::JumperStyle, b::PhaseStyle) = b
 
-jumper_seek(node::Jumper, ctx, ext) = node.seek(ctx, ext)
-jumper_seek(node, ctx, ext) = quote end
+jumper_seek(ctx, node::Jumper, ext) = node.seek(ctx, ext)
+jumper_seek(ctx, node, ext) = quote end
 
-jumper_range(node, ctx, ext) = dimless
+jumper_range(ctx, node, ext) = dimless
 
-function jumper_range(node::FinchNode, ctx, ext)
+function jumper_range(ctx, node::FinchNode, ext)
     if @capture node access(~tns::isvirtual, ~i...)
-        jumper_range(tns.val, ctx, ext)
+        jumper_range(ctx, tns.val, ext)
     else
         return dimless
     end
 end
 
-function jumper_range(node::Jumper, ctx, ext)
+function jumper_range(ctx, node::Jumper, ext)
     push!(ctx.code.preamble, node.seek !== nothing ? node.seek(ctx, ext) : quote end)
     push!(ctx.code.preamble, node.preamble !== nothing ? node.preamble : quote end)
     ext_2 = similar_extent(ext, getstart(ext), node.stop(ctx, ext))
@@ -53,23 +53,23 @@ end
 
 
 
-jumper_body(node, ctx, ext, ext_2) = truncate(node, ctx, ext, ext_2)
+jumper_body(ctx, node, ext, ext_2) = truncate(ctx, node, ext, ext_2)
 
-function jumper_body(node::FinchNode, ctx, ext, ext_2)
+function jumper_body(ctx, node::FinchNode, ext, ext_2)
     if @capture node access(~tns::isvirtual, ~m, ~i...)
-        access(jumper_body(tns.val, ctx, ext, ext_2), m, i...)
+        access(jumper_body(ctx, tns.val, ext, ext_2), m, i...)
     else
         return node
     end
 end
 
 
-function jumper_body(node::Jumper, ctx, ext, ext_2)
+function jumper_body(ctx, node::Jumper, ext, ext_2)
     next = node.next(ctx, ext_2)
     if next !== nothing
         Switch([
             value(:($(ctx(node.stop(ctx, ext))) == $(ctx(getstop(ext_2))))) => Thunk(
-                body = (ctx) -> truncate(node.chunk, ctx, ext, similar_extent(ext, getstart(ext_2), getstop(ext))),
+                body = (ctx) -> truncate(ctx, node.chunk, ext, similar_extent(ext, getstart(ext_2), getstop(ext))),
                 epilogue = next
             ),
             literal(true) => Stepper(
@@ -85,7 +85,7 @@ function jumper_body(node::Jumper, ctx, ext, ext_2)
     end
 end
 
-function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
+function lower(ctx::AbstractCompiler, root::FinchNode, style::JumperStyle)
     root.kind === loop || error("unimplemented")
     
     i = getname(root.idx)
@@ -97,7 +97,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
     guard = :($i <= $(ctx(getstop(root.ext))))
 
     #foreach(filter(isvirtual, collect(PostOrderDFS(root.body)))) do node
-    #    push!(ctx.code.preamble, jumper_seek(node.val, ctx, root.ext))
+    #    push!(ctx.code.preamble, jumper_seek(ctx, node.val, root.ext))
     #end
 
     body_2 = contain(ctx) do ctx_2
@@ -105,11 +105,11 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
         i1 = freshen(ctx_2.code, i)
 
         ext_1 = bound_measure_below!(similar_extent(root.ext, value(i0), getstop(root.ext)), get_smallest_measure(root.ext))
-        ext_2 = mapreduce((node)->jumper_range(node, ctx_2, ext_1), (a, b) -> virtual_union(ctx_2, a, b), PostOrderDFS(root.body))
+        ext_2 = mapreduce((node)->jumper_range(ctx_2, node, ext_1), (a, b) -> virtual_union(ctx_2, a, b), PostOrderDFS(root.body))
         ext_3 = virtual_intersect(ctx_2, ext_1, ext_2)
         ext_4 = cache_dim!(ctx_2, :phase, ext_3)
 
-        body = Rewrite(Postwalk(node->jumper_body(node, ctx_2, ext_1, ext_4)))(root.body)
+        body = Rewrite(Postwalk(node->jumper_body(ctx_2, node, ext_1, ext_4)))(root.body)
         body = quote
             $i1 = $i
             $(contain(ctx_2) do ctx_3
@@ -119,7 +119,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
             $i = $(ctx_2(getstop(ext_4))) + $(ctx_2(getunit(ext_4)))
         end
 
-        if prove(call(>=, measure(ext_4), 0), ctx_2)  
+        if prove(ctx_2, call(>=, measure(ext_4), 0))  
             body
         else
             quote
@@ -133,7 +133,7 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  style::JumperStyle)
 
     @assert isvirtual(root.ext)
 
-    if prove(call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)), ctx)
+    if prove(ctx, call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)))
         body_2
     else
         return quote
