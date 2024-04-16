@@ -37,7 +37,7 @@ function simplify_queries(bindings)
     Rewrite(Fixpoint(Postwalk(Chain([
         (@rule aggregate(~op, ~init, ~arg) => mapjoin(op, arg)),
         (@rule mapjoin(overwrite, ~lhs, ~rhs) =>
-            reorder(rhs, getfields(mapjoin(overwrite, ~lhs, ~rhs), bindings)...)),
+            reorder(rhs, getfields(mapjoin(overwrite, ~lhs, ~rhs))...)),
     ]))))
 end
 
