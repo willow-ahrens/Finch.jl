@@ -67,29 +67,28 @@ end
 """
 normalize the program to a form where reorders wrap relabels and both are pushed to the leaves of mapjoins
 """
-function push_labels(root, bindings)
+function push_labels(root)
     root = Rewrite(Postwalk(Chain([
         (@rule relabel(~arg, ~idxs...) => reorder(relabel(~arg, ~idxs...), idxs...)),
         #TODO: This statement sets the loop order, which should probably be done with more forethought as a separate step before concordization.
-        (@rule mapjoin(~args...) => reorder(mapjoin(args...), getfields(mapjoin(args...), bindings)...))
+        (@rule mapjoin(~args...) => reorder(mapjoin(args...), getfields(mapjoin(args...))...))
     ])))(root)
 
     root = Rewrite(Fixpoint(Prewalk(Chain([
         (@rule reorder(mapjoin(~op, ~args...), ~idxs...) =>
             mapjoin(op, map(arg -> reorder(arg, ~idxs...), args)...)),
         (@rule relabel(mapjoin(~op, ~args...), ~idxs...) => begin
-            idxs_2 = getfields(mapjoin(op, args...), bindings)
+            idxs_2 = getfields(mapjoin(op, args...))
             mapjoin(op, map(arg -> relabel(reorder(arg, idxs_2...), idxs...), args)...)
         end),
         (@rule reorder(reorder(~arg, ~idxs...), ~idxs_2...) =>
             reorder(~arg, ~idxs_2...)),
         (@rule relabel(relabel(~arg, ~idxs...), ~idxs_2...) =>
             relabel(~arg, ~idxs_2...)),
-        (@rule relabel(reorder(~arg, ~idxs...), ~idxs_2...) => begin
-            reidx = Dict(map(Pair, idxs, idxs_2)...)
-            idxs_3 = getfields(arg, bindings)
-            idxs_4 = map(idx -> get(reidx, idx, idx), idxs_3)
-            reorder(relabel(arg, idxs_4...), idxs_2...)
+        (@rule relabel(reorder(relabel(~arg, ~idxs...), ~idxs_2...), ~idxs_3...) => begin
+            reidx = Dict(map(Pair, idxs_2, idxs_3)...)
+            idxs_4 = map(idx -> get(reidx, idx, idx), idxs)
+            reorder(relabel(arg, idxs_4...), idxs_3...)
         end),
     ]))))(root)
 
@@ -435,10 +434,12 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     prgm = propagate_map_queries(prgm)
     prgm = pretty_labels(prgm)
     bindings = getbindings(prgm)
-    prgm = push_labels(prgm, bindings)
+    prgm = propagate_fields(prgm)
+    prgm = push_labels(prgm)
     prgm = concordize(bindings, prgm)
     prgm = fuse_reformats(prgm)
-    prgm = push_labels(prgm, bindings)
+    prgm = propagate_fields(prgm)
+    prgm = push_labels(prgm)
     prgm = propagate_copy_queries(prgm)
     bindings = getbindings(prgm)
     prgm = format_queries(bindings)(prgm)

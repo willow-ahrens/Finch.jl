@@ -357,11 +357,12 @@ function getbindings(root::LogicNode)
     bindings
 end
 
-function getfields(node::LogicNode, bindings)
+function getfields(node::LogicNode, bindings=Dict())
     if node.kind == field || node.kind == immediate
         throw(ArgumentError("getfields($(node.kind)) is undefined"))
     elseif node.kind == alias
         return getfields(bindings[node], bindings)
+        #throw(ArgumentError("getfields(alias) is undefined, try calling `propagate_fields` on the whole plan to resolve alias fields."))
     elseif node.kind == table
         return node.idxs
     elseif node.kind == subquery
@@ -382,5 +383,27 @@ function getfields(node::LogicNode, bindings)
         return getfields(node.arg, bindings)
     else
         throw(ArgumentError("getfields($(node.kind)) is undefined"))
+    end
+end
+
+function propagate_fields(node::LogicNode, fields = Dict{LogicNode, Any}())
+    if @capture node plan(~stmts..., produces(~args...))
+        stmts = map(stmts) do stmt
+            propagate_fields(stmt, fields)
+        end
+        plan(stmts..., produces(args...))
+    elseif @capture node query(~lhs, ~rhs)
+        rhs = propagate_fields(rhs, fields)
+        fields[lhs] = getfields(rhs, Dict())
+        query(lhs, rhs)
+    elseif @capture node relabel(alias, ~idxs...)
+        node
+    elseif isalias(node)
+        println(fields[node])
+        relabel(node, fields[node]...)
+    elseif istree(node)
+        similarterm(node, operation(node), map(x -> propagate_fields(x, fields), arguments(node)))
+    else
+        node
     end
 end
