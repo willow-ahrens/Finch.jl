@@ -218,5 +218,33 @@ using Finch: AsArray
         plan = permutedims(broadcast(.+, permutedims(a_l, (2, 1)), permutedims(b_l, (2, 1))), (2, 1))
         compute(plan)  # fails
     end
+
+    #Concordize
+    #plan(query(alias(A0), table(immediate(Tensor(Dense{Int64}(SparseList{Int64}(Element{0, Int64, Int64}([11, 22, 33, 44, 55]), 4, [1, 4, 4, 6], [2, 3, 4, 1, 3]), 3))), field(i0), field(i1))), query(alias(A1), table(immediate(Tensor(Dense{Int64}(SparseList{Int64}(Element{0, Int64, Int64}([11, 22, 33, 44, 55]), 4, [1, 4, 4, 6], [2, 3, 4, 1, 3]), 3))), field(i2), field(i3))), query(alias(A2), aggregate(immediate(+), immediate(0), mapjoin(immediate(*), reorder(relabel(alias(A1), field(i4), field(i5)), field(i4), field(i5), field(i6)), reorder(relabel(alias(A0), field(i6), field(i5)), field(i4), field(i5), field(i6))), field(i5))), produces(alias(A2)))
+
+
+    A = alias(:A)
+    B = alias(:B)
+    C = alias(:C)
+    i = field(:i)
+    j = field(:j)
+    k = field(:k)
+    prgm = plan(
+        query(A, table(0, i, j)),
+        query(B, table(0, i, j)),
+        query(C, aggregate(+, 0, mapjoin(*,
+            reorder(relabel(A, i, k), i, k, j),
+            reorder(relabel(B, k, j), i, k, j)
+        ))),
+        produces(C))
+    prgm = plan(
+        query(A, table(0, i, j)),
+        query(B, table(0, i, j)),
+        query(~D, reorder(relabel(B, i, j), j, i)),
+        query(C, aggregate(+, 0, mapjoin(*,
+            reorder(relabel(A, i, k), i, k, j),
+            reorder(relabel(~D, j, k), i, k, j)
+        ))),
+        produces(C))
     =#
 end

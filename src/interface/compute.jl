@@ -157,6 +157,7 @@ function withsubsequence(a, b)
     a = collect(a)
     b = collect(b)
     view(b, findall(idx -> idx in a, b)) .= a
+    b
 end
 
 """
@@ -186,34 +187,26 @@ they match their containing `reorder`s. Modified `ACCESS` statements match the f
 ACCESS := reorder(relabel(ALIAS, idxs_1::FIELD...), idxs_2::FIELD...) where issubsequence(idxs_1, idxs_2)
 ```
 """
-
-function concordize(bindings, root)
+function concordize(root)
     needed_swizzles = Dict()
+    #Collect the needed swizzles
     root = Rewrite(Postwalk(
-        @rule reorder(relabel(~a::isalias, ~idxs_2...), ~idxs...) => begin
-            idxs_3 = getfields(a, bindings)
-            reidx = Dict(map(Pair, idxs_2, idxs_3)...)
-            idxs_4 = map(idx -> get(reidx, idx, idx), idxs)
-            relabel(reorder(a, idxs_4...), idxs...)
+        @rule reorder(relabel(~a::isalias, ~idxs_1...), ~idxs_2...) => begin
+            idxs_3 = intersect(idxs_1, idxs_2)
+            if !issubsequence(idxs_3, idxs_2)
+                idxs_4 = withsubsequence(intersect(idxs_2, idxs_1), idxs_1)
+                perm = map(idx -> findfirst(isequal(idx), idxs_1), idxs_4)
+                reorder(relabel(get!(get!(needed_swizzles, a, Dict()), perm, alias(gensym(:A))), idxs_4), idxs_2...)
+            end
         end
     ))(root)
-    root = Rewrite(Postwalk(Chain([
-        (@rule reorder(~a::isalias, ~idxs...) => begin
-            idxs_2 = getfields(a, bindings)
-            idxs_3 = intersect(idxs, idxs_2)
-            if !issubsequence(idxs_3, idxs_2)
-                reorder(get!(get!(needed_swizzles, a, Dict()), idxs_3, alias(gensym(:A))), idxs...)
-            end
-        end),
-    ])))(root)
+    #Insert the swizzles
     root = Rewrite(Postwalk(Chain([
         (@rule query(~a, ~b) => begin
             if haskey(needed_swizzles, a)
-                idxs = getfields(a, bindings)
-                swizzle_queries = map(collect(needed_swizzles[a])) do (idxs_2, c)
-                    idxs_3 = withsubsequence(idxs_2, idxs)
-                    bindings[c] = reorder(a, idxs_3...)
-                    query(c, reorder(relabel(a, idxs), idxs_3...))
+                idxs = getfields(b)
+                swizzle_queries = map(collect(needed_swizzles[a])) do (perm, c)
+                    query(c, reorder(relabel(a, idxs...), idxs[perm]...))
                 end
                 plan(query(a, b), swizzle_queries...)
             end
@@ -436,7 +429,7 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     bindings = getbindings(prgm)
     prgm = propagate_fields(prgm)
     prgm = push_labels(prgm)
-    prgm = concordize(bindings, prgm)
+    prgm = concordize(prgm)
     prgm = fuse_reformats(prgm)
     prgm = propagate_fields(prgm)
     prgm = push_labels(prgm)

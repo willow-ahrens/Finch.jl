@@ -399,7 +399,6 @@ function propagate_fields(node::LogicNode, fields = Dict{LogicNode, Any}())
     elseif @capture node relabel(alias, ~idxs...)
         node
     elseif isalias(node)
-        println(fields[node])
         relabel(node, fields[node]...)
     elseif istree(node)
         similarterm(node, operation(node), map(x -> propagate_fields(x, fields), arguments(node)))
