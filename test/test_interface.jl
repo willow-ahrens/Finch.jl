@@ -2,6 +2,146 @@ using Finch: AsArray
 
 @testset "interface" begin
     @info "Testing Finch Interface"
+
+    @testset "concordize" begin
+        using Finch.FinchLogic
+        A = alias(:A)
+        B = alias(:B)
+        C = alias(:C)
+        i = field(:i)
+        j = field(:j)
+        k = field(:k)
+        prgm_in = plan(
+            query(A, table(0, i, j)),
+            query(B, table(0, i, j)),
+            query(C, aggregate(+, 0, mapjoin(*,
+                reorder(relabel(A, i, k), i, k, j),
+                reorder(relabel(B, j, k), i, k, j)
+            ))),
+            produces(C))
+        B_2 = alias(:B_2)
+        prgm_out = plan(
+            query(A, table(0, i, j)),
+            query(B, table(0, i, j)),
+            query(B_2, reorder(relabel(B, i, j), j, i)),
+            query(C, aggregate(+, 0, mapjoin(*,
+                reorder(relabel(A, i, k), i, k, j),
+                reorder(relabel(B_2, k, j), i, k, j)
+            ))),
+            produces(C))
+        @test Finch.concordize(prgm_in) == prgm_out
+    
+        prgm_in = plan(produces())
+        prgm_out = plan(produces())
+        @test Finch.concordize(prgm_in) == prgm_out
+    
+        prgm_in = plan(
+            query(A, table(0, i, j)),
+            query(B, table(0, i, j)),
+            query(C, mapjoin(+,
+                reorder(relabel(A, i, j), j, i),
+                reorder(relabel(B, j, i), i, j)
+            )),
+            produces(C)
+        )
+        A_2 = alias(:A_2)
+        prgm_out = plan(
+            query(A, table(0, i, j)),
+            query(A_2, reorder(relabel(A, i, j), j, i)),
+            query(B, table(0, i, j)),
+            query(B_2, reorder(relabel(B, i, j), j, i)),
+            query(C, mapjoin(+,
+                reorder(relabel(A_2, j, i), j, i),
+                reorder(relabel(B_2, i, j), i, j)
+            )),
+            produces(C)
+        )
+        @test Finch.concordize(prgm_in) == prgm_out
+    
+        prgm_in = plan(
+            query(A, table(0, i, j)),
+            query(B, reorder(relabel(A, i, j), i, j)),
+            produces(B)
+        )
+        prgm_out = plan(
+            query(A, table(0, i, j)),
+            query(B, reorder(relabel(A, i, j), i, j)),
+            produces(B)
+        )
+        @test Finch.concordize(prgm_in) == prgm_out
+    
+        D = alias(:D)
+        prgm_in = plan(
+            query(A, table(0, i, j)),
+            query(B, table(0, i, j)),
+            query(C, reorder(relabel(A, i, j), j, i)),
+            query(D, reorder(relabel(B, j, i), i, j)),
+            produces(C, D)
+        )
+        prgm_out = plan(
+            query(A, table(0, i, j)),
+            query(A_2, reorder(relabel(A, i, j), j, i)),
+            query(B, table(0, i, j)),
+            query(B_2, reorder(relabel(B, i, j), j, i)),
+            query(C, reorder(relabel(A_2, j, i), j, i)),
+            query(D, reorder(relabel(B_2, i, j), i, j)),
+            produces(C, D)
+        )
+        @test Finch.concordize(prgm_in) == prgm_out
+    
+        prgm_in = plan(
+            query(B, table(0, i, j)),
+            query(C, table(0, i, j)),
+            query(A, mapjoin(+,
+                reorder(relabel(B, i, k), k, i),
+                reorder(relabel(C, k, j), j, k)
+            )),
+            produces(A)
+        )
+        C_2 = alias(:C_2)
+        prgm_out = plan(
+            query(B, table(0, i, j)),
+            query(C, table(0, i, j)),
+            query(B_2, reorder(relabel(B, i, k), k, i)),
+            query(C_2, reorder(relabel(C, k, j), j, k)),
+            query(A_new, mapjoin(+, B_2, C_2)),
+            produces(A_new)
+        )
+        @test Finch.concordize(prgm_in) == prgm_out
+    
+        prgm_in = plan(
+            query(A, table(0)),
+            query(B, reorder(relabel(A, ), )),
+            produces(B)
+        )
+        prgm_out = plan(
+            query(A, table(0)),
+            query(B, reorder(relabel(A, ), )),
+            produces(B)
+        )
+        @test Finch.concordize(prgm_in) == prgm_out
+    
+        prgm_in = plan(
+            query(A, table(0, i, j, k)),  # Initialize A with three fields i, j, k
+            query(B, reorder(relabel(A, i, j, k), k, j, i)),  # Use A reordered as k, j, i
+            query(C, reorder(relabel(A, i, j, k), j, k, i)),  # Use A reordered as j, k, i
+            query(D, mapjoin(*, 
+                reorder(relabel(B, k, j, i), i, j, k),  # Use B reordered back to i, j, k
+                reorder(relabel(C, j, k, i), i, j, k)   # Use C reordered to i, j, k
+            )),
+            produces(D)
+        )
+        prgm_out = plan(
+            query(A, table(0, i, j, k)),
+            query(B, reorder(relabel(A, i, j, k), k, j, i)),
+            query(C, reorder(relabel(A, i, j, k), j, k, i)),
+            query(B_new, reorder(relabel(B, k, j, i), i, j, k)),  # New alias for reordered B
+            query(C_new, reorder(relabel(C, j, k, i), i, j, k)),  # New alias for reordered C
+            query(D, mapjoin(*, B_new, C_new)),
+            produces(D)
+        )
+        @test Finch.concordize(prgm_in) == prgm_out
+    end
     A = Tensor(SparseList(Element(0.0)), fsparse([1, 3, 5, 7, 9], [2.0, 3.0, 4.0, 5.0, 6.0], (10,)))
     B = Tensor(SparseList(Element(0.0)), A)
     @test A == B
@@ -218,33 +358,8 @@ using Finch: AsArray
         plan = permutedims(broadcast(.+, permutedims(a_l, (2, 1)), permutedims(b_l, (2, 1))), (2, 1))
         compute(plan)  # fails
     end
-
-    #Concordize
-    #plan(query(alias(A0), table(immediate(Tensor(Dense{Int64}(SparseList{Int64}(Element{0, Int64, Int64}([11, 22, 33, 44, 55]), 4, [1, 4, 4, 6], [2, 3, 4, 1, 3]), 3))), field(i0), field(i1))), query(alias(A1), table(immediate(Tensor(Dense{Int64}(SparseList{Int64}(Element{0, Int64, Int64}([11, 22, 33, 44, 55]), 4, [1, 4, 4, 6], [2, 3, 4, 1, 3]), 3))), field(i2), field(i3))), query(alias(A2), aggregate(immediate(+), immediate(0), mapjoin(immediate(*), reorder(relabel(alias(A1), field(i4), field(i5)), field(i4), field(i5), field(i6)), reorder(relabel(alias(A0), field(i6), field(i5)), field(i4), field(i5), field(i6))), field(i5))), produces(alias(A2)))
-
-
-    A = alias(:A)
-    B = alias(:B)
-    C = alias(:C)
-    i = field(:i)
-    j = field(:j)
-    k = field(:k)
-    prgm = plan(
-        query(A, table(0, i, j)),
-        query(B, table(0, i, j)),
-        query(C, aggregate(+, 0, mapjoin(*,
-            reorder(relabel(A, i, k), i, k, j),
-            reorder(relabel(B, k, j), i, k, j)
-        ))),
-        produces(C))
-    prgm = plan(
-        query(A, table(0, i, j)),
-        query(B, table(0, i, j)),
-        query(~D, reorder(relabel(B, i, j), j, i)),
-        query(C, aggregate(+, 0, mapjoin(*,
-            reorder(relabel(A, i, k), i, k, j),
-            reorder(relabel(~D, j, k), i, k, j)
-        ))),
-        produces(C))
     =#
+
+
+
 end

@@ -189,6 +189,8 @@ ACCESS := reorder(relabel(ALIAS, idxs_1::FIELD...), idxs_2::FIELD...) where issu
 """
 function concordize(root)
     needed_swizzles = Dict()
+    spc = Namespace()
+    map(node->freshen(spc, node.name), unique(filter(Or(isfield, isalias), collect(PostOrderDFS(root)))))
     #Collect the needed swizzles
     root = Rewrite(Postwalk(
         @rule reorder(relabel(~a::isalias, ~idxs_1...), ~idxs_2...) => begin
@@ -196,7 +198,7 @@ function concordize(root)
             if !issubsequence(idxs_3, idxs_2)
                 idxs_4 = withsubsequence(intersect(idxs_2, idxs_1), idxs_1)
                 perm = map(idx -> findfirst(isequal(idx), idxs_1), idxs_4)
-                reorder(relabel(get!(get!(needed_swizzles, a, Dict()), perm, alias(gensym(:A))), idxs_4), idxs_2...)
+                reorder(relabel(get!(get!(needed_swizzles, a, Dict()), perm, alias(freshen(spc, a.name))), idxs_4), idxs_2...)
             end
         end
     ))(root)
