@@ -152,6 +152,54 @@ using Finch: AsArray
         )
         @test Finch.concordize(prgm_in) == prgm_out
     end
+
+    @testset "push_fields" begin
+        using Finch.FinchLogic
+        A = alias(:A)
+        i = field(:i)
+        j = field(:j)
+        k = field(:k)
+        
+        # Test 1: Simple reorder and relabel on a table
+        expr_in = reorder(relabel(table(A, i, j, k), k, j, i), i, j, k)
+        expr_out = reorder(table(A, k, j, i), i, j, k)  # After push_fields, reorder and relabel should be absorbed
+        @test Finch.push_fields(expr_in) == expr_out
+    
+        # Test 2: Nested reorders and relabels on a table
+        expr_in = reorder(relabel(reorder(relabel(table(A, i, j, k), j, i, k), k, j, i), i, k, j), j, i, k)
+        expr_out = reorder(table(A, k, j, i), j, i, k)
+        @test Finch.push_fields(expr_in) == expr_out
+    
+        # Test 3: Mapjoin with internal reordering and relabeling
+        expr_in = mapjoin(+,
+                    reorder(relabel(table(A, i, j), j, i), i, j),
+                    reorder(relabel(table(A, j, i), i, j), j, i))
+        expr_out = mapjoin(+,
+                    reorder(table(A, j, i), i, j),
+                    reorder(table(A, i, j), j, i))
+        @test Finch.push_fields(expr_in) == expr_out
+    
+        # Test 4: Immediate values absorbing relabel and reorder
+        expr_in = reorder(relabel(immediate(42)), i)
+        expr_out = reorder(immediate(42), i)
+        @test Finch.push_fields(expr_in) == expr_out
+    
+        # Test 5: Complex nested structure with mapjoin and aggregates
+        expr_in = mapjoin(+,
+                    reorder(relabel(mapjoin(*,
+                        reorder(relabel(table(A, i, j, k), k, j, i), i, j, k),
+                        table(A, j, i, k)), i, k, j), j, i, k),
+                    mapjoin(*,
+                        reorder(relabel(table(A, i, j, k), j, i, k), k, j, i)))
+        expr_out = mapjoin(+,
+                     mapjoin(*,
+                        reorder(table(A, j, k, i), j, i, k),
+                        reorder(table(A, k, i, j), j, i, k)),
+                    mapjoin(*,
+                        reorder(table(A, j, i, k), k, j, i)))
+        @test Finch.push_fields(expr_in) == expr_out
+    end
+
     A = Tensor(SparseList(Element(0.0)), fsparse([1, 3, 5, 7, 9], [2.0, 3.0, 4.0, 5.0, 6.0], (10,)))
     B = Tensor(SparseList(Element(0.0)), A)
     @test A == B

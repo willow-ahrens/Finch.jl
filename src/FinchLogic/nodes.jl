@@ -358,8 +358,10 @@ function getbindings(root::LogicNode)
 end
 
 function getfields(node::LogicNode, bindings=Dict())
-    if node.kind == field || node.kind == immediate
+    if node.kind == field
         throw(ArgumentError("getfields($(node.kind)) is undefined"))
+    elseif node.kind == immediate
+        return []
     elseif node.kind == alias
         return getfields(bindings[node], bindings)
         #throw(ArgumentError("getfields(alias) is undefined, try calling `propagate_fields` on the whole plan to resolve alias fields."))

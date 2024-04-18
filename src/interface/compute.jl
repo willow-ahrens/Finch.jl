@@ -33,12 +33,12 @@ lift_subqueries = Rewrite(Fixpoint(Postwalk(Chain([
     (@rule plan(~args...) => plan(unique(args))),
 ]))))
 
-function simplify_queries(bindings)
+function simplify_queries(prgm)
     Rewrite(Fixpoint(Postwalk(Chain([
         (@rule aggregate(~op, ~init, ~arg) => mapjoin(op, arg)),
         (@rule mapjoin(overwrite, ~lhs, ~rhs) =>
             reorder(rhs, getfields(mapjoin(overwrite, ~lhs, ~rhs))...)),
-    ]))))
+    ]))))(prgm)
 end
 
 function propagate_copy_queries(root)
@@ -65,8 +65,53 @@ function pretty_labels(root)
 end
 
 """
-normalize the program to a form where reorders wrap relabels and both are pushed to the leaves of mapjoins
+push_fields(node)
+
+This program modifies all `EXPR` statements in the program, as
+defined in the following grammar:
+```
+    LEAF := relabel(ALIAS, FIELD...) |
+            table(IMMEDIATE, FIELD...) |
+            IMMEDIATE
+    EXPR := LEAF |
+            reorder(EXPR, FIELD...) |
+            relabel(EXPR, FIELD...) |
+            mapjoin(IMMEDIATE, EXPR...)
+```
+
+Pushes all reorder and relabel statements down to LEAF nodes of each EXPR.
+Output LEAF nodes will match the form `reorder(relabel(LEAF, FIELD...),
+FIELD...)`, omitting reorder or relabel if not present as an ancestor of the
+LEAF in the original EXPR. Tables and immediates will absorb relabels.
 """
+function push_fields(root)
+    root = Rewrite(Prewalk(Fixpoint(Chain([
+        (@rule relabel(mapjoin(~op, ~args...), ~idxs...) => begin
+            idxs_2 = getfields(mapjoin(op, args...))
+            mapjoin(op, map(arg -> relabel(reorder(arg, idxs_2...), idxs...), args)...)
+        end),
+        (@rule relabel(relabel(~arg, ~idxs...), ~idxs_2...) =>
+            relabel(~arg, ~idxs_2...)),
+        (@rule relabel(reorder(~arg, ~idxs_1...), ~idxs_2...) => begin
+            idxs_3 = getfields(arg)
+            reidx = Dict(map(Pair, idxs_1, idxs_2)...)
+            idxs_4 = map(idx -> get(reidx, idx, idx), idxs_3)
+            reorder(relabel(arg, idxs_4...), idxs_2...)
+        end),
+        (@rule relabel(table(~arg, ~idxs_1...), ~idxs_2...) => begin
+            table(arg, idxs_2...)
+        end),
+        (@rule relabel(~arg::isimmediate) => arg),
+    ]))))(root)
+    root = Rewrite(Prewalk(Fixpoint(Chain([
+        (@rule reorder(mapjoin(~op, ~args...), ~idxs...) =>
+            mapjoin(op, map(arg -> reorder(arg, ~idxs...), args)...)),
+        (@rule reorder(reorder(~arg, ~idxs...), ~idxs_2...) =>
+            reorder(~arg, ~idxs_2...)),
+    ]))))(root)
+    root
+end
+
 function push_labels(root)
     root = Rewrite(Postwalk(Chain([
         (@rule relabel(~arg, ~idxs...) => reorder(relabel(~arg, ~idxs...), idxs...)),
@@ -91,8 +136,9 @@ function push_labels(root)
             reorder(relabel(arg, idxs_4...), idxs_3...)
         end),
     ]))))(root)
+end
 
-    #=
+#=
     root = Rewrite(Fixpoint(Postwalk(Chain([
         (@rule plan(~a1..., query(~b, relabel(~c, ~i...)), ~a2...) => begin
             d = alias(gensym(:A))
@@ -108,9 +154,7 @@ function push_labels(root)
         end),
         #(@rule reformat(~tns, relabel(~arg, ~idxs...)) => relabel(reformat(tns, arg), idxs...)),
     ]))))(root)
-    =#
-end
-
+=#
 #=
 function pull_reorders(root, bindings)
     root = Rewrite(Fixpoint(Prewalk(Chain([
@@ -132,6 +176,30 @@ function push_reorders(root, bindings)
     ]))))(root)
 end
 =#
+
+"""
+order_loops(root)
+
+Heuristically chooses a total order for all loops in the program by inserting
+`reorder` statments inside reformat, query, and aggregate nodes.
+
+Accepts programs of the form:
+```
+      REORDER := reorder(relabel(ALIAS, FIELD...), FIELD...)
+       ACCESS := reorder(relabel(ALIAS, idxs_1::FIELD...), idxs_2::FIELD...) where issubsequence(idxs_1, idxs_2)
+    POINTWISE := ACCESS | mapjoin(IMMEDIATE, POINTWISE...) | reorder(IMMEDIATE, FIELD...) | IMMEDIATE
+    MAPREDUCE := POINTWISE | aggregate(IMMEDIATE, IMMEDIATE, POINTWISE, FIELD...)
+       TABLE  := table(IMMEDIATE, FIELD...)
+COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, arg::(REORDER | MAPREDUCE)))
+  INPUT_QUERY := query(ALIAS, TABLE)
+         STEP := COMPUTE_QUERY | INPUT_QUERY
+         ROOT := PLAN(STEP..., produces(ALIAS...))
+```
+"""
+function order_loops(prgm)
+    
+end
+
 
 pad_labels = Rewrite(Postwalk(
     @rule relabel(~arg, ~idxs...) => reorder(relabel(~arg, ~idxs...), idxs...)
@@ -161,7 +229,7 @@ function withsubsequence(a, b)
 end
 
 """
-    concordize(bindings, root)
+    concordize(root)
 
 Accepts a program of the following form:
 
@@ -274,7 +342,7 @@ The finch interpreter is a simple interpreter for finch logic programs. The inte
 only capable of executing programs of the form:
       REORDER := reorder(relabel(ALIAS, FIELD...), FIELD...)
        ACCESS := reorder(relabel(ALIAS, idxs_1::FIELD...), idxs_2::FIELD...) where issubsequence(idxs_1, idxs_2)
-    POINTWISE := ACCESS | mapjoin(IMMEDIATE, POINTWISE...) | IMMEDIATE
+    POINTWISE := ACCESS | mapjoin(IMMEDIATE, POINTWISE...) | reorder(IMMEDIATE, FIELD...) | IMMEDIATE
     MAPREDUCE := POINTWISE | aggregate(IMMEDIATE, IMMEDIATE, POINTWISE, FIELD...)
        TABLE  := table(IMMEDIATE, FIELD...)
 COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, arg::(REORDER | MAPREDUCE)))
@@ -298,8 +366,10 @@ function finch_pointwise_logic_to_program(scope, ex)
             idx in idxs_2 ? index_instance(idx.name) : first(axes(arg)[n])
         end
         access_instance(tag_instance(variable_instance(arg.name), scope[arg]), literal_instance(reader), idxs_3...)
-    elseif (@capture ex reorder(relabel(~arg::isimmediate), ~idxs...))
+    elseif (@capture ex reorder(~arg::isimmediate, ~idxs...))
         literal_instance(arg.val)
+    elseif ex.kind === immediate
+        literal_instance(ex.val)
     else
         error("Unrecognized logic: $(ex)")
     end
@@ -416,21 +486,22 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     vars = map(arg -> alias(gensym(:A)), args)
     bodies = map((arg, var) -> query(var, arg.data), args, vars)
     prgm = plan(bodies, produces(vars))
+
     prgm = lift_subqueries(prgm)
+
     #At this point in the program, all statements should be unique, so the
     #isolate calls that name things to lift them should be okay.
     prgm = isolate_reformats(prgm)
     prgm = isolate_aggregates(prgm)
     prgm = isolate_tables(prgm)
     prgm = lift_subqueries(prgm)
-    bindings = getbindings(prgm)
-    prgm = simplify_queries(bindings)(prgm)
+
+    prgm = simplify_queries(prgm)
     prgm = propagate_copy_queries(prgm)
     prgm = propagate_map_queries(prgm)
     prgm = pretty_labels(prgm)
-    bindings = getbindings(prgm)
     prgm = propagate_fields(prgm)
-    prgm = push_labels(prgm)
+    prgm = push_fields(prgm)
     prgm = concordize(prgm)
     prgm = fuse_reformats(prgm)
     prgm = propagate_fields(prgm)
