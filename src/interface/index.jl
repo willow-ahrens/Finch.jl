@@ -26,7 +26,14 @@ getindex_rep_def(lvl::RepeatData, idx) = SolidData(ElementData(lvl.default, lvl.
 getindex_rep_def(lvl::RepeatData, idx::Type{<:AbstractUnitRange}) = SolidData(ElementData(lvl.default, lvl.eltype))
 
 Base.getindex(arr::Tensor, inds::AbstractVector) = getindex_helper(arr, to_indices(arr, axes(arr), (inds,)))
-Base.getindex(arr::Tensor, inds...) = getindex_helper(arr, to_indices(arr, inds))
+function Base.getindex(arr::Tensor, inds...)
+    if nothing in inds && inds isa Tuple{Vararg{Union{Nothing, Colon}}}
+        return compute(lazy(arr)[inds...])
+    else
+        getindex_helper(arr, to_indices(arr, inds))
+    end
+end
+
 @staged function getindex_helper(arr, inds)
     inds <: Type{<:Tuple}
     inds = inds.parameters

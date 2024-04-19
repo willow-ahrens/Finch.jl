@@ -347,7 +347,7 @@ using Finch.FinchNotation: block_instance, declare_instance, call_instance, loop
 function finch_pointwise_logic_to_program(scope, ex)
     if @capture ex mapjoin(~op, ~args...)
         call_instance(literal_instance(op.val), map(arg -> finch_pointwise_logic_to_program(scope, arg), args)...)
-    elseif (@capture ex reorder(relabel(~arg::isalias, ~idxs_1...), ~idxs_2...)) && issubsequence(idxs_1, idxs_2)
+    elseif (@capture ex reorder(relabel(~arg::isalias, ~idxs_1...), ~idxs_2...))
         idxs_3 = map(enumerate(idxs_1)) do (n, idx)
             idx in idxs_2 ? index_instance(idx.name) : first(axes(arg)[n])
         end
@@ -370,14 +370,24 @@ function (ctx::FinchInterpreter)(ex)
     elseif @capture ex table(~tns, ~idxs...)
         return tns.val
     elseif @capture ex reformat(~tns, reorder(relabel(~arg::isalias, ~idxs_1...), ~idxs_2...))
-        println(map(idx -> findfirst(isequal(idx), idxs_1), idxs_2))
-        copyto!(tns.val, swizzle(ctx.scope[arg], map(idx -> findfirst(isequal(idx), idxs_1), idxs_2)...))
+        loop_idxs = map(idx -> index_instance(idx.name), withsubsequence(intersect(idxs_1, idxs_2), idxs_2))
+        lhs_idxs = map(idx -> index_instance(idx.name), idxs_2)
+        res = tag_instance(variable_instance(:res), tns.val)
+        lhs = access_instance(res, literal_instance(updater), lhs_idxs...)
+        rhs = finch_pointwise_logic_to_program(ctx.scope, reorder(relabel(arg, idxs_1...), idxs_2...))
+        body = assign_instance(lhs, literal_instance(initwrite(default(tns.val))), rhs)
+        for idx in loop_idxs
+            body = loop_instance(idx, dimless, body)
+        end
+        body = block_instance(declare_instance(res, literal_instance(default(tns.val))), body, yieldbind_instance(res))
+        #display(body) # wow it's really satisfying to uncomment this and type finch ops at the repl.
+        execute(body).res
     elseif @capture ex reformat(~tns, mapjoin(~args...))
         z = default(tns.val)
         ctx(reformat(tns, aggregate(initwrite(z), immediate(z), mapjoin(args...))))
     elseif @capture ex reformat(~tns, aggregate(~op, ~init, ~arg, ~idxs_1...))
-        idxs_2 = map(idx -> index_instance(idx.name), getfields(arg, Dict()))
-        idxs_3 = map(idx -> index_instance(idx.name), setdiff(getfields(arg, Dict()), idxs_1))
+        idxs_2 = map(idx -> index_instance(idx.name), getfields(arg))
+        idxs_3 = map(idx -> index_instance(idx.name), setdiff(getfields(arg), idxs_1))
         res = tag_instance(variable_instance(:res), tns.val)
         lhs = access_instance(res, literal_instance(updater), idxs_3...)
         rhs = finch_pointwise_logic_to_program(ctx.scope, arg)
