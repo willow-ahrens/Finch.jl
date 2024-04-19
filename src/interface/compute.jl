@@ -118,23 +118,24 @@ function propagate_transpose_queries(node::LogicNode, bindings = Dict{LogicNode,
     if @capture node plan(~stmts..., produces(~args...))
         union!(productions, args)
         stmts = map(stmts) do stmt
-            propagate_transpose_queries(stmt, bindings)
+            propagate_transpose_queries(stmt, bindings, productions)
         end
         plan(stmts..., produces(args...))
     elseif @capture node query(~lhs, ~rhs)
         rhs = push_fields(Rewrite(Postwalk((node) -> get(bindings, node, node)))(rhs))
         if lhs in productions
+            println(lhs)
             query(lhs, rhs)
         else
             if @capture rhs reorder(relabel(~rhs::isalias, ~idxs_1...), ~idxs_2...)
                 bindings[lhs] = rhs
-                plan()
+                plan(produces())
             elseif @capture rhs relabel(~rhs::isalias, ~idxs_1...)
                 bindings[lhs] = rhs
-                plan()
+                plan(produces())
             elseif isalias(rhs)
                 bindings[lhs] = rhs
-                plan()
+                plan(produces())
             else
                 query(lhs, rhs)
             end
@@ -149,13 +150,11 @@ function propagate_copy_queries(root)
     for node in PostOrderDFS(root)
         if @capture node query(~a, ~b::isalias)
             copies[a] = get(copies, b, b)
-        elseif @capture node query(~a, relabel(~b, ~idxs...))
-            copies[a] = relabel(get(copies, b, b), idxs...)
         end
     end
     Rewrite(Postwalk(Chain([
         (a -> get(copies, a, nothing)),
-        (@rule query(~a, ~b) => if haskey(copies, a) plan() end),
+        (@rule query(~a, ~a) => plan(produces())),
     ])))(root)
 end
 
@@ -447,8 +446,8 @@ function propagate_map_queries(root)
     end
     Rewrite(Prewalk(Chain([
         (a -> if haskey(props, a) props[a] end),
-        (@rule query(~a, ~b) => if haskey(props, a) plan() end),
-        (@rule plan(~a1..., plan(), ~a2...) => plan(a1..., a2...)),
+        (@rule query(~a, ~b) => if haskey(props, a) plan(produces()) end),
+        (@rule plan(~a1..., plan(produces()), ~a2...) => plan(a1..., a2...)),
     ])))(root)
 end
 
@@ -492,6 +491,8 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     #into later expressions.
     #Only reformat statements preserve intermediate breaks in computation
     prgm = propagate_copy_queries(prgm)
+    @info "propagate_copies"
+    display(prgm)
     prgm = propagate_transpose_queries(prgm)
     prgm = propagate_map_queries(prgm)
 
@@ -505,14 +506,14 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     display(prgm)
 
     prgm = push_fields(prgm)
-    @info "push_fields"
-    display(prgm)
+    #@info "push_fields"
+    #display(prgm)
     prgm = lift_fields(prgm)
-    @info "lift_fields"
-    display(prgm)
+    #@info "lift_fields"
+    #display(prgm)
     prgm = push_fields(prgm)
-    @info "push_fields"
-    display(prgm)
+    #@info "push_fields"
+    #display(prgm)
 
     @info "looped"
     display(prgm)
