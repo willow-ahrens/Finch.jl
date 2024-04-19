@@ -347,21 +347,13 @@ function RewriteTools.term(f::LogicNodeKind, args...; type = nothing)
     RewriteTools.Term(f, [finch_pattern.(args)...])
 end
 
-function getbindings(root::LogicNode)
-    bindings = Dict{LogicNode, LogicNode}()
-    for node in PostOrderDFS(root)
-        if @capture node query(~lhs, ~rhs)
-            bindings[lhs] = rhs
-        end
-    end
-    bindings
-end
-
-function getfields(node::LogicNode, bindings)
-    if node.kind == field || node.kind == immediate
+function getfields(node::LogicNode, bindings=Dict())
+    if node.kind == field
         throw(ArgumentError("getfields($(node.kind)) is undefined"))
+    elseif node.kind == immediate
+        return []
     elseif node.kind == alias
-        return getfields(bindings[node], bindings)
+        throw(ArgumentError("getfields(alias) is undefined, try calling `propagate_fields` on the whole plan to resolve alias fields."))
     elseif node.kind == table
         return node.idxs
     elseif node.kind == subquery
@@ -372,15 +364,33 @@ function getfields(node::LogicNode, bindings)
     elseif node.kind == aggregate
         return setdiff(getfields(node.arg, bindings), node.idxs)
     elseif node.kind == reorder
-        idxs = getfields(node.arg, bindings)
-        return intersect(node.idxs, idxs)
+        return node.idxs
     elseif node.kind == relabel
-        #idxs = getfields(node.arg, bindings)
-        #@assert length(idxs) == length(node.idxs)
         return node.idxs
     elseif node.kind == reformat
         return getfields(node.arg, bindings)
     else
         throw(ArgumentError("getfields($(node.kind)) is undefined"))
+    end
+end
+
+function propagate_fields(node::LogicNode, fields = Dict{LogicNode, Any}())
+    if @capture node plan(~stmts..., produces(~args...))
+        stmts = map(stmts) do stmt
+            propagate_fields(stmt, fields)
+        end
+        plan(stmts..., produces(args...))
+    elseif @capture node query(~lhs, ~rhs)
+        rhs = propagate_fields(rhs, fields)
+        fields[lhs] = getfields(rhs, Dict())
+        query(lhs, rhs)
+    elseif @capture node relabel(alias, ~idxs...)
+        node
+    elseif isalias(node)
+        relabel(node, fields[node]...)
+    elseif istree(node)
+        similarterm(node, operation(node), map(x -> propagate_fields(x, fields), arguments(node)))
+    else
+        node
     end
 end

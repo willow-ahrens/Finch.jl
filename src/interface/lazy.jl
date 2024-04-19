@@ -21,31 +21,15 @@ Base.size(::LazyTensor) =
 Base.getindex(::LazyTensor, i...) = throw(ErrorException("Lazy indexing with named indices is not supported. Call `compute()` first."))
 
 function Base.getindex(arr::LazyTensor{T, N}, idxs::Vararg{Union{Nothing, Colon}}) where {T, N}
-    num_nothings = sum([isnothing(idx) for idx in idxs]; init=0)
-    num_colons = length(idxs) - num_nothings
-    if num_colons != N
+    if length(idxs) - count(isnothing, idxs) != N
         throw(ArgumentError("Cannot index a lazy tensor with more or fewer `:` dims than it had original dims."))
     end
     fields = [field(gensym(:i)) for _ in 1:length(idxs)]
-    original_fields = fields[1:num_colons]
-    added_fields = fields[num_colons+1:end]
-    reordered_fields = []
-    new_extrude = Bool[]
-    original_idx = 1
-    added_idx = 1
-    for idx in idxs
-        if idx isa Colon
-            push!(reordered_fields, original_fields[original_idx])
-            push!(new_extrude, arr.extrude[original_idx])
-            original_idx += 1
-        else
-            push!(reordered_fields, added_fields[added_idx])
-            push!(new_extrude, true)
-            added_idx += 1
-        end
-    end
-    data = reorder(relabel(arr.data, fields...), reordered_fields...)
-    return LazyTensor{T}(data, Tuple(new_extrude))
+    original_fields = fields[findall(!isnothing, idxs)]
+    data = reorder(relabel(arr.data, original_fields...), fields...)
+    extrude = [true for _ in 1:length(idxs)]
+    extrude[findall(!isnothing, idxs)] .= arr.extrude
+    return LazyTensor{T}(data, (extrude...,))
 end
 
 function identify(data)
