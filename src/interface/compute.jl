@@ -33,28 +33,6 @@ lift_subqueries = Rewrite(Fixpoint(Postwalk(Chain([
     (@rule plan(~args...) => plan(unique(args))),
 ]))))
 
-function simplify_queries(bindings)
-    Rewrite(Fixpoint(Postwalk(Chain([
-        (@rule aggregate(~op, ~init, ~arg) => mapjoin(op, arg)),
-        (@rule mapjoin(overwrite, ~lhs, ~rhs) =>
-            reorder(rhs, getfields(mapjoin(overwrite, ~lhs, ~rhs), bindings)...)),
-    ]))))
-end
-
-function propagate_copy_queries(root)
-    copies = Dict()
-    for node in PostOrderDFS(root)
-        if @capture node query(~a, ~b::isalias)
-            copies[a] = b
-        end
-    end
-    Rewrite(Postwalk(Chain([
-        Fixpoint(a -> if haskey(copies, a) copies[a] end),
-        (@rule query(~a, ~a) => plan()),
-        (@rule plan(~a1..., plan(), ~a2...) => plan(a1..., a2...)),
-    ])))(root)
-end
-
 function pretty_labels(root)
     fields = Dict()
     aliases = Dict()
@@ -65,83 +43,149 @@ function pretty_labels(root)
 end
 
 """
-normalize the program to a form where reorders wrap relabels and both are pushed to the leaves of mapjoins
-"""
-function push_labels(root, bindings)
-    root = Rewrite(Postwalk(Chain([
-        (@rule relabel(~arg, ~idxs...) => reorder(relabel(~arg, ~idxs...), idxs...)),
-        #TODO: This statement sets the loop order, which should probably be done with more forethought as a separate step before concordization.
-        (@rule mapjoin(~args...) => reorder(mapjoin(args...), getfields(mapjoin(args...), bindings)...))
-    ])))(root)
+push_fields(node)
 
-    root = Rewrite(Fixpoint(Prewalk(Chain([
-        (@rule reorder(mapjoin(~op, ~args...), ~idxs...) =>
-            mapjoin(op, map(arg -> reorder(arg, ~idxs...), args)...)),
+This program modifies all `EXPR` statements in the program, as
+defined in the following grammar:
+```
+    LEAF := relabel(ALIAS, FIELD...) |
+            table(IMMEDIATE, FIELD...) |
+            IMMEDIATE
+    EXPR := LEAF |
+            reorder(EXPR, FIELD...) |
+            relabel(EXPR, FIELD...) |
+            mapjoin(IMMEDIATE, EXPR...)
+```
+
+Pushes all reorder and relabel statements down to LEAF nodes of each EXPR.
+Output LEAF nodes will match the form `reorder(relabel(LEAF, FIELD...),
+FIELD...)`, omitting reorder or relabel if not present as an ancestor of the
+LEAF in the original EXPR. Tables and immediates will absorb relabels.
+"""
+function push_fields(root)
+    root = Rewrite(Prewalk(Fixpoint(Chain([
         (@rule relabel(mapjoin(~op, ~args...), ~idxs...) => begin
-            idxs_2 = getfields(mapjoin(op, args...), bindings)
+            idxs_2 = getfields(mapjoin(op, args...))
             mapjoin(op, map(arg -> relabel(reorder(arg, idxs_2...), idxs...), args)...)
         end),
-        (@rule reorder(reorder(~arg, ~idxs...), ~idxs_2...) =>
-            reorder(~arg, ~idxs_2...)),
         (@rule relabel(relabel(~arg, ~idxs...), ~idxs_2...) =>
             relabel(~arg, ~idxs_2...)),
-        (@rule relabel(reorder(~arg, ~idxs...), ~idxs_2...) => begin
-            reidx = Dict(map(Pair, idxs, idxs_2)...)
-            idxs_3 = getfields(arg, bindings)
+        (@rule relabel(reorder(~arg, ~idxs_1...), ~idxs_2...) => begin
+            idxs_3 = getfields(arg)
+            reidx = Dict(map(Pair, idxs_1, idxs_2)...)
             idxs_4 = map(idx -> get(reidx, idx, idx), idxs_3)
             reorder(relabel(arg, idxs_4...), idxs_2...)
         end),
-    ]))))(root)
-
-    #=
-    root = Rewrite(Fixpoint(Postwalk(Chain([
-        (@rule plan(~a1..., query(~b, relabel(~c, ~i...)), ~a2...) => begin
-            d = alias(gensym(:A))
-            bindings[d] = c
-            rw = Rewrite(Postwalk(@rule b => relabel(d, i...)))
-            plan(a1..., query(d, c), map(rw, a2)...)
+        (@rule relabel(table(~arg, ~idxs_1...), ~idxs_2...) => begin
+            table(arg, idxs_2...)
         end),
-        (@rule plan(~a1..., query(~b, reorder(~c, ~i...)), ~a2...) => begin
-            d = alias(gensym(:A))
-            bindings[d] = c
-            rw = Rewrite(Postwalk(@rule b => reorder(d, i...)))
-            plan(a1..., query(d, c), map(rw, a2)...)
-        end),
-        #(@rule reformat(~tns, relabel(~arg, ~idxs...)) => relabel(reformat(tns, arg), idxs...)),
+        (@rule relabel(~arg::isimmediate) => arg),
     ]))))(root)
-    =#
+    root = Rewrite(Prewalk(Fixpoint(Chain([
+        (@rule reorder(mapjoin(~op, ~args...), ~idxs...) =>
+            mapjoin(op, map(arg -> reorder(arg, ~idxs...), args)...)),
+        (@rule reorder(reorder(~arg, ~idxs...), ~idxs_2...) =>
+            reorder(~arg, ~idxs_2...)),
+    ]))))(root)
+    root
 end
 
-#=
-function pull_reorders(root, bindings)
-    root = Rewrite(Fixpoint(Prewalk(Chain([
-        (@rule mapjoin(~args...) => reorder(mapjoin(args...), getfields(mapjoin(args...), bindings)...))
-    ]))))(root)
-    root = Rewrite(Fixpoint(Prewalk(Chain([
-        (@rule mapjoin(~a1..., reorder(~b, ~i...), ~a2...) => mapjoin(a1..., b, a2...)),
-    ]))))(root)
+"""
+propagate_transpose_queries(root)
+
+Removes non-materializing permutation queries by propagating them to the
+expressions they contain. Pushes fields and also removes copies. Removes queries of the form:
+```
+    query(ALIAS, reorder(relabel(ALIAS, FIELD...), FIELD...))
+```
+
+Does not remove queries which define production aliases.
+
+Accepts programs of the form:
+```
+       TABLE  := table(IMMEDIATE, FIELD...)
+       ACCESS := reorder(relabel(ALIAS, FIELD...), FIELD...)
+    POINTWISE := ACCESS | mapjoin(IMMEDIATE, POINTWISE...) | reorder(IMMEDIATE, FIELD...) | IMMEDIATE
+    MAPREDUCE := POINTWISE | aggregate(IMMEDIATE, IMMEDIATE, POINTWISE, FIELD...)
+  INPUT_QUERY := query(ALIAS, TABLE)
+COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, MAPREDUCE)) | query(ALIAS, MAPREDUCE))
+         PLAN := plan(STEP..., produces(ALIAS...))
+         STEP := COMPUTE_QUERY | INPUT_QUERY | PLAN
+         ROOT := STEP
+```
+"""
+function propagate_transpose_queries(node::LogicNode, bindings = Dict{LogicNode, LogicNode}(), productions = Set())
+    if @capture node plan(~stmts..., produces(~args...))
+        union!(productions, args)
+        stmts = map(stmts) do stmt
+            propagate_transpose_queries(stmt, bindings, productions)
+        end
+        plan(stmts..., produces(args...))
+    elseif @capture node query(~lhs, ~rhs)
+        rhs = push_fields(Rewrite(Postwalk((node) -> get(bindings, node, node)))(rhs))
+        if lhs in productions
+            query(lhs, rhs)
+        else
+            if @capture rhs reorder(relabel(~rhs::isalias, ~idxs_1...), ~idxs_2...)
+                bindings[lhs] = rhs
+                plan(produces())
+            elseif @capture rhs relabel(~rhs::isalias, ~idxs_1...)
+                bindings[lhs] = rhs
+                plan(produces())
+            elseif isalias(rhs)
+                bindings[lhs] = rhs
+                plan(produces())
+            else
+                query(lhs, rhs)
+            end
+        end
+    else
+        throw(ArgumentError("Unrecognized program in propagate_transpose_queries"))
+    end
 end
 
-function push_reorders(root, bindings)
-    Rewrite(Fixpoint(Postwalk(Chain([
-        (@rule plan(~a1..., query(~b, reorder(~c, ~i...)), ~a2...) => begin
-            d = alias(gensym(:A))
-            bindings[d] = c
-            rw = Rewrite(Postwalk(@rule b => reorder(d, i...)))
-            plan(a1..., query(d, c), map(rw, a2)...)
-        end),
-    ]))))(root)
+function propagate_copy_queries(root)
+    copies = Dict()
+    for node in PostOrderDFS(root)
+        if @capture node query(~a, ~b::isalias)
+            copies[a] = get(copies, b, b)
+        end
+    end
+    Rewrite(Postwalk(Chain([
+        (a -> get(copies, a, nothing)),
+        (@rule query(~a, ~a) => plan(produces())),
+    ])))(root)
 end
-=#
+
+"""
+This one is a placeholder that places reorder statements inside aggregate and mapjoin query nodes.
+only works on the output of propagate_fields(push_fields(prgm))
+"""
+function lift_fields(prgm)
+    Rewrite(Postwalk(Chain([
+        (@rule aggregate(~op, ~init, ~arg, ~idxs_1...) => begin
+            idxs_2 = getfields(arg)
+            aggregate(op, init, reorder(arg, idxs_2...), idxs_1...)
+        end),
+        (@rule query(~lhs, ~rhs) => if rhs.kind === mapjoin
+            idxs = getfields(rhs)
+            query(lhs, reorder(rhs, idxs...))
+        end),
+        (@rule query(~lhs, reformat(~arg)) => if arg.kind === mapjoin
+            idxs = getfields(arg)
+            query(lhs, reformat(reorder(arg, idxs...)))
+        end),
+    ])))(prgm)
+end
 
 pad_labels = Rewrite(Postwalk(
     @rule relabel(~arg, ~idxs...) => reorder(relabel(~arg, ~idxs...), idxs...)
 ))
 
-function fuse_reformats(root)
+function propagate_into_reformats(root)
     Rewrite(Postwalk(Chain([
         (@rule plan(~a1..., query(~b, ~c), ~a2..., query(~d, reformat(~tns, ~b)), ~a3...) => begin
-            if !(b in PostOrderDFS(plan(a2..., a3...))) && c.kind !== reformat
+            if !(b in PostOrderDFS(plan(a2..., a3...))) && (c.kind === mapjoin || c.kind === aggregate || c.kind === reorder)
                 plan(a1..., query(d, reformat(tns, c)), a2..., a3...)
             end
         end),
@@ -158,35 +202,58 @@ function withsubsequence(a, b)
     a = collect(a)
     b = collect(b)
     view(b, findall(idx -> idx in a, b)) .= a
+    b
 end
 
-function concordize(bindings, root)
+"""
+    concordize(root)
+
+Accepts a program of the following form:
+
+```
+        TABLE := table(IMMEDIATE, FIELD...)
+       ACCESS := reorder(relabel(ALIAS, FIELD...), FIELD...)
+      COMPUTE := ACCESS |
+                 mapjoin(IMMEDIATE, COMPUTE...) |
+                 aggregate(IMMEDIATE, IMMEDIATE, COMPUTE, FIELD...) |
+                 reformat(IMMEDIATE, COMPUTE) |
+                 IMMEDIATE
+COMPUTE_QUERY := query(ALIAS, COMPUTE)
+  INPUT_QUERY := query(ALIAS, TABLE)
+         STEP := COMPUTE_QUERY | INPUT_QUERY
+         ROOT := PLAN(STEP..., produces(ALIAS...))
+```   
+
+Inserts permutation statements of the form `query(ALIAS, reorder(ALIAS,
+FIELD...))` and updates `relabel`s so that
+they match their containing `reorder`s. Modified `ACCESS` statements match the form:
+
+```
+ACCESS := reorder(relabel(ALIAS, idxs_1::FIELD...), idxs_2::FIELD...) where issubsequence(idxs_1, idxs_2)
+```
+"""
+function concordize(root)
     needed_swizzles = Dict()
+    spc = Namespace()
+    map(node->freshen(spc, node.name), unique(filter(Or(isfield, isalias), collect(PostOrderDFS(root)))))
+    #Collect the needed swizzles
     root = Rewrite(Postwalk(
-        @rule reorder(relabel(~a::isalias, ~idxs_2...), ~idxs...) => begin
-            idxs_3 = getfields(a, bindings)
-            reidx = Dict(map(Pair, idxs_2, idxs_3)...)
-            idxs_4 = map(idx -> get(reidx, idx, idx), idxs)
-            relabel(reorder(a, idxs_4...), idxs...)
+        @rule reorder(relabel(~a::isalias, ~idxs_1...), ~idxs_2...) => begin
+            idxs_3 = intersect(idxs_1, idxs_2)
+            if !issubsequence(idxs_3, idxs_2)
+                idxs_4 = withsubsequence(intersect(idxs_2, idxs_1), idxs_1)
+                perm = map(idx -> findfirst(isequal(idx), idxs_1), idxs_4)
+                reorder(relabel(get!(get!(needed_swizzles, a, OrderedDict()), perm, alias(freshen(spc, a.name))), idxs_4), idxs_2...)
+            end
         end
     ))(root)
-    root = Rewrite(Postwalk(Chain([
-        (@rule reorder(~a::isalias, ~idxs...) => begin
-            idxs_2 = getfields(a, bindings)
-            idxs_3 = intersect(idxs, idxs_2)
-            if !issubsequence(idxs_3, idxs_2)
-                reorder(get!(get!(needed_swizzles, a, Dict()), idxs_3, alias(gensym(:A))), idxs...)
-            end
-        end),
-    ])))(root)
+    #Insert the swizzles
     root = Rewrite(Postwalk(Chain([
         (@rule query(~a, ~b) => begin
             if haskey(needed_swizzles, a)
-                idxs = getfields(a, bindings)
-                swizzle_queries = map(collect(needed_swizzles[a])) do (idxs_2, c)
-                    idxs_3 = withsubsequence(idxs_2, idxs)
-                    bindings[c] = reorder(a, idxs_3...)
-                    query(c, reorder(relabel(a, idxs), idxs_3...))
+                idxs = getfields(b)
+                swizzle_queries = map(collect(needed_swizzles[a])) do (perm, c)
+                    query(c, reorder(relabel(a, idxs...), idxs[perm]...))
                 end
                 plan(query(a, b), swizzle_queries...)
             end
@@ -199,21 +266,30 @@ drop_noisy_reorders = Rewrite(Postwalk(
     @rule reorder(relabel(~arg, ~idxs...), ~idxs...) => relabel(arg, idxs...)
 ))
 
-function format_queries(bindings)
-    Rewrite(Postwalk(
-        @rule query(~a, ~b) => if b.kind !== reformat && b.kind !== table
-            query(a, reformat(immediate(suitable_storage(b, bindings)), b))
+function format_queries(node::LogicNode, bindings=Dict())
+    if @capture node plan(~stmts..., produces(~args...))
+        stmts = map(stmts) do stmt
+            format_queries(stmt, bindings)
         end
-    ))
+        plan(stmts..., produces(args...))
+    elseif (@capture node query(~lhs, ~rhs)) && rhs.kind !== reformat && rhs.kind !== table
+        rep = SuitableRep(bindings)(rhs)
+        bindings[lhs] = rep
+        tns = immediate(rep_construct(rep))
+        query(lhs, reformat(tns, rhs))
+    elseif @capture node query(~lhs, ~rhs)
+        bindings[lhs] = SuitableRep(bindings)(rhs)
+        node
+    else
+        node
+    end
 end
-
 struct SuitableRep
     bindings::Dict
 end
-suitable_storage(ex, bindings) = rep_construct(SuitableRep(bindings)(ex))
 function (ctx::SuitableRep)(ex)
     if ex.kind === alias
-        return ctx(ctx.bindings[ex])
+        return ctx.bindings[ex]
     elseif ex.kind === table
         return data_rep(ex.tns.val)
     elseif ex.kind === mapjoin
@@ -223,13 +299,13 @@ function (ctx::SuitableRep)(ex)
         #total ordering of the indices as we go.
         return map_rep(ex.op.val, map(ctx, ex.args)...)
     elseif ex.kind === aggregate
-        idxs = getfields(ex.arg, ctx.bindings)
+        idxs = getfields(ex.arg)
         return aggregate_rep(ex.op.val, ex.init.val, ctx(ex.arg), map(idx->findfirst(isequal(idx), idxs), ex.idxs))
     elseif ex.kind === reorder
         #In this step, we need to consider that the reorder may add or permute
         #dims. I haven't considered whether this is robust to dropping dims (it
         #probably isn't)
-        idxs = getfields(ex.arg, ctx.bindings)
+        idxs = getfields(ex.arg)
         perm = sortperm(idxs, by=idx->findfirst(isequal(idx), ex.idxs))
         rep = permutedims_rep(ctx(ex.arg), perm)
         dims = findall(idx -> idx in idxs, ex.idxs)
@@ -250,15 +326,15 @@ end
 
 The finch interpreter is a simple interpreter for finch logic programs. The interpreter is
 only capable of executing programs of the form:
-REORDER = relabel(reorder(tns::isalias, idxs_1...), idxs_2...)
-ACCESS = relabel(reorder(tns::isalias, idxs_1...), idxs_2...) where issubsequence(idxs_1, idxs_2)
-IMMEDIATE = reorder(relabel(val::isimmediate))
-POINTWISE = ACCESS | mapjoin(f, arg::POINTWISE...) | IMMEDIATE
-MAPREDUCE = POINTWISE | aggregate(op, init, arg::POINTWISE, idxs...)
-TABLE = table(tns, idxs...)
-COMPUTE_QUERY = query(lhs, reformat(tns, arg::(REORDER | MAPREDUCE)))
-INPUT_QUERY = query(lhs, TABLE)
-ROOT = PLAN(args::(COMPUTE_QUERY | INPUT_QUERY | produces(args...))...)
+      REORDER := reorder(relabel(ALIAS, FIELD...), FIELD...)
+       ACCESS := reorder(relabel(ALIAS, idxs_1::FIELD...), idxs_2::FIELD...) where issubsequence(idxs_1, idxs_2)
+    POINTWISE := ACCESS | mapjoin(IMMEDIATE, POINTWISE...) | reorder(IMMEDIATE, FIELD...) | IMMEDIATE
+    MAPREDUCE := POINTWISE | aggregate(IMMEDIATE, IMMEDIATE, POINTWISE, FIELD...)
+       TABLE  := table(IMMEDIATE, FIELD...)
+COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, arg::(REORDER | MAPREDUCE)))
+  INPUT_QUERY := query(ALIAS, TABLE)
+         STEP := COMPUTE_QUERY | INPUT_QUERY
+         ROOT := PLAN(STEP..., produces(ALIAS...))
 """
 struct FinchInterpreter
     scope::Dict
@@ -276,8 +352,10 @@ function finch_pointwise_logic_to_program(scope, ex)
             idx in idxs_2 ? index_instance(idx.name) : first(axes(arg)[n])
         end
         access_instance(tag_instance(variable_instance(arg.name), scope[arg]), literal_instance(reader), idxs_3...)
-    elseif (@capture ex reorder(relabel(~arg::isimmediate), ~idxs...))
+    elseif (@capture ex reorder(~arg::isimmediate, ~idxs...))
         literal_instance(arg.val)
+    elseif ex.kind === immediate
+        literal_instance(ex.val)
     else
         error("Unrecognized logic: $(ex)")
     end
@@ -292,6 +370,7 @@ function (ctx::FinchInterpreter)(ex)
     elseif @capture ex table(~tns, ~idxs...)
         return tns.val
     elseif @capture ex reformat(~tns, reorder(relabel(~arg::isalias, ~idxs_1...), ~idxs_2...))
+        println(map(idx -> findfirst(isequal(idx), idxs_1), idxs_2))
         copyto!(tns.val, swizzle(ctx.scope[arg], map(idx -> findfirst(isequal(idx), idxs_1), idxs_2)...))
     elseif @capture ex reformat(~tns, mapjoin(~args...))
         z = default(tns.val)
@@ -359,6 +438,7 @@ is fused with the execution of `z + 1`.
 lazy(arg) = LazyTensor(arg)
 
 function propagate_map_queries(root)
+    root = Rewrite(Postwalk(@rule aggregate(~op, ~init, ~arg) => mapjoin(op, init, arg)))(root)
     rets = []
     for node in PostOrderDFS(root)
         if @capture node produces(~args...)
@@ -375,8 +455,8 @@ function propagate_map_queries(root)
     end
     Rewrite(Prewalk(Chain([
         (a -> if haskey(props, a) props[a] end),
-        (@rule query(~a, ~b) => if haskey(props, a) plan() end),
-        (@rule plan(~a1..., plan(), ~a2...) => plan(a1..., a2...)),
+        (@rule query(~a, ~b) => if haskey(props, a) plan(produces()) end),
+        (@rule plan(~a1..., plan(produces()), ~a2...) => plan(a1..., a2...)),
     ])))(root)
 end
 
@@ -394,26 +474,64 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     vars = map(arg -> alias(gensym(:A)), args)
     bodies = map((arg, var) -> query(var, arg.data), args, vars)
     prgm = plan(bodies, produces(vars))
+
+    #deduplicate and lift inline subqueries to regular queries
     prgm = lift_subqueries(prgm)
-    #At this point in the program, all statements should be unique, so the
-    #isolate calls that name things to lift them should be okay.
+    #At this point in the program, all statements should be unique, so
+    #it is okay to name different occurences of things.
+
+    #these steps lift reformat, aggregate, and table nodes into separate
+    #queries, using subqueries as temporaries.
     prgm = isolate_reformats(prgm)
     prgm = isolate_aggregates(prgm)
     prgm = isolate_tables(prgm)
     prgm = lift_subqueries(prgm)
-    bindings = getbindings(prgm)
-    prgm = simplify_queries(bindings)(prgm)
-    prgm = propagate_copy_queries(prgm)
-    prgm = propagate_map_queries(prgm)
+
+    #I shouldn't use gensym but I do, so this cleans up the names
     prgm = pretty_labels(prgm)
-    bindings = getbindings(prgm)
-    prgm = push_labels(prgm, bindings)
-    prgm = concordize(bindings, prgm)
-    prgm = fuse_reformats(prgm)
-    prgm = push_labels(prgm, bindings)
+
+    #@info "split"
+    #display(prgm)
+
+    #These steps fuse copy, permutation, and mapjoin statements
+    #into later expressions.
+    #Only reformat statements preserve intermediate breaks in computation
     prgm = propagate_copy_queries(prgm)
-    bindings = getbindings(prgm)
-    prgm = format_queries(bindings)(prgm)
+    prgm = propagate_transpose_queries(prgm)
+    prgm = propagate_map_queries(prgm)
+
+    #@info "fused"
+    #display(prgm)
+
+    #These steps assign a global loop order to each statement.
+    prgm = propagate_fields(prgm)
+
+    #@info "propagate_fields"
+    #display(prgm)
+
+    prgm = push_fields(prgm)
+    prgm = lift_fields(prgm)
+    prgm = push_fields(prgm)
+
+    #@info "loops ordered"
+    #display(prgm)
+
+    #After we have a global loop order, we concordize the program
+    prgm = concordize(prgm)
+
+    #@info "concordized"
+    #display(prgm)
+
+    #Add reformat statements where there aren't any
+    prgm = propagate_into_reformats(prgm)
+    prgm = propagate_copy_queries(prgm)
+    prgm = format_queries(prgm)
+
+    #@info "formatted"
+    #display(prgm)
+
+    #Normalize names for caching
     prgm = normalize_names(prgm)
+
     FinchInterpreter(Dict())(prgm)
 end
