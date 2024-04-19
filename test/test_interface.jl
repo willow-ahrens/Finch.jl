@@ -414,7 +414,6 @@ using Finch: AsArray
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/487
-    #=
     let
         a = fsprand(100, 1, 0.8)
         b = fsprand(100, 1, 0.8)
@@ -427,6 +426,4 @@ using Finch: AsArray
         plan = permutedims(broadcast(.+, permutedims(a_l, (2, 1)), permutedims(b_l, (2, 1))), (2, 1))
         compute(plan)  # fails
     end
-    =#
-
 end
