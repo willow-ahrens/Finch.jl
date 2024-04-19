@@ -124,7 +124,6 @@ function propagate_transpose_queries(node::LogicNode, bindings = Dict{LogicNode,
     elseif @capture node query(~lhs, ~rhs)
         rhs = push_fields(Rewrite(Postwalk((node) -> get(bindings, node, node)))(rhs))
         if lhs in productions
-            println(lhs)
             query(lhs, rhs)
         else
             if @capture rhs reorder(relabel(~rhs::isalias, ~idxs_1...), ~idxs_2...)
@@ -267,21 +266,30 @@ drop_noisy_reorders = Rewrite(Postwalk(
     @rule reorder(relabel(~arg, ~idxs...), ~idxs...) => relabel(arg, idxs...)
 ))
 
-function format_queries(bindings)
-    Rewrite(Postwalk(
-        @rule query(~a, ~b) => if b.kind !== reformat && b.kind !== table
-            query(a, reformat(immediate(suitable_storage(b, bindings)), b))
+function format_queries(node::LogicNode, bindings=Dict())
+    if @capture node plan(~stmts..., produces(~args...))
+        stmts = map(stmts) do stmt
+            format_queries(stmt, bindings)
         end
-    ))
+        plan(stmts..., produces(args...))
+    elseif (@capture node query(~lhs, ~rhs)) && rhs.kind !== reformat && rhs.kind !== table
+        rep = SuitableRep(bindings)(rhs)
+        bindings[lhs] = rep
+        tns = immediate(rep_construct(rep))
+        query(lhs, reformat(tns, rhs))
+    elseif @capture node query(~lhs, ~rhs)
+        bindings[lhs] = SuitableRep(bindings)(rhs)
+        node
+    else
+        node
+    end
 end
-
 struct SuitableRep
     bindings::Dict
 end
-suitable_storage(ex, bindings) = rep_construct(SuitableRep(bindings)(ex))
 function (ctx::SuitableRep)(ex)
     if ex.kind === alias
-        return ctx(ctx.bindings[ex])
+        return ctx.bindings[ex]
     elseif ex.kind === table
         return data_rep(ex.tns.val)
     elseif ex.kind === mapjoin
@@ -291,13 +299,13 @@ function (ctx::SuitableRep)(ex)
         #total ordering of the indices as we go.
         return map_rep(ex.op.val, map(ctx, ex.args)...)
     elseif ex.kind === aggregate
-        idxs = getfields(ex.arg, ctx.bindings)
+        idxs = getfields(ex.arg)
         return aggregate_rep(ex.op.val, ex.init.val, ctx(ex.arg), map(idx->findfirst(isequal(idx), idxs), ex.idxs))
     elseif ex.kind === reorder
         #In this step, we need to consider that the reorder may add or permute
         #dims. I haven't considered whether this is robust to dropping dims (it
         #probably isn't)
-        idxs = getfields(ex.arg, ctx.bindings)
+        idxs = getfields(ex.arg)
         perm = sortperm(idxs, by=idx->findfirst(isequal(idx), ex.idxs))
         rep = permutedims_rep(ctx(ex.arg), perm)
         dims = findall(idx -> idx in idxs, ex.idxs)
@@ -471,9 +479,6 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     #At this point in the program, all statements should be unique, so
     #it is okay to name different occurences of things.
 
-    @info "ssa"
-    display(prgm)
-
     #these steps lift reformat, aggregate, and table nodes into separate
     #queries, using subqueries as temporaries.
     prgm = isolate_reformats(prgm)
@@ -484,55 +489,45 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     #I shouldn't use gensym but I do, so this cleans up the names
     prgm = pretty_labels(prgm)
 
-    @info "split"
-    display(prgm)
+    #@info "split"
+    #display(prgm)
 
     #These steps fuse copy, permutation, and mapjoin statements
     #into later expressions.
     #Only reformat statements preserve intermediate breaks in computation
     prgm = propagate_copy_queries(prgm)
-    @info "propagate_copies"
-    display(prgm)
     prgm = propagate_transpose_queries(prgm)
     prgm = propagate_map_queries(prgm)
 
-    @info "fused"
-    display(prgm)
+    #@info "fused"
+    #display(prgm)
 
     #These steps assign a global loop order to each statement.
     prgm = propagate_fields(prgm)
 
-    @info "propagate_fields"
-    display(prgm)
+    #@info "propagate_fields"
+    #display(prgm)
 
     prgm = push_fields(prgm)
-    #@info "push_fields"
-    #display(prgm)
     prgm = lift_fields(prgm)
-    #@info "lift_fields"
-    #display(prgm)
     prgm = push_fields(prgm)
-    #@info "push_fields"
-    #display(prgm)
 
-    @info "looped"
-    display(prgm)
+    #@info "loops ordered"
+    #display(prgm)
 
     #After we have a global loop order, we concordize the program
     prgm = concordize(prgm)
 
-    @info "concordized"
-    display(prgm)
+    #@info "concordized"
+    #display(prgm)
 
     #Add reformat statements where there aren't any
     prgm = propagate_into_reformats(prgm)
     prgm = propagate_copy_queries(prgm)
-    bindings = getbindings(prgm)
-    prgm = format_queries(bindings)(prgm)
+    prgm = format_queries(prgm)
 
-    @info "formatted"
-    display(prgm)
-
+    #@info "formatted"
+    #display(prgm)
 
     #Normalize names for caching
     prgm = normalize_names(prgm)

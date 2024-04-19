@@ -347,16 +347,6 @@ function RewriteTools.term(f::LogicNodeKind, args...; type = nothing)
     RewriteTools.Term(f, [finch_pattern.(args)...])
 end
 
-function getbindings(root::LogicNode)
-    bindings = Dict{LogicNode, LogicNode}()
-    for node in PostOrderDFS(root)
-        if @capture node query(~lhs, ~rhs)
-            bindings[lhs] = rhs
-        end
-    end
-    bindings
-end
-
 function getfields(node::LogicNode, bindings=Dict())
     if node.kind == field
         throw(ArgumentError("getfields($(node.kind)) is undefined"))
