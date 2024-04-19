@@ -178,7 +178,7 @@ function get_wrapper_rules(ctx, depth, alg)
         (@rule call(swizzle, call(swizzle, ~A, ~sigma_1...), ~sigma_2...) =>
             call(swizzle, A, sigma_1[getval.(sigma_2)]...)),
         (@rule access(call(swizzle, ~A, ~sigma...), ~m, ~i...) =>
-            access(A, m, i[invperm(getval.(sigma))]...)),
+            access(A, m, i[invperm(Vector{Int}(getval.(sigma)))]...)),
 
         # Common subexpression elimination
         (@rule loop(~idx, ~ext, ~body) => begin

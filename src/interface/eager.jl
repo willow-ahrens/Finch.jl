@@ -124,13 +124,3 @@ function LinearAlgebra.norm(arr::FiberOrBroadcast, p::Real = 2)
         return root(sum(broadcasted(power, broadcasted(norm, arr, p), p)))
     end
 end
-
-function Base.getindex(arr::FiberOrBroadcast, idxs::Vararg{Union{Nothing, Colon}})
-    return compute(lazy(arr)[idxs...])
-end
-function Base.getindex(arr::Tensor, idxs::Vararg{Union{Nothing, Colon}})
-    return compute(lazy(arr)[idxs...])
-end
-function Base.getindex(arr::SwizzleArray, idxs::Vararg{Union{Nothing, Colon}})
-    return compute(lazy(arr)[idxs...])
-end

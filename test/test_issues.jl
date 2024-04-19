@@ -767,5 +767,16 @@ using SparseArrays
     let
         A = fsprand(10, 10, 0.5)
         @test size(A[:, nothing, :]) == (10, 1, 10)
+
+        copyto!(Tensor(Element(0.0)), swizzle(Tensor(Element(0.0))))
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/485
+    let
+        a = zeros(1,1,1)
+        a_tns = Tensor(Dense(SparseList(SparseList(Element(0.0)))), a)
+
+        sum(a, dims=(1, 2))
+        sum(a_tns, dims=(1, 2))
     end
 end
