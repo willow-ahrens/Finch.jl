@@ -375,11 +375,8 @@ function getfields(node::LogicNode, bindings=Dict())
     elseif node.kind == aggregate
         return setdiff(getfields(node.arg, bindings), node.idxs)
     elseif node.kind == reorder
-        idxs = getfields(node.arg, bindings)
-        return intersect(node.idxs, idxs)
+        return node.idxs
     elseif node.kind == relabel
-        #idxs = getfields(node.arg, bindings)
-        #@assert length(idxs) == length(node.idxs)
         return node.idxs
     elseif node.kind == reformat
         return getfields(node.arg, bindings)

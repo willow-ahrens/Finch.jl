@@ -198,6 +198,17 @@ using Finch: AsArray
                     mapjoin(*,
                         reorder(table(A, j, i, k), k, j, i)))
         @test Finch.push_fields(expr_in) == expr_out
+
+        #=
+        query(A1, table(0, i0, i1))
+        query(A2, table(1, i2, i3))
+        query(A5, 
+            aggregate(+, 0.0, relabel(
+                mapjoin(*, 
+                    reorder(relabel(relabel(A2, i2, i3), i7, i8), i7, i8, i9),
+                    reorder(relabel(relabel(A0, i0, i1), i8, i9), i7, i8, i9)
+                ), i13, i14, i15), i14))
+        =#
     end
 
     A = Tensor(SparseList(Element(0.0)), fsparse([1, 3, 5, 7, 9], [2.0, 3.0, 4.0, 5.0, 6.0], (10,)))

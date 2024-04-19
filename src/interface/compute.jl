@@ -116,7 +116,7 @@ COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, MAPREDUCE)) | query(ALIAS, MAP
 """
 function propagate_transpose_queries(node::LogicNode, bindings = Dict{LogicNode, LogicNode}(), productions = Set())
     if @capture node plan(~stmts..., produces(~args...))
-        append!(productions, args)
+        union!(productions, args)
         stmts = map(stmts) do stmt
             propagate_transpose_queries(stmt, bindings)
         end
@@ -160,7 +160,7 @@ function propagate_copy_queries(root)
 end
 
 """
-This one is a placeholder that places reorder statements inside aggregate, query, and reformat nodes.
+This one is a placeholder that places reorder statements inside aggregate and mapjoin query nodes.
 only works on the output of propagate_fields(push_fields(prgm))
 """
 function lift_fields(prgm)
@@ -169,13 +169,13 @@ function lift_fields(prgm)
             idxs_2 = getfields(arg)
             aggregate(op, init, reorder(arg, idxs_2...), idxs_1...)
         end),
-        (@rule query(~lhs, ~rhs) => begin
+        (@rule query(~lhs, ~rhs) => if rhs.kind === mapjoin
             idxs = getfields(rhs)
             query(lhs, reorder(rhs, idxs...))
         end),
-        (@rule reformat(~tns, ~arg) => begin
+        (@rule query(~lhs, reformat(~arg)) => if arg.kind === mapjoin
             idxs = getfields(arg)
-            reformat(tns, reorder(arg, idxs...))
+            query(lhs, reformat(reorder(arg, idxs...)))
         end),
     ])))(prgm)
 end
@@ -184,10 +184,10 @@ pad_labels = Rewrite(Postwalk(
     @rule relabel(~arg, ~idxs...) => reorder(relabel(~arg, ~idxs...), idxs...)
 ))
 
-function propatate_reformat_arguments(root)
+function propagate_into_reformats(root)
     Rewrite(Postwalk(Chain([
         (@rule plan(~a1..., query(~b, ~c), ~a2..., query(~d, reformat(~tns, ~b)), ~a3...) => begin
-            if !(b in PostOrderDFS(plan(a2..., a3...))) && c.kind !== reformat
+            if !(b in PostOrderDFS(plan(a2..., a3...))) && (c.kind === mapjoin || c.kind === aggregate || c.kind === reorder)
                 plan(a1..., query(d, reformat(tns, c)), a2..., a3...)
             end
         end),
@@ -472,6 +472,9 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     #At this point in the program, all statements should be unique, so
     #it is okay to name different occurences of things.
 
+    @info "ssa"
+    display(prgm)
+
     #these steps lift reformat, aggregate, and table nodes into separate
     #queries, using subqueries as temporaries.
     prgm = isolate_reformats(prgm)
@@ -482,6 +485,9 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     #I shouldn't use gensym but I do, so this cleans up the names
     prgm = pretty_labels(prgm)
 
+    @info "split"
+    display(prgm)
+
     #These steps fuse copy, permutation, and mapjoin statements
     #into later expressions.
     #Only reformat statements preserve intermediate breaks in computation
@@ -489,20 +495,43 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     prgm = propagate_transpose_queries(prgm)
     prgm = propagate_map_queries(prgm)
 
+    @info "fused"
+    display(prgm)
+
     #These steps assign a global loop order to each statement.
     prgm = propagate_fields(prgm)
+
+    @info "propagate_fields"
+    display(prgm)
+
     prgm = push_fields(prgm)
+    @info "push_fields"
+    display(prgm)
     prgm = lift_fields(prgm)
+    @info "lift_fields"
+    display(prgm)
     prgm = push_fields(prgm)
+    @info "push_fields"
+    display(prgm)
+
+    @info "looped"
+    display(prgm)
 
     #After we have a global loop order, we concordize the program
     prgm = concordize(prgm)
 
+    @info "concordized"
+    display(prgm)
+
     #Add reformat statements where there aren't any
-    prgm = propagate_reformat_arguments(prgm)
+    prgm = propagate_into_reformats(prgm)
     prgm = propagate_copy_queries(prgm)
     bindings = getbindings(prgm)
     prgm = format_queries(bindings)(prgm)
+
+    @info "formatted"
+    display(prgm)
+
 
     #Normalize names for caching
     prgm = normalize_names(prgm)
