@@ -243,7 +243,7 @@ function concordize(root)
             if !issubsequence(idxs_3, idxs_2)
                 idxs_4 = withsubsequence(intersect(idxs_2, idxs_1), idxs_1)
                 perm = map(idx -> findfirst(isequal(idx), idxs_1), idxs_4)
-                reorder(relabel(get!(get!(needed_swizzles, a, Dict()), perm, alias(freshen(spc, a.name))), idxs_4), idxs_2...)
+                reorder(relabel(get!(get!(needed_swizzles, a, OrderedDict()), perm, alias(freshen(spc, a.name))), idxs_4), idxs_2...)
             end
         end
     ))(root)
@@ -370,6 +370,7 @@ function (ctx::FinchInterpreter)(ex)
     elseif @capture ex table(~tns, ~idxs...)
         return tns.val
     elseif @capture ex reformat(~tns, reorder(relabel(~arg::isalias, ~idxs_1...), ~idxs_2...))
+        println(map(idx -> findfirst(isequal(idx), idxs_1), idxs_2))
         copyto!(tns.val, swizzle(ctx.scope[arg], map(idx -> findfirst(isequal(idx), idxs_1), idxs_2)...))
     elseif @capture ex reformat(~tns, mapjoin(~args...))
         z = default(tns.val)
