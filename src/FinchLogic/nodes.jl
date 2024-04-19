@@ -353,8 +353,7 @@ function getfields(node::LogicNode, bindings=Dict())
     elseif node.kind == immediate
         return []
     elseif node.kind == alias
-        return getfields(bindings[node], bindings)
-        #throw(ArgumentError("getfields(alias) is undefined, try calling `propagate_fields` on the whole plan to resolve alias fields."))
+        throw(ArgumentError("getfields(alias) is undefined, try calling `propagate_fields` on the whole plan to resolve alias fields."))
     elseif node.kind == table
         return node.idxs
     elseif node.kind == subquery
