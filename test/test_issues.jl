@@ -768,7 +768,7 @@ using SparseArrays
         A = fsprand(10, 10, 0.5)
         @test size(A[:, nothing, :]) == (10, 1, 10)
 
-        copyto!(Tensor(Element(0.0)), swizzle(Tensor(Element(0.0))))
+        copyto!(Tensor(Element(0.0)), swizzle(Tensor(Element(0.0, [1.0]))))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/485
