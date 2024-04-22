@@ -7,13 +7,15 @@ const AbstractArrayOrBroadcasted = Union{AbstractArray,Broadcasted}
 mutable struct LazyTensor{T, N}
     data
     extrude::NTuple{N, Bool}
+    default::T
 end
-LazyTensor{T}(data, extrude::NTuple{N, Bool}) where {T, N} = LazyTensor{T, N}(data, extrude)
+LazyTensor{T}(data, extrude::NTuple{N, Bool}, default) where {T, N} = LazyTensor{T, N}(data, extrude, default)
 
 Base.ndims(::Type{LazyTensor{T, N}}) where {T, N} = N
 Base.ndims(tns::LazyTensor) = ndims(typeof(tns))
 Base.eltype(::Type{<:LazyTensor{T}}) where {T} = T
 Base.eltype(tns::LazyTensor) = eltype(typeof(tns))
+default(tns::LazyTensor) = tns.default
 
 Base.size(::LazyTensor) =
     throw(ErrorException("Base.size is not supported for LazyTensor. Call `compute()` first."))
@@ -29,7 +31,7 @@ function Base.getindex(arr::LazyTensor{T, N}, idxs::Vararg{Union{Nothing, Colon}
     data = reorder(relabel(arr.data, original_fields...), fields...)
     extrude = [true for _ in 1:length(idxs)]
     extrude[findall(!isnothing, idxs)] .= arr.extrude
-    return LazyTensor{T}(data, (extrude...,))
+    return LazyTensor{T}(data, (extrude...,), arr.default)
 end
 
 function identify(data)
@@ -37,15 +39,15 @@ function identify(data)
     subquery(query(lhs, data), lhs)
 end
 
-LazyTensor(data::Number) = LazyTensor{typeof(data), 0}(immediate(data), ())
-LazyTensor{T}(data::Number) where {T} = LazyTensor{T, 0}(immediate(data), ())
+LazyTensor(data::Number) = LazyTensor{typeof(data), 0}(immediate(data), (), data)
+LazyTensor{T}(data::Number) where {T} = LazyTensor{T, 0}(immediate(data), (), data)
 LazyTensor(arr::Base.AbstractArrayOrBroadcasted) = LazyTensor{eltype(arr)}(arr)
 function LazyTensor{T}(arr::Base.AbstractArrayOrBroadcasted) where {T}
     name = alias(gensym(:A))
     idxs = [field(gensym(:i)) for _ in 1:ndims(arr)]
     extrude = ntuple(n -> size(arr, n) == 1, ndims(arr))
     tns = subquery(query(name, table(immediate(arr), idxs...)), name)
-    LazyTensor{eltype(arr), ndims(arr)}(tns, extrude)
+    LazyTensor{eltype(arr), ndims(arr)}(tns, extrude, default(arr))
 end
 LazyTensor(arr::Tensor) = LazyTensor{eltype(arr)}(arr)
 LazyTensor(swizzle_arr::SwizzleArray{dims, <:Tensor}) where {dims} = permutedims(LazyTensor(swizzle_arr.body), dims)
@@ -54,7 +56,7 @@ function LazyTensor{T}(arr::Tensor) where {T}
     idxs = [field(gensym(:i)) for _ in 1:ndims(arr)]
     extrude = ntuple(n -> size(arr)[n] == 1, ndims(arr))
     tns = subquery(query(name, table(immediate(arr), idxs...)), name)
-    LazyTensor{eltype(arr), ndims(arr)}(tns, extrude)
+    LazyTensor{eltype(arr), ndims(arr)}(tns, extrude, default(arr))
 end
 LazyTensor(data::LazyTensor) = data
 
@@ -85,13 +87,14 @@ function Base.map(f, src::LazyTensor, args...)
         end
     end
     T = combine_eltypes(f, args)
+    new_default = op(default(src), map(default, largs)...)
     data = mapjoin(immediate(f), ldatas...)
-    return LazyTensor{T}(identify(data), src.extrude)
+    return LazyTensor{T}(identify(data), src.extrude, new_default)
 end
 
 function Base.map!(dst, f, src::LazyTensor, args...)
     res = map(f, src, args...)
-    return LazyTensor(identify(reformat(dst, res.data)), res.extrude)
+    return LazyTensor(identify(reformat(dst, res.data)), res.extrude, res.default)
 end
 
 function initial_value(op, T)
@@ -118,7 +121,7 @@ function Base.reduce(op, arg::LazyTensor{T, N}; dims=:, init = initial_value(op,
     fields = [field(gensym(:i)) for _ in 1:N]
     S = fixpoint_type(op, init, arg)
     data = aggregate(immediate(op), immediate(init), relabel(arg.data, fields), fields[dims]...)
-    LazyTensor{S}(identify(data), extrude)
+    LazyTensor{S}(identify(data), extrude, init)
 end
 
 # tensordot takes in two tensors `A` and `B` and performs a product and contraction
@@ -147,7 +150,7 @@ function tensordot(A::LazyTensor{T1, N1}, B::LazyTensor{T2, N2}, idxs; mult_op=*
     AB = mapjoin(immediate(mult_op), relabel(A.data, A_fields), relabel(B.data, B_fields))
     AB_reduce = aggregate(immediate(add_op), immediate(init), AB, reduce_fields...)
     S = fixpoint_type(add_op, init, AB_reduce)
-    return LazyTensor{S}(identify(AB_reduce), extrude)
+    return LazyTensor{S}(identify(AB_reduce), extrude, init)
 end
 
 #=
@@ -226,6 +229,14 @@ function broadcast_to_extrude(tns::LazyTensor, n)
     get(tns.extrude, n, false)
 end
 
+function broadcast_to_default(bc::Broadcast.Broadcasted)
+    bc.f(map(arg -> broadcast_to_default(arg), bc.args)...)
+end
+
+function broadcast_to_default(tns::LazyTensor)
+    tns.default
+end
+
 function Base.materialize!(dest, bc::Broadcasted{<:LazyStyle})
     return copyto!(dest, bc)
 end
@@ -241,7 +252,8 @@ function Base.copy(bc::Broadcasted{LazyStyle{N}}) where {N}
     idxs = [field(gensym(:i)) for _ in 1:N]
     data = reorder(broadcast_to_query(bc_lgc, idxs), idxs)
     extrude = ntuple(n -> broadcast_to_extrude(bc_lgc, n), N)
-    return LazyTensor{eltype(bc)}(identify(data), extrude)
+    def = broadcast_to_default(bc_lgc)
+    return LazyTensor{eltype(bc)}(identify(data), extrude, def)
 end
 
 function Base.copyto!(::LazyTensor, ::Any)
@@ -249,7 +261,7 @@ function Base.copyto!(::LazyTensor, ::Any)
 end
 
 function Base.copyto!(dst::AbstractArray, src::LazyTensor{T, N}) where {T, N}
-    return LazyTensor{T, N}(reformat(immediate(dst), src.data), src.extrude)
+    return LazyTensor{T, N}(reformat(immediate(dst), src.data), src.extrude, src.default)
 end
 
 Base.permutedims(arg::LazyTensor{T, 2}) where {T} = permutedims(arg, [2, 1])
@@ -258,7 +270,7 @@ function Base.permutedims(arg::LazyTensor{T, N}, perm) where {T, N}
     isperm(perm) || throw(ArgumentError("permutedims given invalid permutation"))
     perm = collect(perm)
     idxs = [field(gensym(:i)) for _ in 1:N]
-    return LazyTensor{T, N}(reorder(relabel(arg.data, idxs...), idxs[perm]...), arg.extrude[perm])
+    return LazyTensor{T, N}(reorder(relabel(arg.data, idxs...), idxs[perm]...), arg.extrude[perm], arg.default)
 end
 Base.permutedims(arr::SwizzleArray, perm) = swizzle(arr, perm...)
 

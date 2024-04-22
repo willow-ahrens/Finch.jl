@@ -18,35 +18,42 @@ struct EinsumArgument{T, Style}
     style::Style
     data::LogicNode
     extrude::Dict{Symbol, Bool}
+    default::T
 end
 
-EinsumArgument{T}(style::Style, data, extrude) where {T, Style} = EinsumArgument{T, Style}(style, data, extrude)
+EinsumArgument{T}(style::Style, data, extrude, default) where {T, Style} = EinsumArgument{T, Style}(style, data, extrude, default)
 
 Base.eltype(::EinsumArgument{T}) where {T} = T
 
 einsum_access(tns::EinsumTensor, idxs...) = EinsumArgument{eltype(tns.arg)}(
     tns.style,
     relabel(tns.arg.data, map(field, idxs)...),
-    Dict(idx => idx_extrude for (idx, idx_extrude) in zip(idxs, tns.arg.extrude))
+    Dict(idx => idx_extrude for (idx, idx_extrude) in zip(idxs, tns.arg.extrude)),
+    tns.arg.default
 )
 
 einsum_op(op, args::EinsumArgument...) = EinsumArgument{combine_eltypes(op, args)}(
     result_style((arg.style for arg in args)...),
     mapjoin(op, (arg.data for arg in args)...),
-    mergewith(&, (arg.extrude for arg in args)...)
+    mergewith(&, (arg.extrude for arg in args)...),
+    op((arg.default for arg in args)...)
 )
 
-einsum_immediate(val) = EinsumArgument{typeof(val)}(EinsumEagerStyle(), Dict(), immediate(val))
+einsum_immediate(val) = EinsumArgument{typeof(val)}(EinsumEagerStyle(), immediate(val), Dict(), val)
 
 struct EinsumProgram{Style, Arg <: LazyTensor}
     style::Style
     arg::Arg
 end
 
+function einsum(::typeof(overwrite), arg::EinsumArgument{T}, idxs...; init = nothing) where {T}
+    einsum(initwrite(arg.default), arg, idxs...; init=arg.default)
+end
+
 function einsum(op, arg::EinsumArgument{T}, idxs...; init = initial_value(op, T)) where {T}
     extrude = ntuple(n -> arg.extrude[idxs[n]], length(idxs))
     data = reorder(aggregate(immediate(op), immediate(init), arg.data, map(field, setdiff(collect(keys(arg.extrude)), idxs))...), map(field, idxs)...)
-    einsum_execute(arg.style, LazyTensor{typeof(init)}(data, extrude))
+    einsum_execute(arg.style, LazyTensor{typeof(init)}(data, extrude, init))
 end
 
 function einsum_execute(::EinsumEagerStyle, arg)
@@ -124,6 +131,32 @@ function (ctx::EinsumParserVisitor)(ex)
     end
 end
 
+"""
+    @einsum tns[idxs...] <<op>>= ex...
+
+Construct an einsum expression that computes the result of applying `op` to the
+tensor `tns` with the indices `idxs` and the tensors in the expression `ex`.
+The result is stored in the variable `tns`.
+
+`ex` may be any pointwise expression consisting of function calls and tensor
+references of the form `tns[idxs...]`, where `tns` and `idxs` are symbols.
+
+The `<<op>>` operator can be any binary operator that is defined on the element
+type of the expression `ex`.
+
+The einsum will evaluate the pointwise expression `tns[idxs...] <<op>>= ex...`
+over all combinations of index values in `tns` and the tensors in `ex`.
+
+Here are a few examples:
+```
+@einsum C[i, j] += A[i, k] * B[k, j]
+@einsum C[i, j, k] += A[i, j] * B[j, k]
+@einsum D[i, k] += X[i, j] * Y[j, k]
+@einsum J[i, j] = H[i, j] * I[i, j]
+@einsum N[i, j] = K[i, k] * L[k, j] - M[i, j]
+@einsum R[i, j] <<max>>= P[i, k] + Q[k, j]
+```
+"""
 macro einsum(ex)
     preamble = Expr(:block)
     space = Namespace()

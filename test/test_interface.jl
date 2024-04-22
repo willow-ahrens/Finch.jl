@@ -3,6 +3,77 @@ using Finch: AsArray
 @testset "interface" begin
     @info "Testing Finch Interface"
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/428
+    let
+        using Test
+
+        @testset "Einsum Tests" begin
+            # Test 1
+            A = [1 2; 3 4]
+            B = [5 6; 7 8]
+            @einsum C[i, j] += A[i, k] * B[k, j]
+            @test C == [19 22; 43 50]
+
+            # Test 2
+            A = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 3, 5, 0.5))
+            B = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 5, 3, 0.5))
+            @einsum C[i, j, k] += A[i, j] * B[j, k]
+
+            C_ref = zeros(Int, 3, 5, 3)
+            for i = 1:3, j = 1:5, k = 1:3
+                C_ref[i, j, k] += A[i, j] * B[j, k]
+            end
+            @test C == C_ref
+
+            # Test 3
+            X = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 4, 6, 0.5))
+            Y = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 6, 4, 0.5))
+            @einsum D[i, k] += X[i, j] * Y[j, k]
+
+            D_ref = zeros(Int, 4, 4)
+            for i = 1:4, j = 1:6, k = 1:4
+                D_ref[i, k] += X[i, j] * Y[j, k]
+            end
+            @test D == D_ref
+
+            # Test 4
+            H = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 5, 5, 0.6))
+            I = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 5, 5, 0.6))
+            @einsum J[i, j] = H[i, j] * I[i, j]
+
+            J_ref = zeros(Int, 5, 5)
+            for i = 1:5, j = 1:5
+                J_ref[i, j] = H[i, j] * I[i, j]
+            end
+            @test J == J_ref
+
+            # Test 5
+            K = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 4, 4, 0.7))
+            L = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 4, 4, 0.7))
+            M = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 4, 4, 0.7))
+            @einsum N[i, j] = K[i, k] * L[k, j] - M[i, j]
+
+            N_ref = zeros(Int, 4, 4)
+            for i = 1:4, k = 1:4, j = 1:4
+                N_ref[i, j] = K[i, k] * L[k, j] - M[i, j]
+            end
+            @test N == N_ref
+
+            # Test 6
+            P = Tensor(Dense(SparseList(Element(-Inf))), fsprand(Int, 3, 3, 0.7)) # Adjacency matrix with probabilities
+            Q = Tensor(Dense(SparseList(Element(-Inf))), fsprand(Int, 3, 3, 0.7))
+            @einsum R[i, j] <<max>>= P[i, k] + Q[k, j]  # Max-plus product
+
+            R_ref = fill(-Inf, 3, 3)
+            for i = 1:3, j = 1:3
+                for k = 1:3
+                    R_ref[i, j] = max(R_ref[i, j], P[i, k] + Q[k, j])
+                end
+            end
+            @test R == R_ref
+        end
+    end
+
     @testset "concordize" begin
         using Finch.FinchLogic
         A = alias(:A)
