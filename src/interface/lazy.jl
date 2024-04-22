@@ -150,6 +150,7 @@ function tensordot(A::LazyTensor{T1, N1}, B::LazyTensor{T2, N2}, idxs; mult_op=*
     return LazyTensor{S}(identify(AB_reduce), extrude)
 end
 
+#=
 # einsum represents an expression of the form Out[`out_idxs`] += ∏ F[F_idxs]
 # where each entry in args is a (lazy) tensor and a set of indices (F, F_idxs)
 function einsum(out_idxs, args...;add_op=+, mult_op=*, init = initial_value(add_op, Float64))
@@ -188,10 +189,10 @@ function einsum(out_idxs, args...;add_op=+, mult_op=*, init = initial_value(add_
     S = fixpoint_type(add_op, init, t_ordered)
     return LazyTensor{S}(identify(t_ordered), Tuple(extrude))
 end
+=#
 
-
-struct LogicStyle{N} <: BroadcastStyle end
-Base.Broadcast.BroadcastStyle(F::Type{<:LazyTensor{T, N}}) where {T, N} = LogicStyle{N}()
+struct LazyStyle{N} <: BroadcastStyle end
+Base.Broadcast.BroadcastStyle(F::Type{<:LazyTensor{T, N}}) where {T, N} = LazyStyle{N}()
 Base.Broadcast.broadcastable(tns::LazyTensor) = tns
 Base.Broadcast.BroadcastStyle(a::LazyStyle{M}, b::LazyStyle{N}) where {M, N} = LazyStyle{max(M, N)}()
 Base.Broadcast.BroadcastStyle(a::LazyStyle{M}, b::Broadcast.AbstractArrayStyle{N}) where {M, N} = LazyStyle{max(M, N)}()

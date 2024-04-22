@@ -3,6 +3,77 @@ using SparseArrays
 @testset "issues" begin
     @info "Testing Github Issues"
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/428
+    let
+        using Test
+
+        @testset "Einsum Tests" begin
+            # Test 1
+            A = [1 2; 3 4]
+            B = [5 6; 7 8]
+            @einsum C[i, j] += A[i, k] * B[k, j]
+            @test C == [19 22; 43 50]
+
+            # Test 2
+            A = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 3, 5, 0.5))
+            B = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 5, 3, 0.5))
+            @einsum C[i, j, k] += A[i, j] * B[j, k]
+
+            C_ref = zeros(Int, 3, 5, 3)
+            for i = 1:3, j = 1:5, k = 1:3
+                C_ref[i, j, k] += A[i, j] * B[j, k]
+            end
+            @test C == C_ref
+
+            # Test 3
+            X = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 4, 6, 0.5))
+            Y = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 6, 4, 0.5))
+            @einsum D[i, k] += X[i, j] * Y[j, k]
+
+            D_ref = zeros(Int, 4, 4)
+            for i = 1:4, j = 1:6, k = 1:4
+                D_ref[i, k] += X[i, j] * Y[j, k]
+            end
+            @test D == D_ref
+
+            # Test 4
+            H = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 5, 5, 0.6))
+            I = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 5, 5, 0.6))
+            @einsum J[i, j] = H[i, j] * I[i, j]
+
+            J_ref = zeros(Int, 5, 5)
+            for i = 1:5, j = 1:5
+                J_ref[i, j] = H[i, j] * I[i, j]
+            end
+            @test J == J_ref
+
+            # Test 5
+            K = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 4, 4, 0.7))
+            L = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 4, 4, 0.7))
+            M = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 4, 4, 0.7))
+            @einsum N[i, j] = K[i, k] * L[k, j] - M[i, j]
+
+            N_ref = zeros(Int, 4, 4)
+            for i = 1:4, k = 1:4, j = 1:4
+                N_ref[i, j] = K[i, k] * L[k, j] - M[i, j]
+            end
+            @test N == N_ref
+
+            # Test 6
+            P = Tensor(Dense(SparseList(Element(-Inf))), fsprand(Int, 3, 3, 0.7)) # Adjacency matrix with probabilities
+            Q = Tensor(Dense(SparseList(Element(-Inf))), fsprand(Int, 3, 3, 0.7))
+            @einsum R[i, j] = max(R[i, j], P[i, k] + Q[k, j])  # Max-plus product
+
+            R_ref = fill(-Inf, 3, 3)
+            for i = 1:3, j = 1:3
+                for k = 1:3
+                    R_ref[i, j] = max(R_ref[i, j], P[i, k] + Q[k, j])
+                end
+            end
+            @test R == R_ref
+        end
+    end
+
     #https://github.com/willow-ahrens/Finch.jl/issues/358
     let
         A = Tensor(Dense(SparseList(Element(0))), [
@@ -290,7 +361,7 @@ using SparseArrays
         @repl io C = Scalar(0)
         @repl io @finch for k=_, j=_, i=_; C[] += A[i, j, k] end
 
-        check_output("issues/pull197.txt", String(take!(io)))
+        @test check_output("issues/pull197.txt", String(take!(io)))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/70
@@ -426,7 +497,7 @@ using SparseArrays
         A = zeros(3, 3, 3)
         C = zeros(3, 3, 3)
         X = zeros(3, 3)
-        check_output("issues/issue288_concordize_let.jl", @finch_code mode=fastfinch begin
+        @test check_output("issues/issue288_concordize_let.jl", @finch_code mode=fastfinch begin
             for k=_, j=_, i=_
                 let temp1 = X[i, j]
                     for l=_
@@ -439,7 +510,7 @@ using SparseArrays
                 end
             end
         end)
-        check_output("issues/issue288_concordize_double_let.jl", @finch_code mode=fastfinch begin
+        @test check_output("issues/issue288_concordize_double_let.jl", @finch_code mode=fastfinch begin
             for k=_, j=_, i=_
                 let temp1 = X[i, j]
                     for l=_
@@ -487,14 +558,14 @@ using SparseArrays
         s = ShortCircuitScalar(false)
         x = Tensor(SparseList(Element(false)), [false, true, true, false])
         y = Tensor(SparseList(Element(false)), [false, true, false, true])
-        check_output("issues/short_circuit.jl", @finch_code begin
+        @test check_output("issues/short_circuit.jl", @finch_code begin
             for i = _
                 s[] |= x[i] && y[i]
             end
         end)
 
         c = Scalar(0)
-        check_output("issues/short_circuit_sum.jl", @finch_code begin
+        @test check_output("issues/short_circuit_sum.jl", @finch_code begin
             for i = _
                 let x_i = x[i]
                     s[] |= x_i && y[i]
@@ -508,7 +579,7 @@ using SparseArrays
         p = ShortCircuitScalar(0)
         P = Tensor(Dense(Element(0)))
 
-        check_output("issues/short_circuit_bfs.jl", @finch_code begin
+        @test check_output("issues/short_circuit_bfs.jl", @finch_code begin
             P .= false
             for j = _
                 p .= false
@@ -621,7 +692,7 @@ using SparseArrays
         x = Tensor(Dense(Element(0.0)), rand(3))
         y = Tensor(Dense(Element(0.0)), rand(3))
 
-        check_output("issues/cse_symv.jl", @finch_code begin
+        @test check_output("issues/cse_symv.jl", @finch_code begin
             for i=_, j=_
                 y[i] += A[i, j] * x[j]
                 y[j] += A[i, j] * x[i]
@@ -632,7 +703,7 @@ using SparseArrays
     #https://github.com/willow-ahrens/Finch.jl/issues/397
     let
         A = AsArray(swizzle(Tensor(Dense(Dense(Element(0.0))), [1 2 3; 4 5 6; 7 8 9]), 2, 1))
-        check_output("issues/print_swizzle_as_array.txt", sprint(show, MIME"text/plain"(), A))
+        @test check_output("issues/print_swizzle_as_array.txt", sprint(show, MIME"text/plain"(), A))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/427
