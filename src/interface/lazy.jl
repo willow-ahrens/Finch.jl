@@ -11,7 +11,26 @@ end
 LazyTensor{T}(data, extrude::NTuple{N, Bool}) where {T, N} = LazyTensor{T, N}(data, extrude)
 
 Base.ndims(::Type{LazyTensor{T, N}}) where {T, N} = N
+Base.ndims(tns::LazyTensor) = ndims(typeof(tns))
 Base.eltype(::Type{<:LazyTensor{T}}) where {T} = T
+Base.eltype(tns::LazyTensor) = eltype(typeof(tns))
+
+Base.size(::LazyTensor) =
+    throw(ErrorException("Base.size is not supported for LazyTensor. Call `compute()` first."))
+
+Base.getindex(::LazyTensor, i...) = throw(ErrorException("Lazy indexing with named indices is not supported. Call `compute()` first."))
+
+function Base.getindex(arr::LazyTensor{T, N}, idxs::Vararg{Union{Nothing, Colon}}) where {T, N}
+    if length(idxs) - count(isnothing, idxs) != N
+        throw(ArgumentError("Cannot index a lazy tensor with more or fewer `:` dims than it had original dims."))
+    end
+    fields = [field(gensym(:i)) for _ in 1:length(idxs)]
+    original_fields = fields[findall(!isnothing, idxs)]
+    data = reorder(relabel(arr.data, original_fields...), fields...)
+    extrude = [true for _ in 1:length(idxs)]
+    extrude[findall(!isnothing, idxs)] .= arr.extrude
+    return LazyTensor{T}(data, (extrude...,))
+end
 
 function identify(data)
     lhs = alias(gensym(:A))
@@ -38,6 +57,8 @@ function LazyTensor{T}(arr::Tensor) where {T}
     LazyTensor{eltype(arr), ndims(arr)}(tns, extrude)
 end
 LazyTensor(data::LazyTensor) = data
+
+swizzle(arr::LazyTensor, dims...) = permutedims(arr, dims)
 
 Base.sum(arr::LazyTensor; kwargs...) = reduce(+, arr; kwargs...)
 Base.prod(arr::LazyTensor; kwargs...) = reduce(*, arr; kwargs...)
@@ -216,7 +237,8 @@ Base.copyto!(out, bc::Broadcasted{LazyStyle{N}}) where {N} = copyto!(out, copy(b
 
 function Base.copy(bc::Broadcasted{LazyStyle{N}}) where {N}
     bc_lgc = broadcast_to_logic(bc)
-    data = broadcast_to_query(bc_lgc, [field(gensym(:i)) for _ in 1:N])
+    idxs = [field(gensym(:i)) for _ in 1:N]
+    data = reorder(broadcast_to_query(bc_lgc, idxs), idxs)
     extrude = ntuple(n -> broadcast_to_extrude(bc_lgc, n), N)
     return LazyTensor{eltype(bc)}(identify(data), extrude)
 end
@@ -237,6 +259,7 @@ function Base.permutedims(arg::LazyTensor{T, N}, perm) where {T, N}
     idxs = [field(gensym(:i)) for _ in 1:N]
     return LazyTensor{T, N}(reorder(relabel(arg.data, idxs...), idxs[perm]...), arg.extrude[perm])
 end
+Base.permutedims(arr::SwizzleArray, perm) = swizzle(arr, perm...)
 
 Base.:+(
     x::LazyTensor,

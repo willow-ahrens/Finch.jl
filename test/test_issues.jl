@@ -1,5 +1,4 @@
 using SparseArrays
-using CIndices
 
 @testset "issues" begin
     @info "Testing Github Issues"
@@ -115,7 +114,7 @@ using CIndices
             return a+b+c
         end
         struct MyAlgebra115 <: Finch.AbstractAlgebra end
-        Finch.virtualize(ex, ::Type{MyAlgebra115}, ::Finch.JuliaContext) = MyAlgebra115()
+        Finch.virtualize(::Finch.JuliaContext, ex, ::Type{MyAlgebra115}) = MyAlgebra115()
         t = Tensor(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Tensor(SparseList(SparseList(Element(0.0)))), B))
@@ -704,4 +703,80 @@ using CIndices
         @finch (output .= 0; for i=_, j=_ output[] += A_hash[j,i] * B_hash[follow(j), i] end)
     end
 
+    let
+        A = zeros(2, 3, 3)
+        A[1, :, :] = [1 2 3; 4 5 6; 7 8 9]
+        A[2, :, :] = [1 1 1; 2 2 2; 3 3 3]
+        perm = (2, 3, 1)
+        A_t = permutedims(A, perm)
+
+        A_tns = Tensor(Dense(Dense(Dense(Element(0.0)))), A)
+        A_sw = swizzle(A_tns, perm...)
+
+        actual = broadcast(.*, A_t, A_t)
+        expected = broadcast(.*, A_sw, A_sw)
+
+        @test actual == expected
+        
+        B = zeros(size(A_sw)...)
+        copyto!(B, A_sw)
+
+        @test B == A_t
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/474
+    let
+        A = [1 2 3; 4 5 6; 7 8 9]
+        A_t = permutedims(A, (2, 1))
+        A_tns = Tensor(Dense(Dense(Element(0.0))), A)
+        A_sw = swizzle(A_tns, 2, 1)
+
+        @test prod(A_t; dims=2)[:, 1] == prod(A_sw; dims=2)
+        @test prod(A_t; dims=1)[1, :] == prod(A_sw; dims=1)
+        @test prod(A_t) == prod(A_sw)
+
+        @test tensordot(A_sw, A_sw, (2, 1)) == transpose(A * A)
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/483
+    let
+        D = Tensor(Dense{Int64}(Sparse{Int64}(Element{0.0, Float64, Int64}([0.4550140005294436, 0.6850107897370502, 0.4426087218562376, 0.24735950954269276, 0.05888493126676229, 0.5646016165775413, 0.0316029017824437]), 5, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}([1, 3, 5, 8, 8, 8], [2, 5, 2, 3, 1, 2, 3], [1, 2, 3, 4, 5, 6, 7], Dict((3, 2) => 6, (1, 2) => 1, (3, 1) => 5, (3, 3) => 7, (2, 2) => 3, (2, 3) => 4, (1, 5) => 2))), 5))
+        @test countstored(D) == 7
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/488
+    let
+        M = Tensor(Dense(SparseList(Element(0.0))), fsprand(1_000_000, 1_000_000, 1e-05));
+
+        expected(f) = sum([f() for _ = 1:100_000])/100_000.0
+
+        t = 1_000_000
+        @test 0.5 < expected(() -> countstored(fsprand(t, t, t, t, 1.0/t/t/t/t))) < 1.5
+        @test 8.5 < expected(() -> countstored(fsprand(t, t, t, t, 9.0/t/t/t/t))) < 9.5
+        @test 10.5 < expected(() -> countstored(fsprand(t, t, t, t, 11.0/t/t/t/t))) < 11.5
+
+        @test 99.5 < expected(() -> countstored(fsprand(10, 10, 1.0))) < 100.5
+        @test 49.5 < expected(() -> countstored(fsprand(10, 10, 0.5))) < 50.5
+
+        @test countstored(fsprand(10, 10, 50)) == 50
+        @test countstored(fsprand(10, 10, 100)) == 100
+        @test countstored(fsprand(t, t, t, t, 100)) == 100
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/480
+    let
+        A = fsprand(10, 10, 0.5)
+        @test size(A[:, nothing, :]) == (10, 1, 10)
+
+        copyto!(Tensor(Element(0.0)), swizzle(Tensor(Element(0.0, [1.0]))))
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/485
+    let
+        a = zeros(1,1,1)
+        a_tns = Tensor(Dense(SparseList(SparseList(Element(0.0)))), a)
+
+        sum(a, dims=(1, 2))
+        sum(a_tns, dims=(1, 2))
+    end
 end

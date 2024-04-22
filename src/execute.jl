@@ -1,25 +1,25 @@
 abstract type CompileMode end
 struct DebugFinch <: CompileMode end
 const debugfinch = DebugFinch()
-virtualize(ex, ::Type{DebugFinch}, ctx) = DebugFinch()
+virtualize(ctx, ex, ::Type{DebugFinch}) = DebugFinch()
 struct SafeFinch <: CompileMode end
 const safefinch = SafeFinch()
-virtualize(ex, ::Type{SafeFinch}, ctx) = SafeFinch()
+virtualize(ctx, ex, ::Type{SafeFinch}) = SafeFinch()
 struct FastFinch <: CompileMode end
 const fastfinch = FastFinch()
-virtualize(ex, ::Type{FastFinch}, ctx) = FastFinch()
+virtualize(ctx, ex, ::Type{FastFinch}) = FastFinch()
 
 issafe(::DebugFinch) = true
 issafe(::SafeFinch) = true
 issafe(::FastFinch) = false
 
 """
-    instantiate!(prgm, ctx)
+    instantiate!(ctx, prgm)
 
 A transformation to instantiate readers and updaters before executing an
 expression.
 """
-function instantiate!(prgm, ctx) 
+function instantiate!(ctx, prgm) 
     prgm = InstantiateTensors(ctx=ctx)(prgm)
     return prgm
 end
@@ -47,7 +47,7 @@ function (ctx::InstantiateTensors)(node::FinchNode)
     elseif (@capture node access(~tns, ~mode, ~idxs...)) && !(getroot(tns) in ctx.escape)
         #@assert get(ctx.ctx.modes, tns, reader) === node.mode.val
         protos = [(mode.val === reader ? defaultread : defaultupdate) for _ in idxs]
-        tns_2 = instantiate(tns, ctx.ctx, mode.val, protos)
+        tns_2 = instantiate(ctx.ctx, tns, mode.val, protos)
         access(tns_2, mode, idxs...)
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -60,7 +60,7 @@ execute(ex) = execute(ex, NamedTuple())
 
 @staged function execute(ex, opts)
     contain(JuliaContext()) do ctx
-        code = execute_code(:ex, ex; virtualize(:opts, opts, ctx)...)
+        code = execute_code(:ex, ex; virtualize(ctx, :opts, opts)...)
         quote
             # try
                 @inbounds @fastmath begin
@@ -78,31 +78,31 @@ end
 function execute_code(ex, T; algebra = DefaultAlgebra(), mode = safefinch, ctx = LowerJulia(algebra = algebra, mode=mode))
     code = contain(ctx) do ctx_2
         prgm = nothing
-        prgm = virtualize(ex, T, ctx_2.code)
-        lower_global(prgm, ctx_2)
+        prgm = virtualize(ctx_2.code, ex, T)
+        lower_global(ctx_2, prgm)
     end
 end
 
 """
-    lower_global(prgm, ctx)
+    lower_global(ctx, prgm)
 
 lower the program `prgm` at global scope in the context `ctx`.
 """
-function lower_global(prgm, ctx)
+function lower_global(ctx, prgm)
     prgm = enforce_scopes(prgm)
-    prgm = evaluate_partial(prgm, ctx)
+    prgm = evaluate_partial(ctx, prgm)
     code = contain(ctx) do ctx_2
         quote
             $(ctx.needs_return) = true
             $(ctx.result) = nothing
             $(begin
-                prgm = wrapperize(prgm, ctx_2)
+                prgm = wrapperize(ctx_2, prgm)
                 prgm = enforce_lifecycles(prgm)
                 prgm = dimensionalize!(prgm, ctx_2)
-                prgm = concordize(prgm, ctx_2)
-                prgm = evaluate_partial(prgm, ctx_2)
-                prgm = simplify(prgm, ctx_2) #appears necessary
-                prgm = instantiate!(prgm, ctx_2)
+                prgm = concordize(ctx_2, prgm)
+                prgm = evaluate_partial(ctx_2, prgm)
+                prgm = simplify(ctx_2, prgm) #appears necessary
+                prgm = instantiate!(ctx_2, prgm)
                 contain(ctx_2) do ctx_3
                     ctx_3(prgm)
                 end
@@ -223,7 +223,7 @@ function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = safe
     maybe_typeof(x) = x isa Type ? x : typeof(x)
     code = contain(ctx) do ctx_2
         foreach(args) do (key, val)
-            ctx_2.bindings[variable(key)] = finch_leaf(virtualize(key, maybe_typeof(val), ctx_2.code, key))
+            ctx_2.bindings[variable(key)] = finch_leaf(virtualize(ctx_2.code, key, maybe_typeof(val), key))
         end
         execute_code(:UNREACHABLE, prgm, algebra = algebra, mode = mode, ctx = ctx_2)
     end |> pretty |> unresolve |> dataflow |> unquote_literals

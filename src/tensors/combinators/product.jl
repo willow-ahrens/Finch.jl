@@ -17,15 +17,15 @@ struct VirtualProductArray <: AbstractVirtualCombinator
     dim
 end
 
-function is_injective(lvl::VirtualProductArray, ctx)
-    sub = is_injective(lvl.body, ctx)
+function is_injective(ctx, lvl::VirtualProductArray)
+    sub = is_injective(ctx, lvl.body)
     return [sub[1:lvl.dim]..., false, sub[lvl.dim + 1:end]...]
 end
-function is_concurrent(lvl::VirtualProductArray, ctx)
-    sub = is_concurrent(lvl.body, ctx)
+function is_concurrent(ctx, lvl::VirtualProductArray)
+    sub = is_concurrent(ctx, lvl.body)
     return [sub[1:lvl.dim]..., false, sub[lvl.dim + 1:end]...]
 end
-is_atomic(lvl::VirtualProductArray, ctx) = is_atomic(lvl.body, ctx)
+is_atomic(ctx, lvl::VirtualProductArray) = is_atomic(ctx, lvl.body)
 
 Base.show(io::IO, ex::VirtualProductArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualProductArray)
@@ -36,8 +36,8 @@ Base.summary(io::IO, ex::VirtualProductArray) = print(io, "VProduct($(summary(ex
 
 FinchNotation.finch_leaf(x::VirtualProductArray) = virtual(x)
 
-function virtualize(ex, ::Type{ProductArray{dim, Body}}, ctx) where {dim, Body}
-    VirtualProductArray(virtualize(:($ex.body), Body, ctx), dim)
+function virtualize(ctx, ex, ::Type{ProductArray{dim, Body}}) where {dim, Body}
+    VirtualProductArray(virtualize(ctx, :($ex.body), Body), dim)
 end
 
 """
@@ -50,25 +50,25 @@ Create a `ProductArray` such that
 This is like [`toeplitz`](@ref) but with times instead of plus.
 """
 products(body, dim) = ProductArray(body, dim)
-function virtual_call(::typeof(products), ctx, body, dim)
+function virtual_call(ctx, ::typeof(products), body, dim)
     @assert isliteral(dim)
     VirtualProductArray(body, dim.val)
 end
 
 unwrap(ctx, arr::VirtualProductArray, var) = call(products, unwrap(ctx, arr.body, var), arr.dim)
 
-lower(tns::VirtualProductArray, ctx::AbstractCompiler, ::DefaultStyle) = :(ProductArray($(ctx(tns.body)), $(tns.dim)))
+lower(ctx::AbstractCompiler, tns::VirtualProductArray, ::DefaultStyle) = :(ProductArray($(ctx(tns.body)), $(tns.dim)))
 
-#virtual_size(arr::Fill, ctx::AbstractCompiler) = (dimless,) # this is needed for multidimensional convolution..
-#virtual_size(arr::Simplify, ctx::AbstractCompiler) = (dimless,)
-#virtual_size(arr::Furlable, ctx::AbstractCompiler) = (dimless,)
+#virtual_size(ctx::AbstractCompiler, arr::Fill) = (dimless,) # this is needed for multidimensional convolution..
+#virtual_size(ctx::AbstractCompiler, arr::Simplify) = (dimless,)
+#virtual_size(ctx::AbstractCompiler, arr::Furlable) = (dimless,)
 
-function virtual_size(arr::VirtualProductArray, ctx::AbstractCompiler)
-    dims = virtual_size(arr.body, ctx)
+function virtual_size(ctx::AbstractCompiler, arr::VirtualProductArray)
+    dims = virtual_size(ctx, arr.body)
     return (dims[1:arr.dim - 1]..., dimless, dimless, dims[arr.dim + 1:end]...)
 end
-function virtual_resize!(arr::VirtualProductArray, ctx::AbstractCompiler, dims...)
-    virtual_resize!(arr.body, ctx, dims[1:arr.dim - 1]..., dimless, dims[arr.dim + 2:end]...)
+function virtual_resize!(ctx::AbstractCompiler, arr::VirtualProductArray, dims...)
+    virtual_resize!(ctx, arr.body, dims[1:arr.dim - 1]..., dimless, dims[arr.dim + 2:end]...)
 end
 
 function instantiate_reader(arr::VirtualProductArray, ctx, protos)
@@ -79,22 +79,22 @@ function instantiate_updater(arr::VirtualProductArray, ctx, protos)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualProductArray) = ctx(node.body)
-function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::VirtualProductArray)
-    stylize_access(node, ctx, tns.body)
+function stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualProductArray)
+    stylize_access(ctx, node, tns.body)
 end
 
 function popdim(node::VirtualProductArray, ctx)
-    if length(virtual_size(node, ctx)) == node.dim
+    if length(virtual_size(ctx, node)) == node.dim
         return node.body
     else
         return node
     end
 end
 
-truncate(node::VirtualProductArray, ctx, ext, ext_2) = VirtualProductArray(truncate(node.body, ctx, ext, ext_2), node.dim)
+truncate(ctx, node::VirtualProductArray, ext, ext_2) = VirtualProductArray(truncate(ctx, node.body, ext, ext_2), node.dim)
 
-function get_point_body(node::VirtualProductArray, ctx, ext, idx)
-    body_2 = get_point_body(node.body, ctx, ext, idx)
+function get_point_body(ctx, node::VirtualProductArray, ext, idx)
+    body_2 = get_point_body(ctx, node.body, ext, idx)
     if body_2 === nothing
         return nothing
     else
@@ -104,8 +104,8 @@ end
 
 (ctx::ThunkVisitor)(node::VirtualProductArray) = VirtualProductArray(ctx(node.body), node.dim)
 
-function get_run_body(node::VirtualProductArray, ctx, ext)
-    body_2 = get_run_body(node.body, ctx, ext)
+function get_run_body(ctx, node::VirtualProductArray, ext)
+    body_2 = get_run_body(ctx, node.body, ext)
     if body_2 === nothing
         return nothing
     else
@@ -113,8 +113,8 @@ function get_run_body(node::VirtualProductArray, ctx, ext)
     end
 end
 
-function get_acceptrun_body(node::VirtualProductArray, ctx, ext)
-    body_2 = get_acceptrun_body(node.body, ctx, ext)
+function get_acceptrun_body(ctx, node::VirtualProductArray, ext)
+    body_2 = get_acceptrun_body(ctx, node.body, ext)
     if body_2 === nothing
         return nothing
     else
@@ -128,11 +128,11 @@ function (ctx::SequenceVisitor)(node::VirtualProductArray)
     end
 end
 
-phase_body(node::VirtualProductArray, ctx, ext, ext_2) = VirtualProductArray(phase_body(node.body, ctx, ext, ext_2), node.dim)
-phase_range(node::VirtualProductArray, ctx, ext) = phase_range(node.body, ctx, ext)
+phase_body(ctx, node::VirtualProductArray, ext, ext_2) = VirtualProductArray(phase_body(ctx, node.body, ext, ext_2), node.dim)
+phase_range(ctx, node::VirtualProductArray, ext) = phase_range(ctx, node.body, ext)
 
-get_spike_body(node::VirtualProductArray, ctx, ext, ext_2) = VirtualProductArray(get_spike_body(node.body, ctx, ext, ext_2), node.dim)
-get_spike_tail(node::VirtualProductArray, ctx, ext, ext_2) = VirtualProductArray(get_spike_tail(node.body, ctx, ext, ext_2), node.dim)
+get_spike_body(ctx, node::VirtualProductArray, ext, ext_2) = VirtualProductArray(get_spike_body(ctx, node.body, ext, ext_2), node.dim)
+get_spike_tail(ctx, node::VirtualProductArray, ext, ext_2) = VirtualProductArray(get_spike_tail(ctx, node.body, ext, ext_2), node.dim)
 
 visit_fill(node, tns::VirtualProductArray) = visit_fill(node, tns.body)
 visit_simplify(node::VirtualProductArray) = VirtualProductArray(visit_simplify(node.body), node.dim)
@@ -141,21 +141,21 @@ visit_simplify(node::VirtualProductArray) = VirtualProductArray(visit_simplify(n
     guard => VirtualProductArray(body, node.dim)
 end
 
-jumper_body(node::VirtualProductArray, ctx, ext) = VirtualProductArray(jumper_body(node.body, ctx, ext), node.dim)
-stepper_body(node::VirtualProductArray, ctx, ext) = VirtualProductArray(stepper_body(node.body, ctx, ext), node.dim)
-stepper_seek(node::VirtualProductArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
-jumper_seek(node::VirtualProductArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
+jumper_body(ctx, node::VirtualProductArray, ext) = VirtualProductArray(jumper_body(ctx, node.body, ext), node.dim)
+stepper_body(ctx, node::VirtualProductArray, ext) = VirtualProductArray(stepper_body(ctx, node.body, ext), node.dim)
+stepper_seek(ctx, node::VirtualProductArray, ext) = stepper_seek(ctx, node.body, ext)
+jumper_seek(ctx, node::VirtualProductArray, ext) = jumper_seek(ctx, node.body, ext)
 
 getroot(tns::VirtualProductArray) = getroot(tns.body)
 
-function unfurl(tns::VirtualProductArray, ctx, ext, mode, protos...)
-    if length(virtual_size(tns, ctx)) == tns.dim + 1
+function unfurl(ctx, tns::VirtualProductArray, ext, mode, protos...)
+    if length(virtual_size(ctx, tns)) == tns.dim + 1
         Unfurled(tns,
             Lookup(
                 body = (ctx, idx) -> VirtualPermissiveArray(VirtualScaleArray(tns.body, ([literal(1) for _ in 1:tns.dim - 1]..., idx)), ([false for _ in 1:tns.dim - 1]..., true)), 
             )
         )
     else
-        VirtualProductArray(unfurl(tns.body, ctx, ext, mode, protos...), tns.dim)
+        VirtualProductArray(unfurl(ctx, tns.body, ext, mode, protos...), tns.dim)
     end
 end

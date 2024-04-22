@@ -81,43 +81,43 @@ struct VirtualPatternLevel <: AbstractVirtualLevel
     Tp
 end
 
-function virtual_moveto_level(lvl::VirtualPatternLevel, ctx::AbstractCompiler, arch)
+function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualPatternLevel, arch)
 end
 
-is_level_injective(::VirtualPatternLevel, ctx) = []
-is_level_atomic(lvl::VirtualPatternLevel, ctx) = true
+is_level_injective(ctx, ::VirtualPatternLevel) = []
+is_level_atomic(ctx, lvl::VirtualPatternLevel) = true
 
-lower(lvl::VirtualPatternLevel, ctx::AbstractCompiler, ::DefaultStyle) = :(PatternLevel())
-virtualize(ex, ::Type{PatternLevel{Tp}}, ctx) where {Tp} = VirtualPatternLevel(Tp)
+lower(ctx::AbstractCompiler, lvl::VirtualPatternLevel, ::DefaultStyle) = :(PatternLevel())
+virtualize(ctx, ex, ::Type{PatternLevel{Tp}}) where {Tp} = VirtualPatternLevel(Tp)
 
-virtual_level_resize!(lvl::VirtualPatternLevel, ctx) = lvl
-virtual_level_size(::VirtualPatternLevel, ctx) = ()
+virtual_level_resize!(ctx, lvl::VirtualPatternLevel) = lvl
+virtual_level_size(ctx, ::VirtualPatternLevel) = ()
 virtual_level_default(::VirtualPatternLevel) = false
 virtual_level_eltype(::VirtualPatternLevel) = Bool
 
 postype(lvl::VirtualPatternLevel) = lvl.Tp
 
-function declare_level!(lvl::VirtualPatternLevel, ctx, pos, init)
+function declare_level!(ctx, lvl::VirtualPatternLevel, pos, init)
     init == literal(false) || throw(FinchProtocolError("Must initialize Pattern Levels to false"))
     lvl
 end
 
-freeze_level!(lvl::VirtualPatternLevel, ctx, pos) = lvl
+freeze_level!(ctx, lvl::VirtualPatternLevel, pos) = lvl
 
-thaw_level!(lvl::VirtualPatternLevel, ctx, pos) = lvl
+thaw_level!(ctx, lvl::VirtualPatternLevel, pos) = lvl
 
-assemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote end
-reassemble_level!(lvl::VirtualPatternLevel, ctx, pos_start, pos_stop) = quote end
+assemble_level!(ctx, lvl::VirtualPatternLevel, pos_start, pos_stop) = quote end
+reassemble_level!(ctx, lvl::VirtualPatternLevel, pos_start, pos_stop) = quote end
 
-instantiate(::VirtualSubFiber{VirtualPatternLevel}, ctx, mode::Reader, protos) = Fill(true)
+instantiate(ctx, ::VirtualSubFiber{VirtualPatternLevel}, mode::Reader, protos) = Fill(true)
 
-function instantiate(fbr::VirtualSubFiber{VirtualPatternLevel}, ctx, mode::Updater, protos)
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualPatternLevel}, mode::Updater, protos)
     val = freshen(ctx.code, :null)
     push!(ctx.code.preamble, :($val = false))
     VirtualScalar(nothing, Bool, false, gensym(), val)
 end
 
-function instantiate(fbr::VirtualHollowSubFiber{VirtualPatternLevel}, ctx, mode::Updater, protos)
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualPatternLevel}, mode::Updater, protos)
     VirtualScalar(nothing, Bool, false, gensym(), fbr.dirty)
 end
 

@@ -31,7 +31,12 @@ function Base.permutedims(src::Tensor, perm)
     copyto!(dst, swizzle(src, perm...))
 end
 
-function Base.copyto!(dst::Union{Tensor, AbstractArray}, src::SwizzleArray{dims}) where {dims}
+function Base.copyto!(dst::AbstractArray, src::SwizzleArray{dims}) where {dims}
+    ret = copyto!(swizzle(dst, invperm(dims)...), src.body)
+    return ret.body
+end
+
+function Base.copyto!(dst::Tensor, src::SwizzleArray{dims}) where {dims}
     ret = copyto!(swizzle(dst, invperm(dims)...), src.body)
     return ret.body
 end
@@ -42,6 +47,9 @@ function Base.copyto!(dst::SwizzleArray{dims1}, src::SwizzleArray{dims2}) where 
 end
 
 function Base.copyto!(dst::SwizzleArray{dims}, src::Union{Tensor, AbstractArray}) where {dims}
+    if ndims(src) == 0
+        return copyto_helper!(dst, src)
+    end
     tmp = Tensor(SparseHash{ndims(src)}(Element(default(src))))
     tmp = copyto_helper!(swizzle(tmp, dims...), src).body
     swizzle(copyto_helper!(dst.body, tmp), dims...)
@@ -71,14 +79,13 @@ dropdefaults!(dst::Tensor, src) = dropdefaults_helper!(dst, src)
     T = eltype(dst)
     d = default(dst)
     return quote
-        tmp = Scalar{$d, $T}()
         @finch begin
             dst .= $(default(dst))
             $(Expr(:for, exts, quote
-                tmp .= $(default(dst))
-                tmp[] = src[$(idxs...)]
-                if !isequal(tmp[], $d)
-                    dst[$(idxs...)] = tmp[]
+                let tmp = src[$(idxs...)]
+                    if !isequal(tmp, $d)
+                        dst[$(idxs...)] = tmp
+                    end
                 end
             end))
         end

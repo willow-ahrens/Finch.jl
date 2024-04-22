@@ -85,7 +85,7 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
 end
 
 """
-    concordize(root, ctx)
+    concordize(ctx, root)
 
 A raw index is an index expression consisting of a single index node (i.e.
 `A[i]` as opposed to `A[i + 1]`). A Finch program is concordant when all indices
@@ -125,7 +125,7 @@ becomes
 end
 ```
 """
-function concordize(root, ctx::AbstractCompiler)
+function concordize(ctx::AbstractCompiler, root)
     depth = depth_calculator(root)
     if issafe(ctx.mode)
         for node in PostOrderDFS(root)

@@ -72,14 +72,18 @@ function fsparse!_impl(I::Tuple, V, shape = map(maximum, I))
 end
 
 """
-    fsprand([rng],[type], M..., p::AbstractFloat,[rfn])
+    fsprand([rng],[type], M..., p, [rfn])
 
-Create a random sparse tensor of size `m` in COO format, in which the
-probability of any element being nonzero is independently given by `p` (and
-hence the mean density of nonzeros is also exactly `p`). Nonzero values are
-sampled from the distribution specified by `rfn` and have the type `type`. The
-uniform distribution is used in case `rfn` is not specified. The optional `rng`
-argument specifies a random number generator.
+Create a random sparse tensor of size `m` in COO format. There are two cases:
+    - If `p` is floating point, the probability of any element being nonzero is
+    independently given by `p` (and hence the expected density of nonzeros is
+    also `p`).
+    - If `p` is an integer, exactly `p` nonzeros are distributed uniformly at
+    random throughout the tensor (and hence the density of nonzeros is exactly
+    `p / prod(M)`).
+Nonzero values are sampled from the distribution specified by `rfn` and have the
+type `type`. The uniform distribution is used in case `rfn` is not specified.
+The optional `rng` argument specifies a random number generator.
 
 See also: (`sprand`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#SparseArrays.sprand)
 
@@ -109,23 +113,110 @@ fsprand_parse_type(r, T::Type, args...) = fsprand_parse_shape(r, (T,), (), args.
 fsprand_parse_type(r, args...) = fsprand_parse_shape(r, (), (), args...)
 
 fsprand_parse_shape(r, T, M, m, args...) = fsprand_parse_shape(r, T, (M..., m), args...)
-fsprand_parse_shape(r, T, M, p::AbstractFloat, rfn=rand) = fsprand_impl(r, T, M, p, rfn)
-fsprand_parse_shape(r, T, M) = throw(ArgumentError("No float p given to fsprand"))
+fsprand_parse_shape(r, T, M, p::AbstractFloat) = fsprand_parse_shape(r, T, M, p, rand)
+fsprand_parse_shape(r, T, M, p::AbstractFloat, rfn::Function) = fsprand_erdos_renyi_gilbert(r, T, M, p, rfn)
+fsprand_parse_shape(r, T, M, nnz::Integer) = fsprand_parse_shape(r, T, M, nnz, rand)
+fsprand_parse_shape(r, T, M, nnz::Integer, rfn::Function) = fsprand_erdos_renyi(r, T, M, nnz, rfn)
+#fsprand_parse_shape(r, T, M) = throw(ArgumentError("No float p given to fsprand"))
 
-function fsprand_impl(r::AbstractRNG, T, M::Tuple, p::AbstractFloat, rfn)
-    I = fsprand_helper(r, M, p)
-    V = rfn(r, T..., length(I[1]))
+#https://github.com/JuliaStats/StatsBase.jl/blob/60fb5cd400c31d75efd5cdb7e4edd5088d4b1229/src/sampling.jl#L137-L182
+function fsprand_erdos_renyi_sample_knuth(r::AbstractRNG, M::Tuple, nnz::Int)
+    N = length(M)
+
+    I = ntuple(n -> Vector{typeof(M[n])}(undef, nnz), N)
+
+    k = 1
+    function sample(n, p::Float64, i...)
+        if n == 0
+            if k <= nnz
+                for m = 1:N
+                    I[m][k] = i[m]
+                end
+            elseif rand(r) * p < k 
+                l = rand(r, 1:nnz)
+                for m = 1:N
+                    I[m][l] = i[m]
+                end
+            end
+            k += 1
+        else
+            m = M[n]
+            for i_n = 1:m
+                sample(n - 1, ((p - 1) * m) + i_n, i_n, i...)
+            end
+        end
+    end
+    sample(N, 1.0)
+
+    return I
+end
+
+#https://github.com/JuliaStats/StatsBase.jl/blob/60fb5cd400c31d75efd5cdb7e4edd5088d4b1229/src/sampling.jl#L234-L278
+function fsprand_erdos_renyi_sample_self_avoid(r::AbstractRNG, M::Tuple, nnz::Int)
+    N = length(M)
+
+    I = ntuple(n -> Vector{typeof(M[n])}(undef, nnz), length(M))
+    S = Set{typeof(M)}()
+
+    k = 0
+    while length(S) < nnz
+        i = ntuple(n -> rand(r, 1:M[n]), N)
+        push!(S, i)       
+        if length(S) > k
+            k += 1
+            for m = 1:N
+                I[m][k] = i[m]
+            end
+        end
+    end
+
+    return I
+end
+
+function fsprand_erdos_renyi(r::AbstractRNG, T, M::Tuple, nnz::Int, rfn)
+    if nnz / prod(M, init=1.0) < 0.15
+        I = fsprand_erdos_renyi_sample_self_avoid(r, M, nnz)
+    else
+        I = fsprand_erdos_renyi_sample_knuth(r, M, nnz)
+    end
+    p = sortperm(map(tuple, reverse(I)...))
+    for n = 1:length(I)
+        permute!(I[n], p)
+    end
+    V = rfn(r, T..., nnz)
     return fsparse!(I..., V, M)
 end
 
-function fsprand_helper(r::AbstractRNG, M::Tuple, p::AbstractFloat)
-    I = map(shape -> Vector{typeof(shape)}(), M)
-    for i in randsubseq(r, CartesianIndices(M), p)
-        for r = 1:length(M)
-            push!(I[r], i[r])
+function fsprand_erdos_renyi_gilbert(r::AbstractRNG, T, M::Tuple, p::AbstractFloat, rfn)
+    n = prod(M, init=1.0)
+    q = 1 - p
+    #We wish to sample nnz from binomial(n, p).
+    if n <= typemax(Int)*(1 - eps())
+        #Ideally, n is representable as an Int
+        _n = Int(prod(M))
+        nnz = rand(r, Binomial(_n, p))
+    else
+        #Otherwise we approximate
+        if n * p < 10
+            #When n * p < 10, we use a poisson
+            #https://math.oxford.emory.edu/site/math117/connectingPoissonAndBinomial/
+            nnz = rand(r, Poisson(n * p))
+        else
+            nnz = -1
+            while nnz < 0
+                #Otherwise, we use a normal distribution
+                #https://stats.libretexts.org/Courses/Las_Positas_College/Math_40%3A_Statistics_and_Probability/06%3A_Continuous_Random_Variables_and_the_Normal_Distribution/6.04%3A_Normal_Approximation_to_the_Binomial_Distribution
+                _nnz = rand(r, Normal(n * p, sqrt(n * p * q)))
+                @assert _nnz <= typemax(Int) "integer overflow; tried to generate too many nonzeros"
+                nnz = round(Int, _nnz)
+            end
         end
+        # Note that we do not consider n * q < 10, since this would mean we
+        # would probably overflow the int buffer anyway. However, subtracting
+        # poisson would work in that case
     end
-    I
+    #now we generate exactly nnz nonzeros:
+    return fsprand_erdos_renyi(r, T, M, nnz, rfn) 
 end
 
 fsprandn(args...) = fsprand(args..., randn)

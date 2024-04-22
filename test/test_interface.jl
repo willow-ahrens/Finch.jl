@@ -2,6 +2,215 @@ using Finch: AsArray
 
 @testset "interface" begin
     @info "Testing Finch Interface"
+
+    @testset "concordize" begin
+        using Finch.FinchLogic
+        A = alias(:A)
+        B = alias(:B)
+        C = alias(:C)
+        i = field(:i)
+        j = field(:j)
+        k = field(:k)
+        prgm_in = plan(
+            query(A, table(0, i, j)),
+            query(B, table(0, i, j)),
+            query(C, aggregate(+, 0, mapjoin(*,
+                reorder(relabel(A, i, k), i, k, j),
+                reorder(relabel(B, j, k), i, k, j)
+            ))),
+            produces(C))
+        B_2 = alias(:B_2)
+        prgm_out = plan(
+            query(A, table(0, i, j)),
+            query(B, table(0, i, j)),
+            query(B_2, reorder(relabel(B, i, j), j, i)),
+            query(C, aggregate(+, 0, mapjoin(*,
+                reorder(relabel(A, i, k), i, k, j),
+                reorder(relabel(B_2, k, j), i, k, j)
+            ))),
+            produces(C))
+        @test Finch.concordize(prgm_in) == prgm_out
+    
+        prgm_in = plan(produces())
+        prgm_out = plan(produces())
+        @test Finch.concordize(prgm_in) == prgm_out
+    
+        prgm_in = plan(
+            query(A, table(0, i, j)),
+            query(B, table(0, i, j)),
+            query(C, mapjoin(+,
+                reorder(relabel(A, i, j), j, i),
+                reorder(relabel(B, j, i), i, j)
+            )),
+            produces(C)
+        )
+        A_2 = alias(:A_2)
+        prgm_out = plan(
+            query(A, table(0, i, j)),
+            query(A_2, reorder(relabel(A, i, j), j, i)),
+            query(B, table(0, i, j)),
+            query(B_2, reorder(relabel(B, i, j), j, i)),
+            query(C, mapjoin(+,
+                reorder(relabel(A_2, j, i), j, i),
+                reorder(relabel(B_2, i, j), i, j)
+            )),
+            produces(C)
+        )
+        @test Finch.concordize(prgm_in) == prgm_out
+    
+        prgm_in = plan(
+            query(A, table(0, i, j)),
+            query(B, reorder(relabel(A, i, j), i, j)),
+            produces(B)
+        )
+        prgm_out = plan(
+            query(A, table(0, i, j)),
+            query(B, reorder(relabel(A, i, j), i, j)),
+            produces(B)
+        )
+        @test Finch.concordize(prgm_in) == prgm_out
+    
+        D = alias(:D)
+        prgm_in = plan(
+            query(A, table(0, i, j)),
+            query(B, table(0, i, j)),
+            query(C, reorder(relabel(A, i, j), j, i)),
+            query(D, reorder(relabel(B, j, i), i, j)),
+            produces(C, D)
+        )
+        prgm_out = plan(
+            query(A, table(0, i, j)),
+            query(A_2, reorder(relabel(A, i, j), j, i)),
+            query(B, table(0, i, j)),
+            query(B_2, reorder(relabel(B, i, j), j, i)),
+            query(C, reorder(relabel(A_2, j, i), j, i)),
+            query(D, reorder(relabel(B_2, i, j), i, j)),
+            produces(C, D)
+        )
+        @test Finch.concordize(prgm_in) == prgm_out
+    
+        prgm_in = plan(
+            query(A, table(0, i, j)),
+            query(B, table(0, i, j)),
+            query(C, mapjoin(+,
+                reorder(relabel(A, i, k), k, i),
+                reorder(relabel(B, k, j), j, k)
+            )),
+            produces(C)
+        )
+        C_2 = alias(:C_2)
+        prgm_out = plan(
+            query(A, table(0, i, j)),
+            query(A_2, reorder(relabel(A, i, j), j, i)),
+            query(B, table(0, i, j)),
+            query(B_2, reorder(relabel(B, i, j), j, i)),
+            query(C, mapjoin(+,
+                reorder(relabel(A_2, k, i), k, i),
+                reorder(relabel(B_2, j, k), j, k)
+            )),
+            produces(C)
+        )
+        @test Finch.concordize(prgm_in) == prgm_out
+    
+        prgm_in = plan(
+            query(A, table(0)),
+            query(B, reorder(relabel(A, ), )),
+            produces(B)
+        )
+        prgm_out = plan(
+            query(A, table(0)),
+            query(B, reorder(relabel(A, ), )),
+            produces(B)
+        )
+        @test Finch.concordize(prgm_in) == prgm_out
+    
+        prgm_in = plan(
+            query(A, table(0, i, j, k)),
+            query(B, reorder(relabel(A, i, j, k), k, j, i)),
+            query(C, reorder(relabel(A, i, j, k), j, k, i)),
+            query(D, mapjoin(*, 
+                reorder(relabel(B, k, j, i), i, j, k),
+                reorder(relabel(C, j, k, i), i, j, k)
+            )),
+            produces(D)
+        )
+        A_3 = alias(:A_3)
+        C_2 = alias(:C_2)
+        prgm_out = plan(
+            query(A, table(0, i, j, k)),
+            query(A_2, reorder(relabel(A, i, j, k), k, j, i)),
+            query(A_3, reorder(relabel(A, i, j, k), j, k, i)),
+            query(B, reorder(relabel(A_2, k, j, i), k, j, i)),
+            query(B_2, reorder(relabel(B, k, j, i), i, j, k)),
+            query(C, reorder(relabel(A_3, j, k, i), j, k, i)),
+            query(C_2, reorder(relabel(C, j, k, i), i, j, k)),
+            query(D, mapjoin(*, 
+                reorder(relabel(B_2, i, j, k), i, j, k),
+                reorder(relabel(C_2, i, j, k), i, j, k)
+            )),
+            produces(D)
+        )
+        @test Finch.concordize(prgm_in) == prgm_out
+    end
+
+    @testset "push_fields" begin
+        using Finch.FinchLogic
+        A = alias(:A)
+        i = field(:i)
+        j = field(:j)
+        k = field(:k)
+        
+        # Test 1: Simple reorder and relabel on a table
+        expr_in = reorder(relabel(table(A, i, j, k), k, j, i), i, j, k)
+        expr_out = reorder(table(A, k, j, i), i, j, k)  # After push_fields, reorder and relabel should be absorbed
+        @test Finch.push_fields(expr_in) == expr_out
+    
+        # Test 2: Nested reorders and relabels on a table
+        expr_in = reorder(relabel(reorder(relabel(table(A, i, j, k), j, i, k), k, j, i), i, k, j), j, i, k)
+        expr_out = reorder(table(A, k, j, i), j, i, k)
+        @test Finch.push_fields(expr_in) == expr_out
+    
+        # Test 3: Mapjoin with internal reordering and relabeling
+        expr_in = mapjoin(+,
+                    reorder(relabel(table(A, i, j), j, i), i, j),
+                    reorder(relabel(table(A, j, i), i, j), j, i))
+        expr_out = mapjoin(+,
+                    reorder(table(A, j, i), i, j),
+                    reorder(table(A, i, j), j, i))
+        @test Finch.push_fields(expr_in) == expr_out
+    
+        # Test 4: Immediate values absorbing relabel and reorder
+        expr_in = reorder(relabel(immediate(42)), i)
+        expr_out = reorder(immediate(42), i)
+        @test Finch.push_fields(expr_in) == expr_out
+    
+        # Test 5: Complex nested structure with mapjoin and aggregates
+        expr_in = mapjoin(+,
+                    reorder(relabel(mapjoin(*,
+                        reorder(relabel(table(A, i, j, k), k, j, i), i, j, k),
+                        table(A, j, i, k)), i, k, j), j, i, k),
+                    mapjoin(*,
+                        reorder(relabel(table(A, i, j, k), j, i, k), k, j, i)))
+        expr_out = mapjoin(+,
+                     mapjoin(*,
+                        reorder(table(A, j, k, i), j, i, k),
+                        reorder(table(A, k, i, j), j, i, k)),
+                    mapjoin(*,
+                        reorder(table(A, j, i, k), k, j, i)))
+        @test Finch.push_fields(expr_in) == expr_out
+
+        #=
+        query(A1, table(0, i0, i1))
+        query(A2, table(1, i2, i3))
+        query(A5, 
+            aggregate(+, 0.0, relabel(
+                mapjoin(*, 
+                    reorder(relabel(relabel(A2, i2, i3), i7, i8), i7, i8, i9),
+                    reorder(relabel(relabel(A0, i0, i1), i8, i9), i7, i8, i9)
+                ), i13, i14, i15), i14))
+        =#
+    end
+
     A = Tensor(SparseList(Element(0.0)), fsparse([1, 3, 5, 7, 9], [2.0, 3.0, 4.0, 5.0, 6.0], (10,)))
     B = Tensor(SparseList(Element(0.0)), A)
     @test A == B
@@ -171,6 +380,14 @@ using Finch: AsArray
         @test c == c_correct
     end
 
+    let
+        A = lazy(Tensor(Dense(SparseList(Element(0))), [0 0 44; 11 0 0; 22 00 55; 33 0 0]))
+        B = lazy(Tensor(Dense(SparseList(Element(0))), [0 0 44; 11 0 0; 22 00 55; 33 0 0]'))
+        c_correct = Tensor(Dense(Dense(Element(0))), [1936 0 2420 0; 0 121 242 363; 2420 242 3509 726; 0 363 726 1089])
+        c = compute(sum(A[:, :, nothing] .* B[nothing, :, :], dims=[2]))
+        @test c == c_correct
+    end
+
     #https://github.com/willow-ahrens/Finch.jl/issues/457
     let
         A = zeros(2, 3, 3)
@@ -187,5 +404,26 @@ using Finch: AsArray
 
         @test Array(A_result) == A_t
         @test permutedims(A_tns, perm) == A_t
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/481
+    let
+        r = fsprand(1, 10, 10, 0.01)
+        r_tns = Tensor(Dense(Dense(Dense(Element(0.0)))), r)
+        @test r_tns + r_tns == 2 * r_tns
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/487
+    let
+        a = fsprand(100, 1, 0.8)
+        b = fsprand(100, 1, 0.8)
+
+        permutedims(broadcast(.+, permutedims(a, (2, 1)), permutedims(b, (2, 1))), (2, 1))  # passes
+
+        a_l = lazy(a)
+        b_l = lazy(b)
+
+        plan = permutedims(broadcast(.+, permutedims(a_l, (2, 1)), permutedims(b_l, (2, 1))), (2, 1))
+        compute(plan)  # fails
     end
 end

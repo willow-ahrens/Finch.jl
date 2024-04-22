@@ -1,5 +1,5 @@
 """
-    get_wrapper_rules(alg, shash)
+    get_wrapper_rules(shash, alg)
 
 Return the wrapperizing rule set for Finch, which converts expressions like `A[i
 + 1]` to array combinator expressions like `OffsetArray(A, (1,))`. The rules have
@@ -7,7 +7,7 @@ access to the algebra `alg` and the depth lookup `depth`` One can dispatch on
 the `alg` trait to specialize the rule set for different algebras. These rules run
 after simplification so one can expect constants to be folded.
 """
-function get_wrapper_rules(alg, depth, ctx)
+function get_wrapper_rules(ctx, depth, alg)
     return [
         (@rule access(~A, ~m, ~i1..., call(~proto::isliteral, ~j), ~i2...) => if isprotocol(proto.val)
             protos = ([nothing for _ in i1]..., proto.val, [nothing for _ in i2]...)
@@ -72,7 +72,6 @@ function get_wrapper_rules(alg, depth, ctx)
             end
             call(scale, A, s3...)
         end),
-        #Jaeyeon, do we need to add this condition? It feels too restrictive, since the toeplitz should only modify j1 and j2
         (@rule access(~A, ~m, ~i1::(All(isindex))..., call(+, ~j1..., ~k, ~j2...), ~i2...) => begin
             if (!isempty(j1) || !isempty(j2))
                 k_2 = call(+, ~j1..., ~j2...)
@@ -179,7 +178,7 @@ function get_wrapper_rules(alg, depth, ctx)
         (@rule call(swizzle, call(swizzle, ~A, ~sigma_1...), ~sigma_2...) =>
             call(swizzle, A, sigma_1[getval.(sigma_2)]...)),
         (@rule access(call(swizzle, ~A, ~sigma...), ~m, ~i...) =>
-            access(A, m, i[invperm(getval.(sigma))]...)),
+            access(A, m, i[invperm(Vector{Int}(getval.(sigma)))]...)),
 
         # Common subexpression elimination
         (@rule loop(~idx, ~ext, ~body) => begin
@@ -208,7 +207,7 @@ function get_wrapper_rules(alg, depth, ctx)
 end
 
 """
-    wrapperize(root, ctx)
+    wrapperize(ctx, root)
 
 Convert index expressions in the program `root` to wrapper arrays, according to
 the rules in `get_wrapper_rules`. By default, the following transformations are
@@ -230,13 +229,13 @@ expression like `A[i + j]`. Thus, `for i=:,j=:; ... A[i + j]` will result in
 resulting raw indices may participate in dimensionalization according to the
 semantics of the wrapper.
 """
-function wrapperize(root, ctx::AbstractCompiler)
+function wrapperize(ctx::AbstractCompiler, root)
     depth = depth_calculator(root)
-    root = unwrap_roots(root, ctx)
+    root = unwrap_roots(ctx, root)
     root = Rewrite(Fixpoint(Chain([
-        Postwalk(Fixpoint(Chain(get_wrapper_rules(ctx.algebra, depth, ctx))))
+        Postwalk(Fixpoint(Chain(get_wrapper_rules(ctx, depth, ctx.algebra))))
     ])))(root)
-    evaluate_partial(root, ctx)
+    evaluate_partial(ctx, root)
 end
 
 function unwrap(ctx, x, var)
@@ -250,7 +249,7 @@ function unwrap(ctx, x, var)
     end
 end
 
-function unwrap_roots(root, ctx)
+function unwrap_roots(ctx, root)
     #display(root)
     #display(ctx.bindings)
     tnss = unique(filter(!isnothing, map(PostOrderDFS(root)) do node
