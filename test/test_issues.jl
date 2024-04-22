@@ -6,7 +6,7 @@ using SparseArrays
     #https://github.com/willow-ahrens/Finch.jl/issues/500
     let
         using NPZ
-        f = mktempdir("finch-issue-500")
+        f = mktempdir(;prefix="finch-issue-500")
         cd(f) do
             A = Tensor(Dense(Element(0.0)), rand(4))
             fwrite("test.bspnpy", A)
