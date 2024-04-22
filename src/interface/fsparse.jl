@@ -263,3 +263,28 @@ function ffindnz(src)
     val = tmp.lvl.lvl.val
     (ntuple(n->tbl[n][1:nnz], ndims(src))..., val[1:nnz])
 end
+
+"""
+    fspeye([type], M...)
+
+Returns an identity tensor of size `M` with elements of type `type`. The tensor
+is in COO format by default.
+
+See also: (`fspeye!`)(@ref)
+"""
+function fspeye(T::Type, M...)
+    dst = Tensor(
+        SparseCOOLevel{length(M)}(
+            ElementLevel{zero(T), T}()))
+    fspeye!(dst)
+end
+
+fspeye(M...) = fspeye(Float64, M...)
+
+"""
+    fspeye!(dst)
+
+Fill `dst` with an identity tensor.
+"""
+function fspeye!(dst)
+end
