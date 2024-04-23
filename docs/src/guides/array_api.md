@@ -2,7 +2,7 @@
 CurrentModule = Finch
 ```
 
-# Array API
+# High-Level Array API
 
 Finch tensors also support many of the basic array operations one might expect,
 including indexing, slicing, and elementwise maps, broadcast, and reduce.
@@ -129,4 +129,12 @@ together and divides each result by 2, without materializing an intermediate.
 ```@docs
 lazy
 compute
+```
+
+# Einsum
+
+Finch also supports a highly general `@einsum` macro which supports any reduction over any simple pointwise array expression.
+
+```@docs
+@einsum
 ```
