@@ -87,7 +87,7 @@ function Base.map(f, src::LazyTensor, args...)
         end
     end
     T = combine_eltypes(f, args)
-    new_default = f(default(src), map(default, largs)...)
+    new_default = f(map(default, largs)...)
     data = mapjoin(immediate(f), ldatas...)
     return LazyTensor{T}(identify(data), src.extrude, new_default)
 end
