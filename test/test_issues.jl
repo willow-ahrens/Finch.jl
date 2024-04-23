@@ -4,6 +4,18 @@ using SparseArrays
     @info "Testing Github Issues"
 
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/500
+    let
+        using NPZ
+        f = mktempdir(;prefix="finch-issue-500")
+        cd(f) do
+            A = Tensor(Dense(Element(0.0)), rand(4))
+            fwrite("test.bspnpy", A)
+            B = fread("test.bspnpy")
+            @test A == B
+        end
+    end
+
     #https://github.com/willow-ahrens/Finch.jl/issues/358
     let
         A = Tensor(Dense(SparseList(Element(0))), [

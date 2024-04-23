@@ -9,7 +9,7 @@ isdefined(Base, :get_extension) ? (using NPZ) : (using ..NPZ)
 
 function Base.getindex(g::NPYPath, key::AbstractString)
     path = joinpath(g.dirname, key)
-    if isfile(key, "$path.npy")
+    if isfile("$path.npy")
         npzread("$path.npy")
     else
         NPYPath(path)
