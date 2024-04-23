@@ -1,4 +1,4 @@
-# Sparse and Structured Array Utilities
+# Sparse Array Utilities
 
 ## Sparse Constructors
 
@@ -88,4 +88,26 @@ pattern!
 countstored
 dropdefaults
 dropdefaults!
+```
+
+### How to tell whether an entry is "fill"
+
+In the sparse world, a semantic distinction is sometimes made between
+"explicitly stored" values and "implicit" or "fill" values (usually zero).
+However, the formats in the Finch compiler represent a diverse set of structures
+beyond sparsity, and it is often unclear whether any of the values in the tensor
+are "explicit" (consider a mask matrix, which can be represented with a constant
+number of bits). Thus, Finch makes no semantic distinction between values which
+are stored explicitly or not. If users wish to make this distinction, they should
+instead store a tensor of tuples of the form `(value, is_fill)`. For example,
+
+```jldoctest example3; setup = :(using Finch)
+julia> A = fsparse([1, 1, 2, 3], [2, 4, 5, 6], [(1.0, false), (0.0, true), (3.0, false)])
+
+julia> B = Tensor(Dense(SparseList(Element((0.0, true)))), A)
+
+julia> sum(map(last, B))
+
+julia> sum(map(first, B))
+
 ```
