@@ -86,7 +86,7 @@ function Base.map(f, src::LazyTensor, args...)
             throw(DimensionMismatch("Cannot map across arrays with different sizes."))
         end
     end
-    T = combine_eltypes(f, args)
+    T = combine_eltypes(f, (src, args...))
     new_default = f(map(default, largs)...)
     data = mapjoin(immediate(f), ldatas...)
     return LazyTensor{T}(identify(data), src.extrude, new_default)
@@ -104,9 +104,6 @@ function initial_value(op, T)
     end
     throw(ArgumentError("Please supply initial value for reduction of $T with $op."))
 end
-
-initial_value(::typeof(min), T) = typemax(T)
-initial_value(::typeof(max), T) = typemin(T)
 
 function fixpoint_type(op, z, tns)
     S = Union{}

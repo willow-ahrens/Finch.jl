@@ -62,7 +62,7 @@ using Finch: AsArray
             # Test 6
             P = Tensor(Dense(SparseList(Element(-Inf))), fsprand(Int, 3, 3, 0.7)) # Adjacency matrix with probabilities
             Q = Tensor(Dense(SparseList(Element(-Inf))), fsprand(Int, 3, 3, 0.7))
-            @einsum R[i, j] <<max>>= P[i, k] + Q[k, j]  # Max-plus product
+            @einsum init=-Inf R[i, j] <<max>>= P[i, k] + Q[k, j]  # Max-plus product
 
             R_ref = fill(-Inf, 3, 3)
             for i = 1:3, j = 1:3

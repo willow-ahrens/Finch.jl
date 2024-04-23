@@ -106,6 +106,7 @@ end
 struct EinsumParserVisitor
     preamble
     space
+    opts
 end
 
 function (ctx::EinsumParserVisitor)(ex)
@@ -121,7 +122,7 @@ function (ctx::EinsumParserVisitor)(ex)
             end
             arg = EinsumArgumentParserVisitor(ctx.preamble, ctx.space, tns, Dict())(rhs)
             quote
-                $(esc(tns)) = $einsum($(esc(op)), $arg, $(map(QuoteNode, idxs)...))
+                $(esc(tns)) = $einsum($(esc(op)), $arg, $(map(QuoteNode, idxs)...);$(map(esc, ctx.opts)...),)
             end
         else
             throw(FinchSyntaxError("Invalid einsum expression: $ex"))
@@ -158,10 +159,12 @@ Here are a few examples:
 @einsum x[i] = A[i, j] * x[j]
 ```
 """
-macro einsum(ex)
+macro einsum(opts_ex...)
+    length(opts_ex) >= 1 || throw(ArgumentError("Expected at least one argument to @finch(opts..., ex)"))
+    (opts, ex) = (opts_ex[1:end-1], opts_ex[end])
     preamble = Expr(:block)
     space = Namespace()
-    res = EinsumParserVisitor(preamble, space)(ex)
+    res = EinsumParserVisitor(preamble, space, opts)(ex)
     quote
         $preamble
         $res
