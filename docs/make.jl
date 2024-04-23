@@ -21,7 +21,7 @@ makedocs(;
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://willow-ahrens.github.io/Finch.jl",
         assets=["assets/favicon.ico"],
-        size_threshold = 1000,
+        size_threshold = 100_000,
     ),
     pages=[
         "Home" => "index.md",
