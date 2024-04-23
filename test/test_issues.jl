@@ -3,6 +3,7 @@ using SparseArrays
 @testset "issues" begin
     @info "Testing Github Issues"
 
+
     #https://github.com/willow-ahrens/Finch.jl/issues/500
     let
         using NPZ
@@ -302,7 +303,7 @@ using SparseArrays
         @repl io C = Scalar(0)
         @repl io @finch for k=_, j=_, i=_; C[] += A[i, j, k] end
 
-        check_output("issues/pull197.txt", String(take!(io)))
+        @test check_output("issues/pull197.txt", String(take!(io)))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/70
@@ -438,7 +439,7 @@ using SparseArrays
         A = zeros(3, 3, 3)
         C = zeros(3, 3, 3)
         X = zeros(3, 3)
-        check_output("issues/issue288_concordize_let.jl", @finch_code mode=fastfinch begin
+        @test check_output("issues/issue288_concordize_let.jl", @finch_code mode=fastfinch begin
             for k=_, j=_, i=_
                 let temp1 = X[i, j]
                     for l=_
@@ -451,7 +452,7 @@ using SparseArrays
                 end
             end
         end)
-        check_output("issues/issue288_concordize_double_let.jl", @finch_code mode=fastfinch begin
+        @test check_output("issues/issue288_concordize_double_let.jl", @finch_code mode=fastfinch begin
             for k=_, j=_, i=_
                 let temp1 = X[i, j]
                     for l=_
@@ -499,14 +500,14 @@ using SparseArrays
         s = ShortCircuitScalar(false)
         x = Tensor(SparseList(Element(false)), [false, true, true, false])
         y = Tensor(SparseList(Element(false)), [false, true, false, true])
-        check_output("issues/short_circuit.jl", @finch_code begin
+        @test check_output("issues/short_circuit.jl", @finch_code begin
             for i = _
                 s[] |= x[i] && y[i]
             end
         end)
 
         c = Scalar(0)
-        check_output("issues/short_circuit_sum.jl", @finch_code begin
+        @test check_output("issues/short_circuit_sum.jl", @finch_code begin
             for i = _
                 let x_i = x[i]
                     s[] |= x_i && y[i]
@@ -520,7 +521,7 @@ using SparseArrays
         p = ShortCircuitScalar(0)
         P = Tensor(Dense(Element(0)))
 
-        check_output("issues/short_circuit_bfs.jl", @finch_code begin
+        @test check_output("issues/short_circuit_bfs.jl", @finch_code begin
             P .= false
             for j = _
                 p .= false
@@ -633,7 +634,7 @@ using SparseArrays
         x = Tensor(Dense(Element(0.0)), rand(3))
         y = Tensor(Dense(Element(0.0)), rand(3))
 
-        check_output("issues/cse_symv.jl", @finch_code begin
+        @test check_output("issues/cse_symv.jl", @finch_code begin
             for i=_, j=_
                 y[i] += A[i, j] * x[j]
                 y[j] += A[i, j] * x[i]
@@ -644,7 +645,7 @@ using SparseArrays
     #https://github.com/willow-ahrens/Finch.jl/issues/397
     let
         A = AsArray(swizzle(Tensor(Dense(Dense(Element(0.0))), [1 2 3; 4 5 6; 7 8 9]), 2, 1))
-        check_output("issues/print_swizzle_as_array.txt", sprint(show, MIME"text/plain"(), A))
+        @test check_output("issues/print_swizzle_as_array.txt", sprint(show, MIME"text/plain"(), A))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/427
