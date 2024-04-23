@@ -193,7 +193,7 @@ end
 unresolve1(x) = x
 function unresolve1(f::Function)
     if nameof(f) != nameof(typeof(f))
-        if parentmodule(f) === Main || parentmodule(f) === Base
+        if parentmodule(f) === Main || parentmodule(f) === Base || parentmodule(f) === Core
             nameof(f)
         else
             Expr(:., parentmodule(f), QuoteNode(nameof(f)))
