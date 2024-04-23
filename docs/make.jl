@@ -21,6 +21,7 @@ makedocs(;
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://willow-ahrens.github.io/Finch.jl",
         assets=["assets/favicon.ico"],
+        size_threshold = 1_000_000,
     ),
     pages=[
         "Home" => "index.md",
@@ -37,7 +38,7 @@ makedocs(;
             "Mask Sugar" => "guides/mask_sugar.md",
             "Iteration Protocols" => "guides/iteration_protocols.md",
             "Custom Operators" => "guides/custom_operators.md",
-            "Array API and Fusion" => "guides/array_fusion.md",
+            "High-Level Array API" => "guides/array_api.md",
             #"Parallelization and Architectures" => "guides/parallelization.md",
             "FileIO" => "guides/fileio.md",
             "Interoperability" => "guides/interoperability.md",
