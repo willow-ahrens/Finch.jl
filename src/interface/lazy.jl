@@ -153,47 +153,6 @@ function tensordot(A::LazyTensor{T1, N1}, B::LazyTensor{T2, N2}, idxs; mult_op=*
     return LazyTensor{S}(identify(AB_reduce), extrude, init)
 end
 
-#=
-# einsum represents an expression of the form Out[`out_idxs`] += ∏ F[F_idxs]
-# where each entry in args is a (lazy) tensor and a set of indices (F, F_idxs)
-function einsum(out_idxs, args...; add_op=+, mult_op=*, init = initial_value(add_op, Float64))
-    if any([length(arg) != 2 for arg in args])
-        throw(ArgumentError("einsum arguments must be a tuple of length 2 `(T::LazyTensor, Idxs::Tuple{String,...})`"))
-    end
-
-    if any([ length(arg[2]) != length(arg[1].extrude) for arg in args])
-        throw(ArgumentError("einsum arguments must have an equal number of dimensions and named indices"))
-    end
-    args = [(arg[1], [string(idx) for idx in arg[2]]) for arg in args]
-    # For some reason, union automatically translates single character strings to type `Char`
-    s_idxs::Vector{String} = [string(idx) for idx in union(flatten([arg[2] for arg in args])...)]
-    s_to_idx = Dict(s_idx => field(gensym(Symbol(s_idx))) for s_idx in s_idxs)
-    factors = []
-    for arg in args
-        push!(factors, relabel(arg[1].data, [s_to_idx[s_idx] for s_idx in arg[2]]...))
-    end
-    out_fields = [s_to_idx[s_idx] for s_idx in out_idxs]
-    reduce_fields = [s_to_idx[s_idx] for s_idx in s_idxs if !(s_idx in out_idxs)]
-
-    extrude = []
-    for idx in out_idxs
-        is_extruded = true
-        for arg in args
-            idx_pos = findfirst(isequal(idx), arg[2])
-            isnothing(idx_pos) && continue
-            is_extruded = is_extruded && arg[1].extrude[idx_pos]
-        end
-        push!(extrude, is_extruded)
-    end
-    out_fields_in_input_order = [s_to_idx[s_idx] for s_idx in s_idxs if s_idx in out_idxs]
-    t_prod = mapjoin(immediate(mult_op), factors...)
-    t_sum = aggregate(immediate(add_op), immediate(init), t_prod, reduce_fields...)
-    t_ordered = reorder(relabel(t_sum, out_fields_in_input_order...), out_fields...)
-    S = fixpoint_type(add_op, init, t_ordered)
-    return LazyTensor{S}(identify(t_ordered), Tuple(extrude), init)
-end
-=#
-
 struct LazyStyle{N} <: BroadcastStyle end
 Base.Broadcast.BroadcastStyle(F::Type{<:LazyTensor{T, N}}) where {T, N} = LazyStyle{N}()
 Base.Broadcast.broadcastable(tns::LazyTensor) = tns
