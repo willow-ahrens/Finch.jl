@@ -102,12 +102,27 @@ are stored explicitly or not. If users wish to make this distinction, they shoul
 instead store a tensor of tuples of the form `(value, is_fill)`. For example,
 
 ```jldoctest example3; setup = :(using Finch)
-julia> A = fsparse([1, 1, 2, 3], [2, 4, 5, 6], [(1.0, false), (0.0, true), (3.0, false)])
+julia> A = fsparse([1, 1, 2, 3], [2, 4, 5, 6], [(1.0, false), (0.0, true), (3.0, false)]; default=(0.0, true))
+SparseCOO{2} ((0.0, true)) [:,1:6]
+├─ [1, 2]: (1.0, false)
+├─ [1, 4]: (0.0, true)
+└─ [2, 5]: (3.0, false)
 
 julia> B = Tensor(Dense(SparseList(Element((0.0, true)))), A)
+Dense [:,1:6]
+├─ [:, 1]: SparseList ((0.0, true)) [1:3]
+├─ [:, 2]: SparseList ((0.0, true)) [1:3]
+│  └─ [1]: (1.0, false)
+├─ [:, 3]: SparseList ((0.0, true)) [1:3]
+├─ [:, 4]: SparseList ((0.0, true)) [1:3]
+├─ [:, 5]: SparseList ((0.0, true)) [1:3]
+│  └─ [2]: (3.0, false)
+└─ [:, 6]: SparseList ((0.0, true)) [1:3]
 
 julia> sum(map(last, B))
+16
 
 julia> sum(map(first, B))
+4
 
 ```
