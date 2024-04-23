@@ -159,7 +159,7 @@ end
 #=
 # einsum represents an expression of the form Out[`out_idxs`] += ∏ F[F_idxs]
 # where each entry in args is a (lazy) tensor and a set of indices (F, F_idxs)
-function einsum(out_idxs, args...;add_op=+, mult_op=*, init = initial_value(add_op, Float64))
+function einsum(out_idxs, args...; add_op=+, mult_op=*, init = initial_value(add_op, Float64))
     if any([length(arg) != 2 for arg in args])
         throw(ArgumentError("einsum arguments must be a tuple of length 2 `(T::LazyTensor, Idxs::Tuple{String,...})`"))
     end
@@ -193,7 +193,7 @@ function einsum(out_idxs, args...;add_op=+, mult_op=*, init = initial_value(add_
     t_sum = aggregate(immediate(add_op), immediate(init), t_prod, reduce_fields...)
     t_ordered = reorder(relabel(t_sum, out_fields_in_input_order...), out_fields...)
     S = fixpoint_type(add_op, init, t_ordered)
-    return LazyTensor{S}(identify(t_ordered), Tuple(extrude))
+    return LazyTensor{S}(identify(t_ordered), Tuple(extrude), init)
 end
 =#
 
