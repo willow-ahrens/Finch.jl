@@ -155,6 +155,7 @@ Here are a few examples:
 @einsum J[i, j] = H[i, j] * I[i, j]
 @einsum N[i, j] = K[i, k] * L[k, j] - M[i, j]
 @einsum R[i, j] <<max>>= P[i, k] + Q[k, j]
+@einsum x[i] = A[i, j] * x[j]
 ```
 """
 macro einsum(ex)

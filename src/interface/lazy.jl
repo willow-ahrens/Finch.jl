@@ -87,7 +87,7 @@ function Base.map(f, src::LazyTensor, args...)
         end
     end
     T = combine_eltypes(f, args)
-    new_default = op(default(src), map(default, largs)...)
+    new_default = f(default(src), map(default, largs)...)
     data = mapjoin(immediate(f), ldatas...)
     return LazyTensor{T}(identify(data), src.extrude, new_default)
 end
@@ -99,11 +99,14 @@ end
 
 function initial_value(op, T)
     try
-        reduce(op, Vector{T}())
+        return reduce(op, Vector{T}())
     catch
-        throw(ArgumentError("Please supply initial value for reduction of $T with $op."))
     end
+    throw(ArgumentError("Please supply initial value for reduction of $T with $op."))
 end
+
+initial_value(::typeof(min), T) = typemax(T)
+initial_value(::typeof(max), T) = typemin(T)
 
 function fixpoint_type(op, z, tns)
     S = Union{}

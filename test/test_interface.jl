@@ -51,11 +51,11 @@ using Finch: AsArray
             K = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 4, 4, 0.7))
             L = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 4, 4, 0.7))
             M = Tensor(Dense(SparseList(Element(0))), fsprand(Int, 4, 4, 0.7))
-            @einsum N[i, j] = K[i, k] * L[k, j] - M[i, j]
+            @einsum N[i, j] += K[i, k] * L[k, j] - M[i, j]
 
             N_ref = zeros(Int, 4, 4)
             for i = 1:4, k = 1:4, j = 1:4
-                N_ref[i, j] = K[i, k] * L[k, j] - M[i, j]
+                N_ref[i, j] += K[i, k] * L[k, j] - M[i, j]
             end
             @test N == N_ref
 
@@ -71,6 +71,63 @@ using Finch: AsArray
                 end
             end
             @test R == R_ref
+
+            # Test for Sparse Matrix-Vector Multiplication (SpMV)
+            # Define a sparse matrix `S` and a dense vector `v`
+            S = Tensor(Dense(SparseList(Element(0))), sprand(Int, 10, 10, 0.3))  # 10x10 sparse matrix with 30% density
+            v = Tensor(Dense(Element(0)), rand(Int, 10))              # Dense vector of size 10
+
+            # Perform matrix-vector multiplication using the @einsum macro
+            @einsum w[i] += S[i, k] * v[k]  # Compute the product
+
+            # Reference calculation using explicit loop for validation
+            w_ref = zeros(Int, 10)
+            for i = 1:10
+                for k = 1:10
+                    w_ref[i] += S[i, k] * v[k]
+                end
+            end
+
+            # Test to ensure the results match
+            @test w == w_ref
+
+            # Test for Transposed Sparse Matrix-Vector Multiplication (SpMV)
+            # Define a sparse matrix `T` and a dense vector `u`
+            T = Tensor(Dense(SparseList(Element(0))), sprand(Int, 10, 10, 0.3))  # 10x10 sparse matrix with 30% density
+            u = Tensor(Dense(Element(0)), rand(Int, 10))              # Dense vector of size 10
+
+            # Perform transposed matrix-vector multiplication using the @einsum macro
+            @einsum x[k] += T[j, k] * u[j]  # Compute the product using the transpose of T
+
+            # Reference calculation using explicit loop for validation
+            x_ref = zeros(Int, 10)
+            for k = 1:10
+                for j = 1:10
+                    x_ref[k] += T[j, k] * u[j]
+                end
+            end
+
+            # Test to ensure the results match
+            @test x == x_ref
+
+            # Test for Outer Product with Output Named A
+            # Define two vectors for outer product
+            v1 = Tensor(Dense(Element(0)), rand(Int, 5))  # Dense vector of size 5
+            v2 = Tensor(Dense(Element(0)), rand(Int, 7))  # Dense vector of size 7
+
+            # Perform outer product using the @einsum macro
+            @einsum A[i, j] = v1[i] * v2[j]  # Compute the outer product
+
+            # Reference calculation using explicit loop for validation
+            A_ref = zeros(Int, 5, 7)
+            for i = 1:5
+                for j = 1:7
+                    A_ref[i, j] = v1[i] * v2[j]
+                end
+            end
+
+            # Test to ensure the results match
+            @test A == A_ref
         end
     end
 
