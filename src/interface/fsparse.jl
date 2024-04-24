@@ -1,5 +1,5 @@
 """
-    fsparse(I::Tuple, V,[ M::Tuple, combine])
+    fsparse(I::Tuple, V,[ M::Tuple, combine]; default=zero(eltype(V)))
 
 Create a sparse COO tensor `S` such that `size(S) == M` and `S[(i[q] for i =
 I)...] = V[q]`. The combine function is used to combine duplicates. If `M` is
@@ -26,12 +26,12 @@ SparseCOO (0.0) [1:3×1:3×1:3]
 └─└─└─[1, 1, 1] [2, 2, 2] [3, 3, 3]
       1.0       2.0       3.0
 """
-fsparse(iV::AbstractVector, args...) = fsparse_parse((), iV, args...)
-fsparse_parse(I, i::AbstractVector, args...) = fsparse_parse((I..., i), args...)
-fsparse_parse(I, V::AbstractVector) = fsparse_impl(I, V)
-fsparse_parse(I, V::AbstractVector, m::Tuple) = fsparse_impl(I, V, m)
-fsparse_parse(I, V::AbstractVector, m::Tuple, combine) = fsparse_impl(I, V, m, combine)
-function fsparse_impl(I::Tuple, V::Vector, shape = map(maximum, I), combine = eltype(V) isa Bool ? (|) : (+))
+fsparse(iV::AbstractVector, args...; kwargs...) = fsparse_parse((), iV, args...; kwargs...)
+fsparse_parse(I, i::AbstractVector, args...; kwargs...) = fsparse_parse((I..., i), args...; kwargs...)
+fsparse_parse(I, V::AbstractVector; kwargs...) = fsparse_impl(I, V; kwargs...)
+fsparse_parse(I, V::AbstractVector, m::Tuple; kwargs...) = fsparse_impl(I, V, m; kwargs...)
+fsparse_parse(I, V::AbstractVector, m::Tuple, combine; kwargs...) = fsparse_impl(I, V, m, combine; kwargs...)
+function fsparse_impl(I::Tuple, V::Vector, shape = map(maximum, I), combine = eltype(V) isa Bool ? (|) : (+); default = zero(eltype(V)))
     C = map(tuple, reverse(I)...)
     updater = false
     if !issorted(C)
@@ -54,7 +54,7 @@ function fsparse_impl(I::Tuple, V::Vector, shape = map(maximum, I), combine = el
     else
         I = map(copy, I)
     end
-    return fsparse!(I..., V, shape)
+    return fsparse!(I..., V, shape; default=default)
 end
 
 """
@@ -63,12 +63,12 @@ end
 Like [`fsparse`](@ref), but the coordinates must be sorted and unique, and memory
 is reused.
 """
-fsparse!(args...) = fsparse!_parse((), args...)
-fsparse!_parse(I, i::AbstractVector, args...) = fsparse!_parse((I..., i), args...)
-fsparse!_parse(I, V::AbstractVector) = fsparse!_impl(I, V)
-fsparse!_parse(I, V::AbstractVector, M::Tuple) = fsparse!_impl(I, V, M)
-function fsparse!_impl(I::Tuple, V, shape = map(maximum, I))
-    return Tensor(SparseCOO{length(I), Tuple{map(eltype, I)...}}(Element{zero(eltype(V)), eltype(V), Int}(V), shape, [1, length(V) + 1], I))
+fsparse!(args...; kwargs...) = fsparse!_parse((), args...; kwargs...)
+fsparse!_parse(I, i::AbstractVector, args...; kwargs...) = fsparse!_parse((I..., i), args...; kwargs...)
+fsparse!_parse(I, V::AbstractVector; kwargs...) = fsparse!_impl(I, V; kwargs...)
+fsparse!_parse(I, V::AbstractVector, M::Tuple; kwargs...) = fsparse!_impl(I, V, M; kwargs...)
+function fsparse!_impl(I::Tuple, V, shape = map(maximum, I); default = zero(eltype(V)))
+    return Tensor(SparseCOO{length(I), Tuple{map(eltype, I)...}}(Element{default, eltype(V), Int}(V), shape, [1, length(V) + 1], I))
 end
 
 """
