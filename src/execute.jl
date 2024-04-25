@@ -1,17 +1,14 @@
-abstract type CompileMode end
-struct DebugFinch <: CompileMode end
-const debugfinch = DebugFinch()
-virtualize(ctx, ex, ::Type{DebugFinch}) = DebugFinch()
-struct SafeFinch <: CompileMode end
-const safefinch = SafeFinch()
-virtualize(ctx, ex, ::Type{SafeFinch}) = SafeFinch()
-struct FastFinch <: CompileMode end
-const fastfinch = FastFinch()
-virtualize(ctx, ex, ::Type{FastFinch}) = FastFinch()
-
-issafe(::DebugFinch) = true
-issafe(::SafeFinch) = true
-issafe(::FastFinch) = false
+function issafe(mode)
+    if mode === :debug
+        return true
+    elseif mode === :safe
+        return true
+    elseif mode === :fast
+        return false
+    else
+        throw(ArgumentError("Unknown mode: $mode"))
+    end
+end
 
 """
     instantiate!(ctx, prgm)
@@ -56,26 +53,35 @@ function (ctx::InstantiateTensors)(node::FinchNode)
     end
 end
 
-execute(ex) = execute(ex, NamedTuple())
+execute(ex; algebra = DefaultAlgebra(), mode = :safe) =
+    execute_impl(ex, Val(algebra), Val(mode))
 
-@staged function execute(ex, opts)
-    contain(JuliaContext()) do ctx
-        code = execute_code(:ex, ex; virtualize(ctx, :opts, opts)...)
-        quote
-            # try
-                @inbounds @fastmath begin
+getvalue(::Type{Val{v}}) where {v} = v
+
+@staged function execute_impl(ex, algebra, mode)
+    code = execute_code(:ex, ex; algebra=getvalue(algebra), mode=getvalue(mode))
+    if mode === :debug
+        return quote
+            try
+                begin
                     $(code |> unblock)
                 end
-            # catch
-            #    println("Error executing code:")
-            #    println($(QuoteNode(code |> unblock |> pretty |> unquote_literals)))
-            #    rethrow()
-            #end
+            catch
+                println("Error executing code:")
+                println($(QuoteNode(code |> unblock |> pretty |> unquote_literals)))
+                rethrow()
+            end
+        end
+    else
+        return quote
+            @inbounds @fastmath begin
+                $(code |> unblock |> pretty |> unquote_literals)
+            end
         end
     end
 end
 
-function execute_code(ex, T; algebra = DefaultAlgebra(), mode = safefinch, ctx = LowerJulia(algebra = algebra, mode=mode))
+function execute_code(ex, T; algebra = DefaultAlgebra(), mode = :safe, ctx = LowerJulia(algebra = algebra, mode=mode))
     code = contain(ctx) do ctx_2
         prgm = nothing
         prgm = virtualize(ctx_2.code, ex, T)
@@ -154,8 +160,11 @@ sparsity information to reliably skip iterations when possible.
 `options` are optional keyword arguments:
 
  - `algebra`: the algebra to use for the program. The default is `DefaultAlgebra()`.
- - `mode`: the optimization mode to use for the program. The default is `fastfinch`.
- - `ctx`: the context to use for the program. The default is a `LowerJulia` context with the given options.
+ - `mode`: the optimization mode to use for the program. Possible modes are:
+    - `:debug`: run the program in debug mode, with bounds checking and better error handling.
+    - `:safe`: run the program in safe mode, with modest checks for performance and correctness.
+    - `:fast`: run the program in fast mode, with no checks or warnings, this mode is for power users.
+    The default is `:safe`.
 
 See also: [`@finch_code`](@ref)
 """
@@ -173,7 +182,7 @@ macro finch(opts_ex...)
     )
     res = esc(:res)
     thunk = quote
-        res = $execute($prgm, (;$(map(esc, opts)...),))
+        res = $execute($prgm, ;$(map(esc, opts)...),)
     end
     for tns in something(FinchNotation.finch_parse_yieldbind(ex), FinchNotation.finch_parse_default_yieldbind(ex))
         push!(thunk.args, quote
@@ -219,7 +228,7 @@ type `prgm`. Here, `fname` is the name of the function and `args` is a
 
 See also: [`@finch`](@ref)
 """
-function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = safefinch, ctx = LowerJulia(algebra=algebra, mode=mode))
+function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = :safe, ctx = LowerJulia(algebra=algebra, mode=mode))
     maybe_typeof(x) = x isa Type ? x : typeof(x)
     code = contain(ctx) do ctx_2
         foreach(args) do (key, val)

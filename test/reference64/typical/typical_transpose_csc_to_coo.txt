@@ -12,7 +12,7 @@ Dense [:,1:3]
 julia> B = Tensor(SparseDict(SparseDict(Element(0.0))))
 Sparse (0.0) [:,1:0]
 
-julia> @finch_code mode = fastfinch begin
+julia> @finch_code mode = :fast begin
         B .= 0
         for j = _
             for i = _
@@ -101,7 +101,7 @@ quote
     result = (B = Tensor((SparseLevel){Int64}((SparseLevel){Int64}(B_lvl_3, A_lvl.shape, B_lvl_tbl_2), A_lvl_2.shape, B_lvl_tbl)),)
     result
 end
-julia> @finch mode = fastfinch begin
+julia> @finch mode = :fast begin
         B .= 0
         for j = _
             for i = _

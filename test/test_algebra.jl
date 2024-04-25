@@ -11,10 +11,6 @@ struct MyAlgebra2 <: Finch.AbstractAlgebra end
 
     @test pattern!(w) == [1, 1, 1, 0, 1, 0, 1, 1, 1, 0]
 
-    Finch.virtualize(ctx, ex, ::Type{MyAlgebra}) = MyAlgebra()
-
-    Finch.virtualize(ctx, ex, ::Type{MyAlgebra2}) = MyAlgebra2()
-
     Finch.isassociative(::MyAlgebra, ::typeof(gcd)) = true
     Finch.iscommutative(::MyAlgebra, ::typeof(gcd)) = true
     Finch.isannihilator(::MyAlgebra, ::typeof(gcd), x) = x == 1

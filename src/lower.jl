@@ -4,7 +4,7 @@
     result = freshen(code, :result)
     algebra = DefaultAlgebra()
     bindings::Dict{FinchNode, FinchNode} = Dict{FinchNode, FinchNode}()
-    mode = fastfinch
+    mode = :fast
     modes::Dict{Any, Any} = Dict()
     scope = Set()
     shash = StaticHash()

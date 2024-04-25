@@ -69,7 +69,7 @@
 
         output = Tensor(SparseByteMap{Int64}(Pattern(), shape_id))
 
-        def = @finch_kernel mode=fastfinch function rangequery(output, box, points)
+        def = @finch_kernel mode=:fast function rangequery(output, box, points)
             output .= false 
             for x=_, y=_, id=_
                 output[id] |= box[y,x] && points[id,y,x]
@@ -77,7 +77,7 @@
         end
 
         radius=ox=oy=0.0 #placeholder
-        def2 = @finch_kernel mode=fastfinch function radiusquery(output, points, radius, ox, oy)
+        def2 = @finch_kernel mode=:fast function radiusquery(output, points, radius, ox, oy)
             output .= false 
             for x=realextent(ox-radius,ox+radius), y=realextent(oy-radius,oy+radius)
                 if (x-ox)^2 + (y-oy)^2 <= radius^2
@@ -164,7 +164,7 @@
         ox=oy=oz=0.1
 
         #Main Kernel
-        @finch mode=fastfinch begin
+        @finch mode=:fast begin
              output .= 0
              for t=_
                  if timeray[t]
