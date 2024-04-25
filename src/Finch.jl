@@ -68,10 +68,9 @@ struct FinchExtensionError <: Exception
 end
 
 include("util/util.jl")
-include("util/limits.jl")
-include("util/vectors.jl")
 
 include("environment.jl")
+
 include("FinchNotation/FinchNotation.jl")
 using .FinchNotation
 using .FinchNotation: and, or, InitWriter
