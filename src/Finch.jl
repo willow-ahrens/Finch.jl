@@ -19,8 +19,6 @@ using Distributions: Binomial, Normal, Poisson
 
 export @finch, @finch_program, @finch_code, @finch_kernel, value
 
-export fastfinch, safefinch, debugfinch
-
 export Tensor
 export SparseRLE, SparseRLELevel
 export DenseRLE, DenseRLELevel
