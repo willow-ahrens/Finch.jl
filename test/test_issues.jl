@@ -42,7 +42,7 @@ using SparseArrays
             Tensor(Dense(Dense(Element(0)))),
         ]
             E = deepcopy(D)
-            @finch mode=fastfinch begin
+            @finch mode=:fast begin
                 D .= 0
                 E .= 0
                 for j = _, i = _
@@ -127,7 +127,6 @@ using SparseArrays
             return a+b+c
         end
         struct MyAlgebra115 <: Finch.AbstractAlgebra end
-        Finch.virtualize(::Finch.JuliaContext, ex, ::Type{MyAlgebra115}) = MyAlgebra115()
         t = Tensor(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Tensor(SparseList(SparseList(Element(0.0)))), B))
@@ -372,7 +371,7 @@ using SparseArrays
     let
         C = Tensor(Dense(Dense(Element(0.0))), [1 0; 0 1])
         w = Tensor(Dense(Dense(Element(0.0))), [0 0; 0 0])
-        @finch mode=fastfinch begin
+        @finch mode=:fast begin
             for j = _, i = _
                 C[i, j] += 1
             end
@@ -390,40 +389,40 @@ using SparseArrays
     let
         A = [1 2 3; 4 5 6; 7 8 9]
         x = Scalar(0.0)
-        @finch mode=fastfinch for j=_, i=_; if i < j x[] += A[i, j] end end
+        @finch mode=:fast for j=_, i=_; if i < j x[] += A[i, j] end end
         @test x[] == 11.0
 
-        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i < j x[] += A[j, i] end end)
+        @finch mode=:fast (x .= 0; for i=_, j=_; if i < j x[] += A[j, i] end end)
         @test x[] == 19.0
 
-        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i <= j x[] += A[i, j] end end)
+        @finch mode=:fast (x .= 0; for j=_, i=_; if i <= j x[] += A[i, j] end end)
         @test x[] == 26.0
 
-        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i <= j x[] += A[j, i] end end)
+        @finch mode=:fast (x .= 0; for i=_, j=_; if i <= j x[] += A[j, i] end end)
         @test x[] == 34.0
 
-        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i > j x[] += A[i, j] end end)
+        @finch mode=:fast (x .= 0; for j=_, i=_; if i > j x[] += A[i, j] end end)
         @test x[] == 19.0
 
-        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i > j x[] += A[j, i] end end)
+        @finch mode=:fast (x .= 0; for i=_, j=_; if i > j x[] += A[j, i] end end)
         @test x[] == 11.0
 
-        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i >= j x[] += A[i, j] end end)
+        @finch mode=:fast (x .= 0; for j=_, i=_; if i >= j x[] += A[i, j] end end)
         @test x[] == 34.0
 
-        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i >= j x[] += A[j, i] end end)
+        @finch mode=:fast (x .= 0; for i=_, j=_; if i >= j x[] += A[j, i] end end)
         @test x[] == 26.0
 
-        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i == j x[] += A[i, j] end end)
+        @finch mode=:fast (x .= 0; for j=_, i=_; if i == j x[] += A[i, j] end end)
         @test x[] == 15.0
 
-        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i == j x[] += A[j, i] end end)
+        @finch mode=:fast (x .= 0; for i=_, j=_; if i == j x[] += A[j, i] end end)
         @test x[] == 15.0
 
-        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i != j x[] += A[i, j] end end)
+        @finch mode=:fast (x .= 0; for j=_, i=_; if i != j x[] += A[i, j] end end)
         @test x[] == 30.0
 
-        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i != j x[] += A[j, i] end end)
+        @finch mode=:fast (x .= 0; for i=_, j=_; if i != j x[] += A[j, i] end end)
         @test x[] == 30.0
     end
 
@@ -439,7 +438,7 @@ using SparseArrays
         A = zeros(3, 3, 3)
         C = zeros(3, 3, 3)
         X = zeros(3, 3)
-        @test check_output("issues/issue288_concordize_let.jl", @finch_code mode=fastfinch begin
+        @test check_output("issues/issue288_concordize_let.jl", @finch_code mode=:fast begin
             for k=_, j=_, i=_
                 let temp1 = X[i, j]
                     for l=_
@@ -452,7 +451,7 @@ using SparseArrays
                 end
             end
         end)
-        @test check_output("issues/issue288_concordize_double_let.jl", @finch_code mode=fastfinch begin
+        @test check_output("issues/issue288_concordize_double_let.jl", @finch_code mode=:fast begin
             for k=_, j=_, i=_
                 let temp1 = X[i, j]
                     for l=_
