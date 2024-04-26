@@ -109,9 +109,18 @@ julia> using Pkg; Pkg.add("Finch")
 
 ## Learn More
 
+### Finch System
+
+The following manuscript provides a good overview of the Finch System:
+
+[https://arxiv.org/abs/2404.16730](https://arxiv.org/abs/2404.16730)
+
+### Looplets IR
+
 At it's heart, Finch is powered by a new domain specific language for
 coiteration, breaking structured iterators into control flow units we call
 **Looplets**. Looplets are lowered progressively with
-several stages for rewriting and simplification.
+several stages for rewriting and simplification. More on Looplets:
 
-The technologies enabling Finch are described in our [manuscript](https://doi.org/10.1145/3579990.3580020).
+[https://doi.org/10.1145/3579990.3580020](https://doi.org/10.1145/3579990.3580020)
+[https://arxiv.org/abs/2209.05250](https://arxiv.org/abs/2209.05250)
