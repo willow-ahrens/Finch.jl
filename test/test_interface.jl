@@ -8,6 +8,13 @@ using Finch: AsArray
         using Test
 
         @testset "Einsum Tests" begin
+            # Test 0
+            A = [1 2; 3 4]
+            B = [5 6; 7 8]
+            s = Scalar(0)
+            @einsum s[] += abs(A[i, k] * B[k, j])
+            @test s[] == 134
+
             # Test 1
             A = [1 2; 3 4]
             B = [5 6; 7 8]
