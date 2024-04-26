@@ -16,6 +16,12 @@ using Compat
 using DataStructures
 using JSON
 using Distributions: Binomial, Normal, Poisson
+using Scratch
+using Preferences
+using Pkg
+using TOML
+using UUIDs
+using FileWatching.Pidfile
 
 export @finch, @finch_program, @finch_code, @finch_kernel, value
 
@@ -161,9 +167,10 @@ include("interface/lazy.jl")
 include("interface/eager.jl")
 include("interface/einsum.jl")
 
-
-@static if !isdefined(Base, :get_extension)
-    function __init__()
+const FINCH_VERSION = VersionNumber(TOML.parsefile(joinpath(dirname(@__DIR__), "Project.toml"))["version"])
+const FINCH_INFO = Pkg.dependencies()[UUID("9177782c-1635-4eb9-9bfb-d9dfa25e6bce")]
+function __init__()
+    @static if !isdefined(Base, :get_extension)
         @require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("../ext/SparseArraysExt.jl")
         @require HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f" include("../ext/HDF5Ext.jl")
         @require TensorMarket = "8b7d4fe7-0b45-4d0d-9dd8-5cc9b23b4b77" include("../ext/TensorMarketExt.jl")
