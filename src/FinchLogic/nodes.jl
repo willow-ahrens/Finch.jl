@@ -86,9 +86,9 @@ Logical AST statement that reformats `arg` into the tensor `tns`.
 reformat
 
 """
-    subquery(body, arg)
+    subquery(lhs, arg)
 
-Logical AST statement that executes `body`, then evaluates `arg` in the resulting scope.
+Logical AST statement that evaluates `arg`, binding the result to `lhs`, and returns `arg`.
 """
 subquery
 
@@ -206,7 +206,7 @@ function Base.getproperty(node::LogicNode, sym::Symbol)
     elseif node.kind === relabel && sym === :idxs @view node.children[2:end]
     elseif node.kind === reformat && sym === :tns node.children[1]
     elseif node.kind === reformat && sym === :arg node.children[2]
-    elseif node.kind === subquery && sym === :body node.children[1]
+    elseif node.kind === subquery && sym === :lhs node.children[1]
     elseif node.kind === subquery && sym === :arg node.children[2]
     elseif node.kind === query && sym === :lhs node.children[1]
     elseif node.kind === query && sym === :rhs node.children[2]
@@ -279,7 +279,7 @@ function display_expression(io, mime, node)
     elseif operation(node) == subquery
         print(io, "(")
         display_expression(io, mime, node.body)
-        print(io, " ; ")
+        print(io, " = ")
         display_expression(io, mime, node.arg)
         print(io, ")")
     elseif istree(node)
