@@ -791,4 +791,11 @@ using SparseArrays
         sum(a, dims=(1, 2))
         sum(a_tns, dims=(1, 2))
     end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/511
+    let
+        coo_tns = Tensor(SparseCOO{2}(Element(0.0), (3, 3)))
+
+        Tensor(Dense(Dense(Element(0.0))), coo_tns)
+    end
 end
