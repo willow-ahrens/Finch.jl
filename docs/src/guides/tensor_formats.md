@@ -165,6 +165,7 @@ Finch levels can be used to construct a variety of popular sparse formats. A few
 ```@docs
 Tensor
 Tensor(lvl::AbstractLevel)
+Tensor(lvl::AbstractLevel, dims::Number...)
 Tensor(lvl::AbstractLevel, init::UndefInitializer)
 Tensor(lvl::AbstractLevel, arr)
 Tensor(arr)
