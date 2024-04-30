@@ -1,1 +1,0 @@
-Tensor(SparseCOO{2}(Element{0.0, Float64, Int64}(…), (5, 10), …))

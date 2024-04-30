@@ -89,21 +89,6 @@ using SparseArrays
         @test reference_isequal(A, [0, 1, 0, 2, 3, 0])
     end
 
-    #https://github.com/willow-ahrens/Finch.jl/issues/61
-    I = copyto!(Tensor(RepeatRLE(0)), [1, 1, 9, 3, 3])
-    A = [
-        11 12 13 14 15;
-        21 22 23 24 25;
-        31 32 33 34 35;
-        41 42 43 44 45;
-        51 52 53 54 55;
-        61 62 63 64 65;
-        71 72 73 74 75;
-        81 82 83 84 85;
-        91 92 93 94 95]
-    A = copyto!(Tensor(Dense(Dense(Element(0)))), A)
-    B = Tensor(Dense(Element(0)))
-
     @test check_output("issues/fiber_as_idx.jl", @finch_code (B .= 0; for i=_; B[i] = A[I[i], i] end))
     @finch (B .= 0; for i=_; B[i] = A[I[i], i] end)
 
