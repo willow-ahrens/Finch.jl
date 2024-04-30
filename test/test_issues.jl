@@ -1,8 +1,20 @@
 using SparseArrays
-using CIndices
 
 @testset "issues" begin
     @info "Testing Github Issues"
+
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/500
+    let
+        using NPZ
+        f = mktempdir(;prefix="finch-issue-500")
+        cd(f) do
+            A = Tensor(Dense(Element(0.0)), rand(4))
+            fwrite("test.bspnpy", A)
+            B = fread("test.bspnpy")
+            @test A == B
+        end
+    end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/358
     let
@@ -30,7 +42,7 @@ using CIndices
             Tensor(Dense(Dense(Element(0)))),
         ]
             E = deepcopy(D)
-            @finch mode=fastfinch begin
+            @finch mode=:fast begin
                 D .= 0
                 E .= 0
                 for j = _, i = _
@@ -91,8 +103,8 @@ using CIndices
         91 92 93 94 95]
     A = copyto!(Tensor(Dense(Dense(Element(0)))), A)
     B = Tensor(Dense(Element(0)))
-    
-    @test check_output("fiber_as_idx.jl", @finch_code (B .= 0; for i=_; B[i] = A[I[i], i] end))
+
+    @test check_output("issues/fiber_as_idx.jl", @finch_code (B .= 0; for i=_; B[i] = A[I[i], i] end))
     @finch (B .= 0; for i=_; B[i] = A[I[i], i] end)
 
     @test B == [11, 12, 93, 34, 35]
@@ -113,9 +125,8 @@ using CIndices
     let
         function f(a::Float64, b::Float64, c::Float64)
             return a+b+c
-        end 
+        end
         struct MyAlgebra115 <: Finch.AbstractAlgebra end
-        Finch.virtualize(ex, ::Type{MyAlgebra115}, ::Finch.JuliaContext) = MyAlgebra115()
         t = Tensor(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
         A = dropdefaults(copyto!(Tensor(SparseList(SparseList(Element(0.0)))), B))
@@ -174,7 +185,7 @@ using CIndices
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/99
-    let 
+    let
         m = 4; n = 3; ptr_c = [0, 3, 3, 5]; idx_c = [1, 2, 3, 0, 2]; val_c = [1.1, 2.2, 3.3, 4.4, 5.5];
 
         ptr_jl = PlusOneVector(ptr_c)
@@ -194,11 +205,11 @@ using CIndices
 
         x = Scalar(Inf)
 
-        @test check_output("specialvals_minimum_inf.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @test check_output("issues/specialvals_minimum_inf.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
         @finch for i=_; x[] <<min>>= yf[i] end
         @test x[] == 1.0
 
-        @test check_output("specialvals_repr_inf.txt", String(take!(io)))
+        @test check_output("issues/specialvals_repr_inf.txt", String(take!(io)))
 
         io = IOBuffer()
         y = [2.0, NaN, NaN, 1.0, 3.0, NaN]
@@ -208,11 +219,11 @@ using CIndices
 
         x = Scalar(Inf)
 
-        @test check_output("specialvals_minimum_nan.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @test check_output("issues/specialvals_minimum_nan.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
         @finch for i=_; x[] <<min>>= yf[i] end
         @test isequal(x[], NaN)
 
-        @test check_output("specialvals_repr_nan.txt", String(take!(io)))
+        @test check_output("issues/specialvals_repr_nan.txt", String(take!(io)))
 
         io = IOBuffer()
         y = [2.0, missing, missing, 1.0, 3.0, missing]
@@ -222,11 +233,11 @@ using CIndices
 
         x = Scalar(Inf)
 
-        @test check_output("specialvals_minimum_missing.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
+        @test check_output("issues/specialvals_minimum_missing.jl", @finch_code (for i=_; x[] <<min>>= yf[i] end))
         @finch for i=_; x[] <<min>>= coalesce(yf[i], missing, Inf) end
         @test x[] == 1.0
 
-        @test check_output("specialvals_repr_missing.txt", String(take!(io)))
+        @test check_output("issues/specialvals_repr_missing.txt", String(take!(io)))
 
         io = IOBuffer()
         y = [2.0, nothing, nothing, 1.0, 3.0, Some(1.0), nothing]
@@ -236,11 +247,11 @@ using CIndices
 
         x = Scalar(Inf)
 
-        @test check_output("specialvals_minimum_nothing.jl", @finch_code (for i=_; x[] <<min>>= something(yf[i], nothing, Inf) end))
+        @test check_output("issues/specialvals_minimum_nothing.jl", @finch_code (for i=_; x[] <<min>>= something(yf[i], nothing, Inf) end))
         @finch for i=_; x[] <<min>>= something(yf[i], nothing, Inf) end
         @test x[] == 1.0
 
-        @test check_output("specialvals_repr_nothing.txt", String(take!(io)))
+        @test check_output("issues/specialvals_repr_nothing.txt", String(take!(io)))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/118
@@ -258,7 +269,7 @@ using CIndices
         println(io, redefault!(B, Inf))
         println(io, C)
         @test Structure(C) == Structure(redefault!(B, Inf))
-        @test check_output("issue118.txt", String(take!(io)))
+        @test check_output("issues/issue118.txt", String(take!(io)))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/97
@@ -291,7 +302,7 @@ using CIndices
         @repl io C = Scalar(0)
         @repl io @finch for k=_, j=_, i=_; C[] += A[i, j, k] end
 
-        check_output("pull197.txt", String(take!(io)))
+        @test check_output("issues/pull197.txt", String(take!(io)))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/70
@@ -360,12 +371,12 @@ using CIndices
     let
         C = Tensor(Dense(Dense(Element(0.0))), [1 0; 0 1])
         w = Tensor(Dense(Dense(Element(0.0))), [0 0; 0 0])
-        @finch mode=fastfinch begin 
+        @finch mode=:fast begin
             for j = _, i = _
                 C[i, j] += 1
             end
-            for j = _, i = _ 
-                w[j, i] = C[i, j] 
+            for j = _, i = _
+                w[j, i] = C[i, j]
             end
             for i = _, j = _
                 C[j, i] = w[j, i]
@@ -378,45 +389,45 @@ using CIndices
     let
         A = [1 2 3; 4 5 6; 7 8 9]
         x = Scalar(0.0)
-        @finch mode=fastfinch for j=_, i=_; if i < j x[] += A[i, j] end end
+        @finch mode=:fast for j=_, i=_; if i < j x[] += A[i, j] end end
         @test x[] == 11.0
 
-        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i < j x[] += A[j, i] end end)
+        @finch mode=:fast (x .= 0; for i=_, j=_; if i < j x[] += A[j, i] end end)
         @test x[] == 19.0
 
-        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i <= j x[] += A[i, j] end end)
+        @finch mode=:fast (x .= 0; for j=_, i=_; if i <= j x[] += A[i, j] end end)
         @test x[] == 26.0
 
-        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i <= j x[] += A[j, i] end end)
+        @finch mode=:fast (x .= 0; for i=_, j=_; if i <= j x[] += A[j, i] end end)
         @test x[] == 34.0
 
-        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i > j x[] += A[i, j] end end)
+        @finch mode=:fast (x .= 0; for j=_, i=_; if i > j x[] += A[i, j] end end)
         @test x[] == 19.0
 
-        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i > j x[] += A[j, i] end end)
+        @finch mode=:fast (x .= 0; for i=_, j=_; if i > j x[] += A[j, i] end end)
         @test x[] == 11.0
 
-        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i >= j x[] += A[i, j] end end)
+        @finch mode=:fast (x .= 0; for j=_, i=_; if i >= j x[] += A[i, j] end end)
         @test x[] == 34.0
 
-        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i >= j x[] += A[j, i] end end)
+        @finch mode=:fast (x .= 0; for i=_, j=_; if i >= j x[] += A[j, i] end end)
         @test x[] == 26.0
 
-        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i == j x[] += A[i, j] end end)
+        @finch mode=:fast (x .= 0; for j=_, i=_; if i == j x[] += A[i, j] end end)
         @test x[] == 15.0
 
-        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i == j x[] += A[j, i] end end)
+        @finch mode=:fast (x .= 0; for i=_, j=_; if i == j x[] += A[j, i] end end)
         @test x[] == 15.0
 
-        @finch mode=fastfinch (x .= 0; for j=_, i=_; if i != j x[] += A[i, j] end end)
+        @finch mode=:fast (x .= 0; for j=_, i=_; if i != j x[] += A[i, j] end end)
         @test x[] == 30.0
 
-        @finch mode=fastfinch (x .= 0; for i=_, j=_; if i != j x[] += A[j, i] end end)
+        @finch mode=:fast (x .= 0; for i=_, j=_; if i != j x[] += A[j, i] end end)
         @test x[] == 30.0
     end
-  
+
     #https://github.com/willow-ahrens/Finch.jl/issues/286
-    let 
+    let
         A = [1 0; 0 1]
         #note that A[i, j] is ignored here, as the temp local is never used
         @finch (for j=_, i=_; let temp = A[i, j]; end end)
@@ -427,7 +438,7 @@ using CIndices
         A = zeros(3, 3, 3)
         C = zeros(3, 3, 3)
         X = zeros(3, 3)
-        check_output("issue288_concordize_let.jl", @finch_code mode=fastfinch begin
+        @test check_output("issues/issue288_concordize_let.jl", @finch_code mode=:fast begin
             for k=_, j=_, i=_
                 let temp1 = X[i, j]
                     for l=_
@@ -440,7 +451,7 @@ using CIndices
                 end
             end
         end)
-        check_output("issue288_concordize_double_let.jl", @finch_code mode=fastfinch begin
+        @test check_output("issues/issue288_concordize_double_let.jl", @finch_code mode=:fast begin
             for k=_, j=_, i=_
                 let temp1 = X[i, j]
                     for l=_
@@ -485,17 +496,17 @@ using CIndices
 
     #https://github.com/willow-ahrens/Finch.jl/issues/52
     let
-        s = ShortCircuitScalar(false, true)
+        s = ShortCircuitScalar(false)
         x = Tensor(SparseList(Element(false)), [false, true, true, false])
         y = Tensor(SparseList(Element(false)), [false, true, false, true])
-        check_output("short_circuit.jl", @finch_code begin
+        @test check_output("issues/short_circuit.jl", @finch_code begin
             for i = _
                 s[] |= x[i] && y[i]
             end
         end)
 
         c = Scalar(0)
-        check_output("short_circuit_sum.jl", @finch_code begin
+        @test check_output("issues/short_circuit_sum.jl", @finch_code begin
             for i = _
                 let x_i = x[i]
                     s[] |= x_i && y[i]
@@ -506,16 +517,17 @@ using CIndices
 
         A = Tensor(Dense(SparseList(Element(false))), [false true true false; false true false false]')
 
-        t = SparseShortCircuitScalar(false, true)
+        p = ShortCircuitScalar(0)
+        P = Tensor(Dense(Element(0)))
 
-        check_output("short_circuit_bfs.jl", @finch_code begin
-            x .= false
+        @test check_output("issues/short_circuit_bfs.jl", @finch_code begin
+            P .= false
             for j = _
-                t .= false
+                p .= false
                 for i = _
-                    t[] |= A[i, j] && y[i]
+                    p[] <<choose(0)>>= ifelse(A[i, j] && y[i], i, 0)
                 end
-                x[j] = t[]
+                P[j] = p[]
             end
         end)
     end
@@ -573,7 +585,7 @@ using CIndices
         Point = Tensor(SparseList(Element{0}([1]), 10, [1,2], [1]))
         Kernel = Tensor(SparseList(Dense(Element{0}([1]),1), 10, [1,2], [2]))
 
-        eval(@finch_kernel function test(Output, Point, Kernel) 
+        eval(@finch_kernel function test(Output, Point, Kernel)
             Output .= 0
             for x = _
                 for xx = _
@@ -621,7 +633,7 @@ using CIndices
         x = Tensor(Dense(Element(0.0)), rand(3))
         y = Tensor(Dense(Element(0.0)), rand(3))
 
-        check_output("cse_symv.jl", @finch_code begin
+        @test check_output("issues/cse_symv.jl", @finch_code begin
             for i=_, j=_
                 y[i] += A[i, j] * x[j]
                 y[j] += A[i, j] * x[i]
@@ -632,7 +644,7 @@ using CIndices
     #https://github.com/willow-ahrens/Finch.jl/issues/397
     let
         A = AsArray(swizzle(Tensor(Dense(Dense(Element(0.0))), [1 2 3; 4 5 6; 7 8 9]), 2, 1))
-        check_output("print_swizzle_as_array.txt", sprint(show, MIME"text/plain"(), A))
+        @test check_output("issues/print_swizzle_as_array.txt", sprint(show, MIME"text/plain"(), A))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/427
@@ -658,4 +670,125 @@ using CIndices
             end
         end
     end)
+
+    #https://github.com/willow-ahrens/Finch.jl/pull/442
+    let
+        I = [6, 6, 6, 9]
+        J = [1, 3, 10, 5]
+        V = [1, 1, 1, 1]
+        fsparse(I, J, V) == sparse(I, J, V)
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/pull/450
+    let
+        #there was a bug with let statements and scoping
+        input = Tensor(Dense(Dense(Element(UInt(0)))))
+        output = Tensor(Dense(Dense(Element(UInt(0)))))
+        tmp = Tensor(Dense(Dense(Element(UInt(0)))))
+
+        eval(Finch.@finch_kernel function erode_finch_bits_kernel(output, input, tmp)
+            tmp .= 0
+            for y = _
+                for x = _
+                    tmp[x, y] = coalesce(input[x, ~(y-1)], ~(UInt(0))) & input[x, y] & coalesce(input[x, ~(y+1)], ~(UInt(0)))
+                end
+            end
+            output .= 0
+            for y = _
+                for x = _
+                    let tl = coalesce(tmp[~(x-1), y], ~(UInt(0))), t = tmp[x, y], tr = coalesce(tmp[~(x+1), y], ~(UInt(0)))
+                        output[x, y] = ((tr << (8 * sizeof(UInt) - 1)) | (t >> 1)) & t & ((t << 1) | (tl >> (8 * sizeof(UInt) - 1)))
+                    end
+                end
+            end
+        end)
+    end
+
+    let
+        A_COO = fsprand(10, 10, .5)
+        A_hash = Tensor(SparseHash{1}(SparseHash{1}(Element(0.0))))
+        @finch (A_hash .= 0; for i=_, j=_ A_hash[i,j]= A_COO[i,j] end)
+        B_COO = fsprand(10, 10, .5)
+        B_hash = Tensor(SparseHash{1}(SparseHash{1}(Element(0.0))))
+        @finch (B_hash .= 0; for i=_, j=_ B_hash[i,j]= B_COO[i,j] end)
+        output = Scalar(0)
+        @finch (output .= 0; for i=_, j=_ output[] += A_hash[j,i] * B_hash[follow(j), i] end)
+    end
+
+    let
+        A = zeros(2, 3, 3)
+        A[1, :, :] = [1 2 3; 4 5 6; 7 8 9]
+        A[2, :, :] = [1 1 1; 2 2 2; 3 3 3]
+        perm = (2, 3, 1)
+        A_t = permutedims(A, perm)
+
+        A_tns = Tensor(Dense(Dense(Dense(Element(0.0)))), A)
+        A_sw = swizzle(A_tns, perm...)
+
+        actual = broadcast(.*, A_t, A_t)
+        expected = broadcast(.*, A_sw, A_sw)
+
+        @test actual == expected
+        
+        B = zeros(size(A_sw)...)
+        copyto!(B, A_sw)
+
+        @test B == A_t
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/474
+    let
+        A = [1 2 3; 4 5 6; 7 8 9]
+        A_t = permutedims(A, (2, 1))
+        A_tns = Tensor(Dense(Dense(Element(0.0))), A)
+        A_sw = swizzle(A_tns, 2, 1)
+
+        @test prod(A_t; dims=2)[:, 1] == prod(A_sw; dims=2)
+        @test prod(A_t; dims=1)[1, :] == prod(A_sw; dims=1)
+        @test prod(A_t) == prod(A_sw)
+
+        @test tensordot(A_sw, A_sw, (2, 1)) == transpose(A * A)
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/483
+    let
+        D = Tensor(Dense{Int64}(Sparse{Int64}(Element{0.0, Float64, Int64}([0.4550140005294436, 0.6850107897370502, 0.4426087218562376, 0.24735950954269276, 0.05888493126676229, 0.5646016165775413, 0.0316029017824437]), 5, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}([1, 3, 5, 8, 8, 8], [2, 5, 2, 3, 1, 2, 3], [1, 2, 3, 4, 5, 6, 7], Dict((3, 2) => 6, (1, 2) => 1, (3, 1) => 5, (3, 3) => 7, (2, 2) => 3, (2, 3) => 4, (1, 5) => 2))), 5))
+        @test countstored(D) == 7
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/488
+    let
+        M = Tensor(Dense(SparseList(Element(0.0))), fsprand(1_000_000, 1_000_000, 1e-05));
+
+        expected(f) = sum([f() for _ = 1:100_000])/100_000.0
+
+        t = 1_000_000
+        @test 0.5 < expected(() -> countstored(fsprand(t, t, t, t, 1.0/t/t/t/t))) < 1.5
+        @test 8.5 < expected(() -> countstored(fsprand(t, t, t, t, 9.0/t/t/t/t))) < 9.5
+        @test 10.5 < expected(() -> countstored(fsprand(t, t, t, t, 11.0/t/t/t/t))) < 11.5
+
+        @test 99.5 < expected(() -> countstored(fsprand(10, 10, 1.0))) < 100.5
+        @test 49.5 < expected(() -> countstored(fsprand(10, 10, 0.5))) < 50.5
+
+        @test countstored(fsprand(10, 10, 50)) == 50
+        @test countstored(fsprand(10, 10, 100)) == 100
+        @test countstored(fsprand(t, t, t, t, 100)) == 100
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/480
+    let
+        A = fsprand(10, 10, 0.5)
+        @test size(A[:, nothing, :]) == (10, 1, 10)
+
+        copyto!(Tensor(Element(0.0)), swizzle(Tensor(Element(0.0, [1.0]))))
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/485
+    let
+        a = zeros(1,1,1)
+        a_tns = Tensor(Dense(SparseList(SparseList(Element(0.0)))), a)
+
+        sum(a, dims=(1, 2))
+        sum(a_tns, dims=(1, 2))
+    end
 end

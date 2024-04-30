@@ -4,7 +4,9 @@ end
 
 function (ctx::ShortCircuitVisitor)(node::FinchNode)
     if @capture node assign(access(~tns::isvirtual, ~m, ~i...), ~op, ~rhs)
-        short_circuit_cases(tns.val, ctx.ctx, op)
+        map(short_circuit_cases(ctx.ctx, tns.val, op)) do (guard, body)
+            guard => assign(access(body, m, i...), op, rhs)
+        end
     elseif istree(node)
         mapreduce(vcat, enumerate(arguments(node)), init=[]) do (n, arg)
             map(ctx(arg)) do (guard, body)
@@ -18,4 +20,4 @@ function (ctx::ShortCircuitVisitor)(node::FinchNode)
     end
 end
 
-short_circuit_cases(node, ctx, op) = []
+short_circuit_cases(ctx, node, op) = []

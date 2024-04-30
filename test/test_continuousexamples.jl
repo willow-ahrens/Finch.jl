@@ -5,19 +5,19 @@
         A_left = [1.1, 6.6, 9.9]
         A_right = [3.3, 7.7, 11.11]
         A_val = [1, 2, 3]
-        A = Tensor(SparseRLE{Float64}(Element(0, A_val), 12.0, [1, 4], Finch.PlusEpsVector(A_left), A_right))
+        A = Tensor(SparseRLE{Float64}(Element(0, A_val), 12.0, [1, 4], Finch.PlusEpsVector(A_left), A_right, Element(0, Int[])))
         B_left = [2.2, 5.5, 8.8]
         B_right = [3.3, 8.8, 9.9]
         B_val = [1, 1, 2]
-        B = Tensor(SparseRLE{Float64}(Element(0, B_val), 12.0, [1, 4], Finch.PlusEpsVector(B_left), B_right))
-        C = Tensor(SparseRLE{Float64}(Element(0), 12.0, [1], Finch.PlusEpsVector(Float64[]), Float64[]))
+        B = Tensor(SparseRLE{Float64}(Element(0, B_val), 12.0, [1, 4], Finch.PlusEpsVector(B_left), B_right, Element(0, Int[])))
+        C = Tensor(SparseRLE{Float64}(Element(0), 12.0, [1], Finch.PlusEpsVector(Float64[]), Float64[], Element(0, Int[])))
         @finch begin
             C .= 0
             for i = _
                 C[i] += A[i] + B[i]
             end
         end
-        C_ref = Tensor(SparseRLE{Float64}(Element(0, [1, 2, 1, 3, 1, 2, 3]), 12.0, [1, 8], Finch.PlusEpsVector([1.1, 2.2, 5.5, 6.6, 7.7, 8.8, 9.9]), [2.2, 3.3, 6.6, 7.7, 8.8, 9.9, 11.11]))
+        C_ref = Tensor(SparseRLE{Float64}(Element(0, [1, 2, 1, 3, 1, 2, 3]), 12.0, [1, 8], Finch.PlusEpsVector([1.1, 2.2, 5.5, 6.6, 7.7, 8.8, 9.9]), [2.2, 3.3, 6.6, 7.7, 8.8, 9.9, 11.11], Element(0, Int[])))
         @test Structure(C) == Structure(C_ref)
     end
 
@@ -39,7 +39,7 @@
         point_ptr_x = [1,length(point_x)+1]
         point_ptr_y = collect(Int64, 1:length(point_y)+1)
         point_ptr_id = collect(Int64, 1:length(point_y)+1)
-        points = Tensor(SparseList{Float64}(SparseList{Float64}(SingleList{Int64}(Pattern(),
+        points = Tensor(SparseList{Float64}(SparseList{Float64}(SparsePoint{Int64}(Pattern(),
                                                               shape_id,
                                                               point_ptr_id,
                                                               point_id),
@@ -57,7 +57,7 @@
         box_y_stop = [query[1][4]]
         box_ptr_x = [1,2]
         box_ptr_y = [1,2]
-        box = Tensor(SingleRLE{Float64}(SingleRLE{Float64}(Pattern(),
+        box = Tensor(SparseInterval{Float64}(SparseInterval{Float64}(Pattern(),
                                           shape,
                                           box_ptr_y,
                                           box_y_start,
@@ -69,7 +69,7 @@
 
         output = Tensor(SparseByteMap{Int64}(Pattern(), shape_id))
 
-        def = @finch_kernel mode=fastfinch function rangequery(output, box, points)
+        def = @finch_kernel mode=:fast function rangequery(output, box, points)
             output .= false 
             for x=_, y=_, id=_
                 output[id] |= box[y,x] && points[id,y,x]
@@ -77,7 +77,7 @@
         end
 
         radius=ox=oy=0.0 #placeholder
-        def2 = @finch_kernel mode=fastfinch function radiusquery(output, points, radius, ox, oy)
+        def2 = @finch_kernel mode=:fast function radiusquery(output, points, radius, ox, oy)
             output .= false 
             for x=realextent(ox-radius,ox+radius), y=realextent(oy-radius,oy+radius)
                 if (x-ox)^2 + (y-oy)^2 <= radius^2
@@ -99,7 +99,7 @@
             box_y_stop = [query[i][4]]
             box_ptr_x = [1,2]
             box_ptr_y = [1,2]
-            box = Tensor(SingleRLE{Float64}(SingleRLE{Float64}(Pattern(),
+            box = Tensor(SparseInterval{Float64}(SparseInterval{Float64}(Pattern(),
                                        shape,
                                        box_ptr_y,
                                        box_y_start,
@@ -143,7 +143,7 @@
     @testset "Trilinear Interpolation on Sampled Ray" begin
         output = Tensor(SparseList(Dense(Element(Float32(0.0)))), 16, 100)
         grid = Tensor(SparseRLE{Float64}(SparseRLE{Float64}(SparseRLE{Float64}(Dense(Element(0))))), 16,16,16,27)
-        timeray = Tensor(SingleRLE{Int64}(Pattern()), 100)
+        timeray = Tensor(SparseInterval{Int64}(Pattern()), 100)
         @finch begin
             grid .= 0
             for i=realextent(4.0,12.0),j=realextent(4.0,12.0),k=realextent(4.0,12.0)
@@ -164,7 +164,7 @@
         ox=oy=oz=0.1
 
         #Main Kernel
-        @finch mode=fastfinch begin
+        @finch mode=:fast begin
              output .= 0
              for t=_
                  if timeray[t]

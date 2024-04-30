@@ -1,9 +1,0 @@
-Tensor(SparseList(SparseTriangle{1}(Element(zero)))) representation:
-
-array: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
-tensor: Tensor(SparseList{Int32}(SparseTriangle{1, Int32}(Element{0.0, Float64, Int32}(Float64[]), 5), 5, [1, 1], Int32[]))
-array: [1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0]
-tensor: Tensor(SparseList{Int32}(SparseTriangle{1, Int32}(Element{0.0, Float64, Int32}([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]), 5), 5, [1, 6], [1, 2, 3, 4, 5]))
-array: [0.0 1.0 2.0 2.0; 0.0 0.0 0.0 0.0; 1.0 1.0 2.0 0.0; 0.0 0.0 0.0 0.0]
-tensor: Tensor(SparseList{Int32}(SparseTriangle{1, Int32}(Element{0.0, Float64, Int32}([0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 2.0, 0.0, 2.0, 0.0, 2.0, 0.0, 0.0, 0.0]), 4), 4, [1, 5], [1, 2, 3, 4]))
-

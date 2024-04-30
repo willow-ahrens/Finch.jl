@@ -48,8 +48,8 @@ SparseListLevel{Ti}(lvl::Lvl, shape, ptr::Ptr, idx::Idx) where {Ti, Lvl, Ptr, Id
     SparseListLevel{Ti, Ptr, Idx, Lvl}(lvl, shape, ptr, idx)
     
 Base.summary(lvl::SparseListLevel) = "SparseList($(summary(lvl.lvl)))"
-similar_level(lvl::SparseListLevel) = SparseList(similar_level(lvl.lvl))
-similar_level(lvl::SparseListLevel, dim, tail...) = SparseList(similar_level(lvl.lvl, tail...), dim)
+similar_level(lvl::SparseListLevel, fill_value, eltype::Type, dim, tail...) =
+    SparseList(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
 
 function postype(::Type{SparseListLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl}
     return postype(Lvl)
@@ -140,16 +140,16 @@ end
 is_level_injective(ctx, lvl::VirtualSparseListLevel) = [is_level_injective(ctx, lvl.lvl)..., false]
 function is_level_atomic(ctx, lvl::VirtualSparseListLevel)
     (below, atomic) = is_level_atomic(ctx, lvl.lvl)
-    return ([below; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
+    return ([below; [atomic for _ in 1:num_indexable(ctx, lvl)]], atomic)
 end
 function is_level_concurrent(ctx, lvl::VirtualSparseListLevel)
     (data, _) = is_level_concurrent(ctx, lvl.lvl)
-    return ([data; [false for _ in 1:num_indexable(lvl, ctx)]], false)
+    return ([data; [false for _ in 1:num_indexable(ctx, lvl)]], false)
 end
-num_indexable(lvl::VirtualSparseListLevel, ctx) = virtual_level_ndims(lvl, ctx) - virtual_level_ndims(lvl.lvl, ctx)
+num_indexable(ctx, lvl::VirtualSparseListLevel) = virtual_level_ndims(ctx, lvl) - virtual_level_ndims(ctx, lvl.lvl)
 
 
-function virtualize(ex, ::Type{SparseListLevel{Ti, Ptr, Idx, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Idx, Lvl}
+function virtualize(ctx, ex, ::Type{SparseListLevel{Ti, Ptr, Idx, Lvl}}, tag=:lvl) where {Ti, Ptr, Idx, Lvl}
     sym = freshen(ctx, tag)
     ptr = freshen(ctx, tag, :_ptr)
     idx = freshen(ctx, tag, :_idx)
@@ -158,14 +158,14 @@ function virtualize(ex, ::Type{SparseListLevel{Ti, Ptr, Idx, Lvl}}, ctx, tag=:lv
         $ptr = $sym.ptr
         $idx = $sym.idx
     end)
-    lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
+    lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)
     qos_stop = freshen(ctx, sym, :_qos_stop)
     prev_pos = freshen(ctx, sym, :_prev_pos)
     VirtualSparseListLevel(lvl_2, sym, Ti, ptr, idx, shape, qos_fill, qos_stop, prev_pos)
 end
-function lower(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualSparseListLevel, ::DefaultStyle)
     quote
         $SparseListLevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
@@ -178,14 +178,14 @@ end
 
 Base.summary(lvl::VirtualSparseListLevel) = "SparseList($(summary(lvl.lvl)))"
 
-function virtual_level_size(lvl::VirtualSparseListLevel, ctx)
+function virtual_level_size(ctx, lvl::VirtualSparseListLevel)
     ext = make_extent(lvl.Ti, literal(lvl.Ti(1)), lvl.shape)
-    (virtual_level_size(lvl.lvl, ctx)..., ext)
+    (virtual_level_size(ctx, lvl.lvl)..., ext)
 end
 
-function virtual_level_resize!(lvl::VirtualSparseListLevel, ctx, dims...)
+function virtual_level_resize!(ctx, lvl::VirtualSparseListLevel, dims...)
     lvl.shape = getstop(dims[end])
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-1]...)
+    lvl.lvl = virtual_level_resize!(ctx, lvl.lvl, dims[1:end-1]...)
     lvl
 end
 
@@ -194,7 +194,7 @@ virtual_level_default(lvl::VirtualSparseListLevel) = virtual_level_default(lvl.l
 
 postype(lvl::VirtualSparseListLevel) = postype(lvl.lvl)
 
-function declare_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos, init)
+function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseListLevel, pos, init)
     #TODO check that init == default
     Ti = lvl.Ti
     Tp = postype(lvl)
@@ -207,11 +207,11 @@ function declare_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos,
             $(lvl.prev_pos) = $(Tp(0))
         end)
     end
-    lvl.lvl = declare_level!(lvl.lvl, ctx, literal(Tp(0)), init)
+    lvl.lvl = declare_level!(ctx, lvl.lvl, literal(Tp(0)), init)
     return lvl
 end
 
-function assemble_level!(lvl::VirtualSparseListLevel, ctx, pos_start, pos_stop)
+function assemble_level!(ctx, lvl::VirtualSparseListLevel, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
@@ -220,9 +220,9 @@ function assemble_level!(lvl::VirtualSparseListLevel, ctx, pos_start, pos_stop)
     end
 end
 
-function freeze_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos_stop)
+function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseListLevel, pos_stop)
     p = freshen(ctx.code, :p)
-    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(ctx, pos_stop)))
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
         resize!($(lvl.ptr), $pos_stop + 1)
@@ -232,13 +232,13 @@ function freeze_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos_s
         $qos_stop = $(lvl.ptr)[$pos_stop + 1] - 1
         resize!($(lvl.idx), $qos_stop)
     end)
-    lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
+    lvl.lvl = freeze_level!(ctx, lvl.lvl, value(qos_stop))
     return lvl
 end
 
-function thaw_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos_stop)
+function thaw_level!(ctx::AbstractCompiler, lvl::VirtualSparseListLevel, pos_stop)
     p = freshen(ctx.code, :p)
-    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(ctx, pos_stop)))
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(lvl.ptr)[$pos_stop + 1] - 1
@@ -253,11 +253,11 @@ function thaw_level!(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, pos_sto
             $(lvl.ptr)[$p + 1] -= $(lvl.ptr)[$p]
         end
     end)
-    lvl.lvl = thaw_level!(lvl.lvl, ctx, value(qos_stop))
+    lvl.lvl = thaw_level!(ctx, lvl.lvl, value(qos_stop))
     return lvl
 end
 
-function virtual_moveto_level(lvl::VirtualSparseListLevel, ctx::AbstractCompiler, arch)
+function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualSparseListLevel, arch)
     ptr_2 = freshen(ctx.code, lvl.ptr)
     idx_2 = freshen(ctx.code, lvl.idx)
     push!(ctx.code.preamble, quote
@@ -270,10 +270,10 @@ function virtual_moveto_level(lvl::VirtualSparseListLevel, ctx::AbstractCompiler
         $(lvl.ptr) = $ptr_2
         $(lvl.idx) = $idx_2
     end)
-    virtual_moveto_level(lvl.lvl, ctx, arch)
+    virtual_moveto_level(ctx, lvl.lvl, arch)
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
@@ -309,7 +309,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, mode::Re
                         stop = (ctx, ext) -> value(my_i),
                         chunk = Spike(
                             body = Fill(virtual_level_default(lvl)),
-                            tail = Simplify(instantiate(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, mode, subprotos))
+                            tail = Simplify(instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Ti)), mode, subprotos))
                         ),
                         next = (ctx, ext) -> :($my_q += $(Tp(1))) 
                     )
@@ -322,7 +322,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, mode::Re
     )
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, mode::Reader, subprotos, ::typeof(gallop))
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Reader, subprotos, ::typeof(gallop))
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
@@ -361,7 +361,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, mode::Re
                         stop = (ctx, ext) -> value(my_i2),
                         chunk =  Spike(
                             body = Fill(virtual_level_default(lvl)),
-                            tail = instantiate(VirtualSubFiber(lvl.lvl, value(my_q, Ti)), ctx, mode, subprotos),
+                            tail = instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Ti)), mode, subprotos),
                         ),
                         next = (ctx, ext) -> :($my_q += $(Tp(1))),
                     )  
@@ -374,10 +374,10 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, mode::Re
     )
 end
 
-instantiate(fbr::VirtualSubFiber{VirtualSparseListLevel}, ctx, mode::Updater, protos) = begin
-    instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
+instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Updater, protos) = begin
+    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), mode, protos)
 end
-function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseListLevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseListLevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
@@ -402,11 +402,11 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseListLevel}, ctx, mo
                         if $qos > $qos_stop
                             $qos_stop = max($qos_stop << 1, 1)
                             Finch.resize_if_smaller!($(lvl.idx), $qos_stop)
-                            $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, Tp), value(qos_stop, Tp)), ctx))
+                            $(contain(ctx_2->assemble_level!(ctx_2, lvl.lvl, value(qos, Tp), value(qos_stop, Tp)), ctx))
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), ctx, mode, subprotos),
+                    body = (ctx) -> instantiate(ctx, VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), mode, subprotos),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true

@@ -2,37 +2,38 @@
     ex
     eltype
     ndims
+    shape
 end
 
-function virtual_size(arr::VirtualAbstractArray, ctx::AbstractCompiler)
-    dims = map(i -> Symbol(arr.ex, :_mode, i, :_stop), 1:arr.ndims)
-    push!(ctx.code.preamble, quote
-        ($(dims...),) = size($(arr.ex))
-    end)
-    return map(i->Extent(literal(1), value(dims[i], Int)), 1:arr.ndims)
+function virtual_size(ctx::AbstractCompiler, arr::VirtualAbstractArray)
+    return arr.shape
 end
 
-function lower(arr::VirtualAbstractArray, ctx::AbstractCompiler,  ::DefaultStyle)
+function lower(ctx::AbstractCompiler, arr::VirtualAbstractArray, ::DefaultStyle)
     return arr.ex
 end
 
-function virtualize(ex, ::Type{<:AbstractArray{T, N}}, ctx, tag=:tns) where {T, N}
+function virtualize(ctx, ex, ::Type{<:AbstractArray{T, N}}, tag=:tns) where {T, N}
     sym = freshen(ctx, tag)
-    push!(ctx.preamble, :($sym = $ex))
-    VirtualAbstractArray(sym, T, N)
+    dims = map(i -> Symbol(sym, :_mode, i, :_stop), 1:N)
+    push!(ctx.preamble, quote
+        $sym = $ex
+        ($(dims...),) = size($ex)
+    end)
+    VirtualAbstractArray(sym, T, N, map(i->Extent(literal(1), value(dims[i], Int)), 1:N))
 end
 
-function declare!(arr::VirtualAbstractArray, ctx::AbstractCompiler, init)
+function declare!(ctx::AbstractCompiler, arr::VirtualAbstractArray, init)
     push!(ctx.code.preamble, quote
         fill!($(arr.ex), $(ctx(init)))
     end)
     arr
 end
 
-freeze!(arr::VirtualAbstractArray, ctx::AbstractCompiler) = arr
-thaw!(arr::VirtualAbstractArray, ctx::AbstractCompiler) = arr
+freeze!(ctx::AbstractCompiler, arr::VirtualAbstractArray) = arr
+thaw!(ctx::AbstractCompiler, arr::VirtualAbstractArray) = arr
 
-function instantiate(arr::VirtualAbstractArray, ctx::AbstractCompiler, mode, subprotos, protos...)
+function instantiate(ctx::AbstractCompiler, arr::VirtualAbstractArray, mode, subprotos, protos...)
     val = freshen(ctx.code, :val)
     function nest(idx...)
         if length(idx) == arr.ndims
@@ -62,10 +63,10 @@ end
 
 FinchNotation.finch_leaf(x::VirtualAbstractArray) = virtual(x)
 
-virtual_default(::VirtualAbstractArray, ctx) = 0
-virtual_eltype(tns::VirtualAbstractArray, ctx) = tns.eltype
+virtual_default(ctx, ::VirtualAbstractArray) = 0
+virtual_eltype(ctx, tns::VirtualAbstractArray) = tns.eltype
 
-function virtual_moveto(vec::VirtualAbstractArray, ctx, device)
+function virtual_moveto(ctx, vec::VirtualAbstractArray, device)
     ex = freshen(ctx.code, vec.ex)
     push!(ctx.code.preamble, quote
         $ex = $(vec.ex)

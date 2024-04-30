@@ -28,15 +28,15 @@ Base.summary(io::IO, ex::VirtualWindowedArray) = print(io, "VWindowed($(summary(
 
 FinchNotation.finch_leaf(x::VirtualWindowedArray) = virtual(x)
 
-function virtualize(ex, ::Type{WindowedArray{Dims, Body}}, ctx) where {Dims, Body}
+function virtualize(ctx, ex, ::Type{WindowedArray{Dims, Body}}) where {Dims, Body}
     dims = map(enumerate(Dims.parameters)) do (n, param)
         if param === Nothing
             nothing
         else
-            virtualize(:($ex.dims[$n]), param, ctx)
+            virtualize(ctx, :($ex.dims[$n]), param)
         end
     end
-    VirtualWindowedArray(virtualize(:($ex.body), Body, ctx), dims)
+    VirtualWindowedArray(virtualize(ctx, :($ex.body), Body), dims)
 end
 
 """
@@ -51,30 +51,30 @@ of each `dim`. The `dims` may also be `nothing` to represent a full view of the
 underlying dimension.
 """
 window(body, delta...) = WindowArray(body, delta)
-function virtual_call(::typeof(window), ctx, body, delta...)
+function virtual_call(ctx, ::typeof(window), body, delta...)
     VirtualWindowedArray(body, delta)
 end
 
 unwrap(ctx, arr::VirtualWindowedArray, var) = call(window, unwrap(ctx, arr.body, var), arr.delta...)
 
-lower(tns::VirtualWindowedArray, ctx::AbstractCompiler, ::DefaultStyle) = :(WindowedArray($(ctx(tns.body)), $(tns.dims)))
+lower(ctx::AbstractCompiler, tns::VirtualWindowedArray, ::DefaultStyle) = :(WindowedArray($(ctx(tns.body)), $(tns.dims)))
 
-function virtual_size(arr::VirtualWindowedArray, ctx::AbstractCompiler)
-    something.(arr.dims, virtual_size(arr.body, ctx))
+function virtual_size(ctx::AbstractCompiler, arr::VirtualWindowedArray)
+    something.(arr.dims, virtual_size(ctx, arr.body))
 end
-function virtual_resize!(arr::VirtualWindowedArray, ctx::AbstractCompiler, dims...)
-    virtual_resize!(arr.body, ctx, something.(arr.dims, dims)...)
+function virtual_resize!(ctx::AbstractCompiler, arr::VirtualWindowedArray, dims...)
+    virtual_resize!(ctx, arr.body, something.(arr.dims, dims)...)
 end
 
-virtual_default(arr::VirtualWindowedArray, ctx::AbstractCompiler) = virtual_default(arr.body, ctx)
+virtual_default(ctx::AbstractCompiler, arr::VirtualWindowedArray) = virtual_default(ctx, arr.body)
 
-function instantiate(arr::VirtualWindowedArray, ctx, mode, protos)
-    VirtualWindowedArray(instantiate(arr.body, ctx, mode, protos), arr.dims)
+function instantiate(ctx, arr::VirtualWindowedArray, mode, protos)
+    VirtualWindowedArray(instantiate(ctx, arr.body, mode, protos), arr.dims)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualWindowedArray) = ctx(node.body)
-function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::VirtualWindowedArray)
-    stylize_access(node, ctx, tns.body)
+function stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualWindowedArray)
+    stylize_access(ctx, node, tns.body)
 end
 
 function popdim(node::VirtualWindowedArray)
@@ -85,10 +85,10 @@ function popdim(node::VirtualWindowedArray)
     end
 end
 
-truncate(node::VirtualWindowedArray, ctx, ext, ext_2) = VirtualWindowedArray(truncate(node.body, ctx, ext, ext_2), node.dims)
+truncate(ctx, node::VirtualWindowedArray, ext, ext_2) = VirtualWindowedArray(truncate(ctx, node.body, ext, ext_2), node.dims)
 
-function get_point_body(node::VirtualWindowedArray, ctx, ext, idx)
-    body_2 = get_point_body(node.body, ctx, ext, idx)
+function get_point_body(ctx, node::VirtualWindowedArray, ext, idx)
+    body_2 = get_point_body(ctx, node.body, ext, idx)
     if body_2 === nothing
         return nothing
     else
@@ -98,8 +98,8 @@ end
 
 (ctx::ThunkVisitor)(node::VirtualWindowedArray) = VirtualWindowedArray(ctx(node.body), node.dims)
 
-function get_run_body(node::VirtualWindowedArray, ctx, ext)
-    body_2 = get_run_body(node.body, ctx, ext)
+function get_run_body(ctx, node::VirtualWindowedArray, ext)
+    body_2 = get_run_body(ctx, node.body, ext)
     if body_2 === nothing
         return nothing
     else
@@ -107,8 +107,8 @@ function get_run_body(node::VirtualWindowedArray, ctx, ext)
     end
 end
 
-function get_acceptrun_body(node::VirtualWindowedArray, ctx, ext)
-    body_2 = get_acceptrun_body(node.body, ctx, ext)
+function get_acceptrun_body(ctx, node::VirtualWindowedArray, ext)
+    body_2 = get_acceptrun_body(ctx, node.body, ext)
     if body_2 === nothing
         return nothing
     else
@@ -122,11 +122,11 @@ function (ctx::SequenceVisitor)(node::VirtualWindowedArray)
     end
 end
 
-phase_body(node::VirtualWindowedArray, ctx, ext, ext_2) = VirtualWindowedArray(phase_body(node.body, ctx, ext, ext_2), node.dims)
-phase_range(node::VirtualWindowedArray, ctx, ext) = phase_range(node.body, ctx, ext)
+phase_body(ctx, node::VirtualWindowedArray, ext, ext_2) = VirtualWindowedArray(phase_body(ctx, node.body, ext, ext_2), node.dims)
+phase_range(ctx, node::VirtualWindowedArray, ext) = phase_range(ctx, node.body, ext)
 
-get_spike_body(node::VirtualWindowedArray, ctx, ext, ext_2) = VirtualWindowedArray(get_spike_body(node.body, ctx, ext, ext_2), node.dims)
-get_spike_tail(node::VirtualWindowedArray, ctx, ext, ext_2) = VirtualWindowedArray(get_spike_tail(node.body, ctx, ext, ext_2), node.dims)
+get_spike_body(ctx, node::VirtualWindowedArray, ext, ext_2) = VirtualWindowedArray(get_spike_body(ctx, node.body, ext, ext_2), node.dims)
+get_spike_tail(ctx, node::VirtualWindowedArray, ext, ext_2) = VirtualWindowedArray(get_spike_tail(ctx, node.body, ext, ext_2), node.dims)
 
 visit_fill(node, tns::VirtualWindowedArray) = visit_fill(node, tns.body)
 visit_simplify(node::VirtualWindowedArray) = VirtualWindowedArray(visit_simplify(node.body), node.dims)
@@ -135,28 +135,28 @@ visit_simplify(node::VirtualWindowedArray) = VirtualWindowedArray(visit_simplify
     guard => VirtualWindowedArray(body, node.dims)
 end
 
-stepper_range(node::VirtualWindowedArray, ctx, ext) = stepper_range(node.body, ctx, ext)
-stepper_body(node::VirtualWindowedArray, ctx, ext, ext_2) = VirtualWindowedArray(stepper_body(node.body, ctx, ext, ext_2), node.dims)
-stepper_seek(node::VirtualWindowedArray, ctx, ext) = stepper_seek(node.body, ctx, ext)
+stepper_range(ctx, node::VirtualWindowedArray, ext) = stepper_range(ctx, node.body, ext)
+stepper_body(ctx, node::VirtualWindowedArray, ext, ext_2) = VirtualWindowedArray(stepper_body(ctx, node.body, ext, ext_2), node.dims)
+stepper_seek(ctx, node::VirtualWindowedArray, ext) = stepper_seek(ctx, node.body, ext)
 
-jumper_range(node::VirtualWindowedArray, ctx, ext) = jumper_range(node.body, ctx, ext)
-jumper_body(node::VirtualWindowedArray, ctx, ext, ext_2) = VirtualWindowedArray(jumper_body(node.body, ctx, ext, ext_2), node.dims)
-jumper_seek(node::VirtualWindowedArray, ctx, ext) = jumper_seek(node.body, ctx, ext)
+jumper_range(ctx, node::VirtualWindowedArray, ext) = jumper_range(ctx, node.body, ext)
+jumper_body(ctx, node::VirtualWindowedArray, ext, ext_2) = VirtualWindowedArray(jumper_body(ctx, node.body, ext, ext_2), node.dims)
+jumper_seek(ctx, node::VirtualWindowedArray, ext) = jumper_seek(ctx, node.body, ext)
 
-function short_circuit_cases(node::VirtualWindowedArray, ctx, op)
-    map(short_circuit_cases(node.body, ctx, op)) do (guard, body)
+function short_circuit_cases(ctx, node::VirtualWindowedArray, op)
+    map(short_circuit_cases(ctx, node.body, op)) do (guard, body)
         guard => VirtualWindowedArray(body, node.dims)
     end
 end
 
 getroot(tns::VirtualWindowedArray) = getroot(tns.body)
 
-function unfurl(tns::VirtualWindowedArray, ctx, ext, mode, protos...)
+function unfurl(ctx, tns::VirtualWindowedArray, ext, mode, protos...)
     if tns.dims[end] !== nothing
-        dims = virtual_size(tns.body, ctx)
-        tns_2 = unfurl(tns.body, ctx, dims[end], mode, protos...)
-        truncate(tns_2, ctx, dims[end], ext)
+        dims = virtual_size(ctx, tns.body)
+        tns_2 = unfurl(ctx, tns.body, dims[end], mode, protos...)
+        truncate(ctx, tns_2, dims[end], ext)
     else
-        unfurl(tns.body, ctx, ext, mode, protos...)
+        unfurl(ctx, tns.body, ext, mode, protos...)
     end
 end

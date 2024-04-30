@@ -67,6 +67,8 @@ function get_program_rules(alg, shash)
         (@rule call(overwrite, ~a, ~b) => b),
         (@rule call(~f::isliteral, ~a, ~b) => if f.val isa InitWriter b end),
         (@rule assign(~a::isliteral, ~op, ~b) => if a.val === Null() block() end),
+        (@rule call(~f::isliteral, true, ~b) => if f.val isa FilterOp b end),
+        (@rule call(~f::isliteral, false, ~b) => if f.val isa FilterOp f.val(false, nothing) end),
         (@rule call(ifelse, true, ~a, ~b) => a),
         (@rule call(ifelse, false, ~a, ~b) => b),
         (@rule call(ifelse, ~a, ~b, ~b) => b),
@@ -182,9 +184,9 @@ struct SimplifyStyle end
 combine_style(a::SimplifyStyle, b::SimplifyStyle) = a
 
 
-function lower(root, ctx::AbstractCompiler,  ::SimplifyStyle)
+function lower(ctx::AbstractCompiler, root, ::SimplifyStyle)
     root = Rewrite(Prewalk((x) -> if x.kind === virtual visit_simplify(x.val) end))(root)
-    root = simplify(root, ctx)
+    root = simplify(ctx, root)
     ctx(root)
 end
 
@@ -202,7 +204,7 @@ function visit_simplify(node::FinchNode)
     end
 end
 
-function simplify(root, ctx)
+function simplify(ctx, root)
     Rewrite(Fixpoint(Chain([
         Prewalk(Fixpoint(Chain(ctx.program_rules))),
         #these rules are non-customizeable:

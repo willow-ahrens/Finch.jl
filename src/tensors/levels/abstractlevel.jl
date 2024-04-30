@@ -58,7 +58,7 @@ level of type `Lvl`.
 function level_default end
 
 """
-    declare_level!(lvl, ctx, pos, init)
+    declare_level!(ctx, lvl, pos, init)
 
 Initialize and thaw all fibers within `lvl`, assuming positions `1:pos` were
 previously assembled and frozen. The resulting level has no assembled positions.
@@ -66,7 +66,7 @@ previously assembled and frozen. The resulting level has no assembled positions.
 function declare_level! end
 
 """
-    freeze_level!(lvl, ctx, pos, init)
+    freeze_level!(ctx, lvl, pos, init)
 
 Given the last reference position, `pos`, freeze all fibers within `lvl` assuming
 that we have potentially updated `1:pos`. 
@@ -75,7 +75,7 @@ function freeze_level! end
 
 
 """
-    thaw_level!(lvl, ctx, pos, init)
+    thaw_level!(ctx, lvl, pos, init)
 
 Given the last reference position, `pos`, thaw all fibers within `lvl` assuming
 that we have previously assembled and frozen `1:pos`.
@@ -84,7 +84,7 @@ function thaw_level! end
 
 
 """
-    assemble_level!(lvl, ctx, pos, new_pos)
+    assemble_level!(ctx, lvl, pos, new_pos)
 
 Assemble and positions `pos+1:new_pos` in `lvl`, assuming positions `1:pos` were
 previously assembled.
@@ -100,11 +100,11 @@ Set the previously assempled positions from `pos_start` to `pos_end` to
 function reassemble_level! end
 
 """
-    freeze_level!(lvl, ctx, pos) 
+    freeze_level!(ctx, lvl, pos) 
 
 Freeze all fibers in `lvl`. Positions `1:pos` need freezing.
 """
-freeze_level!(fbr, ctx, mode) = fbr.lvl
+freeze_level!(ctx, fbr, mode) = fbr.lvl
 
 """
     postype(lvl)

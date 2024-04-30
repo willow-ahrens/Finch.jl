@@ -43,8 +43,7 @@ RepeatRLELevel{D, Ti, Tp, Tv}(shape, ptr::Ptr, idx::Idx, val::Val) where {D, Ti,
     RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}(shape, ptr, idx, val)
 
 Base.summary(::RepeatRLE{D}) where {D} = "RepeatRLE($(D))"
-similar_level(::RepeatRLELevel{D}) where {D} = RepeatRLE{D}()
-similar_level(::RepeatRLELevel{D}, dim, tail...) where {D} = RepeatRLE{D}(dim)
+similar_level(::RepeatRLELevel{D}, ::Any, ::Type, dim, tail...) where {D} = RepeatRLE{D}(dim)
 data_rep_level(::Type{<:RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}}) where {D, Ti, Tp, Tv, Ptr, Idx, Val} = RepeatData(D, Tv)
 
 function postype(::Type{RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}}) where {D, Ti, Tp, Tv, Ptr, Idx, Val}
@@ -137,11 +136,11 @@ end
 is_level_injective(ctx, ::VirtualRepeatRLELevel) = [false]
 is_level_atomic(ctx, lvl::VirtualRepeatRLELevel) = ([false], false)
 function is_level_concurrent(ctx, lvl::VirtualRepeatRLELevel)
-    return ([false for _ in 1:num_indexable(lvl)], false)
+    return ([false for _ in 1:num_indexable(ctx, lvl)], false)
 end
-num_indexable(lvl::VirtualRepeatRLELevel, ctx) = length(lvl.shape)
+num_indexable(ctx, lvl::VirtualRepeatRLELevel) = length(lvl.shape)
 
-function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}}, ctx, tag=:lvl) where {D, Ti, Tp, Tv, Ptr, Idx, Val}
+function virtualize(ctx, ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}}, tag=:lvl) where {D, Ti, Tp, Tv, Ptr, Idx, Val}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Int)
     ros_fill = freshen(ctx, sym, :_ros_fill)
@@ -159,7 +158,7 @@ function virtualize(ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}}, ct
     prev_pos = freshen(ctx, sym, :_prev_pos)
     VirtualRepeatRLELevel(sym, D, Ti, Tp, Tv, ptr, idx, val, shape, ros_fill, qos_stop, dirty, prev_pos)
 end
-function lower(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualRepeatRLELevel, ::DefaultStyle)
     quote
         $RepeatRLELevel{$(lvl.D), $(lvl.Ti), $(lvl.Tp), $(lvl.Tv)}(
             $(ctx(lvl.shape)),
@@ -172,12 +171,12 @@ end
 
 Base.summary(lvl::VirtualRepeatRLELevel) = "RepeatRLE($(lvl.D))"
 
-function virtual_level_size(lvl::VirtualRepeatRLELevel, ctx)
+function virtual_level_size(ctx, lvl::VirtualRepeatRLELevel)
     ext = Extent(literal(lvl.Ti(1)), lvl.shape)
     (ext,)
 end
 
-function virtual_level_resize!(lvl::VirtualRepeatRLELevel, ctx, dim)
+function virtual_level_resize!(ctx, lvl::VirtualRepeatRLELevel, dim)
     lvl.shape = getstop(dim)
     lvl
 end
@@ -186,7 +185,7 @@ virtual_level_default(lvl::VirtualRepeatRLELevel) = lvl.D
 virtual_level_eltype(lvl::VirtualRepeatRLELevel) = lvl.Tv
 postype(lvl::VirtualRepeatRLELevel) = lvl.Tp
 
-function virtual_moveto_level(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, arch)
+function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualRepeatRLELevel, arch)
     ptr_2 = freshen(ctx.code, lvl.ptr)
     idx_2 = freshen(ctx.code, lvl.idx)
     val_2 = freshen(ctx.code, lvl.val)
@@ -203,10 +202,10 @@ function virtual_moveto_level(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler,
         $(lvl.idx) = $idx_2
         $(lvl.val) = $val_2
     end)
-    virtual_moveto_level(lvl.lvl, ctx, arch)
+    virtual_moveto_level(ctx, lvl.lvl, arch)
 end
 
-function declare_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, mode, init)
+function declare_level!(ctx::AbstractCompiler, lvl::VirtualRepeatRLELevel, mode, init)
     init == literal(lvl.D) || throw(FinchProtocolError("Cannot initialize RepeatRLE Levels to non-default values"))
     Tp = lvl.Tp
     Ti = lvl.Ti
@@ -223,7 +222,7 @@ function declare_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, mode,
     return lvl
 end
 
-function assemble_level!(lvl::VirtualRepeatRLELevel, ctx, pos_start, pos_stop)
+function assemble_level!(ctx, lvl::VirtualRepeatRLELevel, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_stop, pos_stop))
     quote
@@ -232,7 +231,7 @@ function assemble_level!(lvl::VirtualRepeatRLELevel, ctx, pos_start, pos_stop)
     end
 end
 
-function freeze_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, pos_stop)
+function freeze_level!(ctx::AbstractCompiler, lvl::VirtualRepeatRLELevel, pos_stop)
     Tp = lvl.Tp
     Ti = lvl.Ti
     p = freshen(ctx.code, :p)
@@ -254,7 +253,7 @@ function freeze_level!(lvl::VirtualRepeatRLELevel, ctx::AbstractCompiler, pos_st
     return lvl
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualRepeatRLELevel}, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp
@@ -293,9 +292,9 @@ function instantiate(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, mode::Rea
     )
 end
 
-instantiate(fbr::VirtualSubFiber{VirtualRepeatRLELevel}, ctx, mode::Updater, protos) = 
-    instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
-function instantiate(fbr::VirtualHollowSubFiber{VirtualRepeatRLELevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+instantiate(ctx, fbr::VirtualSubFiber{VirtualRepeatRLELevel}, mode::Updater, protos) = 
+    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), mode, protos)
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualRepeatRLELevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = lvl.Tp

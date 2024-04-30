@@ -3,11 +3,11 @@
     let 
         s1 = Scalar(0)
         x = Tensor(SparseRLE{Limit{Float32}}(Element(0)), 10)
-        @finch mode=fastfinch (x[3] = 1)
-        @finch mode=fastfinch (for i=realextent(5+Eps,7-Eps); x[~i] = 1 end)
-        @finch mode=fastfinch (for i=realextent(8,9+Eps); x[~i] = 1 end)
+        @finch mode=:fast (x[3] = 1)
+        @finch mode=:fast (for i=realextent(5+Eps,7-Eps); x[~i] = 1 end)
+        @finch mode=:fast (for i=realextent(8,9+Eps); x[~i] = 1 end)
         
-        @finch mode=fastfinch (for i=_; s1[] += x[i] * d(i) end)
+        @finch mode=:fast (for i=_; s1[] += x[i] * d(i) end)
         @test s1.val == 3
     end
 
@@ -15,10 +15,10 @@
         s1 = Scalar(0)
         x = Tensor(SparseRLE{Limit{Float32}}(SparseList(Element(0))), 10, 10)
         a = [1, 4, 8]
-        @finch mode=fastfinch (for i=realextent(2,4-Eps); for j=extent(1,3); x[a[j], ~i] = 1 end end)
-        @finch mode=fastfinch (for i=realextent(6+Eps,10-Eps); x[2, ~i] = 1 end)
+        @finch mode=:fast (for i=realextent(2,4-Eps); for j=extent(1,3); x[a[j], ~i] = 1 end end)
+        @finch mode=:fast (for i=realextent(6+Eps,10-Eps); x[2, ~i] = 1 end)
         
-        @finch mode=fastfinch (for i=_; for j=_; s1[] += x[j,i] * d(i) end end)
+        @finch mode=:fast (for i=_; for j=_; s1[] += x[j,i] * d(i) end end)
         @test s1.val == 10
     end   
     
@@ -48,11 +48,11 @@
         io = IOBuffer()
         @repl io @finch_code (z1 .= 0; for i=_; z1[] += x[i] end)
         @repl io @finch (z1 .= 0; for i=_; z1[] += x[i] end)
-        @test check_output("continuous_pinpoint_sl.txt", String(take!(io)))
+        @test check_output("continuous/pinpoint_sl.txt", String(take!(io)))
 
         @repl io @finch_code (z2 .= 0; for i=_; z2[] += y[i] end)
         @repl io @finch (z2 .= 0; for i=_; z2[] += y[i] end)
-        @test check_output("continuous_pinpoint_rle.txt", String(take!(io)))
+        @test check_output("continuous/pinpoint_rle.txt", String(take!(io)))
        
         @test z1.val == z2.val
 
@@ -70,11 +70,11 @@
         io = IOBuffer()
         @repl io @finch_code (z1 .= 0; for i=_; z1[] += x[2*i+10] end)
         @repl io @finch (z1 .= 0; for i=_; z1[] += x[2*i+10] end)
-        @test check_output("continuous_affine_sl.txt", String(take!(io)))
+        @test check_output("continuous/affine_sl.txt", String(take!(io)))
 
         @repl io @finch_code (z1 .= 0; for i=_; z2[] += y[2*i+10] end)
         @repl io @finch (z1 .= 0; for i=_; z2[] += y[2*i+10] end)
-        @test check_output("continuous_affine_rle.txt", String(take!(io)))
+        @test check_output("continuous/affine_rle.txt", String(take!(io)))
       
         @test z1.val == z2.val
 
@@ -92,27 +92,27 @@
         io = IOBuffer()
         @repl io @finch_code (z .= 0; for i=_; z[i] += x[i] * y[i]  end)
         @repl io @finch (z .= 0; for i=_; z[i] += x[i] * y[i]  end)
-        @test check_output("continuous_intersect.txt", String(take!(io)))
+        @test check_output("continuous/intersect.txt", String(take!(io)))
 
         @repl io @finch_code (z .= 0; for i=_; z[i] += x[i] + y[i]  end)
         @repl io @finch (z .= 0; for i=_; z[i] += x[i] + y[i]  end)
-        @test check_output("continuous_union.txt", String(take!(io)))
+        @test check_output("continuous/union.txt", String(take!(io)))
 
         @repl io @finch_code (s .= 0; for i=_; s[] += (x[i] * y[i])  end)
         @repl io @finch (s .= 0; for i=_; s[] += (x[i] * y[i])  end)
-        @test check_output("continuous_intersect_counting.txt", String(take!(io)))
+        @test check_output("continuous/intersect_counting.txt", String(take!(io)))
 
         @repl io @finch_code (s .= 0; for i=_; s[] += (x[i] * y[i]) * d(i) end)
         @repl io @finch (s .= 0; for i=_; s[] += (x[i] * y[i]) * d(i)  end)
-        @test check_output("continuous_intersect_lebesgue.txt", String(take!(io)))
+        @test check_output("continuous/intersect_lebesgue.txt", String(take!(io)))
         
         @repl io @finch_code (s .= 0; for i=_; s[] += (x[i] + y[i])  end)
         @repl io @finch (s .= 0; for i=_; s[] += (x[i] + y[i])  end)
-        @test check_output("continuous_union_counting.txt", String(take!(io)))
+        @test check_output("continuous/union_counting.txt", String(take!(io)))
 
         @repl io @finch_code (s .= 0; for i=_; s[] += (x[i] + y[i]) * d(i) end)
         @repl io @finch (s .= 0; for i=_; s[] += (x[i] + y[i]) * d(i)  end)
-        @test check_output("continuous_union_lebesgue.txt", String(take!(io)))
+        @test check_output("continuous/union_lebesgue.txt", String(take!(io)))
     end
 
 
@@ -133,27 +133,27 @@
         io = IOBuffer()
         @repl io @finch_code (z .= 0; for i=_, j=_; z[j,i] += x[j,i] * y[j,i] end)
         @repl io @finch (z .= 0; for i=_, j=_; z[j,i] += x[j,i] * y[j,i] end)
-        @test check_output("continuous_2d_intersect.txt", String(take!(io)))  
+        @test check_output("continuous/2d_intersect.txt", String(take!(io)))  
 
         @repl io @finch_code (z .= 0; for i=_, j=_; z[j,i] += x[j,i] + y[j,i] end)
         @repl io @finch (z .= 0; for i=_, j=_; z[j,i] += x[j,i] + y[j,i] end)
-        @test check_output("continuous_2d_union.txt", String(take!(io)))  
+        @test check_output("continuous/2d_union.txt", String(take!(io)))  
 
         @repl io @finch_code (s .= 0; for i=_, j=_; s[] += (x[j,i] * y[j,i]) * d(i,j) end)
         @repl io @finch (s .= 0; for i=_, j=_; s[] += (x[j,i] * y[j,i]) * d(i,j) end)
-        @test check_output("continuous_2d_intersect_lebesgue.txt", String(take!(io)))  
+        @test check_output("continuous/2d_intersect_lebesgue.txt", String(take!(io)))  
 
         @repl io @finch_code (s .= 0; for i=_, j=_; s[] += (x[j,i] * y[j,i]) end)
         @repl io @finch (s .= 0; for i=_, j=_; s[] += (x[j,i] * y[j,i]) end)
-        @test check_output("continuous_2d_intersect_counting.txt", String(take!(io)))  
+        @test check_output("continuous/2d_intersect_counting.txt", String(take!(io)))  
 
         @repl io @finch_code (s .= 0; for i=_, j=_; s[] += (x[j,i] + y[j,i]) end)
         @repl io @finch (s .= 0; for i=_, j=_; s[] += (x[j,i] + y[j,i]) end)
-        @test check_output("continuous_2d_union_counting.txt", String(take!(io))) 
+        @test check_output("continuous/2d_union_counting.txt", String(take!(io))) 
 
         @repl io @finch_code (s .= 0; for i=_, j=_; s[] += (x[j,i] + y[j,i]) * d(i,j) end)
         @repl io @finch (s .= 0; for i=_, j=_; s[] += (x[j,i] + y[j,i]) * d(i,j) end)
-        @test check_output("continuous_2d_union_lebesgue.txt", String(take!(io)))  
+        @test check_output("continuous/2d_union_lebesgue.txt", String(take!(io)))  
 
         sum1 = Scalar(0)
         sum2 = Scalar(0)
@@ -179,11 +179,11 @@
         io = IOBuffer()
         @repl io @finch_code (s1 .= 0; for i=_, j=_; s1[] += x1[j,i] * y[j] * d(j) end)
         @repl io @finch (s1 .= 0; for i=_, j=_; s1[] += x1[j,i] * y[j] * d(j) end)
-        @test check_output("continuous_2d_itvl_sum_sl.txt", String(take!(io)))  
+        @test check_output("continuous/2d_itvl_sum_sl.txt", String(take!(io)))  
 
         @repl io @finch_code (s2 .= 0; for i=_, j=_; s2[] += x1[j,i] * y[j] * d(j) end)
         @repl io @finch (s2 .= 0; for i=_, j=_; s2[] += x1[j,i] * y[j] * d(j) end)
-        @test check_output("continuous_2d_itvl_sum_rle.txt", String(take!(io)))  
+        @test check_output("continuous/2d_itvl_sum_rle.txt", String(take!(io)))  
    
         @test s1.val==s2.val
     end

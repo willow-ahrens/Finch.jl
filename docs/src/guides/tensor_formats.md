@@ -76,16 +76,16 @@ some general descriptions.
 |----------------------|----------|-----------------------|:------------------:|:------------:|:------------------------:|:------------------:|:--------------:|:------:|
 | Dense                | Core     | Dense                 | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ✅     |
 | SparseTree           | Core     | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️    |
-| SparseRunTree        | Core     | Sparse Runs           | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️    |
+| SparseRLETree        | Core     | Sparse Runs           | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️    |
 | Element              | Core     | Leaf                  | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ✅     |
 | Pattern              | Core     | Leaf                  | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ✅     |
 | SparseList           | Advanced | Sparse                | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
-| SparseRunList        | Advanced | Sparse Runs           | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
+| SparseRLE            | Advanced | Sparse Runs           | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
 | SparseVBL            | Advanced | Sparse Blocks         | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ✅     |
-| RepeatedList         | Advanced | Dense Runs            | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ⚙     |
-| SingleSparse         | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
-| SingleSparseRun      | Advanced | Sparse Runs           | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
-| SingleBlock          | Advanced | Sparse Blocks         | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ⚙️     |
+| SparsePoint          | Advanced | Single Sparse         | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
+| SparseInterval       | Advanced | Single Sparse Run     | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ✅     |
+| SparseBand           | Advanced | Single Sparse Block   | ✅                  | ✅            | ✅                        | ❌                  | ❌              | ⚙️     |
+| DenseRLE             | Advanced | Dense Runs            | ✅                  | ❌            | ✅                        | ❌                  | ❌              | ⚙     |
 | SparseBytemap        | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ❌              | ✅     |
 | SparseDict           | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ❌              | ✅️     |
 | AtomicLevel          | Modifier | No Data               | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️ |
@@ -165,6 +165,7 @@ Finch levels can be used to construct a variety of popular sparse formats. A few
 ```@docs
 Tensor
 Tensor(lvl::AbstractLevel)
+Tensor(lvl::AbstractLevel, dims::Number...)
 Tensor(lvl::AbstractLevel, init::UndefInitializer)
 Tensor(lvl::AbstractLevel, arr)
 Tensor(arr)
@@ -183,10 +184,14 @@ PatternLevel
 ## Advanced Levels
 ```@docs
 SparseListLevel
-SparseByteMapLevel
-RepeatRLELevel
+DenseRLELevel
 SparseRLELevel
 SparseVBLLevel
+SparseBandLevel
+SparsePointLevel
+SparseIntervalLevel
+SparseByteMapLevel
+SparseLevel
 ```
 
 ## Modifier Levels

@@ -25,7 +25,7 @@
             end
         end
 
-        @test check_output("debug_parallel_spmv.txt", String(take!(io)))
+        @test check_output("parallel/parallel_spmv.txt", String(take!(io)))
     end
 
     let
@@ -417,7 +417,7 @@
 
         
 
-        @test check_output("debug_parallel_spmv_atomics.txt", String(take!(io)))
+        @test check_output("parallel/parallel_spmv_atomics.txt", String(take!(io)))
     end
 
     let
@@ -462,7 +462,7 @@
 
         @test yp == y
 
-        @test check_output("stress_dense_atomics.txt", String(take!(io)))
+        @test check_output("parallel/stress_dense_atomics.txt", String(take!(io)))
     end
 
     let
@@ -540,7 +540,7 @@
         cpu = CPU(Threads.nthreads())
         tmp = moveto(Tensor(Dense(Element(0))), CPULocalMemory(cpu))
 
-        check_output("parallel_blur.jl", @finch_code begin
+        check_output("parallel/parallel_blur.jl", @finch_code begin
             output .= 0
             for y = parallel(_, cpu)
                 tmp .= 0
@@ -562,7 +562,7 @@
         cpu = CPU(Threads.nthreads())
         tmp = moveto(Tensor(Dense(Element(0))), CPULocalMemory(cpu))
 
-        check_output("parallel_blur_sparse.jl", @finch_code begin
+        check_output("parallel/parallel_blur_sparse.jl", @finch_code begin
             output .= 0
             for y = parallel(_, cpu)
                 tmp .= 0

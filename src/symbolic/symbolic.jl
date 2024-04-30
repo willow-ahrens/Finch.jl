@@ -1,8 +1,6 @@
 abstract type AbstractAlgebra end
 struct DefaultAlgebra<:AbstractAlgebra end
 
-virtualize(ex, ::Type{DefaultAlgebra}, ctx) = DefaultAlgebra()
-
 struct Chooser{D} end
 
 (f::Chooser{D})(x) where {D} = x
@@ -33,6 +31,37 @@ julia> x[]
 ```
 """
 choose(d) = Chooser{d}()
+
+struct FilterOp{D} end
+
+(f::FilterOp{D})(cond, arg) where {D} = ifelse(cond, arg, D)
+
+"""
+    filterop(z)(cond, arg)
+
+`filterop(z)` is a function which returns `ifelse(cond, arg, z)`. This operation
+is handy for filtering out values based on a mask or a predicate.
+`map(filterop(0), cond, arg)` is analogous to `filter(x -> cond ? x: z, arg)`.
+
+```jldoctest setup=:(using Finch)
+julia> a = Tensor(SparseList(Element(0.0)), [0, 1.1, 0, 4.4, 0])
+SparseList (0.0) [1:5]
+├─ [2]: 1.1
+└─ [4]: 4.4
+
+julia> x = Tensor(SparseList(Element(0.0)));
+
+julia> c = Tensor(SparseList(Element(false)), [false, false, false, true, false]);
+
+julia> @finch (x .= 0; for i=_; x[i] = filterop(0)(c[i], a[i]) end)
+(x = Tensor(SparseList{Int64}(Element{0.0, Float64, Int64}([4.4]), 5, [1, 2], [4])),)
+
+julia> x
+SparseList (0.0) [1:5]
+└─ [4]: 4.4
+```
+"""
+filterop(d) = FilterOp{d}()
 
 """
     minby(a, b)
@@ -206,6 +235,8 @@ function isannihilator_by_fn(alg::AbstractAlgebra, ::typeof(maxby), x::FinchNode
     end
     return false
 end
+isannihilator(::AbstractAlgebra, ::Chooser{D}, x) where {D} = !isequal(x, D)
+#isannihilator(::AbstractAlgebra, ::InitWriter{D}, x) where {D} = !isequal(x, D)
 
 isinverse(alg) = (f, g) -> isinverse(alg, f, g)
 isinverse(alg, f::FinchNode, g::FinchNode) = isliteral(f) && isliteral(g) && isinverse(alg, f.val, g.val)
@@ -244,13 +275,13 @@ collapsed(alg, idx, ext, lhs, f::typeof(*), rhs) = assign(lhs, f, call(^, rhs, m
 collapsed(alg, idx, ext::Extent, lhs, f::typeof(+), rhs) = assign(lhs, f, call(*, measure(ext), rhs))
 collapsed(alg, idx, ext::ContinuousExtent, lhs, f::typeof(+), rhs) = begin 
     if (@capture rhs call(*, ~a1..., call(d, ~i1..., idx, ~i2...), ~a2...)) # Lebesgue
-        if query(call(==, measure(ext), 0), LowerJulia())
+        if prove(LowerJulia(), call(==, measure(ext), 0))
             assign(lhs, f, literal(0))
         else
             assign(lhs, f, call(*, call(drop_eps, measure(ext)), a1..., a2..., call(d, i1..., i2...)))
         end
     else # Counting
-        if query(call(==, measure(ext), 0), LowerJulia())
+        if prove(LowerJulia(), call(==, measure(ext), 0))
             assign(lhs, f, rhs)
         else
             sieve(call(==, measure(ext), 0), assign(lhs, f, rhs)) # Undefined if measure != 0 

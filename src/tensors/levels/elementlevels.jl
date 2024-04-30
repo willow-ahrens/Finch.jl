@@ -5,7 +5,7 @@ A subfiber of an element level is a scalar of type `Tv`, initialized to `D`. `D`
 may optionally be given as the first argument.
 
 The data is stored in a vector
-of type `Val` with `eltype(Val) = Tv`. The type `Ti` is the index type used to
+of type `Val` with `eltype(Val) = Tv`. The type `Tp` is the index type used to
 access Val.
 
 ```jldoctest
@@ -34,7 +34,8 @@ ElementLevel{D, Tv, Tp}(val::Val) where {D, Tv, Tp, Val} = ElementLevel{D, Tv, T
 
 Base.summary(::Element{D}) where {D} = "Element($(D))"
 
-similar_level(::ElementLevel{D, Tv, Tp}) where {D, Tv, Tp} = ElementLevel{D, Tv, Tp}()
+similar_level(::ElementLevel{D, Tv, Tp}, fill_value, eltype::Type, ::Vararg) where {D, Tv, Tp} =
+    ElementLevel{fill_value, eltype, Tp}()
 
 postype(::Type{<:ElementLevel{D, Tv, Tp}}) where {D, Tv, Tp} = Tp
 
@@ -91,11 +92,11 @@ is_level_atomic(ctx, lvl::VirtualElementLevel) = ([false], false)
 function is_level_concurrent(ctx, lvl::VirtualElementLevel)
     return ([], true)
 end
-num_indexable(lvl::VirtualElementLevel, ctx) = 0
+num_indexable(ctx, lvl::VirtualElementLevel) = 0
 
-lower(lvl::VirtualElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex
+lower(ctx::AbstractCompiler, lvl::VirtualElementLevel, ::DefaultStyle) = lvl.ex
 
-function virtualize(ex, ::Type{ElementLevel{D, Tv, Tp, Val}}, ctx, tag=:lvl) where {D, Tv, Tp, Val}
+function virtualize(ctx, ex, ::Type{ElementLevel{D, Tv, Tp, Val}}, tag=:lvl) where {D, Tv, Tp, Val}
     sym = freshen(ctx, tag)
     val = freshen(ctx, tag, :_val)
     push!(ctx.preamble, quote
@@ -107,30 +108,30 @@ end
 
 Base.summary(lvl::VirtualElementLevel) = "Element($(lvl.D))"
 
-virtual_level_resize!(lvl::VirtualElementLevel, ctx) = lvl
-virtual_level_size(::VirtualElementLevel, ctx) = ()
+virtual_level_resize!(ctx, lvl::VirtualElementLevel) = lvl
+virtual_level_size(ctx, ::VirtualElementLevel) = ()
 virtual_level_eltype(lvl::VirtualElementLevel) = lvl.Tv
 virtual_level_default(lvl::VirtualElementLevel) = lvl.D
 
 postype(lvl::VirtualElementLevel) = lvl.Tp
 
-function declare_level!(lvl::VirtualElementLevel, ctx, pos, init)
+function declare_level!(ctx, lvl::VirtualElementLevel, pos, init)
     init == literal(lvl.D) || throw(FinchProtocolError("Cannot initialize Element Levels to non-default values (have $init expected $(lvl.D))"))
     lvl
 end
 
-function freeze_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, pos)
+function freeze_level!(ctx::AbstractCompiler, lvl::VirtualElementLevel, pos)
     push!(ctx.code.preamble, quote
         resize!($(lvl.val), $(ctx(pos)))
     end)
     return lvl
 end
 
-thaw_level!(lvl::VirtualElementLevel, ctx::AbstractCompiler, pos) = lvl
+thaw_level!(ctx::AbstractCompiler, lvl::VirtualElementLevel, pos) = lvl
 
-function assemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
-    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
-    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
+function assemble_level!(ctx, lvl::VirtualElementLevel, pos_start, pos_stop)
+    pos_start = cache!(ctx, :pos_start, simplify(ctx, pos_start))
+    pos_stop = cache!(ctx, :pos_stop, simplify(ctx, pos_stop))
     quote
         Finch.resize_if_smaller!($(lvl.val), $(ctx(pos_stop)))
         Finch.fill_range!($(lvl.val), $(lvl.D), $(ctx(pos_start)), $(ctx(pos_stop)))
@@ -138,16 +139,16 @@ function assemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
 end
 
 supports_reassembly(::VirtualElementLevel) = true
-function reassemble_level!(lvl::VirtualElementLevel, ctx, pos_start, pos_stop)
-    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
-    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
+function reassemble_level!(ctx, lvl::VirtualElementLevel, pos_start, pos_stop)
+    pos_start = cache!(ctx, :pos_start, simplify(ctx, pos_start))
+    pos_stop = cache!(ctx, :pos_stop, simplify(ctx, pos_stop))
     push!(ctx.code.preamble, quote
         Finch.fill_range!($(lvl.val), $(lvl.D), $(ctx(pos_start)), $(ctx(pos_stop)))
     end)
     lvl
 end
 
-function virtual_moveto_level(lvl::VirtualElementLevel, ctx::AbstractCompiler, arch)
+function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualElementLevel, arch)
     val_2 = freshen(ctx.code, :val)
     push!(ctx.code.preamble, quote
         $val_2 = $(lvl.val)
@@ -158,7 +159,7 @@ function virtual_moveto_level(lvl::VirtualElementLevel, ctx::AbstractCompiler, a
     end)
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualElementLevel}, ctx, mode::Reader, protos)
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualElementLevel}, mode::Reader, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     val = freshen(ctx.code, lvl.ex, :_val)
     return Thunk(
@@ -169,12 +170,12 @@ function instantiate(fbr::VirtualSubFiber{VirtualElementLevel}, ctx, mode::Reade
     )
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualElementLevel}, ctx, mode::Updater, protos)
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualElementLevel}, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     VirtualScalar(nothing, lvl.Tv, lvl.D, gensym(), :($(lvl.val)[$(ctx(pos))]))
 end
 
-function instantiate(fbr::VirtualHollowSubFiber{VirtualElementLevel}, ctx, mode::Updater, protos)
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualElementLevel}, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     VirtualSparseScalar(nothing, lvl.Tv, lvl.D, gensym(), :($(lvl.val)[$(ctx(pos))]), fbr.dirty)
 end

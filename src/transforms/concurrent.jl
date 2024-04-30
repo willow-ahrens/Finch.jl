@@ -140,7 +140,6 @@ function ensure_concurrent(root, ctx)
                 #TODO perhaps if the last access is the parallel index, we only need injectivity or atomics on the parallel one, and concurrency on that one only
             else
                 throw(FinchConcurrencyError("Assignment $(acc) is invalid! "))
-
             end
         end
     end

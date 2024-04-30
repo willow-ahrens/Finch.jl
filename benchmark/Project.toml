@@ -4,3 +4,6 @@ Finch = "9177782c-1635-4eb9-9bfb-d9dfa25e6bce"
 MatrixDepot = "b51810bb-c9f3-55da-ae3c-350fc1fbce05"
 MatrixMarket = "4d4711f2-db25-561a-b6b3-d35e7d4047d3"
 PkgBenchmark = "32113eaa-f34f-5b0d-bd6c-c81e245fc73d"
+
+[compat]
+BenchmarkTools = "1.5"

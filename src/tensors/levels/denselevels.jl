@@ -34,8 +34,9 @@ DenseLevel{Ti}(lvl::Lvl, shape) where {Ti, Lvl} = DenseLevel{Ti, Lvl}(lvl, shape
 const Dense = DenseLevel
 
 Base.summary(lvl::Dense) = "Dense($(summary(lvl.lvl)))"
-similar_level(lvl::DenseLevel) = Dense(similar_level(lvl.lvl))
-similar_level(lvl::DenseLevel, dims...) = Dense(similar_level(lvl.lvl, dims[1:end-1]...), dims[end])
+
+similar_level(lvl::DenseLevel, fill_value, eltype::Type, dims...) =
+    Dense(similar_level(lvl.lvl, fill_value, eltype, dims[1:end-1]...), dims[end])
 
 function postype(::Type{DenseLevel{Ti, Lvl}}) where {Ti, Lvl}
     return postype(Lvl)
@@ -108,25 +109,25 @@ end
 is_level_injective(ctx, lvl::VirtualDenseLevel) = [is_level_injective(ctx, lvl.lvl)..., true]
 function is_level_atomic(ctx, lvl::VirtualDenseLevel)
     (data, atomic) = is_level_atomic(ctx, lvl.lvl)
-    return ([data; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
+    return ([data; [atomic for _ in 1:num_indexable(ctx, lvl)]], atomic)
 end
 function is_level_concurrent(ctx, lvl::VirtualDenseLevel)
     (data, concurrent) = is_level_concurrent(ctx, lvl.lvl)
-    return ([data; [concurrent for _ in 1:num_indexable(lvl, ctx)]], concurrent)
+    return ([data; [concurrent for _ in 1:num_indexable(ctx, lvl)]], concurrent)
 end
-num_indexable(lvl::VirtualDenseLevel, ctx) = virtual_level_ndims(lvl, ctx) - virtual_level_ndims(lvl.lvl, ctx)
+num_indexable(ctx, lvl::VirtualDenseLevel) = virtual_level_ndims(ctx, lvl) - virtual_level_ndims(ctx, lvl.lvl)
 
 
-function virtualize(ex, ::Type{DenseLevel{Ti, Lvl}}, ctx, tag=:lvl) where {Ti, Lvl}
+function virtualize(ctx, ex, ::Type{DenseLevel{Ti, Lvl}}, tag=:lvl) where {Ti, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Ti)
     push!(ctx.preamble, quote
         $sym = $ex
     end)
-    lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
+    lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
     VirtualDenseLevel(lvl_2, sym, Ti, shape)
 end
-function lower(lvl::VirtualDenseLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualDenseLevel, ::DefaultStyle)
     quote
         $DenseLevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
@@ -137,14 +138,14 @@ end
 
 Base.summary(lvl::VirtualDenseLevel) = "Dense($(summary(lvl.lvl)))"
 
-function virtual_level_size(lvl::VirtualDenseLevel, ctx)
+function virtual_level_size(ctx, lvl::VirtualDenseLevel)
     ext = Extent(literal(lvl.Ti(1)), lvl.shape)
-    (virtual_level_size(lvl.lvl, ctx)..., ext)
+    (virtual_level_size(ctx, lvl.lvl)..., ext)
 end
 
-function virtual_level_resize!(lvl::VirtualDenseLevel, ctx, dims...)
+function virtual_level_resize!(ctx, lvl::VirtualDenseLevel, dims...)
     lvl.shape = getstop(dims[end])
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-1]...)
+    lvl.lvl = virtual_level_resize!(ctx, lvl.lvl, dims[1:end-1]...)
     lvl
 end
 
@@ -153,37 +154,37 @@ virtual_level_default(lvl::VirtualDenseLevel) = virtual_level_default(lvl.lvl)
 
 postype(lvl::VirtualDenseLevel) = postype(lvl.lvl)
 
-function declare_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos, init)
-    lvl.lvl = declare_level!(lvl.lvl, ctx, call(*, pos, lvl.shape), init)
+function declare_level!(ctx::AbstractCompiler, lvl::VirtualDenseLevel, pos, init)
+    lvl.lvl = declare_level!(ctx, lvl.lvl, call(*, pos, lvl.shape), init)
     return lvl
 end
 
-function assemble_level!(lvl::VirtualDenseLevel, ctx, pos_start, pos_stop)
+function assemble_level!(ctx, lvl::VirtualDenseLevel, pos_start, pos_stop)
     qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), lvl.shape), 1)
     qos_stop = call(*, pos_stop, lvl.shape)
-    assemble_level!(lvl.lvl, ctx, qos_start, qos_stop)
+    assemble_level!(ctx, lvl.lvl, qos_start, qos_stop)
 end
 
 supports_reassembly(::VirtualDenseLevel) = true
-function reassemble_level!(lvl::VirtualDenseLevel, ctx, pos_start, pos_stop)
+function reassemble_level!(ctx, lvl::VirtualDenseLevel, pos_start, pos_stop)
     qos_start = call(+, call(*, call(-, pos_start, lvl.Ti(1)), lvl.shape), 1)
     qos_stop = call(*, pos_stop, lvl.shape)
-    reassemble_level!(lvl.lvl, ctx, qos_start, qos_stop)
+    reassemble_level!(ctx, lvl.lvl, qos_start, qos_stop)
     lvl
 end
 
-function thaw_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
-    lvl.lvl = thaw_level!(lvl.lvl, ctx, call(*, pos, lvl.shape))
+function thaw_level!(ctx::AbstractCompiler, lvl::VirtualDenseLevel, pos)
+    lvl.lvl = thaw_level!(ctx, lvl.lvl, call(*, pos, lvl.shape))
     return lvl
 end
 
-function freeze_level!(lvl::VirtualDenseLevel, ctx::AbstractCompiler, pos)
-    lvl.lvl = freeze_level!(lvl.lvl, ctx, call(*, pos, lvl.shape))
+function freeze_level!(ctx::AbstractCompiler, lvl::VirtualDenseLevel, pos)
+    lvl.lvl = freeze_level!(ctx, lvl.lvl, call(*, pos, lvl.shape))
     return lvl
 end
 
-function virtual_moveto_level(lvl::VirtualDenseLevel, ctx::AbstractCompiler, arch)
-    virtual_moveto_level(lvl.lvl, ctx, arch)
+function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualDenseLevel, arch)
+    virtual_moveto_level(ctx, lvl.lvl, arch)
 end
 
 struct DenseTraversal
@@ -191,12 +192,12 @@ struct DenseTraversal
     subfiber_ctr
 end
 
-instantiate(fbr::VirtualSubFiber{VirtualDenseLevel}, ctx, mode, protos) =
-    instantiate(DenseTraversal(fbr, VirtualSubFiber), ctx, mode, protos)
-instantiate(fbr::VirtualHollowSubFiber{VirtualDenseLevel}, ctx, mode, protos) =
-    instantiate(DenseTraversal(fbr, (lvl, pos) -> VirtualHollowSubFiber(lvl, pos, fbr.dirty)), ctx, mode, protos)
+instantiate(ctx, fbr::VirtualSubFiber{VirtualDenseLevel}, mode, protos) =
+    instantiate(ctx, DenseTraversal(fbr, VirtualSubFiber), mode, protos)
+instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualDenseLevel}, mode, protos) =
+    instantiate(ctx, DenseTraversal(fbr, (lvl, pos) -> VirtualHollowSubFiber(lvl, pos, fbr.dirty)), mode, protos)
 
-function instantiate(trv::DenseTraversal, ctx, mode, subprotos, ::Union{typeof(defaultread), typeof(follow), typeof(defaultupdate), typeof(laminate), typeof(extrude)})
+function instantiate(ctx, trv::DenseTraversal, mode, subprotos, ::Union{typeof(defaultread), typeof(follow), typeof(defaultupdate), typeof(laminate), typeof(extrude)})
     (lvl, pos) = (trv.fbr.lvl, trv.fbr.pos)
     tag = lvl.ex
     Ti = lvl.Ti
@@ -209,7 +210,7 @@ function instantiate(trv::DenseTraversal, ctx, mode, subprotos, ::Union{typeof(d
                 preamble = quote
                     $q = ($(ctx(pos)) - $(Ti(1))) * $(ctx(lvl.shape)) + $(ctx(i))
                 end,
-                body = (ctx) -> instantiate(trv.subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), ctx, mode, subprotos)
+                body = (ctx) -> instantiate(ctx, trv.subfiber_ctr(lvl.lvl, value(q, lvl.Ti)), mode, subprotos)
             )
         )
     )

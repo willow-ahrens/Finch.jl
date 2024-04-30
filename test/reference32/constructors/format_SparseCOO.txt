@@ -1,0 +1,15 @@
+Tensor(SparseCOO{1}(Element(0))) constructors:
+initialized tensor: Tensor(SparseCOO{1, Tuple{Int32}}(Element{0.0, Float64, Int32}([2.0, 2.0, 3.0, 3.0]), (6,), [1, 5], ([2, 3, 5, 6], ) ))
+initialized tensor: Tensor(SparseCOO{1, Tuple{Int16}}(Element{0.0, Float64, Int32}([2.0, 2.0, 3.0, 3.0]), (6,), [1, 5], (Int16[2, 3, 5, 6], ) ))
+sized tensor: Tensor(SparseCOO{1, Tuple{Int32}}(Element{0.0, Float64, Int32}(Float64[]), (6,), [1], (Int32[], ) ))
+sized tensor: Tensor(SparseCOO{1, Tuple{Int16}}(Element{0.0, Float64, Int32}(Float64[]), (6,), [1], (Int16[], ) ))
+empty tensor: Tensor(SparseCOO{1, Tuple{Int32}}(Element{0.0, Float64, Int32}(Float64[]), (0,), [1], (Int32[], ) ))
+empty tensor: Tensor(SparseCOO{1, Tuple{Int16}}(Element{0.0, Float64, Int32}(Float64[]), (0,), [1], (Int16[], ) ))
+Tensor(SparseCOO{2}(Element(0))) constructors:
+initialized tensor: Tensor(SparseCOO{2, Tuple{Int32, Int32}}(Element{0.0, Float64, Int32}([2.0, 3.0, 2.0, 3.0]), (2, 3), [1, 5], ([1, 2, 1, 2], [2, 2, 3, 3], ) ))
+initialized tensor: Tensor(SparseCOO{2, Tuple{Int16, Int16}}(Element{0.0, Float64, Int32}([2.0, 3.0, 2.0, 3.0]), (2, 3), [1, 5], (Int16[1, 2, 1, 2], Int16[2, 2, 3, 3], ) ))
+sized tensor: Tensor(SparseCOO{2, Tuple{Int32, Int32}}(Element{0.0, Float64, Int32}(Float64[]), (2, 3), [1], (Int32[], Int32[], ) ))
+sized tensor: Tensor(SparseCOO{2, Tuple{Int16, Int16}}(Element{0.0, Float64, Int32}(Float64[]), (2, 3), [1], (Int16[], Int16[], ) ))
+empty tensor: Tensor(SparseCOO{2, Tuple{Int32, Int32}}(Element{0.0, Float64, Int32}(Float64[]), (0, 0), [1], (Int32[], Int32[], ) ))
+empty tensor: Tensor(SparseCOO{2, Tuple{Int16, Int16}}(Element{0.0, Float64, Int32}(Float64[]), (0, 0), [1], (Int16[], Int16[], ) ))
+

@@ -10,23 +10,23 @@ using RewriteTools
 using RewriteTools.Rewriters
 using Base.Iterators
 using Base: @kwdef
-using Random: randsubseq, AbstractRNG, default_rng
+using Random: AbstractRNG, default_rng, randexp, randperm
 using PrecompileTools
 using Compat
 using DataStructures
 using JSON
-using CIndices
+using Distributions: Binomial, Normal, Poisson
 
 export @finch, @finch_program, @finch_code, @finch_kernel, value
 
-export fastfinch, safefinch, debugfinch
-
 export Tensor
-export SparseRLE, SparseRLELevel 
-export SingleRLE, SingleRLELevel
+export SparseRLE, SparseRLELevel
+export DenseRLE, DenseRLELevel
+export SparseInterval, SparseIntervalLevel
 export Sparse, SparseLevel, SparseDict
 export SparseList, SparseListLevel
-export SingleList, SingleListLevel
+export SparsePoint, SparsePointLevel
+export SparseBand, SparseBandLevel
 export SparseHash, SparseHashLevel
 export SparseCOO, SparseCOOLevel
 export SparseTriangle, SparseTriangleLevel
@@ -45,7 +45,9 @@ export diagmask, lotrimask, uptrimask, bandmask, chunkmask
 export scale, products, offset, permissive, protocolize, swizzle, toeplitz, window
 export PlusOneVector
 
-export choose, minby, maxby, overwrite, initwrite, d
+export lazy, compute, tensordot, @einsum
+
+export choose, minby, maxby, overwrite, initwrite, filterop, d
 
 export default, AsArray
 
@@ -64,10 +66,9 @@ struct FinchExtensionError <: Exception
 end
 
 include("util/util.jl")
-include("util/limits.jl")
-include("util/vectors.jl")
 
 include("environment.jl")
+
 include("FinchNotation/FinchNotation.jl")
 using .FinchNotation
 using .FinchNotation: and, or, InitWriter
@@ -108,15 +109,17 @@ include("tensors/scalars.jl")
 include("tensors/levels/abstractlevel.jl")
 include("tensors/fibers.jl")
 include("tensors/levels/sparserlelevels.jl")
-include("tensors/levels/singlerlelevels.jl")
+include("tensors/levels/sparseintervallevels.jl")
 include("tensors/levels/sparselistlevels.jl")
-include("tensors/levels/singlelistlevels.jl")
+include("tensors/levels/sparsepointlevels.jl")
 include("tensors/levels/sparsehashlevels.jl")
 include("tensors/levels/sparsecoolevels.jl")
+include("tensors/levels/sparsebandlevels.jl")
 include("tensors/levels/sparselevels.jl")
 include("tensors/levels/sparsebytemaplevels.jl")
 include("tensors/levels/sparsevbllevels.jl")
 include("tensors/levels/denselevels.jl")
+include("tensors/levels/denserlelevels.jl")
 include("tensors/levels/repeatrlelevels.jl")
 include("tensors/levels/elementlevels.jl")
 include("tensors/levels/separatelevels.jl")
@@ -136,8 +139,6 @@ include("tensors/combinators/swizzle.jl")
 include("tensors/combinators/scale.jl")
 include("tensors/combinators/product.jl")
 
-include("traits.jl")
-
 export fsparse, fsparse!, fsprand, fspzeros, ffindnz, fread, fwrite, countstored
 
 export bspread, bspwrite
@@ -145,15 +146,21 @@ export ftnsread, ftnswrite, fttread, fttwrite
 
 export moveto, postype
 
+include("FinchLogic/FinchLogic.jl")
+using .FinchLogic
+include("interface/traits.jl")
 include("interface/abstractarrays.jl")
 include("interface/abstractunitranges.jl")
-include("interface/broadcast.jl")
 include("interface/index.jl")
-include("interface/mapreduce.jl")
 include("interface/compare.jl")
 include("interface/copy.jl")
 include("interface/fsparse.jl")
 include("interface/fileio/fileio.jl")
+include("interface/compute.jl")
+include("interface/lazy.jl")
+include("interface/eager.jl")
+include("interface/einsum.jl")
+
 
 @static if !isdefined(Base, :get_extension)
     function __init__()

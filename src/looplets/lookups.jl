@@ -14,20 +14,20 @@ FinchNotation.finch_leaf(x::Lookup) = virtual(x)
 struct LookupStyle end
 
 (ctx::Stylize{<:AbstractCompiler})(node::Lookup) = ctx.root.kind === loop ? LookupStyle() : DefaultStyle()
-instantiate(tns::Lookup, ctx, mode, protos) = tns
+instantiate(ctx, tns::Lookup, mode, protos) = tns
 combine_style(a::DefaultStyle, b::LookupStyle) = LookupStyle()
 combine_style(a::ThunkStyle, b::LookupStyle) = ThunkStyle()
 combine_style(a::SimplifyStyle, b::LookupStyle) = a
 combine_style(a::LookupStyle, b::LookupStyle) = LookupStyle()
 
-function lower(root::FinchNode, ctx::AbstractCompiler,  ::LookupStyle)
+function lower(ctx::AbstractCompiler, root::FinchNode, ::LookupStyle)
     if root.kind === loop
         idx_sym = freshen(ctx.code, root.idx.name)
         body = contain(ctx) do ctx_2
             ctx_2.bindings[root.idx] = value(idx_sym)
             body_3 = Rewrite(Postwalk(
                 @rule access(~a::isvirtual, ~m, ~i..., ~j) => begin
-                    a_2 = get_point_body(a.val, ctx_2, root.ext.val, value(idx_sym))
+                    a_2 = get_point_body(ctx_2, a.val, root.ext.val, value(idx_sym))
                     if a_2 != nothing
                         access(a_2, m, i...)
                     else
@@ -35,12 +35,12 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::LookupStyle)
                     end
                 end
             ))(root.body)
-            open_scope(body_3, ctx_2)
+            open_scope(ctx_2, body_3)
         end
         @assert isvirtual(root.ext)
 
         target = is_continuous_extent(root.ext) ? 0 : 1
-        if query(call(==, measure(root.ext.val), target), ctx)
+        if prove(ctx, call(==, measure(root.ext.val), target))
             return quote
                 $idx_sym = $(ctx(getstart(root.ext)))
                 $body
@@ -57,6 +57,6 @@ function lower(root::FinchNode, ctx::AbstractCompiler,  ::LookupStyle)
     end
 end
 
-get_point_body(node::Lookup, ctx, ext, idx) = node.body(ctx, idx)
+get_point_body(ctx, node::Lookup, ext, idx) = node.body(ctx, idx)
 
-get_point_body(node, ctx, ext, idx) = nothing
+get_point_body(ctx, node, ext, idx) = nothing

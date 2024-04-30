@@ -20,16 +20,16 @@ struct ScopeError
     msg
 end
 
-function open_scope(prgm, ctx::ScopeVisitor)
+function open_scope(ctx::ScopeVisitor, prgm)
     prgm = ScopeVisitor(;kwfields(ctx)..., vars = copy(ctx.vars), scope = Set())(prgm)
 end
 
 function (ctx::ScopeVisitor)(node::FinchNode)
     if @capture node loop(~idx, ~ext, ~body)
         ctx.vars[idx] = index(freshen(ctx, idx.name))
-        loop(ctx(idx), ctx(ext), open_scope(body, ctx))
+        loop(ctx(idx), ctx(ext), open_scope(ctx, body))
     elseif @capture node sieve(~cond, ~body)
-        sieve(ctx(cond), open_scope(body, ctx))
+        sieve(ctx(cond), open_scope(ctx, body))
     elseif @capture node declare(~tns, ~init)
         push!(ctx.scope, tns)
         declare(ctx(tns), init)
@@ -51,10 +51,12 @@ function (ctx::ScopeVisitor)(node::FinchNode)
         if node.lhs.kind != variable
             throw(ScopeError("cannot define a non-variable $node.lhs"))
         end
+        #TODO why not just freshen variables?
+        rhs = ctx(node.rhs)
         var = node.lhs
         haskey(ctx.vars, var) && throw(ScopeError("In node $(node) variable $(var) is already bound."))
         ctx.vars[var] = node.rhs
-        define(node.lhs, node.rhs, open_scope(node.body, ctx))
+        define(node.lhs, rhs, open_scope(ctx, node.body))
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
     else

@@ -27,28 +27,28 @@ Base.summary(io::IO, ex::Unfurled) = print(io, "Unfurled($(summary(ex.arr)), $(e
 
 FinchNotation.finch_leaf(x::Unfurled) = virtual(x)
 
-virtual_size(tns::Unfurled, ctx) = virtual_size(tns.arr, ctx)[1 : end - tns.ndims]
-virtual_resize!(tns::Unfurled, ctx, dims...) = virtual_resize!(tns.arr, ctx, dims...) # TODO SHOULD NOT HAPPEN BREAKS LIFECYCLES
-virtual_default(tns::Unfurled, ctx) = virtual_default(tns.arr, ctx)
+virtual_size(ctx, tns::Unfurled) = virtual_size(ctx, tns.arr)[1 : end - tns.ndims]
+virtual_resize!(ctx, tns::Unfurled, dims...) = virtual_resize!(ctx, tns.arr, dims...) # TODO SHOULD NOT HAPPEN BREAKS LIFECYCLES
+virtual_default(ctx, tns::Unfurled) = virtual_default(ctx, tns.arr)
 
-instantiate(tns::Unfurled, ctx, mode, protos) = tns
+instantiate(ctx, tns::Unfurled, mode, protos) = tns
 
 (ctx::Stylize{<:AbstractCompiler})(node::Unfurled) = ctx(node.body)
-function stylize_access(node, ctx::Stylize{<:AbstractCompiler}, tns::Unfurled)
-    stylize_access(node, ctx, tns.body)
+function stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::Unfurled)
+    stylize_access(ctx, node, tns.body)
 end
 
 function popdim(node::Unfurled, ctx)
     #I think this is an equivalent form, but it doesn't pop the unfurled node
     #from scalars. I'm not sure if that's good or bad.
-    @assert node.ndims + 1 <= length(virtual_size(node.arr, ctx))
+    @assert node.ndims + 1 <= length(virtual_size(ctx, node.arr))
     return Unfurled(node.arr, node.ndims + 1, node.body)
 end
 
-truncate(node::Unfurled, ctx, ext, ext_2) = Unfurled(node.arr, node.ndims, truncate(node.body, ctx, ext, ext_2))
+truncate(ctx, node::Unfurled, ext, ext_2) = Unfurled(node.arr, node.ndims, truncate(ctx, node.body, ext, ext_2))
 
-function get_point_body(node::Unfurled, ctx, ext, idx)
-    body_2 = get_point_body(node.body, ctx, ext, idx)
+function get_point_body(ctx, node::Unfurled, ext, idx)
+    body_2 = get_point_body(ctx, node.body, ext, idx)
     if body_2 === nothing
         return nothing
     else
@@ -58,8 +58,8 @@ end
 
 (ctx::ThunkVisitor)(node::Unfurled) = Unfurled(node.arr, node.ndims, ctx(node.body))
 
-function get_run_body(node::Unfurled, ctx, ext)
-    body_2 = get_run_body(node.body, ctx, ext)
+function get_run_body(ctx, node::Unfurled, ext)
+    body_2 = get_run_body(ctx, node.body, ext)
     if body_2 === nothing
         return nothing
     else
@@ -67,8 +67,8 @@ function get_run_body(node::Unfurled, ctx, ext)
     end
 end
 
-function get_acceptrun_body(node::Unfurled, ctx, ext)
-    body_2 = get_acceptrun_body(node.body, ctx, ext)
+function get_acceptrun_body(ctx, node::Unfurled, ext)
+    body_2 = get_acceptrun_body(ctx, node.body, ext)
     if body_2 === nothing
         return nothing
     else
@@ -82,13 +82,13 @@ function (ctx::SequenceVisitor)(node::Unfurled)
     end
 end
 
-phase_body(node::Unfurled, ctx, ext, ext_2) = Unfurled(node.arr, node.ndims, phase_body(node.body, ctx, ext, ext_2))
+phase_body(ctx, node::Unfurled, ext, ext_2) = Unfurled(node.arr, node.ndims, phase_body(ctx, node.body, ext, ext_2))
 
-phase_range(node::Unfurled, ctx, ext) = phase_range(node.body, ctx, ext)
+phase_range(ctx, node::Unfurled, ext) = phase_range(ctx, node.body, ext)
 
-get_spike_body(node::Unfurled, ctx, ext, ext_2) = Unfurled(node.arr, node.ndims, get_spike_body(node.body, ctx, ext, ext_2))
+get_spike_body(ctx, node::Unfurled, ext, ext_2) = Unfurled(node.arr, node.ndims, get_spike_body(ctx, node.body, ext, ext_2))
 
-get_spike_tail(node::Unfurled, ctx, ext, ext_2) = Unfurled(node.arr, node.ndims, get_spike_tail(node.body, ctx, ext, ext_2))
+get_spike_tail(ctx, node::Unfurled, ext, ext_2) = Unfurled(node.arr, node.ndims, get_spike_tail(ctx, node.body, ext, ext_2))
 
 visit_fill(node, tns::Unfurled) = visit_fill(node, tns.body)
 
@@ -98,25 +98,25 @@ visit_simplify(node::Unfurled) = Unfurled(node.arr, node.ndims, visit_simplify(n
     guard => Unfurled(node.arr, node.ndims, body)
 end
 
-function unfurl(tns::Unfurled, ctx, ext, mode, protos...)
-    Unfurled(tns.arr, tns.ndims, unfurl(tns.body, ctx, ext, mode, protos...))
+function unfurl(ctx, tns::Unfurled, ext, mode, protos...)
+    Unfurled(tns.arr, tns.ndims, unfurl(ctx, tns.body, ext, mode, protos...))
 end
 
-stepper_range(node::Unfurled, ctx, ext) = stepper_range(node.body, ctx, ext)
-stepper_body(node::Unfurled, ctx, ext, ext_2) = Unfurled(node.arr, node.ndims, stepper_body(node.body, ctx, ext, ext_2))
-stepper_seek(node::Unfurled, ctx, ext) = stepper_seek(node.body, ctx, ext)
+stepper_range(ctx, node::Unfurled, ext) = stepper_range(ctx, node.body, ext)
+stepper_body(ctx, node::Unfurled, ext, ext_2) = Unfurled(node.arr, node.ndims, stepper_body(ctx, node.body, ext, ext_2))
+stepper_seek(ctx, node::Unfurled, ext) = stepper_seek(ctx, node.body, ext)
 
-jumper_range(node::Unfurled, ctx, ext) = jumper_range(node.body, ctx, ext)
-jumper_body(node::Unfurled, ctx, ext, ext_2) = Unfurled(node.arr, node.ndims, jumper_body(node.body, ctx, ext, ext_2))
-jumper_seek(node::Unfurled, ctx, ext) = jumper_seek(node.body, ctx, ext)
+jumper_range(ctx, node::Unfurled, ext) = jumper_range(ctx, node.body, ext)
+jumper_body(ctx, node::Unfurled, ext, ext_2) = Unfurled(node.arr, node.ndims, jumper_body(ctx, node.body, ext, ext_2))
+jumper_seek(ctx, node::Unfurled, ext) = jumper_seek(ctx, node.body, ext)
 
-function short_circuit_cases(tns::Unfurled, ctx, op)
-    map(short_circuit_cases(tns.body, ctx, op)) do (guard, body)
+function short_circuit_cases(ctx, tns::Unfurled, op)
+    map(short_circuit_cases(ctx, tns.body, op)) do (guard, body)
         guard => Unfurled(tns.arr, tns.ndims, body)
     end
 end
 
-function lower(node::Unfurled, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, node::Unfurled, ::DefaultStyle)
     ctx(node.body)
 end
 
