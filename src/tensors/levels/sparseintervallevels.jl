@@ -143,18 +143,16 @@ mutable struct VirtualSparseIntervalLevel <: AbstractVirtualLevel
     prev_pos
 end
 
-is_level_injective(ctx, lvl::VirtualSingleRLELevel) = [false, is_level_injective(ctx, lvl.lvl)...]
-function is_level_atomic(ctx, lvl::VirtualSingleRLELevel)
+is_level_injective(ctx, lvl::VirtualSparseIntervalLevel) = [false, is_level_injective(ctx, lvl.lvl)...]
+function is_level_atomic(ctx, lvl::VirtualSparseIntervalLevel)
     (below, atomic) = is_level_atomic(ctx, lvl.lvl)
     return ([below; [atomic for _ in 1:num_indexable(ctx, lvl)]], atomic)
 end
-function is_level_concurrent(ctx, lvl::VirtualSingleRLELevel)
+function is_level_concurrent(ctx, lvl::VirtualSparseIntervalLevel)
     (data, concurrent) = is_level_concurrent(ctx, lvl.lvl)
     return ([data; [false for _ in 1:num_indexable(ctx, lvl)]], false)
 end
-num_indexable(ctx, lvl::VirtualSingleRLELevel) = virtual_level_ndims(ctx, lvl) - virtual_level_ndims(ctx, lvl.lvl)
-
-  
+num_indexable(ctx, lvl::VirtualSparseIntervalLevel) = virtual_level_ndims(ctx, lvl) - virtual_level_ndims(ctx, lvl.lvl)
 
 function virtualize(ctx, ex, ::Type{SparseIntervalLevel{Ti, Ptr, Left, Right, Lvl}}, tag=:lvl) where {Ti, Ptr, Left, Right, Lvl}
     sym = freshen(ctx, tag)
