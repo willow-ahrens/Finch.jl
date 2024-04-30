@@ -92,11 +92,11 @@ is_level_atomic(ctx, lvl::VirtualAtomicElementLevel) = ([true], true)
 function is_level_concurrent(ctx, lvl::VirtualAtomicLevel)
     return ([], true)
 end
-num_indexable(lvl::VirtualAtomicElementLevel, ctx) = 0
+num_indexable(ctx, lvl::VirtualAtomicElementLevel) = 0
 
-lower(lvl::VirtualAtomicElementLevel, ctx::AbstractCompiler, ::DefaultStyle) = lvl.ex
+lower(ctx::AbstractCompiler, lvl::VirtualAtomicElementLevel, ::DefaultStyle) = lvl.ex
 
-function virtualize(ex, ::Type{AtomicElementLevel{D, Tv, Tp, Val}}, ctx, tag=:lvl) where {D, Tv, Tp, Val}
+function virtualize(ctx, ex, ::Type{AtomicElementLevel{D, Tv, Tp, Val}}, tag=:lvl) where {D, Tv, Tp, Val}
     sym = freshen(ctx, tag)
     val = freshen(ctx, tag, :_val)
     push!(ctx.preamble, quote
@@ -108,31 +108,31 @@ end
 
 Base.summary(lvl::VirtualAtomicElementLevel) = "AtomicElement($(lvl.D))"
 
-virtual_level_resize!(lvl::VirtualAtomicElementLevel, ctx) = lvl
-virtual_level_size(::VirtualAtomicElementLevel, ctx) = ()
-virtual_level_ndims(lvl::VirtualAtomicLevel, ctx) = length(virtual_level_size(lvl, ctx))
+virtual_level_resize!(ctx, lvl::VirtualAtomicElementLevel) = lvl
+virtual_level_size(ctx, ::VirtualAtomicElementLevel) = ()
+virtual_level_ndims(ctx, lvl::VirtualAtomicLevel) = length(virtual_level_size(ctx, lvl))
 virtual_level_eltype(lvl::VirtualAtomicElementLevel) = lvl.Tv
 virtual_level_default(lvl::VirtualAtomicElementLevel) = lvl.D
 
 postype(lvl::VirtualAtomicElementLevel) = lvl.Tp
 
-function declare_level!(lvl::VirtualAtomicElementLevel, ctx, pos, init)
+function declare_level!(ctx, lvl::VirtualAtomicElementLevel, pos, init)
     init == literal(lvl.D) || throw(FinchProtocolError("Cannot initialize Element Levels to non-default values (have $init expected $(lvl.D))"))
     lvl
 end
 
-function freeze_level!(lvl::VirtualAtomicElementLevel, ctx::AbstractCompiler, pos)
+function freeze_level!(ctx::AbstractCompiler, lvl::VirtualAtomicElementLevel, pos)
     push!(ctx.code.preamble, quote
         resize!($(lvl.val), $(ctx(pos)))
     end)
     return lvl
 end
 
-thaw_level!(lvl::VirtualAtomicElementLevel, ctx::AbstractCompiler, pos) = lvl
+thaw_level!(ctx::AbstractCompiler, lvl::VirtualAtomicElementLevel, pos) = lvl
 
-function assemble_level!(lvl::VirtualAtomicElementLevel, ctx, pos_start, pos_stop)
-    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
-    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
+function assemble_level!(ctx, lvl::VirtualAtomicElementLevel, pos_start, pos_stop)
+    pos_start = cache!(ctx, :pos_start, simplify(ctx, pos_start))
+    pos_stop = cache!(ctx, :pos_stop, simplify(ctx, pos_stop))
     quote
         Finch.resize_if_smaller!($(lvl.val), $(ctx(pos_stop)))
         Finch.fill_range!($(lvl.val), $(lvl.D), $(ctx(pos_start)), $(ctx(pos_stop)))
@@ -140,16 +140,16 @@ function assemble_level!(lvl::VirtualAtomicElementLevel, ctx, pos_start, pos_sto
 end
 
 supports_reassembly(::VirtualAtomicElementLevel) = true
-function reassemble_level!(lvl::VirtualAtomicElementLevel, ctx, pos_start, pos_stop)
-    pos_start = cache!(ctx, :pos_start, simplify(pos_start, ctx))
-    pos_stop = cache!(ctx, :pos_stop, simplify(pos_stop, ctx))
+function reassemble_level!(ctx, lvl::VirtualAtomicElementLevel, pos_start, pos_stop)
+    pos_start = cache!(ctx, :pos_start, simplify(ctx, pos_start))
+    pos_stop = cache!(ctx, :pos_stop, simplify(ctx, pos_stop))
     push!(ctx.code.preamble, quote
         Finch.fill_range!($(lvl.val), $(lvl.D), $(ctx(pos_start)), $(ctx(pos_stop)))
     end)
     lvl
 end
 
-function virtual_moveto_level(lvl::VirtualAtomicElementLevel, ctx::AbstractCompiler, arch)
+function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualAtomicElementLevel, arch)
     val_2 = freshen(ctx.code, :val)
     push!(ctx.code.preamble, quote
         $val_2 = $(lvl.val)
@@ -160,7 +160,7 @@ function virtual_moveto_level(lvl::VirtualAtomicElementLevel, ctx::AbstractCompi
     end)
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualAtomicElementLevel}, ctx, mode::Reader, protos)
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualAtomicElementLevel}, mode::Reader, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     val = freshen(ctx.code, lvl.ex, :_val)
     return Thunk(
@@ -171,12 +171,12 @@ function instantiate(fbr::VirtualSubFiber{VirtualAtomicElementLevel}, ctx, mode:
     )
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualAtomicElementLevel}, ctx, mode::Updater, protos)
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualAtomicElementLevel}, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     VirtualScalar(nothing, lvl.Tv, lvl.D, gensym(), :($(lvl.val)[$(ctx(pos))]))
 end
 
-function instantiate(fbr::VirtualHollowSubFiber{VirtualAtomicElementLevel}, ctx, mode::Updater, protos)
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualAtomicElementLevel}, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
     VirtualSparseScalar(nothing, lvl.Tv, lvl.D, gensym(), :($(lvl.val)[$(ctx(pos))]), fbr.dirty)
 end

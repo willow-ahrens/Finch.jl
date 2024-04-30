@@ -90,11 +90,11 @@ end
 postype(lvl:: VirtualSeparateLevel) = postype(lvl.lvl)
 
 is_level_injective(ctx, lvl::VirtualSeparateLevel) = [is_level_injective(ctx, lvl.lvl)..., true]
-num_indexable(lvl::VirtualSeparateLevel, ctx) = virtual_level_ndims(lvl, ctx) - virtual_level_ndims(lvl.lvl, ctx)
 function is_level_atomic(ctx, lvl::VirtualSeparateLevel)
     (below, atomic) = is_level_atomic(ctx, lvl.lvl)
     return ([below; [atomic for _ in 1:num_indexable(ctx, lvl)]], atomic)
 end
+num_indexable(ctx, lvl::VirtualSeparateLevel) = virtual_level_ndims(ctx, lvl) - virtual_level_ndims(ctx, lvl.lvl)
 function is_level_concurrent(ctx, lvl::VirtualSeparateLevel)
     (data, _) = is_level_concurrent(ctx, lvl.lvl)
     return (data, true)
@@ -140,8 +140,8 @@ function virtual_moveto_level(ctx, lvl::VirtualSeparateLevel, arch)
 end
 
 
-function declare_level!(lvl::VirtualSeparateLevel, ctx, pos, init)
-    #declare_level!(lvl.lvl, ctx_2, literal(1), init)
+function declare_level!(ctx, lvl::VirtualSeparateLevel, pos, init)
+    #declare_level!(ctx_2, lvl.lvl, literal(1), init)
     return lvl
 end
 
