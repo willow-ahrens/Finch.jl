@@ -69,6 +69,22 @@ let
     )
 end
 
+#=
+let
+    m, n = (1000, 1000)
+    A = Tensor(Dense(SparseList(Element(0.0))), fsprand(1000, 1000, 10000))
+    x = rand(1000)
+    y = rand(1000)
+    SUITE["high-level"]["run_baremetal"] = @benchmarkable(
+        begin
+            A, x, y = ($A, $x, $y)
+            spmv(y, A, x)
+        end,
+        evals = 1000
+    )
+end
+=#
+
 SUITE["compile"] = BenchmarkGroup()
 
 code = """
@@ -171,3 +187,5 @@ for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     x = Tensor(Dense{Int64}(Element{0.0, Float64, Int64}()), rand(size(A)[2]))
     SUITE["indices"]["SpMV_64"][mtx] = @benchmarkable spmv64($A, $x) 
 end
+
+SUITE = SUITE["high-level"]

@@ -41,9 +41,10 @@ end
 """
     lift_subqueries
 
-Creates a plan that lifts all subqueries to the top level of the program,
-with unique queries for each distinct subquery alias. This function is called
-before hashing, so it needs to be fast.
+Creates a plan that lifts all subqueries to the top level of the program, with
+unique queries for each distinct subquery alias. This function processes the rhs
+of each subquery once, to carefully extract SSA form from any nested pointer
+structure. After calling lift_subqueries, it is safe to map over the program.
 """
 function lift_subqueries(node::LogicNode)
     if node.kind === plan
@@ -65,6 +66,21 @@ function pretty_labels(root)
         (@rule ~a::isalias => get!(aliases, a, alias(Symbol(:A, length(aliases))))),
     ])))(root)
 end
+
+#=
+function pretty_labels!(root)
+    fields = Dict()
+    aliases = Dict()
+    for node in PostOrderDFS(root)
+        if node.kind === field
+            node.name = 
+            fields[node] = field(Symbol(:i, length(fields)))
+        elseif node.kind === alias
+            aliases[node] = alias(Symbol(:A, length(aliases)))
+        end
+    end
+end
+=#
 
 """
 push_fields(node)
@@ -494,6 +510,31 @@ function propagate_map_queries(root)
     ])))(root)
 end
 
+#=
+struct 
+
+function hash_structure(node::LogicNode, s, cache=IDDict(), names=Dict())
+    get!(cache, node) do
+        if istree(node)
+            s = hash(node.kind, s)
+            for arg in arguments(node)
+                s = hash_structure(arg, s)
+            end
+            s
+        elseif node.kind === table
+            s = hash(table, s)
+            s = hash(typeof(node.tbl.val), s)
+            for idx in node.idxs
+                s = hash_structure(idx, s)
+            end
+            s
+        elseif node.kind === alias || node.kind === index
+            node
+        end
+    end
+end
+=#
+
 """
     compute(args..., ctx=default_optimizer) -> Any
 
@@ -511,7 +552,7 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
 
     #deduplicate and lift inline subqueries to regular queries
     prgm = lift_subqueries(prgm)
-    #return hash(prgm)
+    return hash(prgm)
     #At this point in the program, all statements should be unique, so
     #it is okay to name different occurences of things.
 

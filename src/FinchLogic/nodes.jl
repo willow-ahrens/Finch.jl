@@ -323,6 +323,32 @@ function Base.hash(a::LogicNode, h::UInt)
     end
 end
 
+struct LogicStructure
+    val::LogicNode
+end
+
+function structure_isequal(a::LogicNode, b::LogicNode, memo::IdDict)
+    get!(memo, (a, b)) do
+        if a.kind === value
+            return b.kind === value && a.val == b.val && a.type === b.type
+        elseif a.kind === immediate
+            return b.kind === immediate && a.val === b.val
+        elseif a.kind === field
+            return b.kind === field && a.name == b.name
+        elseif a.kind === alias
+            return b.kind === alias && a.name == b.name
+        elseif istree(a)
+            return a.kind === b.kind && a.children == b.children
+        else
+            error("unimplemented")
+        end
+    end
+end
+
+function Base.(==)(a::LogicStructure, b::LogicStructure)
+    structure_isequal(a.val, b.val)
+end
+
 """
     logic_leaf(x)
 
