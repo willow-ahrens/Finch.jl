@@ -48,8 +48,8 @@ struct VirtualSwizzleArray <: AbstractVirtualCombinator
     dims
 end
 
-#is_injective(lvl::VirtualSwizzleArray, ctx) = is_injective(lvl.body, ctx)
-#is_atomic(lvl::VirtualSwizzleArray, ctx) = is_atomic(lvl.body, ctx)
+#is_injective(ctx, lvl::VirtualSwizzleArray) = is_injective(ctx, lvl.body)
+#is_atomic(ctx, lvl::VirtualSwizzleArray) = is_atomic(ctx, lvl.body)
 
 Base.show(io::IO, ex::VirtualSwizzleArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualSwizzleArray)

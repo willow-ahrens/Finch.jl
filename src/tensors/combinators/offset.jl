@@ -15,9 +15,9 @@ struct VirtualOffsetArray <: AbstractVirtualCombinator
     delta
 end
 
-is_injective(lvl::VirtualOffsetArray, ctx) = is_injective(lvl.body, ctx)
-is_atomic(lvl::VirtualOffsetArray, ctx) = is_atomic(lvl.body, ctx)
-is_concurrent(lvl::VirtualOffsetArray, ctx) = is_concurrent(lvl.body, ctx)
+is_injective(ctx, lvl::VirtualOffsetArray) = is_injective(ctx, lvl.body)
+is_atomic(ctx, lvl::VirtualOffsetArray) = is_atomic(ctx, lvl.body)
+is_concurrent(ctx, lvl::VirtualOffsetArray) = is_concurrent(ctx, lvl.body)
 
 Base.show(io::IO, ex::VirtualOffsetArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualOffsetArray)

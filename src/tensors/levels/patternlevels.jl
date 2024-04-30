@@ -84,9 +84,9 @@ end
 function virtual_moveto_level(lvl::VirtualPatternLevel, ctx::AbstractCompiler, arch)
 end
 
-is_level_injective(::VirtualPatternLevel, ctx) = []
-is_level_atomic(lvl::VirtualPatternLevel, ctx) = ([false], false)
-function is_level_concurrent(lvl::VirtualPatternLevel, ctx)
+is_level_injective(ctx, ::VirtualPatternLevel) = []
+is_level_atomic(ctx, lvl::VirtualPatternLevel) = ([false], false)
+function is_level_concurrent(ctx, lvl::VirtualPatternLevel)
     return ([], true)
 end
 num_indexable(lvl::VirtualPatternLevel, ctx) = 0

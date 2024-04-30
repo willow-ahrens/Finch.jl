@@ -3,7 +3,7 @@ struct FinchConcurrencyError
 end
 
 """
-    is_injective(tns, ctx)
+    is_injective(ctx, tns)
 
 Returns a vector of booleans, one for each dimension of the tensor, indicating
 whether the access is injective in that dimension.  A dimension is injective if
@@ -13,7 +13,7 @@ array.
 function is_injective end
 
 """
-    is_atomic(tns, ctx)
+    is_atomic(ctx, tns)
 
     Returns a tuple (below, overall) where below is a vector, indicating which indicies have an atomic that guards them, 
     and overall is a boolean that indicates is the last level had an atomic guarding it.
@@ -21,7 +21,7 @@ function is_injective end
 function is_atomic end
 
 """
-    is_concurrent(tns, ctx)
+    is_concurrent(ctx, tns)
 
     Returns a vector of booleans, one for each dimension of the tensor, indicating
     whether the index can be written to without any execution state. So if a matrix returns [true, false],
@@ -78,8 +78,8 @@ function ensure_concurrent(root, ctx)
         if !(isassociative(ctx.algebra, oper))
             if (length(ops) == 1)
                 if (@capture(acc, access(~tns, ~mode, ~i...)))
-                    injectivityIdp:: Vector{Bool} = is_injective(tns, ctx)
-                    concurrencyInfo = is_concurrent(tns, ctx)
+                    injectivityIdp:: Vector{Bool} = is_injective(ctx, tns)
+                    concurrencyInfo = is_concurrent(ctx, tns)
                     if !all(injectivityIdp) || !all(concurrencyInfo)
                         throw(FinchConcurrencyError("Non-associative operations can only be parallelized in the case of a single injective acceses, but the injectivity is $(injectivity) and the concurrency is $(concurrencyInfo)."))
                     else
@@ -95,8 +95,8 @@ function ensure_concurrent(root, ctx)
         # If the acceses are different, then all acceses must be atomic.
         if !allequal(accs)
             for acc in accs
-                (below, _) = is_atomic(acc.tns, ctx)
-                concurrencyInfo = is_concurrent(acc.tns, ctx)
+                (below, _) = is_atomic(ctx, acc.tns)
+                concurrencyInfo = is_concurrent(ctx, acc.tns)
                 if !all(below) || !all(concurrencyInfo)
                     throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not all the same access so concurrency and atomics are needed on all acceses!"))
                 end
@@ -107,8 +107,8 @@ function ensure_concurrent(root, ctx)
             #Every access must be injective or they must all be atomic.
             if (@capture(acc, access(~tns, ~mode, ~i...)))
                 locations_with_parallel_vars = []
-                injectivity:: Vector{Bool} = is_injective(tns, ctx)
-                concurrencyInfo = is_concurrent(acc.tns, ctx)
+                injectivity:: Vector{Bool} = is_injective(ctx, tns)
+                concurrencyInfo = is_concurrent(ctx, acc.tns)
                 for loc in 1:length(i)
                     if i[loc] in indicies_in_region
                         push!(locations_with_parallel_vars, loc + 1)
@@ -116,7 +116,7 @@ function ensure_concurrent(root, ctx)
                     end
                 end
                 if length(locations_with_parallel_vars) == 0
-                    (below, overall) = is_atomic(acc.tns, ctx)
+                    (below, overall) = is_atomic(ctx, acc.tns)
                     if !below[1]
                         throw(FinchConcurrencyError("Assignment $(acc) requires last level atomics!"))
                         # FIXME: we could do atomic operations here.
@@ -130,7 +130,7 @@ function ensure_concurrent(root, ctx)
                     continue # We pass due to injectivity!
                 end
                 # FIXME: This could be more fine grained: atomics need to only protect the non-injectivity. 
-                (below, _) = is_atomic(acc.tns, ctx)
+                (below, _) = is_atomic(ctx, acc.tns)
                 if all(below[locations_with_parallel_vars]) && all(concurrencyInfo[[x-1 for x in locations_with_parallel_vars]])
                     continue # we pass due to atomics!
                 else

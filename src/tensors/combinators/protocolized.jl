@@ -15,9 +15,9 @@ struct VirtualProtocolizedArray <: AbstractVirtualCombinator
     protos
 end
 
-is_injective(lvl::VirtualProtocolizedArray, ctx) = is_injective(lvl.body, ctx)
-is_atomic(lvl::VirtualProtocolizedArray, ctx) = is_atomic(lvl.body, ctx)
-is_concurrent(lvl::VirtualProtocolizedArray, ctx) = is_concurrent(lvl.body, ctx)
+is_injective(ctx, lvl::VirtualProtocolizedArray) = is_injective(ctx, lvl.body)
+is_atomic(ctx, lvl::VirtualProtocolizedArray) = is_atomic(ctx, lvl.body)
+is_concurrent(ctx, lvl::VirtualProtocolizedArray) = is_concurrent(ctx, lvl.body)
 
 
 Base.:(==)(a::VirtualProtocolizedArray, b::VirtualProtocolizedArray) = a.body == b.body && a.protos == b.protos

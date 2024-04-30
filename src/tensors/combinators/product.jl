@@ -17,16 +17,16 @@ struct VirtualProductArray <: AbstractVirtualCombinator
     dim
 end
 
-function is_injective(lvl::VirtualProductArray, ctx)
-    sub = is_injective(lvl.body, ctx)
+function is_injective(ctx, lvl::VirtualProductArray)
+    sub = is_injective(ctx, lvl.body)
     return [sub[1:lvl.dim]..., false, sub[lvl.dim + 1:end]...]
 end
-function is_concurrent(lvl::VirtualProductArray, ctx)
-    sub = is_concurrent(lvl.body, ctx)
+function is_concurrent(ctx, lvl::VirtualProductArray)
+    sub = is_concurrent(ctx, lvl.body)
     return [sub[1:lvl.dim]..., false, sub[lvl.dim + 1:end]...]
 end
-function is_atomic(lvl::VirtualProductArray, ctx)
-    (below, overall) = is_atomic(lvl.body, ctx)
+function is_atomic(ctx, lvl::VirtualProductArray)
+    (below, overall) = is_atomic(ctx, lvl.body)
     return ([below[1:lvl.dim]..., below[lvl.dim] && below[lvl.dim+1], below[lvl.dim + 1:end]... ], overall)
 end
 

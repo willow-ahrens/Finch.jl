@@ -250,13 +250,13 @@ mutable struct VirtualSparseLevel <: AbstractVirtualLevel
     qos_stop
 end
   
-is_level_injective(lvl::VirtualSparseLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
-function is_level_atomic(lvl::VirtualSparseLevel, ctx)
-    (below, atomic) = is_level_atomic(lvl.lvl, ctx)
+is_level_injective(ctx, lvl::VirtualSparseLevel) = [is_level_injective(ctx, lvl.lvl)..., false]
+function is_level_atomic(ctx, lvl::VirtualSparseLevel)
+    (below, atomic) = is_level_atomic(ctx, lvl.lvl)
     return ([below; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
 end
-function is_level_concurrent(lvl::VirtualSparseLevel, ctx)
-    (data, _) = is_level_concurrent(lvl.lvl, ctx)
+function is_level_concurrent(ctx, lvl::VirtualSparseLevel)
+    (data, _) = is_level_concurrent(ctx, lvl.lvl)
     #FIXME:
     return ([data; [false for _ in 1:num_indexable(lvl, ctx)]], false)
 end

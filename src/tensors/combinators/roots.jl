@@ -28,9 +28,9 @@ end
 lower_access(ctx::AbstractCompiler, node, tns::FinchNode) = 
     lower_access(ctx, node, resolve(tns, ctx))
 
-is_injective(lvl::FinchNode, ctx) = is_injective(resolve(lvl, ctx), ctx)
-is_atomic(lvl::FinchNode, ctx) = is_atomic(resolve(lvl, ctx), ctx)
-is_concurrent(lvl::FinchNode, ctx) = is_concurrent(resolve(lvl, ctx), ctx)
+is_injective(ctx, lvl::FinchNode) = is_injective(ctx, resolve(lvl), ctx)
+is_atomic(ctx, lvl::FinchNode) = is_atomic(ctx, resolve(lvl), ctx)
+is_concurrent(ctx, lvl::FinchNode) = is_concurrent(ctx, resolve(lvl), ctx)
 
 function getroot(node::FinchNode)
     if node.kind === virtual

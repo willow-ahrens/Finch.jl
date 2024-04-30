@@ -17,9 +17,9 @@ struct VirtualPermissiveArray <: AbstractVirtualCombinator
     dims
 end
 
-is_injective(lvl::VirtualPermissiveArray, ctx) = is_injective(lvl.body, ctx)
-is_atomic(lvl::VirtualPermissiveArray, ctx) = is_atomic(lvl.body, ctx)
-is_concurrent(lvl::VirtualPermissiveArray, ctx) = is_concurrent(lvl.body, ctx)
+is_injective(ctx, lvl::VirtualPermissiveArray) = is_injective(ctx, lvl.body)
+is_atomic(ctx, lvl::VirtualPermissiveArray) = is_atomic(ctx, lvl.body)
+is_concurrent(ctx, lvl::VirtualPermissiveArray) = is_concurrent(ctx, lvl.body)
 
 
 Base.show(io::IO, ex::VirtualPermissiveArray) = Base.show(io, MIME"text/plain"(), ex)

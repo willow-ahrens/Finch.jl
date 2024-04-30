@@ -139,13 +139,13 @@ mutable struct VirtualSparseByteMapLevel <: AbstractVirtualLevel
     qos_stop
 end
   
-is_level_injective(lvl::VirtualSparseByteMapLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
-function is_level_atomic(lvl::VirtualSparseByteMapLevel, ctx)
-    (below, atomic) = is_level_atomic(lvl.lvl, ctx)
+is_level_injective(ctx, lvl::VirtualSparseByteMapLevel) = [is_level_injective(ctx, lvl.lvl)..., false]
+function is_level_atomic(ctx, lvl::VirtualSparseByteMapLevel)
+    (below, atomic) = is_level_atomic(ctx, lvl.lvl)
     return ([below; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
 end
-function is_level_concurrent(lvl::VirtualSparseByteMapLevel, ctx)
-    (data, _) = is_level_concurrent(lvl.lvl, ctx)
+function is_level_concurrent(ctx, lvl::VirtualSparseByteMapLevel)
+    (data, _) = is_level_concurrent(ctx, lvl.lvl)
     return ([data; [false for _ in 1:num_indexable(lvl, ctx)]], false)
 end
 num_indexable(lvl::VirtualSparseByteMapLevel, ctx) = virtual_level_ndims(lvl, ctx) - virtual_level_ndims(lvl.lvl, ctx)

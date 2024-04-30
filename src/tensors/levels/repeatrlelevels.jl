@@ -134,9 +134,9 @@ mutable struct VirtualRepeatRLELevel <: AbstractVirtualLevel
     dirty
     prev_pos
 end
-is_level_injective(::VirtualRepeatRLELevel, ctx) = [false]
-is_level_atomic(lvl::VirtualRepeatRLELevel, ctx) = ([false], false)
-function is_level_concurrent(lvl::VirtualRepeatRLELevel, ctx)
+is_level_injective(ctx, ::VirtualRepeatRLELevel) = [false]
+is_level_atomic(ctx, lvl::VirtualRepeatRLELevel) = ([false], false)
+function is_level_concurrent(ctx, lvl::VirtualRepeatRLELevel)
     return ([false for _ in 1:num_indexable(lvl)], false)
 end
 num_indexable(lvl::VirtualRepeatRLELevel, ctx) = length(lvl.shape)

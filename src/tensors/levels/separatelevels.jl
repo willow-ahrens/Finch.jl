@@ -90,14 +90,14 @@ end
 
 postype(lvl:: VirtualSeparateLevel) = postype(lvl.lvl)
 
-is_level_injective(lvl::VirtualSeparateLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., true]
+is_level_injective(ctx, lvl::VirtualSeparateLevel) = [is_level_injective(ctx, lvl.lvl)..., true]
 num_indexable(lvl::VirtualSeparateLevel, ctx) = virtual_level_ndims(lvl, ctx) - virtual_level_ndims(lvl.lvl, ctx)
-function is_level_atomic(lvl::VirtualSeparateLevel, ctx)
-    (below, atomic) = is_level_atomic(lvl.lvl, ctx)
+function is_level_atomic(ctx, lvl::VirtualSeparateLevel)
+    (below, atomic) = is_level_atomic(ctx, lvl.lvl)
     return ([below; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
 end
-function is_level_concurrent(lvl::VirtualSeparateLevel, ctx)
-    (data, _) = is_level_concurrent(lvl.lvl, ctx)
+function is_level_concurrent(ctx, lvl::VirtualSeparateLevel)
+    (data, _) = is_level_concurrent(ctx, lvl.lvl)
     return (data, true)
 end
 

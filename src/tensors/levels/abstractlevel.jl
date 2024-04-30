@@ -10,7 +10,7 @@ virtual_level_ndims(lvl:: AbstractVirtualLevel, ctx) = length(virtual_level_size
 
 
 
-#is_level_injective(lvl::AbstractVirtualLevel, ctx) = false
+#is_level_injective(ctx, lvl::AbstractVirtualLevel) = false
 
 
 

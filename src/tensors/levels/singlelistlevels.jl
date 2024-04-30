@@ -141,14 +141,14 @@ mutable struct VirtualSingleListLevel <: AbstractVirtualLevel
     prev_pos
 end
   
-is_level_injective(lvl::VirtualSingleListLevel, ctx) = [is_level_injective(lvl.lvl, ctx)..., false]
+is_level_injective(ctx, lvl::VirtualSingleListLevel) = [is_level_injective(ctx, lvl.lvl)..., false]
 
-function is_level_atomic(lvl::VirtualSingleListLevel, ctx)
-    (below, atomic) = is_level_atomic(lvl.lvl, ctx)
+function is_level_atomic(ctx, lvl::VirtualSingleListLevel)
+    (below, atomic) = is_level_atomic(ctx, lvl.lvl)
     return ([below; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
 end
-function is_level_concurrent(lvl::VirtualSingleListLevel, ctx)
-    (data, _) = is_level_concurrent(lvl.lvl, ctx)
+function is_level_concurrent(ctx, lvl::VirtualSingleListLevel)
+    (data, _) = is_level_concurrent(ctx, lvl.lvl)
     return ([data; [false for _ in 1:num_indexable(lvl, ctx)]], false)
 end
 num_indexable(lvl::VirtualSingleListLevel, ctx) = virtual_level_ndims(lvl, ctx) - virtual_level_ndims(lvl.lvl, ctx)

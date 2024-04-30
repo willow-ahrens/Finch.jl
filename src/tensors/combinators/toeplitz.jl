@@ -24,17 +24,17 @@ struct VirtualToeplitzArray <: AbstractVirtualCombinator
     end
 end
 
-function is_injective(lvl::VirtualToeplitzArray, ctx)
-    sub = is_injective(lvl.body, ctx)
+function is_injective(ctx, lvl::VirtualToeplitzArray)
+    sub = is_injective(ctx, lvl.body)
     return [sub[1:lvl.dim]..., false, sub[lvl.dim + 1:end]...]
 end
-function is_atomic(lvl::VirtualToeplitzArray, ctx)
-    (below, overall) = is_atomic(lvl.body, ctx)
+function is_atomic(ctx, lvl::VirtualToeplitzArray)
+    (below, overall) = is_atomic(ctx, lvl.body)
     newBelow = [below[1:lvl.dim]..., below[lvl.dim] && below[lvl.dim + 1], below[lvl.dim + 1:end]...]
     return (newBelow, overall)
 end
-function is_concurrent(lvl::VirtualToeplitzArray, ctx)
-    sub = is_concurrent(lvl.body, ctx)
+function is_concurrent(ctx, lvl::VirtualToeplitzArray)
+    sub = is_concurrent(ctx, lvl.body)
     return [sub[1:lvl.dim]..., false, sub[lvl.dim + 1:end]...]
 end
 

@@ -27,5 +27,5 @@ end
 unfurl(tns, ctx, ext, mode, protos...) = tns
 
 instantiate(tns::Furlable, ctx, mode, protos) = tns
-is_injective(tns:: Furlable, ctx) = is_injective(tns.body, ctx)
-is_atomic(tns:: Furlable, ctx) = is_atomic(tns.body, ctx)
+is_injective(ctx, tns:: Furlable) = is_injective(ctx, tns.body)
+is_atomic(ctx, tns:: Furlable) = is_atomic(ctx, tns.body)

@@ -86,9 +86,9 @@ mutable struct VirtualElementLevel <: AbstractVirtualLevel
     val
 end
 
-is_level_injective(::VirtualElementLevel, ctx) = []
-is_level_atomic(lvl::VirtualElementLevel, ctx) = ([false], false)
-function is_level_concurrent(lvl::VirtualElementLevel, ctx)
+is_level_injective(ctx, ::VirtualElementLevel) = []
+is_level_atomic(ctx, lvl::VirtualElementLevel) = ([false], false)
+function is_level_concurrent(ctx, lvl::VirtualElementLevel)
     return ([], true)
 end
 num_indexable(lvl::VirtualElementLevel, ctx) = 0

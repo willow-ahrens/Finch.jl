@@ -133,13 +133,13 @@ mutable struct VirtualSparseRLELevel <: AbstractVirtualLevel
     prev_pos
 end
 
-is_level_injective(lvl::VirtualSparseRLELevel, ctx) = [false, is_level_injective(lvl.lvl, ctx)...]
-function is_level_atomic(lvl::VirtualSparseRLELevel, ctx)
-    (below, atomic) = is_level_atomic(lvl.lvl, ctx)
+is_level_injective(ctx, lvl::VirtualSparseRLELevel) = [false, is_level_injective(ctx, lvl.lvl)...]
+function is_level_atomic(ctx, lvl::VirtualSparseRLELevel)
+    (below, atomic) = is_level_atomic(ctx, lvl.lvl)
     return ([below; [atomic for _ in 1:num_indexable(lvl, ctx)]], atomic)
 end
-function is_level_concurrent(lvl::VirtualSparseRLELevel, ctx)
-    (data, _) = is_level_concurrent(lvl.lvl, ctx)
+function is_level_concurrent(ctx, lvl::VirtualSparseRLELevel)
+    (data, _) = is_level_concurrent(ctx, lvl.lvl)
     return ([data; [false for _ in 1:num_indexable(lvl, ctx)]], false)
 end
 num_indexable(lvl::VirtualSparseRLELevel, ctx) = virtual_level_ndims(lvl, ctx) - virtual_level_ndims(lvl.lvl, ctx)
