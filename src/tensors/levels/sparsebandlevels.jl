@@ -137,7 +137,15 @@ mutable struct VirtualSparseBandLevel <: AbstractVirtualLevel
 end
 
 is_level_injective(ctx, lvl::VirtualSparseBandLevel) = [is_level_injective(ctx, lvl.lvl)..., false]
-is_level_atomic(ctx, lvl::VirtualSparseBandLevel) = false
+function is_level_atomic(ctx, lvl::VirtualSparseBandLevel)
+    (below, atomic) = is_level_atomic(ctx, lvl.lvl)
+    return ([below; [atomic for _ in 1:num_indexable(ctx, lvl)]], atomic)
+end
+function is_level_concurrent(ctx, lvl::VirtualSparseBandLevel)
+    (data, _) = is_level_concurrent(ctx, lvl.lvl)
+    return ([data; [false for _ in 1:num_indexable(ctx, lvl)]], false)
+end
+num_indexable(ctx, lvl::VirtualSparseBandLevel) = virtual_level_ndims(ctx, lvl) - virtual_level_ndims(ctx, lvl.lvl)
   
 postype(lvl::VirtualSparseBandLevel) = postype(lvl.lvl)
 
