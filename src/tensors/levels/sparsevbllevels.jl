@@ -148,12 +148,11 @@ end
 is_level_injective(ctx, lvl::VirtualSparseVBLLevel) = [is_level_injective(ctx, lvl.lvl)..., false]
 function is_level_atomic(ctx, lvl::VirtualSparseVBLLevel)
     (below, atomic) = is_level_atomic(ctx, lvl.lvl)
-    return ([below; [atomic for _ in 1:num_indexable(ctx, lvl)]], atomic)
+    return ([below; [atomic]], atomic)
 end
-num_indexable(ctx, lvl::VirtualSparseVBLLevel) = virtual_level_ndims(ctx, lvl) - virtual_level_ndims(ctx, lvl.lvl)
 function is_level_concurrent(ctx, lvl::VirtualSparseVBLLevel)
     (data, _) = is_level_concurrent(ctx, lvl.lvl)
-    return ([data; [false for _ in 1:num_indexable(ctx, lvl)]], false)
+    return ([data; [false]], false)
 end
 postype(lvl::VirtualSparseVBLLevel) = postype(lvl.lvl)
 

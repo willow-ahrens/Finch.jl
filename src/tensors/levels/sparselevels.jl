@@ -256,15 +256,13 @@ end
 is_level_injective(ctx, lvl::VirtualSparseLevel) = [is_level_injective(ctx, lvl.lvl)..., false]
 function is_level_atomic(ctx, lvl::VirtualSparseLevel)
     (below, atomic) = is_level_atomic(ctx, lvl.lvl)
-    return ([below; [atomic for _ in 1:num_indexable(ctx, lvl)]], atomic)
+    return ([below; [atomic]], atomic)
 end
 function is_level_concurrent(ctx, lvl::VirtualSparseLevel)
     (data, _) = is_level_concurrent(ctx, lvl.lvl)
     #FIXME:
-    return ([data; [false for _ in 1:num_indexable(ctx, lvl)]], false)
+    return ([data; [false]], false)
 end
-num_indexable(ctx, lvl::VirtualSparseLevel) = virtual_level_ndims(ctx, lvl) - virtual_level_ndims(ctx, lvl.lvl)
-
 
 function virtualize(ctx, ex, ::Type{SparseLevel{Ti, Tbl, Lvl}}, tag=:lvl) where {Ti, Tbl, Lvl}
     sym = freshen(ctx, tag)

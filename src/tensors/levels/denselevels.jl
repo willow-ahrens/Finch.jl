@@ -109,14 +109,12 @@ end
 is_level_injective(ctx, lvl::VirtualDenseLevel) = [is_level_injective(ctx, lvl.lvl)..., true]
 function is_level_atomic(ctx, lvl::VirtualDenseLevel)
     (data, atomic) = is_level_atomic(ctx, lvl.lvl)
-    return ([data; [atomic for _ in 1:num_indexable(ctx, lvl)]], atomic)
+    return ([data; atomic], atomic)
 end
 function is_level_concurrent(ctx, lvl::VirtualDenseLevel)
     (data, concurrent) = is_level_concurrent(ctx, lvl.lvl)
-    return ([data; [concurrent for _ in 1:num_indexable(ctx, lvl)]], concurrent)
+    return ([data; concurrent], concurrent)
 end
-num_indexable(ctx, lvl::VirtualDenseLevel) = virtual_level_ndims(ctx, lvl) - virtual_level_ndims(ctx, lvl.lvl)
-
 
 function virtualize(ctx, ex, ::Type{DenseLevel{Ti, Lvl}}, tag=:lvl) where {Ti, Lvl}
     sym = freshen(ctx, tag)

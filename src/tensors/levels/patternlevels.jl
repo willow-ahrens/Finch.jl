@@ -89,8 +89,6 @@ is_level_atomic(ctx, lvl::VirtualPatternLevel) = ([false], false)
 function is_level_concurrent(ctx, lvl::VirtualPatternLevel)
     return ([], true)
 end
-num_indexable(ctx, lvl::VirtualPatternLevel) = 0
-
 
 lower(ctx::AbstractCompiler, lvl::VirtualPatternLevel, ::DefaultStyle) = :(PatternLevel())
 virtualize(ctx, ex, ::Type{PatternLevel{Tp}}) where {Tp} = VirtualPatternLevel(Tp)

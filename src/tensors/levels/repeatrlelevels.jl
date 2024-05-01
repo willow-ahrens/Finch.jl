@@ -136,9 +136,8 @@ end
 is_level_injective(ctx, ::VirtualRepeatRLELevel) = [false]
 is_level_atomic(ctx, lvl::VirtualRepeatRLELevel) = ([false], false)
 function is_level_concurrent(ctx, lvl::VirtualRepeatRLELevel)
-    return ([false for _ in 1:num_indexable(ctx, lvl)], false)
+    return ([false], false)
 end
-num_indexable(ctx, lvl::VirtualRepeatRLELevel) = length(lvl.shape)
 
 function virtualize(ctx, ex, ::Type{RepeatRLELevel{D, Ti, Tp, Tv, Ptr, Idx, Val}}, tag=:lvl) where {D, Ti, Tp, Tv, Ptr, Idx, Val}
     sym = freshen(ctx, tag)
