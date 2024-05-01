@@ -88,9 +88,8 @@ using SparseArrays
         @finch (A .= 0; for i=_; A[B[i]] = i end)
         @test reference_isequal(A, [0, 1, 0, 2, 3, 0])
     end
-
     #https://github.com/willow-ahrens/Finch.jl/issues/61
-    I = copyto!(Tensor(RepeatRLE(0)), [1, 1, 9, 3, 3])
+    I = copyto!(Tensor(DenseRLE(Element(0))), [1, 1, 9, 3, 3])
     A = [
         11 12 13 14 15;
         21 22 23 24 25;
@@ -291,18 +290,6 @@ using SparseArrays
         @test_throws ArgumentError Tensor(SparseCOO(Element(0.0)))
         @test_throws ArgumentError Tensor(SparseHash(Element(0.0)))
         @test_throws ArgumentError Tensor(SparseList(Element("hello")))
-    end
-
-    #https://github.com/willow-ahrens/Finch.jl/pull/197
-
-    let
-        io = IOBuffer()
-
-        @repl io A = Tensor(Dense(SparseTriangle{2}(Element(0.0))), collect(reshape(1:27, 3, 3, 3)))
-        @repl io C = Scalar(0)
-        @repl io @finch for k=_, j=_, i=_; C[] += A[i, j, k] end
-
-        @test check_output("issues/pull197.txt", String(take!(io)))
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/70
