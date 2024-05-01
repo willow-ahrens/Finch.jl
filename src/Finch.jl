@@ -29,11 +29,9 @@ export SparsePoint, SparsePointLevel
 export SparseBand, SparseBandLevel
 export SparseHash, SparseHashLevel
 export SparseCOO, SparseCOOLevel
-export SparseTriangle, SparseTriangleLevel
 export SparseByteMap, SparseByteMapLevel
 export SparseVBL, SparseVBLLevel
 export Dense, DenseLevel
-export RepeatRLE, RepeatRLELevel
 export Element, ElementLevel
 export Separate, SeparateLevel
 export Atomic, AtomicLevel
@@ -120,12 +118,10 @@ include("tensors/levels/sparsebytemaplevels.jl")
 include("tensors/levels/sparsevbllevels.jl")
 include("tensors/levels/denselevels.jl")
 include("tensors/levels/denserlelevels.jl")
-include("tensors/levels/repeatrlelevels.jl")
 include("tensors/levels/elementlevels.jl")
 include("tensors/levels/separatelevels.jl")
 include("tensors/levels/atomiclevels.jl")
 include("tensors/levels/patternlevels.jl")
-include("tensors/levels/sparsetrianglelevels.jl")
 include("tensors/masks.jl")
 include("tensors/combinators/abstractCombinator.jl")
 include("tensors/combinators/unfurled.jl")

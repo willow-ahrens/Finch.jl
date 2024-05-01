@@ -158,13 +158,14 @@ Finch levels can be used to construct a variety of popular sparse formats. A few
 | COO Matrix                   | `Tensor(SparseCOO{2}(Element(0.0)), args...)`                  |
 | COO 3-Tensor                 | `Tensor(SparseCOO{3}(Element(0.0)), args...)`                  |
 | Dictionary-Of-Keys           | `Tensor(SparseHash{2}(Element(0.0)), args...)`                 |
-| Run-Length-Encoded Image     | `Tensor(Dense(RepeatedRLE(Element(0.0))), args...)`            |
+| Run-Length-Encoded Image     | `Tensor(Dense(DenseRLE(Element(0.0))), args...)`            |
 
 # Tensor Constructors
 
 ```@docs
 Tensor
 Tensor(lvl::AbstractLevel)
+Tensor(lvl::AbstractLevel, dims::Number...)
 Tensor(lvl::AbstractLevel, init::UndefInitializer)
 Tensor(lvl::AbstractLevel, arr)
 Tensor(arr)
