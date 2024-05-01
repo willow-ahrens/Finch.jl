@@ -29,7 +29,6 @@ export SparsePoint, SparsePointLevel
 export SparseBand, SparseBandLevel
 export SparseHash, SparseHashLevel
 export SparseCOO, SparseCOOLevel
-export SparseTriangle, SparseTriangleLevel
 export SparseByteMap, SparseByteMapLevel
 export SparseVBL, SparseVBLLevel
 export Dense, DenseLevel

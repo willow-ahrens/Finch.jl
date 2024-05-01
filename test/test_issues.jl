@@ -292,18 +292,6 @@ using SparseArrays
         @test_throws ArgumentError Tensor(SparseList(Element("hello")))
     end
 
-    #https://github.com/willow-ahrens/Finch.jl/pull/197
-
-    let
-        io = IOBuffer()
-
-        @repl io A = Tensor(Dense(SparseTriangle{2}(Element(0.0))), collect(reshape(1:27, 3, 3, 3)))
-        @repl io C = Scalar(0)
-        @repl io @finch for k=_, j=_, i=_; C[] += A[i, j, k] end
-
-        @test check_output("issues/pull197.txt", String(take!(io)))
-    end
-
     #https://github.com/willow-ahrens/Finch.jl/issues/70
 
     let
