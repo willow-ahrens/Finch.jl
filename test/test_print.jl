@@ -47,18 +47,4 @@
     end
 
     A = Tensor([fld(i + j, 3) for i = 1:5, j = 1:10])
-
-    formats = [
-        "rle" => RepeatRLE{0.0},
-    ]
-
-    for (coln, colf) in formats
-        @testset "print d $coln" begin
-            B = dropdefaults!(Tensor(Dense(colf())), A)
-            @test check_output("print/print_dense_$coln.txt", sprint(show, B))
-            @test check_output("print/print_dense_$(coln)_small.txt", sprint(show, B, context=:compact=>true))
-            @test check_output("print/display_dense_$(coln).txt", sprint(show, MIME"text/plain"(), B))
-            @test check_output("print/summary_dense_$(coln).txt", summary(B))
-        end
-    end
 end
