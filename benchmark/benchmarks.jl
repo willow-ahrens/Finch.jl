@@ -57,6 +57,20 @@ eval(let
 end)
 
 let
+    (m, n, nnz) = (1000, 1000, 20_000)
+    A = Tensor(Dense(SparseList(Element(0.0))), fsprand(m, n, nnz))
+    x = rand(n)
+    y = rand(m)
+    SUITE["high-level"]["run_baremetal_filled"] = @benchmarkable(
+        begin
+            A, x, y = ($A, $x, $y)
+            spmv(y, A, x)
+        end,
+        evals = 1000
+    )
+end
+
+let
     A = Tensor(Dense(SparseList(Element(0.0))), fsprand(1, 1, 1))
     x = rand(1)
     y = rand(1)
@@ -171,3 +185,5 @@ for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     x = Tensor(Dense{Int64}(Element{0.0, Float64, Int64}()), rand(size(A)[2]))
     SUITE["indices"]["SpMV_64"][mtx] = @benchmarkable spmv64($A, $x) 
 end
+
+SUITE = SUITE["high-level"]

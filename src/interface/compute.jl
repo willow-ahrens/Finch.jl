@@ -24,6 +24,14 @@ isolate_tables = Rewrite(Postwalk(
     end
 ))
 
+function simple_map(::Type{T}, f::F, args) where {T, F}
+    res = Vector{T}(undef, length(args))
+    for i in 1:length(args)
+        res[i] = f(args[i])
+    end
+    res
+end
+
 function lift_subqueries_expr(node::LogicNode, bindings)
     if node.kind === subquery
         if !haskey(bindings, node.lhs)
@@ -32,7 +40,7 @@ function lift_subqueries_expr(node::LogicNode, bindings)
         end
         node.lhs
     elseif istree(node)
-        similarterm(node, operation(node), map(n -> lift_subqueries_expr(n, bindings), arguments(node)))
+        similarterm(node, operation(node), simple_map(LogicNode, n -> lift_subqueries_expr(n, bindings), arguments(node)))
     else
         node
     end
@@ -48,11 +56,11 @@ structure. After calling lift_subqueries, it is safe to map over the program.
 """
 function lift_subqueries(node::LogicNode)
     if node.kind === plan
-        plan(map(lift_subqueries, node.bodies))
+        plan(simple_map(LogicNode, lift_subqueries, node.bodies))
     elseif node.kind === query
         bindings = OrderedDict()
         rhs_2 = lift_subqueries_expr(node.rhs, bindings)
-        plan(map(((lhs, rhs),) -> query(lhs, rhs), collect(bindings)), query(node.lhs, rhs_2))
+        plan(simple_map(LogicNode, ((lhs, rhs),) -> query(lhs, rhs), collect(bindings)), query(node.lhs, rhs_2))
     elseif node.kind === produces
         node
     end
@@ -516,7 +524,187 @@ function hash_structure(node::LogicNode, s, cache=IDDict(), names=Dict())
         end
     end
 end
+sha256(reinterpret(UInt8, [4]))
+bytes(x) = reinterpret(NTuple{sizeof(x), UInt8}, x)
+import SHA
+import Serialization
+bytes(x) = reinterpret(NTuple{sizeof(x), UInt8}, x)
+function update_structure_hash!(ctx, a::LogicNode, names=Dict{LogicNode,Int}())
+    #delimit each hash blob with the kind of the node
+    SHA.update!(ctx, bytes(Int(a.kind)))
+    if a.kind === field || a.kind === alias
+        SHA.update!(ctx, bytes(get!(names, a, length(names))))
+    elseif a.kind === immediate
+        buffer = IOBuffer()
+        Serialization.serialize(buffer, a.val)
+        SHA.update!(ctx, take!(buffer))
+    elseif a.kind === subquery
+        if haskey(names, a.lhs)
+            SHA.update!(ctx, a.lhs)
+        else
+            names[a.lhs] = length(names)
+            update_structure_hash!(ctx, a.lhs)
+            update_structure_hash!(ctx, a.arg)
+        end
+    elseif a.kind === table
+        update_structure_hash!(ctx, immediate(typeof(a.tns.val)))
+        for idx in a.idxs
+            update_structure_hash!(ctx, idx)
+        end
+    elseif istree(a)
+        for child in a.children
+            update_structure_hash!(ctx, child)
+        end
+    else
+        error("unimplemented")
+    end
+    #terminate each hash with an unused node kind
+    SHA.update!(ctx, bytes(typemax(Int)))
+end
+
+
+structure_hash(node::LogicNode) = begin
+    ctx = SHA.SHA1_CTX()
+    update_structure_hash!(ctx, node)
+    SHA.digest!(ctx)
+end
+
+import SHA
+import Serialization
+bytes(x) = reinterpret(NTuple{sizeof(x), UInt8}, x)
 =#
+
+function hash_structure(a::LogicNode, s::UInt, names::Dict{LogicNode,Int} = Dict{LogicNode,Int}())
+    #delimit each hash blob with the kind of the node
+    s = hash(Int(a.kind), s)
+    if a.kind === field || a.kind === alias
+        s = hash(get!(names, a, length(names)), s)
+    elseif a.kind === immediate
+        s = hash(a.val, s)
+    elseif a.kind === subquery
+        if haskey(names, a.lhs)
+            s = hash_structure(a.lhs, s)
+        else
+            names[a.lhs] = length(names)
+            s = hash_structure(a.lhs, s)
+            s = hash_structure(a.arg, s)
+        end
+    elseif a.kind === table
+        s = hash(immediate(typeof(a.tns.val)), s)
+        for idx in a.idxs
+            s = hash_structure(idx, s)
+        end
+    elseif istree(a)
+        for child in a.children
+            s = hash_structure(child, s)
+        end
+    else
+        error("unimplemented")
+    end
+    #terminate each hash with an unused node kind
+    return hash(typemax(Int), s)
+end
+
+#=
+function isequal_structure(a::LogicStructure, b::LogicNode, names::Dict{LogicNode,Int} = Dict{LogicNode,Int}())
+    if a.kind !== b.kind
+        return false
+    end
+    if a.kind === field || a.kind === alias
+        return get!(names, a, length(names)) === get!(names, b, length(names))
+    end
+    elseif a.kind === field || a.kind === alias
+        return get!(names, a, length(names)) === get!(names, b, length(names))
+    end
+    if a.kind === field || a.kind === alias
+        s = hash(get!(names, a, length(names)), s)
+    elseif a.kind === immediate
+        s = hash(a.val, s)
+    elseif a.kind === subquery
+        if haskey(names, a.lhs)
+            s = hash_structure(a.lhs, s)
+        else
+            names[a.lhs] = length(names)
+            s = hash_structure(a.lhs, s)
+            s = hash_structure(a.arg, s)
+        end
+    elseif a.kind === table
+        s = hash(immediate(typeof(a.tns.val)), s)
+        for idx in a.idxs
+            s = hash_structure(idx, s)
+        end
+    elseif istree(a)
+        for child in a.children
+            s = hash_structure(child, s)
+        end
+    else
+        error("unimplemented")
+    end
+    #terminate each hash with an unused node kind
+    return hash(typemax(Int), s)
+end
+
+struct LogicStructure
+    node::LogicNode
+    reps::Dict{LogicNode,LogicNode}
+end
+
+function LogicStructure(node::LogicNode)
+    names = Dict{LogicNode,Int}()
+    reps = IDDict{LogicNode,LogicNode}()
+    for node in PostOrderDFS(node)
+        if node.kind === alias
+            reps[node] = get!(names, node, alias(Symbol(:A_, length(names))))
+        elseif node.kind === field
+            reps[node] = get!(names, node, field(Symbol(:A_, length(names))))
+        elseif node.kind === table
+            reps[node] = get!(names, node, immediate(Symbol(:A_, length(names))))
+        end
+    end
+end
+
+
+
+Base.hash(s::LogicStructure, h::UInt) = hash_structure(s.node, h)
+
+=#
+
+function lift_subqueries_expr(node::LogicNode, bindings)
+    if node.kind === subquery
+        if !haskey(bindings, node.lhs)
+            arg_2 = lift_subqueries_expr(node.arg, bindings)
+            bindings[node.lhs] = arg_2
+        end
+        node.lhs
+    elseif istree(node)
+        similarterm(node, operation(node), simple_map(LogicNode, n -> lift_subqueries_expr(n, bindings), arguments(node)))
+    else
+        node
+    end
+end
+
+function get_structure(
+    node::LogicNode,
+    fields::Dict{Symbol, LogicNode}=Dict{Symbol, LogicNode}(),
+    aliases::Dict{Symbol, LogicNode}=Dict{Symbol, LogicNode}())
+    if node.kind === field
+        get!(fields, node.name, immediate(length(fields) + length(aliases)))
+    elseif node.kind === alias
+        get!(aliases, node.name, immediate(length(fields) + length(aliases)))
+    elseif node.kind === subquery
+        if haskey(aliases, node.lhs.name)
+            names[node.lhs]
+        else
+            subquery(get_structure(node.lhs, fields, aliases), get_structure(node.arg, fields, aliases))
+        end
+    elseif node.kind === table
+        table(immediate(typeof(node.tns.val)), simple_map(LogicNode, idx -> get_structure(idx, fields, aliases), node.idxs))
+    elseif istree(node)
+        similarterm(node, operation(node), simple_map(LogicNode, arg -> get_structure(arg, fields, aliases), arguments(node)))
+    else
+        node
+    end
+end
 
 """
     compute(args..., ctx=default_optimizer) -> Any
@@ -533,9 +721,12 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
     bodies = map((arg, var) -> query(var, arg.data), args, vars)
     prgm = plan(bodies, produces(vars))
 
+    #return structure_hash(prgm)
     #deduplicate and lift inline subqueries to regular queries
-    prgm = lift_subqueries(prgm)
-    #return hash(prgm)
+    #prgm = lift_subqueries(prgm)
+    #return hash_structure(prgm, UInt(0))
+    
+    return hash(get_structure(prgm))
     #At this point in the program, all statements should be unique, so
     #it is okay to name different occurences of things.
 

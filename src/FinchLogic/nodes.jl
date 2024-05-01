@@ -161,11 +161,34 @@ function SyntaxInterface.similarterm(::Type{LogicNode}, op::LogicNodeKind, args)
     LogicNode(op, nothing, args)
 end
 
+function LogicNode_concatenate_args(args)
+    n_args = 0
+    for arg in args
+        if arg isa AbstractArray
+            n_args += length(arg)
+        else
+            n_args += 1
+        end
+    end
+    args_2 = Vector{LogicNode}(undef, n_args)
+    i = 0
+    for arg in args
+        if arg isa AbstractArray
+            for arg_2 in arg
+                args_2[i += 1] = arg_2
+            end
+        else
+            args_2[i += 1] = arg
+        end
+    end
+    args_2
+end
+
 function LogicNode(kind::LogicNodeKind, args::Vector)
     if (kind === immediate || kind === field || kind === alias) && length(args) == 1
         return LogicNode(kind, args[1], LogicNode[])
     else
-        args = vcat(args...)
+        args = LogicNode_concatenate_args(args)
         if (kind === table && length(args) >= 1) ||
             (kind === mapjoin && length(args) >= 1) ||
             (kind === aggregate && length(args) >= 3) ||
