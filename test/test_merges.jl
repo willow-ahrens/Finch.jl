@@ -16,7 +16,6 @@
         (;fmt = (z) -> Tensor(SparseCOO{2}(Element(z))), proto = [literal_instance(walk), literal_instance(walk)]),
         (;fmt = (z) -> Tensor(Dense(SparseHash{1}(Element(z)))), proto = [literal_instance(walk),literal_instance(follow)]),
         (;fmt = (z) -> Tensor(SparseHash{2}(Element(z))), proto = [literal_instance(walk), literal_instance(walk)]),
-        #(;fmt = (z) -> Tensor(Dense(RepeatRLE(z))), proto = [walk, follow]),
         (;fmt = (z) -> Tensor(Dense(SparseRLE(Element(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
     ]
 

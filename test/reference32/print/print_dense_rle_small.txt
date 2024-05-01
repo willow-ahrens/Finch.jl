@@ -1,1 +1,0 @@
-Tensor(Dense(RepeatRLE{0.0}(5, …), 10))
