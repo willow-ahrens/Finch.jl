@@ -41,9 +41,10 @@ end
 """
     lift_subqueries
 
-Creates a plan that lifts all subqueries to the top level of the program,
-with unique queries for each distinct subquery alias. This function is called
-before hashing, so it needs to be fast.
+Creates a plan that lifts all subqueries to the top level of the program, with
+unique queries for each distinct subquery alias. This function processes the rhs
+of each subquery once, to carefully extract SSA form from any nested pointer
+structure. After calling lift_subqueries, it is safe to map over the program.
 """
 function lift_subqueries(node::LogicNode)
     if node.kind === plan
@@ -493,6 +494,29 @@ function propagate_map_queries(root)
         (@rule plan(~a1..., plan(produces()), ~a2...) => plan(a1..., a2...)),
     ])))(root)
 end
+
+#=
+function hash_structure(node::LogicNode, s, cache=IDDict(), names=Dict())
+    get!(cache, node) do
+        if istree(node)
+            s = hash(node.kind, s)
+            for arg in arguments(node)
+                s = hash_structure(arg, s)
+            end
+            s
+        elseif node.kind === table
+            s = hash(table, s)
+            s = hash(typeof(node.tbl.val), s)
+            for idx in node.idxs
+                s = hash_structure(idx, s)
+            end
+            s
+        elseif node.kind === alias || node.kind === index
+            node
+        end
+    end
+end
+=#
 
 """
     compute(args..., ctx=default_optimizer) -> Any
