@@ -1,0 +1,3 @@
+Tensor(SparseList(Element(nothing)), Any[2.0, nothing, nothing, 1.0, 3.0, Some(1.0), nothing]):
+Tensor(SparseList{Int64}(Element{nothing, Union{Nothing, Some{Float64}, Float64}, Int64}(Union{Nothing, Some{Float64}, Float64}[2.0, 1.0, 3.0, Some(1.0)]), 7, [1, 5], [1, 4, 5, 6]))
+
