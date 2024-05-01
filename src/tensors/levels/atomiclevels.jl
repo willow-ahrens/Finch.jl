@@ -102,8 +102,6 @@ function is_level_atomic(ctx, lvl::VirtualAtomicLevel)
     (below, _) = is_level_atomic(ctx, lvl.lvl)
     return (below, true)
 end
-num_indexable(ctx, lvl::VirtualAtomicLevel) = virtual_level_ndims(ctx, lvl) - virtual_level_ndims(ctx, lvl.lvl)
-
 
 function lower(ctx::AbstractCompiler, lvl::VirtualAtomicLevel, ::DefaultStyle)
     quote

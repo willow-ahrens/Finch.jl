@@ -92,7 +92,6 @@ is_level_atomic(ctx, lvl::VirtualElementLevel) = ([false], false)
 function is_level_concurrent(ctx, lvl::VirtualElementLevel)
     return ([], true)
 end
-num_indexable(ctx, lvl::VirtualElementLevel) = 0
 
 lower(ctx::AbstractCompiler, lvl::VirtualElementLevel, ::DefaultStyle) = lvl.ex
 
