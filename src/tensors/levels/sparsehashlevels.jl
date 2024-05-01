@@ -179,9 +179,6 @@ function is_level_concurrent(ctx, lvl::VirtualSparseHashLevel)
     return ([data; [false for _ in 1:lvl.N]], false)
 end
 
-is_level_injective(ctx, lvl::VirtualSparseHashLevel) = [is_level_injective(ctx, lvl.lvl)..., (true for _ in 1:lvl.N)...]
-is_level_atomic(ctx, lvl::VirtualSparseHashLevel) = false
-
 function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualSparseHashLevel, arch)
     ptr_2 = freshen(ctx.code, lvl.ptr)
     push!(ctx.code.preamble, quote
