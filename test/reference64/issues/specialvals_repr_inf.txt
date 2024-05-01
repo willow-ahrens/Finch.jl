@@ -1,0 +1,3 @@
+Tensor(SparseList(Element(Inf)), [2.0, Inf, Inf, 1.0, 3.0, Inf]):
+Tensor(SparseList{Int64}(Element{Inf, Float64, Int64}([2.0, 1.0, 3.0]), 6, [1, 4], [1, 4, 5]))
+

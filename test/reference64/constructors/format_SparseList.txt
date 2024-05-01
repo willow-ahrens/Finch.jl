@@ -1,0 +1,8 @@
+Tensor(SparseList(Element(0))) constructors:
+initialized tensor: Tensor(SparseList{Int64}(Element{0.0, Float64, Int64}([2.0, 2.0, 3.0, 3.0]), 6, [1, 5], [2, 3, 5, 6]))
+initialized tensor: Tensor(SparseList{Int16}(Element{0.0, Float64, Int64}([2.0, 2.0, 3.0, 3.0]), 6, [1, 5], Int16[2, 3, 5, 6]))
+sized tensor: Tensor(SparseList{Int64}(Element{0.0, Float64, Int64}(Float64[]), 7, [1], Int64[]))
+sized tensor: Tensor(SparseList{Int16}(Element{0.0, Float64, Int64}(Float64[]), 7, [1], Int16[]))
+empty tensor: Tensor(SparseList{Int64}(Element{0.0, Float64, Int64}(Float64[]), 0, [1], Int64[]))
+empty tensor: Tensor(SparseList{Int16}(Element{0.0, Float64, Int64}(Float64[]), 0, [1], Int16[]))
+
