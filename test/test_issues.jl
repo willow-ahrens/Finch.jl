@@ -89,7 +89,7 @@ using SparseArrays
         @test reference_isequal(A, [0, 1, 0, 2, 3, 0])
     end
     #https://github.com/willow-ahrens/Finch.jl/issues/61
-    I = copyto!(Tensor(DenseRLE(0)), [1, 1, 9, 3, 3])
+    I = copyto!(Tensor(DenseRLE(Element(0))), [1, 1, 9, 3, 3])
     A = [
         11 12 13 14 15;
         21 22 23 24 25;
