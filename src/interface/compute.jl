@@ -636,16 +636,16 @@ Replace immediate tensors with deferred expressions assuming the original progra
 is given as input to the program.
 """
 function defer_tables(ex, node::LogicNode)
-    if @capture ex table(~tns::isimmediate, ~idxs...)
-        table(deferred(:($ex.tns.val), node), map(enumerate(ex.idxs)) do i, idx
+    if @capture node table(~tns::isimmediate, ~idxs...)
+        table(deferred(:($ex.tns.val), typeof(tns)), map(enumerate(node.idxs)) do (i, idx)
             defer_tables(:($ex.idxs[$i]), idx)
         end)
-    elseif istree(ex)
-        similarterm(ex, operation(ex), map(enumerate(ex.children)) do i, child
+    elseif istree(node)
+        similarterm(node, operation(node), map(enumerate(node.children)) do (i, child)
             defer_tables(:($ex.children[$i]), child)
         end)
     else
-        ex
+        node
     end
 end
 
@@ -658,8 +658,8 @@ function cache_deferred!(ctx, root::LogicNode)
     seen::Dict{Any, LogicNode} = Dict{Any, LogicNode}()
     return Rewrite(Postwalk(node -> if isdeferred(node)
         get!(seen, node.val) do
-            var = freshen!(ctx, :V)
-            push!(ctx.cache, :($var = $(node.ex)::$(node.type)))
+            var = freshen(ctx, :V)
+            push!(ctx.preamble, :($var = $(node.ex)::$(node.type)))
             deferred(var, node.type)
         end
     end))(root)
@@ -676,7 +676,7 @@ function compile(prgm::LogicNode)
 end
 
 function compute_impl(prgm, ctx::FinchCompiler)
-    #return compile(prgm)
+    return (compile(prgm),)
     #f = get!(hash(get_structure(prgm))) do
     #    eval(compile(prgm))
     #end
@@ -689,8 +689,8 @@ end
 Compute the value of a lazy tensor. The result is the argument itself, or a
 tuple of arguments if multiple arguments are passed.
 """
-compute(args...; ctx=default_optimizer) = compute(arg, default_optimizer)
-compute(arg; ctx=default_optimizer) = compute_parse((arg,), ctx)[1]
+compute(args...; ctx=default_optimizer) = compute_parse(args, ctx)
+compute(arg; ctx=FinchCompiler()) = compute_parse((arg,), ctx)[1]
 compute(args::Tuple; ctx=default_optimizer) = compute_parse(args, ctx)
 function compute_parse(args::Tuple, ctx)
     args = collect(args)
