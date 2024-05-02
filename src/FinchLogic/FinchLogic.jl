@@ -4,6 +4,7 @@ module FinchLogic
 
     export logic_leaf
     export immediate
+    export deferred
     export field
     export alias
     export table

@@ -4,18 +4,19 @@ const ID = 4
 
 @enum LogicNodeKind begin
     immediate =  0ID
-    field     =  1ID
-    alias     =  2ID
-    table     =  3ID | IS_TREE
-    mapjoin   =  4ID | IS_TREE
-    aggregate =  5ID | IS_TREE
-    reorder   =  6ID | IS_TREE
-    relabel   =  7ID | IS_TREE
-    reformat  =  8ID | IS_TREE
-    subquery  =  9ID | IS_TREE
-    query     = 10ID | IS_TREE | IS_STATEFUL
-    produces  = 11ID | IS_TREE | IS_STATEFUL
-    plan      = 12ID | IS_TREE | IS_STATEFUL
+    deferred  =  1ID
+    field     =  2ID
+    alias     =  3ID
+    table     =  4ID | IS_TREE
+    mapjoin   =  5ID | IS_TREE
+    aggregate =  6ID | IS_TREE
+    reorder   =  7ID | IS_TREE
+    relabel   =  8ID | IS_TREE
+    reformat  =  9ID | IS_TREE
+    subquery  = 10ID | IS_TREE
+    query     = 11ID | IS_TREE | IS_STATEFUL
+    produces  = 12ID | IS_TREE | IS_STATEFUL
+    plan      = 13ID | IS_TREE | IS_STATEFUL
 end
 
 """
@@ -24,6 +25,13 @@ end
 Logical AST expression for the literal value `val`.
 """
 immediate
+
+"""
+    deferred(ex, [type])
+
+Logical AST expression for an expression `ex` of type `type`, yet to be evaluated.
+"""
+deferred
 
 """
     field(name)
@@ -126,6 +134,7 @@ differentiated by a `FinchLogic.LogicNodeKind` enum.
 mutable struct LogicNode
     kind::LogicNodeKind
     val::Any
+    type::Type
     children::Vector{LogicNode}
 end
 
@@ -135,6 +144,13 @@ end
 Returns true if the node is a finch immediate
 """
 isimmediate(ex::LogicNode) = ex.kind === immediate
+
+"""
+    isdeferred(node)
+
+Returns true if the node is a finch immediate
+"""
+isdeferred(ex::LogicNode) = ex.kind === deferred
 
 """
     isalias(node)
@@ -158,7 +174,7 @@ SyntaxInterface.operation(node::LogicNode) = node.kind
 
 function SyntaxInterface.similarterm(::Type{LogicNode}, op::LogicNodeKind, args)
     @assert Int(op) & IS_TREE != 0
-    LogicNode(op, nothing, args)
+    LogicNode(op, nothing, Any, args)
 end
 
 function LogicNode_concatenate_args(args)
@@ -185,8 +201,10 @@ function LogicNode_concatenate_args(args)
 end
 
 function LogicNode(kind::LogicNodeKind, args::Vector)
-    if (kind === immediate || kind === field || kind === alias) && length(args) == 1
-        return LogicNode(kind, args[1], LogicNode[])
+    if (kind === immediate || kind === field || kind === alias || kind === deferred) && length(args) == 1
+        return LogicNode(kind, args[1], Any, LogicNode[])
+    elseif kind === deferred && length(args) == 2
+        return LogicNode(kind, args[1], args[2], LogicNode[])
     else
         args = LogicNode_concatenate_args(args)
         if (kind === table && length(args) >= 1) ||
@@ -199,7 +217,7 @@ function LogicNode(kind::LogicNodeKind, args::Vector)
             (kind === query && length(args) == 2) ||
             (kind === produces) ||
             (kind === plan)
-            return LogicNode(kind, nothing, args)
+            return LogicNode(kind, nothing, Any, args)
         else
             error("wrong number of arguments to $kind(...)")
         end
@@ -243,7 +261,7 @@ end
 function Base.show(io::IO, node::LogicNode) 
     if node.kind === immediate || node.kind === field || node.kind === alias
         print(io, node.kind, "(", node.val, ")")
-    elseif node.kind === value
+    elseif node.kind === deferred
         print(io, node.kind, "(", node.val, ", ", node.type, ")")
     else
         print(io, node.kind, "("); join(io, node.children, ", "); print(io, ")")
@@ -295,6 +313,10 @@ end
 function display_expression(io, mime, node)
     if operation(node) === immediate
         print(io, node.val)
+    elseif operation(node) === deferred
+        print(io, node.ex)
+        print(io, "::")
+        print(io, node.type)
     elseif operation(node) === field
         print(io, node.name)
     elseif operation(node) === alias
@@ -325,6 +347,8 @@ function Base.:(==)(a::LogicNode, b::LogicNode)
         return b.kind === value && a.val == b.val && a.type === b.type
     elseif a.kind === immediate
         return b.kind === immediate && a.val === b.val
+    elseif a.kind === deferred
+        return b.kind === deferred && a.val === b.val && a.type === b.type
     elseif a.kind === field
         return b.kind === field && a.name == b.name
     elseif a.kind === alias
@@ -341,6 +365,8 @@ function Base.hash(a::LogicNode, h::UInt)
         return hash(a.kind, hash(a.val, h))
     elseif istree(a)
         return hash(a.kind, hash(a.children, h))
+    elseif a.kind === deferred
+        return hash(a.kind, hash(a.val, hash(a.type, h)))
     else
         error("unimplemented")
     end

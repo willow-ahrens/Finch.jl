@@ -700,26 +700,184 @@ function get_structure(
 end
 
 """
+    FinchCompiler
+
+The finch compiler is a simple compiler for finch logic programs. The interpreter is
+only capable of executing programs of the form:
+      REORDER := reorder(relabel(ALIAS, FIELD...), FIELD...)
+       ACCESS := reorder(relabel(ALIAS, idxs_1::FIELD...), idxs_2::FIELD...) where issubsequence(idxs_1, idxs_2)
+    POINTWISE := ACCESS | mapjoin(IMMEDIATE, POINTWISE...) | reorder(IMMEDIATE, FIELD...) | IMMEDIATE
+    MAPREDUCE := POINTWISE | aggregate(IMMEDIATE, IMMEDIATE, POINTWISE, FIELD...)
+       TABLE  := table(IMMEDIATE | DEFERRED, FIELD...)
+COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, arg::(REORDER | MAPREDUCE)))
+  INPUT_QUERY := query(ALIAS, TABLE)
+         STEP := COMPUTE_QUERY | INPUT_QUERY
+         ROOT := PLAN(STEP..., produces(ALIAS...))
+"""
+struct FinchCompiler
+    scope::Dict
+end
+
+FinchCompiler() = FinchCompiler(Dict())
+
+function finch_pointwise_logic_to_code(ex)
+    if @capture ex mapjoin(~op, ~args...)
+        :($(op.val)($(map(arg -> finch_pointwise_logic_to_code(arg), args)...)))
+    elseif (@capture ex reorder(relabel(~arg::isalias, ~idxs_1...), ~idxs_2...))
+        :($(arg.name)[$(map(idx -> idx.name, idxs_1)...)])
+    elseif (@capture ex reorder(~arg::isimmediate, ~idxs...))
+        arg.val
+    elseif ex.kind === immediate
+        ex.val
+    else
+        error("Unrecognized logic: $(ex)")
+    end
+end
+
+function compile_logic_constant(expr)
+    if ex.kind === immediate
+        tns.val
+    elseif ex.kind === deferred
+        :($(tns.val)::$(tns.type))
+    end
+end
+
+function (ctx::FinchCompiler)(ex)
+    if @capture ex query(~lhs::isalias, table(~tns, ~idxs...))
+        :($(lhs.name) = $(compile_logic_constant(tns)))
+    elseif @capture ex query(~lhs::isalias, reformat(~tns, reorder(relabel(~arg::isalias, ~idxs_1...), ~idxs_2...)))
+        loop_idxs = map(idx -> idx.name, withsubsequence(intersect(idxs_1, idxs_2), idxs_2))
+        lhs_idxs = map(idx -> idx.name, idxs_2)
+        rhs = finch_pointwise_logic_to_code(reorder(relabel(arg, idxs_1...), idxs_2...))
+        body = :($(lhs.name)[$(lhs_idxs...)] = $rhs)
+        for idx in loop_idxs
+            body = :(for $idx = _
+                body
+            end)
+        end
+        quote
+            $(lhs.name) = $(compile_logic_constant(tns.val))
+            @finch begin
+                $(lhs.name) .= $(default(tns.val))
+                $body
+                return $(lhs.name)
+            end
+        end
+    elseif @capture ex query(~lhs::isalias, reformat(~tns, mapjoin(~args...)))
+        z = default(tns.val)
+        ctx(query(lhs, reformat(tns, aggregate(initwrite(z), immediate(z), mapjoin(args...)))))
+    elseif @capture ex reformat(~tns, aggregate(~op, ~init, ~arg, ~idxs_1...))
+        idxs_2 = map(idx -> idx.name, getfields(arg))
+        idxs_3 = map(idx -> idx.name, setdiff(getfields(arg), idxs_1))
+        lhs = access_instance(res, literal_instance(updater), idxs_3...)
+        rhs = finch_pointwise_logic_to_program(ctx.scope, arg)
+        body = :($(lhs.name)[$(lhs_idxs...)] <<$(compile_logic_constant(op))>>= $rhs)
+        for idx in idxs_2
+            body = :(for $idx = _
+                body
+            end)
+        end
+        quote
+            $(lhs.name) = $(compile_logic_constant(tns.val))
+            @finch begin
+                $(lhs.name) .= $(default(tns.val))
+                $body
+                return $(lhs.name)
+            end
+        end
+    elseif @capture ex produces(~args...)
+        return :(return (map(arg -> arg.name, args)...))
+    elseif @capture ex plan(args...)
+        Expr(:block, map(ctx, args)...)
+    else
+        error("Unrecognized logic: $(ex)")
+    end
+end
+
+"""
+    defer_tables(root::LogicNode)
+
+Replace immediate tensors with deferred expressions assuming the original program structure
+is given as input to the program.
+"""
+function defer_tables(ex, node::LogicNode)
+    if @capture ex table(~tns::isimmediate, ~idxs...)
+        table(deferred(:($ex.tns.val), node), map(enumerate(ex.idxs)) do i, idx
+            defer_tables(:($ex.idxs[$i]), idx)
+        end)
+    elseif istree(ex)
+        similarterm(ex, operation(ex), map(enumerate(ex.children)) do i, child
+            defer_tables(:($ex.children[$i]), child)
+        end)
+    else
+        ex
+    end
+end
+
+"""
+    cache_deferred(ctx, root::LogicNode, seen)
+
+Replace deferred expressions with simpler expressions, and cache their evaluation in the preamble.
+"""
+function cache_deferred!(ctx, root::LogicNode)
+    seen::Dict{Any, LogicNode} = Dict{Any, LogicNode}()
+    return Rewrite(Postwalk(node -> if isdeferred(node)
+        get!(seen, node.val) do
+            var = freshen!(ctx, :V)
+            push!(ctx.cache, :($var = $(node.ex)::$(node.type)))
+            deferred(var, node.type)
+        end
+    end))(root)
+end
+
+struct FinchCompiler end
+
+function compile(prgm::LogicNode)
+    code = contain(JuliaContext()) do ctx
+        prgm = defer_tables(freshen(ctx, :prgm), prgm)
+        prgm = cache_deferred!(ctx, prgm)
+        prgm = optimize(prgm)
+        FinchCompiler()(prgm)
+    end
+end
+
+function compute_impl(prgm, ctx::FinchCompiler)
+    return compile(prgm)
+    f = get!(hash(get_structure(prgm)))
+        eval(compile(prgm))
+    end
+    f(prgm)
+end
+
+"""
     compute(args..., ctx=default_optimizer) -> Any
 
 Compute the value of a lazy tensor. The result is the argument itself, or a
 tuple of arguments if multiple arguments are passed.
 """
 compute(args...; ctx=default_optimizer) = compute(arg, default_optimizer)
-compute(arg; ctx=default_optimizer) = compute_impl((arg,), ctx)[1]
-compute(args::Tuple; ctx=default_optimizer) = compute_impl(args, ctx)
-function compute_impl(args::Tuple, ctx::DefaultOptimizer)
+compute(arg; ctx=default_optimizer) = compute_parse((arg,), ctx)[1]
+compute(args::Tuple; ctx=default_optimizer) = compute_parse(args, ctx)
+function compute_parse(args::Tuple, ctx::DefaultOptimizer)
     args = collect(args)
     vars = map(arg -> alias(gensym(:A)), args)
     bodies = map((arg, var) -> query(var, arg.data), args, vars)
     prgm = plan(bodies, produces(vars))
 
-    #return structure_hash(prgm)
+    return compute_impl(prgm, ctx)
+end
+
+function compute_impl(prgm, ctx::DefaultOptimizer)
+
+    prgm = optimize(prgm)
+
+    FinchInterpreter(Dict())(prgm)
+end
+
+function optimize(prgm)
     #deduplicate and lift inline subqueries to regular queries
-    #prgm = lift_subqueries(prgm)
-    #return hash_structure(prgm, UInt(0))
-    
-    return hash(get_structure(prgm))
+    prgm = lift_subqueries(prgm)
+
     #At this point in the program, all statements should be unique, so
     #it is okay to name different occurences of things.
 
@@ -775,6 +933,4 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
 
     #Normalize names for caching
     prgm = normalize_names(prgm)
-
-    FinchInterpreter(Dict())(prgm)
 end
