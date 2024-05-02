@@ -323,7 +323,7 @@ function display_expression(io, mime, node)
         print(io, node.name)
     elseif operation(node) == subquery
         print(io, "(")
-        display_expression(io, mime, node.body)
+        display_expression(io, mime, node.lhs)
         print(io, " = ")
         display_expression(io, mime, node.arg)
         print(io, ")")

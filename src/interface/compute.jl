@@ -54,7 +54,7 @@ function lift_subqueries(node::LogicNode)
     elseif node.kind === query
         bindings = OrderedDict()
         rhs_2 = lift_subqueries_expr(node.rhs, bindings)
-        plan(map(((lhs, rhs),) -> query(lhs, rhs), collect(bindings)), query(node.lhs, rhs_2))
+        plan(map(((lhs, rhs),) -> query(lhs, rhs), collect(bindings)), query(node.lhs, rhs_2), produces(node.lhs))
     elseif node.kind === produces
         node
     end
@@ -167,6 +167,7 @@ function propagate_transpose_queries(node::LogicNode, bindings = Dict{LogicNode,
             end
         end
     else
+        display(node)
         throw(ArgumentError("Unrecognized program in propagate_transpose_queries"))
     end
 end
@@ -497,169 +498,6 @@ function propagate_map_queries(root)
     ])))(root)
 end
 
-#=
-function hash_structure(node::LogicNode, s, cache=IDDict(), names=Dict())
-    get!(cache, node) do
-        if istree(node)
-            s = hash(node.kind, s)
-            for arg in arguments(node)
-                s = hash_structure(arg, s)
-            end
-            s
-        elseif node.kind === table
-            s = hash(table, s)
-            s = hash(typeof(node.tbl.val), s)
-            for idx in node.idxs
-                s = hash_structure(idx, s)
-            end
-            s
-        elseif node.kind === alias || node.kind === index
-            node
-        end
-    end
-end
-sha256(reinterpret(UInt8, [4]))
-bytes(x) = reinterpret(NTuple{sizeof(x), UInt8}, x)
-import SHA
-import Serialization
-bytes(x) = reinterpret(NTuple{sizeof(x), UInt8}, x)
-function update_structure_hash!(ctx, a::LogicNode, names=Dict{LogicNode,Int}())
-    #delimit each hash blob with the kind of the node
-    SHA.update!(ctx, bytes(Int(a.kind)))
-    if a.kind === field || a.kind === alias
-        SHA.update!(ctx, bytes(get!(names, a, length(names))))
-    elseif a.kind === immediate
-        buffer = IOBuffer()
-        Serialization.serialize(buffer, a.val)
-        SHA.update!(ctx, take!(buffer))
-    elseif a.kind === subquery
-        if haskey(names, a.lhs)
-            SHA.update!(ctx, a.lhs)
-        else
-            names[a.lhs] = length(names)
-            update_structure_hash!(ctx, a.lhs)
-            update_structure_hash!(ctx, a.arg)
-        end
-    elseif a.kind === table
-        update_structure_hash!(ctx, immediate(typeof(a.tns.val)))
-        for idx in a.idxs
-            update_structure_hash!(ctx, idx)
-        end
-    elseif istree(a)
-        for child in a.children
-            update_structure_hash!(ctx, child)
-        end
-    else
-        error("unimplemented")
-    end
-    #terminate each hash with an unused node kind
-    SHA.update!(ctx, bytes(typemax(Int)))
-end
-
-
-structure_hash(node::LogicNode) = begin
-    ctx = SHA.SHA1_CTX()
-    update_structure_hash!(ctx, node)
-    SHA.digest!(ctx)
-end
-
-import SHA
-import Serialization
-bytes(x) = reinterpret(NTuple{sizeof(x), UInt8}, x)
-
-function isequal_structure(a::LogicStructure, b::LogicNode, names::Dict{LogicNode,Int} = Dict{LogicNode,Int}())
-    if a.kind !== b.kind
-        return false
-    end
-    if a.kind === field || a.kind === alias
-        return get!(names, a, length(names)) === get!(names, b, length(names))
-    end
-    elseif a.kind === field || a.kind === alias
-        return get!(names, a, length(names)) === get!(names, b, length(names))
-    end
-    if a.kind === field || a.kind === alias
-        s = hash(get!(names, a, length(names)), s)
-    elseif a.kind === immediate
-        s = hash(a.val, s)
-    elseif a.kind === subquery
-        if haskey(names, a.lhs)
-            s = hash_structure(a.lhs, s)
-        else
-            names[a.lhs] = length(names)
-            s = hash_structure(a.lhs, s)
-            s = hash_structure(a.arg, s)
-        end
-    elseif a.kind === table
-        s = hash(immediate(typeof(a.tns.val)), s)
-        for idx in a.idxs
-            s = hash_structure(idx, s)
-        end
-    elseif istree(a)
-        for child in a.children
-            s = hash_structure(child, s)
-        end
-    else
-        error("unimplemented")
-    end
-    #terminate each hash with an unused node kind
-    return hash(typemax(Int), s)
-end
-
-struct LogicStructure
-    node::LogicNode
-    reps::Dict{LogicNode,LogicNode}
-end
-
-function LogicStructure(node::LogicNode)
-    names = Dict{LogicNode,Int}()
-    reps = IDDict{LogicNode,LogicNode}()
-    for node in PostOrderDFS(node)
-        if node.kind === alias
-            reps[node] = get!(names, node, alias(Symbol(:A_, length(names))))
-        elseif node.kind === field
-            reps[node] = get!(names, node, field(Symbol(:A_, length(names))))
-        elseif node.kind === table
-            reps[node] = get!(names, node, immediate(Symbol(:A_, length(names))))
-        end
-    end
-end
-
-
-
-Base.hash(s::LogicStructure, h::UInt) = hash_structure(s.node, h)
-
-
-function hash_structure(a::LogicNode, s::UInt, names::Dict{LogicNode,Int} = Dict{LogicNode,Int}())
-    #delimit each hash blob with the kind of the node
-    s = hash(Int(a.kind), s)
-    if a.kind === field || a.kind === alias
-        s = hash(get!(names, a, length(names)), s)
-    elseif a.kind === immediate
-        s = hash(a.val, s)
-    elseif a.kind === subquery
-        if haskey(names, a.lhs)
-            s = hash_structure(a.lhs, s)
-        else
-            names[a.lhs] = length(names)
-            s = hash_structure(a.lhs, s)
-            s = hash_structure(a.arg, s)
-        end
-    elseif a.kind === table
-        s = hash(immediate(typeof(a.tns.val)), s)
-        for idx in a.idxs
-            s = hash_structure(idx, s)
-        end
-    elseif istree(a)
-        for child in a.children
-            s = hash_structure(child, s)
-        end
-    else
-        error("unimplemented")
-    end
-    #terminate each hash with an unused node kind
-    return hash(typemax(Int), s)
-end
-=#
 
 function simple_map(::Type{T}, f::F, args) where {T, F}
     res = Vector{T}(undef, length(args))
@@ -831,17 +669,18 @@ function compile(prgm::LogicNode)
     code = contain(JuliaContext()) do ctx
         prgm = defer_tables(freshen(ctx, :prgm), prgm)
         prgm = cache_deferred!(ctx, prgm)
+        display(prgm)
         prgm = optimize(prgm)
         FinchCompiler()(prgm)
     end
 end
 
 function compute_impl(prgm, ctx::FinchCompiler)
-    return compile(prgm)
-    f = get!(hash(get_structure(prgm))) do
-        eval(compile(prgm))
-    end
-    f(prgm)
+    #return compile(prgm)
+    #f = get!(hash(get_structure(prgm))) do
+    #    eval(compile(prgm))
+    #end
+    #f(prgm)
 end
 
 """
@@ -853,7 +692,7 @@ tuple of arguments if multiple arguments are passed.
 compute(args...; ctx=default_optimizer) = compute(arg, default_optimizer)
 compute(arg; ctx=default_optimizer) = compute_parse((arg,), ctx)[1]
 compute(args::Tuple; ctx=default_optimizer) = compute_parse(args, ctx)
-function compute_parse(args::Tuple, ctx::DefaultOptimizer)
+function compute_parse(args::Tuple, ctx)
     args = collect(args)
     vars = map(arg -> alias(gensym(:A)), args)
     bodies = map((arg, var) -> query(var, arg.data), args, vars)
@@ -863,9 +702,7 @@ function compute_parse(args::Tuple, ctx::DefaultOptimizer)
 end
 
 function compute_impl(prgm, ctx::DefaultOptimizer)
-
     prgm = optimize(prgm)
-
     FinchInterpreter(Dict())(prgm)
 end
 

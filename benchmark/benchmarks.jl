@@ -38,7 +38,8 @@ let
     x = rand(1)
     y = lazy(rand(1))
     res = @einsum y[i] += A[i, j] * x[j]
-    compute(res, Finch.FinchCompiler)
+    display(res)
+    compute(res, ctx = Finch.FinchCompiler())
 end
 
 let

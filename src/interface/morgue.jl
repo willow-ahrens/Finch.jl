@@ -225,3 +225,168 @@ function propagate_loop_order_helper(node)
     reorder(node, total_idxs...)
 end
 =#
+
+
+#=
+function hash_structure(node::LogicNode, s, cache=IDDict(), names=Dict())
+    get!(cache, node) do
+        if istree(node)
+            s = hash(node.kind, s)
+            for arg in arguments(node)
+                s = hash_structure(arg, s)
+            end
+            s
+        elseif node.kind === table
+            s = hash(table, s)
+            s = hash(typeof(node.tbl.val), s)
+            for idx in node.idxs
+                s = hash_structure(idx, s)
+            end
+            s
+        elseif node.kind === alias || node.kind === index
+            node
+        end
+    end
+end
+sha256(reinterpret(UInt8, [4]))
+bytes(x) = reinterpret(NTuple{sizeof(x), UInt8}, x)
+import SHA
+import Serialization
+bytes(x) = reinterpret(NTuple{sizeof(x), UInt8}, x)
+function update_structure_hash!(ctx, a::LogicNode, names=Dict{LogicNode,Int}())
+    #delimit each hash blob with the kind of the node
+    SHA.update!(ctx, bytes(Int(a.kind)))
+    if a.kind === field || a.kind === alias
+        SHA.update!(ctx, bytes(get!(names, a, length(names))))
+    elseif a.kind === immediate
+        buffer = IOBuffer()
+        Serialization.serialize(buffer, a.val)
+        SHA.update!(ctx, take!(buffer))
+    elseif a.kind === subquery
+        if haskey(names, a.lhs)
+            SHA.update!(ctx, a.lhs)
+        else
+            names[a.lhs] = length(names)
+            update_structure_hash!(ctx, a.lhs)
+            update_structure_hash!(ctx, a.arg)
+        end
+    elseif a.kind === table
+        update_structure_hash!(ctx, immediate(typeof(a.tns.val)))
+        for idx in a.idxs
+            update_structure_hash!(ctx, idx)
+        end
+    elseif istree(a)
+        for child in a.children
+            update_structure_hash!(ctx, child)
+        end
+    else
+        error("unimplemented")
+    end
+    #terminate each hash with an unused node kind
+    SHA.update!(ctx, bytes(typemax(Int)))
+end
+
+
+structure_hash(node::LogicNode) = begin
+    ctx = SHA.SHA1_CTX()
+    update_structure_hash!(ctx, node)
+    SHA.digest!(ctx)
+end
+
+import SHA
+import Serialization
+bytes(x) = reinterpret(NTuple{sizeof(x), UInt8}, x)
+
+function isequal_structure(a::LogicStructure, b::LogicNode, names::Dict{LogicNode,Int} = Dict{LogicNode,Int}())
+    if a.kind !== b.kind
+        return false
+    end
+    if a.kind === field || a.kind === alias
+        return get!(names, a, length(names)) === get!(names, b, length(names))
+    end
+    elseif a.kind === field || a.kind === alias
+        return get!(names, a, length(names)) === get!(names, b, length(names))
+    end
+    if a.kind === field || a.kind === alias
+        s = hash(get!(names, a, length(names)), s)
+    elseif a.kind === immediate
+        s = hash(a.val, s)
+    elseif a.kind === subquery
+        if haskey(names, a.lhs)
+            s = hash_structure(a.lhs, s)
+        else
+            names[a.lhs] = length(names)
+            s = hash_structure(a.lhs, s)
+            s = hash_structure(a.arg, s)
+        end
+    elseif a.kind === table
+        s = hash(immediate(typeof(a.tns.val)), s)
+        for idx in a.idxs
+            s = hash_structure(idx, s)
+        end
+    elseif istree(a)
+        for child in a.children
+            s = hash_structure(child, s)
+        end
+    else
+        error("unimplemented")
+    end
+    #terminate each hash with an unused node kind
+    return hash(typemax(Int), s)
+end
+
+struct LogicStructure
+    node::LogicNode
+    reps::Dict{LogicNode,LogicNode}
+end
+
+function LogicStructure(node::LogicNode)
+    names = Dict{LogicNode,Int}()
+    reps = IDDict{LogicNode,LogicNode}()
+    for node in PostOrderDFS(node)
+        if node.kind === alias
+            reps[node] = get!(names, node, alias(Symbol(:A_, length(names))))
+        elseif node.kind === field
+            reps[node] = get!(names, node, field(Symbol(:A_, length(names))))
+        elseif node.kind === table
+            reps[node] = get!(names, node, immediate(Symbol(:A_, length(names))))
+        end
+    end
+end
+
+
+
+Base.hash(s::LogicStructure, h::UInt) = hash_structure(s.node, h)
+
+
+function hash_structure(a::LogicNode, s::UInt, names::Dict{LogicNode,Int} = Dict{LogicNode,Int}())
+    #delimit each hash blob with the kind of the node
+    s = hash(Int(a.kind), s)
+    if a.kind === field || a.kind === alias
+        s = hash(get!(names, a, length(names)), s)
+    elseif a.kind === immediate
+        s = hash(a.val, s)
+    elseif a.kind === subquery
+        if haskey(names, a.lhs)
+            s = hash_structure(a.lhs, s)
+        else
+            names[a.lhs] = length(names)
+            s = hash_structure(a.lhs, s)
+            s = hash_structure(a.arg, s)
+        end
+    elseif a.kind === table
+        s = hash(immediate(typeof(a.tns.val)), s)
+        for idx in a.idxs
+            s = hash_structure(idx, s)
+        end
+    elseif istree(a)
+        for child in a.children
+            s = hash_structure(child, s)
+        end
+    else
+        error("unimplemented")
+    end
+    #terminate each hash with an unused node kind
+    return hash(typemax(Int), s)
+end
+=#
