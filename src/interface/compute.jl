@@ -6,32 +6,59 @@ flatten_plans = Rewrite(Postwalk(Fixpoint(Chain([
 isolate_aggregates = Rewrite(Postwalk(
     @rule aggregate(~op, ~init, ~arg, ~idxs...) => begin
         name = alias(gensym(:A))
-        subquery(query(name, aggregate(~op, ~init, ~arg, ~idxs...)), name)
+        subquery(name, aggregate(~op, ~init, ~arg, ~idxs...))
     end
 ))
 
 isolate_reformats = Rewrite(Postwalk(
     @rule reformat(~tns, ~arg) => begin
         name = alias(gensym(:A))
-        subquery(query(name, reformat(tns, arg)), name)
+        subquery(name, reformat(tns, arg))
     end
 ))
 
 isolate_tables = Rewrite(Postwalk(
     @rule table(~tns, ~idxs...) => begin
         name = alias(gensym(:A))
-        subquery(query(name, table(tns, idxs...)), name)
+        subquery(name, table(tns, idxs...))
     end
 ))
 
-lift_subqueries = Rewrite(Fixpoint(Postwalk(Chain([
-    (@rule (~op)(~a1..., subquery(~p, ~b), ~a2...) => if op !== subquery && op !== query
-        subquery(p, op(a1, b, a2))
-    end),
-    Fixpoint(@rule query(~a, subquery(~p, ~b)) => plan(p, query(a, b), produces(a))),
-    Fixpoint(@rule plan(~a1..., plan(~b..., produces(~c...)), ~a2...) => plan(a1, b, a2)),
-    (@rule plan(~args...) => plan(unique(args))),
-]))))
+
+function lift_subqueries_expr(node::LogicNode, bindings)
+    if node.kind === subquery
+        if !haskey(bindings, node.lhs)
+            arg_2 = lift_subqueries_expr(node.arg, bindings)
+            bindings[node.lhs] = arg_2
+        end
+        node.lhs
+    elseif istree(node)
+        similarterm(node, operation(node), map(n -> lift_subqueries_expr(n, bindings), arguments(node)))
+    else
+        node
+    end
+end
+
+"""
+    lift_subqueries
+
+Creates a plan that lifts all subqueries to the top level of the program, with
+unique queries for each distinct subquery alias. This function processes the rhs
+of each subquery once, to carefully extract SSA form from any nested pointer
+structure. After calling lift_subqueries, it is safe to map over the program
+(recursive pointers to subquery structures will not incur exponential overhead).
+"""
+function lift_subqueries(node::LogicNode)
+    if node.kind === plan
+        plan(map(lift_subqueries, node.bodies))
+    elseif node.kind === query
+        bindings = OrderedDict()
+        rhs_2 = lift_subqueries_expr(node.rhs, bindings)
+        plan(map(((lhs, rhs),) -> query(lhs, rhs), collect(bindings)), query(node.lhs, rhs_2), produces(node.lhs))
+    elseif node.kind === produces
+        node
+    end
+end
 
 function pretty_labels(root)
     fields = Dict()
@@ -487,6 +514,7 @@ function compute_impl(args::Tuple, ctx::DefaultOptimizer)
 
     #deduplicate and lift inline subqueries to regular queries
     prgm = lift_subqueries(prgm)
+    display(prgm)
     #At this point in the program, all statements should be unique, so
     #it is okay to name different occurences of things.
 

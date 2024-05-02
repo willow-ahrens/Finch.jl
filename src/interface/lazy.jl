@@ -36,7 +36,7 @@ end
 
 function identify(data)
     lhs = alias(gensym(:A))
-    subquery(query(lhs, data), lhs)
+    subquery(lhs, data)
 end
 
 LazyTensor(data::Number) = LazyTensor{typeof(data), 0}(immediate(data), (), data)
@@ -46,7 +46,7 @@ function LazyTensor{T}(arr::Base.AbstractArrayOrBroadcasted) where {T}
     name = alias(gensym(:A))
     idxs = [field(gensym(:i)) for _ in 1:ndims(arr)]
     extrude = ntuple(n -> size(arr, n) == 1, ndims(arr))
-    tns = subquery(query(name, table(immediate(arr), idxs...)), name)
+    tns = subquery(name, table(immediate(arr), idxs...))
     LazyTensor{eltype(arr), ndims(arr)}(tns, extrude, default(arr))
 end
 LazyTensor(arr::Tensor) = LazyTensor{eltype(arr)}(arr)
@@ -55,7 +55,7 @@ function LazyTensor{T}(arr::Tensor) where {T}
     name = alias(gensym(:A))
     idxs = [field(gensym(:i)) for _ in 1:ndims(arr)]
     extrude = ntuple(n -> size(arr)[n] == 1, ndims(arr))
-    tns = subquery(query(name, table(immediate(arr), idxs...)), name)
+    tns = subquery(name, table(immediate(arr), idxs...))
     LazyTensor{eltype(arr), ndims(arr)}(tns, extrude, default(arr))
 end
 LazyTensor(data::LazyTensor) = data
