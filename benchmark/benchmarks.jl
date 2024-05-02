@@ -36,6 +36,14 @@ end
 let
     A = Tensor(Dense(SparseList(Element(0.0))), fsprand(1, 1, 1))
     x = rand(1)
+    y = lazy(rand(1))
+    res = @einsum y[i] += A[i, j] * x[j]
+    compute(res, Finch.FinchCompiler)
+end
+
+let
+    A = Tensor(Dense(SparseList(Element(0.0))), fsprand(1, 1, 1))
+    x = rand(1)
     y = rand(1)
     SUITE["high-level"]["run_spmv"] = @benchmarkable(
         begin

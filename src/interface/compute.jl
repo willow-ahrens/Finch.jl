@@ -45,7 +45,8 @@ end
 Creates a plan that lifts all subqueries to the top level of the program, with
 unique queries for each distinct subquery alias. This function processes the rhs
 of each subquery once, to carefully extract SSA form from any nested pointer
-structure. After calling lift_subqueries, it is safe to map over the program.
+structure. After calling lift_subqueries, it is safe to map over the program
+(recursive pointers to subquery structures will not incur exponential overhead).
 """
 function lift_subqueries(node::LogicNode)
     if node.kind === plan
@@ -714,11 +715,7 @@ COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, arg::(REORDER | MAPREDUCE)))
          STEP := COMPUTE_QUERY | INPUT_QUERY
          ROOT := PLAN(STEP..., produces(ALIAS...))
 """
-struct FinchCompiler
-    scope::Dict
-end
-
-FinchCompiler() = FinchCompiler(Dict())
+struct FinchCompiler end
 
 function finch_pointwise_logic_to_code(ex)
     if @capture ex mapjoin(~op, ~args...)
@@ -830,8 +827,6 @@ function cache_deferred!(ctx, root::LogicNode)
     end))(root)
 end
 
-struct FinchCompiler end
-
 function compile(prgm::LogicNode)
     code = contain(JuliaContext()) do ctx
         prgm = defer_tables(freshen(ctx, :prgm), prgm)
@@ -843,7 +838,7 @@ end
 
 function compute_impl(prgm, ctx::FinchCompiler)
     return compile(prgm)
-    f = get!(hash(get_structure(prgm)))
+    f = get!(hash(get_structure(prgm))) do
         eval(compile(prgm))
     end
     f(prgm)
