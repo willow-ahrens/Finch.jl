@@ -698,7 +698,7 @@ function compute_impl(prgm, ::FinchCompiler)
     f = get!(codes, get_structure(prgm)) do
         eval(compile(prgm))
     end
-    return invokelatest(f, prgm)
+    return Base.invokelatest(f, prgm)
 end
 
 struct DefaultOptimizer
