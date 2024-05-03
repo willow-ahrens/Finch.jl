@@ -462,12 +462,6 @@ function normalize_names(ex)
     Rewrite(Postwalk(@rule ~a::isalias => alias(normname(a.name))))(ex)
 end
 
-struct DefaultOptimizer
-    ctx
-end
-
-default_optimizer = DefaultOptimizer(FinchInterpreter())
-
 """
     lazy(arg)
 
@@ -720,7 +714,7 @@ Compute the value of a lazy tensor. The result is the argument itself, or a
 tuple of arguments if multiple arguments are passed.
 """
 compute(args...; ctx=default_optimizer) = compute_parse(args, ctx)
-compute(arg; ctx=FinchCompiler()) = compute_parse((arg,), ctx)[1]
+compute(arg; ctx=default_optimizer) = compute_parse((arg,), ctx)[1]
 compute(args::Tuple; ctx=default_optimizer) = compute_parse(args, ctx)
 function compute_parse(args::Tuple, ctx)
     args = collect(args)
@@ -730,6 +724,12 @@ function compute_parse(args::Tuple, ctx)
 
     return compute_impl(prgm, ctx)
 end
+
+struct DefaultOptimizer
+    ctx
+end
+
+default_optimizer = DefaultOptimizer(FinchCompiler())
 
 """
 compute(args..., ctx = ctx) = 
