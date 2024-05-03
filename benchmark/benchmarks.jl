@@ -9,6 +9,7 @@ using Finch
 using BenchmarkTools
 using MatrixDepot
 using SparseArrays
+using ProfileView
 
 include(joinpath(@__DIR__, "../docs/examples/bfs.jl"))
 include(joinpath(@__DIR__, "../docs/examples/pagerank.jl"))
@@ -24,7 +25,7 @@ let
     k = Ref(0.0)
     x = rand(1)
     y = rand(1)
-    SUITE["high-level"]["compile_spmv"] = @benchmarkable(
+    SUITE["high-level"]["einsum_spmv_compile_overhead"] = @benchmarkable(
         begin
             A, x, y = (A, $x, $y)
             @einsum y[i] += A[i, j] * x[j]
@@ -36,12 +37,13 @@ end
 let
     A = Tensor(Dense(SparseList(Element(0.0))), fsprand(1, 1, 1))
     x = rand(1)
-    y = rand(1)
-    SUITE["high-level"]["run_spmv"] = @benchmarkable(
+    #@einsum y[i] += A[i, j] * x[j]
+    SUITE["high-level"]["einsum_spmv_call_overhead"] = @benchmarkable(
         begin
-            A, x, y = ($A, $x, $y)
+            A, x = ($A, $x)
             @einsum y[i] += A[i, j] * x[j]
         end,
+        seconds = 10.0 #Bug in benchmarktools, will be fixed soon.
     )
 end
 
@@ -57,24 +59,10 @@ eval(let
 end)
 
 let
-    (m, n, nnz) = (1000, 1000, 20_000)
-    A = Tensor(Dense(SparseList(Element(0.0))), fsprand(m, n, nnz))
-    x = rand(n)
-    y = rand(m)
-    SUITE["high-level"]["run_baremetal_filled"] = @benchmarkable(
-        begin
-            A, x, y = ($A, $x, $y)
-            spmv(y, A, x)
-        end,
-        evals = 1000
-    )
-end
-
-let
     A = Tensor(Dense(SparseList(Element(0.0))), fsprand(1, 1, 1))
     x = rand(1)
     y = rand(1)
-    SUITE["high-level"]["run_baremetal"] = @benchmarkable(
+    SUITE["high-level"]["einsum_spmv_baremetal"] = @benchmarkable(
         begin
             A, x, y = ($A, $x, $y)
             spmv(y, A, x)

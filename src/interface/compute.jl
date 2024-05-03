@@ -688,11 +688,9 @@ function compile(prgm::LogicNode)
     end
     code = pretty(code)
     fname = gensym(:compute)
-    return quote
-        function $fname(prgm)
+    return :(function $fname(prgm)
             $code
-        end
-    end |> unblock |> striplines
+        end) |> striplines
 end
 
 codes = Dict()
@@ -700,9 +698,7 @@ function compute_impl(prgm, ::FinchCompiler)
     f = get!(codes, get_structure(prgm)) do
         eval(compile(prgm))
     end
-    #display(code)
     return invokelatest(f, prgm)
-    #f(prgm)
 end
 
 struct DefaultOptimizer
