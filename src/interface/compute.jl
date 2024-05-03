@@ -1,5 +1,4 @@
 flatten_plans = Rewrite(Postwalk(Fixpoint(Chain([
-    (@rule plan(~a1..., plan(~b..., produces(~c...)), ~a2...) => plan(a1..., b..., a2...)),
     (@rule plan(~a1..., plan(~b...), ~a2...) => plan(a1..., b..., a2...)),
 ]))))
 
@@ -54,9 +53,11 @@ function lift_subqueries(node::LogicNode)
     elseif node.kind === query
         bindings = OrderedDict()
         rhs_2 = lift_subqueries_expr(node.rhs, bindings)
-        plan(map(((lhs, rhs),) -> query(lhs, rhs), collect(bindings)), query(node.lhs, rhs_2), produces(node.lhs))
+        plan(map(((lhs, rhs),) -> query(lhs, rhs), collect(bindings)), query(node.lhs, rhs_2))
     elseif node.kind === produces
         node
+    else
+        error()
     end
 end
 
@@ -136,18 +137,21 @@ Accepts programs of the form:
     MAPREDUCE := POINTWISE | aggregate(IMMEDIATE, IMMEDIATE, POINTWISE, FIELD...)
   INPUT_QUERY := query(ALIAS, TABLE)
 COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, MAPREDUCE)) | query(ALIAS, MAPREDUCE))
-         PLAN := plan(STEP..., produces(ALIAS...))
-         STEP := COMPUTE_QUERY | INPUT_QUERY | PLAN
+         PLAN := plan(STEP...)
+         STEP := COMPUTE_QUERY | INPUT_QUERY | PLAN | produces(ALIAS...)
          ROOT := STEP
 ```
 """
-function propagate_transpose_queries(node::LogicNode, bindings = Dict{LogicNode, LogicNode}(), productions = Set())
-    if @capture node plan(~stmts..., produces(~args...))
-        union!(productions, args)
+function propagate_transpose_queries(root::LogicNode)
+    return propagate_transpose_queries_impl(root, getproductions(root), Dict{LogicNode, LogicNode}())
+end
+
+function propagate_transpose_queries_impl(node, productions, bindings)
+    if @capture node plan(~stmts...)
         stmts = map(stmts) do stmt
-            propagate_transpose_queries(stmt, bindings, productions)
+            propagate_transpose_queries_impl(stmt, productions, bindings)
         end
-        plan(stmts..., produces(args...))
+        plan(stmts...)
     elseif @capture node query(~lhs, ~rhs)
         rhs = push_fields(Rewrite(Postwalk((node) -> get(bindings, node, node)))(rhs))
         if lhs in productions
@@ -155,17 +159,19 @@ function propagate_transpose_queries(node::LogicNode, bindings = Dict{LogicNode,
         else
             if @capture rhs reorder(relabel(~rhs::isalias, ~idxs_1...), ~idxs_2...)
                 bindings[lhs] = rhs
-                plan(produces())
+                plan()
             elseif @capture rhs relabel(~rhs::isalias, ~idxs_1...)
                 bindings[lhs] = rhs
-                plan(produces())
+                plan()
             elseif isalias(rhs)
                 bindings[lhs] = rhs
-                plan(produces())
+                plan()
             else
                 query(lhs, rhs)
             end
         end
+    elseif @capture node produces(~args...)
+        node
     else
         display(node)
         throw(ArgumentError("Unrecognized program in propagate_transpose_queries"))
@@ -181,7 +187,7 @@ function propagate_copy_queries(root)
     end
     Rewrite(Postwalk(Chain([
         (a -> get(copies, a, nothing)),
-        (@rule query(~a, ~a) => plan(produces())),
+        (@rule query(~a, ~a) => plan()),
     ])))(root)
 end
 
@@ -248,8 +254,8 @@ Accepts a program of the following form:
                  IMMEDIATE
 COMPUTE_QUERY := query(ALIAS, COMPUTE)
   INPUT_QUERY := query(ALIAS, TABLE)
-         STEP := COMPUTE_QUERY | INPUT_QUERY
-         ROOT := PLAN(STEP..., produces(ALIAS...))
+         STEP := COMPUTE_QUERY | INPUT_QUERY | produces(ALIAS...)
+         ROOT := PLAN(STEP...)
 ```   
 
 Inserts permutation statements of the form `query(ALIAS, reorder(ALIAS,
@@ -295,11 +301,11 @@ drop_noisy_reorders = Rewrite(Postwalk(
 ))
 
 function format_queries(node::LogicNode, defer = false, bindings=Dict())
-    if @capture node plan(~stmts..., produces(~args...))
+    if @capture node plan(~stmts...)
         stmts = map(stmts) do stmt
             format_queries(stmt, defer, bindings)
         end
-        plan(stmts..., produces(args...))
+        plan(stmts...)
     elseif (@capture node query(~lhs, ~rhs)) && rhs.kind !== reformat && rhs.kind !== table
         rep = SuitableRep(bindings)(rhs)
         bindings[lhs] = rep
@@ -367,8 +373,8 @@ only capable of executing programs of the form:
        TABLE  := table(IMMEDIATE, FIELD...)
 COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, arg::(REORDER | MAPREDUCE)))
   INPUT_QUERY := query(ALIAS, TABLE)
-         STEP := COMPUTE_QUERY | INPUT_QUERY
-         ROOT := PLAN(STEP..., produces(ALIAS...))
+         STEP := COMPUTE_QUERY | INPUT_QUERY | produces(ALIAS...)
+         ROOT := PLAN(STEP...)
 """
 struct FinchInterpreter
     scope::Dict
@@ -483,12 +489,7 @@ lazy(arg) = LazyTensor(arg)
 
 function propagate_map_queries(root)
     root = Rewrite(Postwalk(@rule aggregate(~op, ~init, ~arg) => mapjoin(op, init, arg)))(root)
-    rets = []
-    for node in PostOrderDFS(root)
-        if @capture node produces(~args...)
-            append!(rets, args)
-        end
-    end
+    rets = getproductions(root)
     props = Dict()
     for node in PostOrderDFS(root)
         if @capture node query(~a, mapjoin(~op, ~args...))
@@ -499,8 +500,8 @@ function propagate_map_queries(root)
     end
     Rewrite(Prewalk(Chain([
         (a -> if haskey(props, a) props[a] end),
-        (@rule query(~a, ~b) => if haskey(props, a) plan(produces()) end),
-        (@rule plan(~a1..., plan(produces()), ~a2...) => plan(a1..., a2...)),
+        (@rule query(~a, ~b) => if haskey(props, a) plan() end),
+        (@rule plan(~a1..., plan(), ~a2...) => plan(a1..., a2...)),
     ])))(root)
 end
 
