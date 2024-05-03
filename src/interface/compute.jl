@@ -173,7 +173,6 @@ function propagate_transpose_queries_impl(node, productions, bindings)
     elseif @capture node produces(~args...)
         node
     else
-        display(node)
         throw(ArgumentError("Unrecognized program in propagate_transpose_queries"))
     end
 end
@@ -696,16 +695,21 @@ function compile(prgm::LogicNode)
     end |> unblock |> striplines
 end
 
+codes = Dict()
 function compute_impl(prgm, ::FinchCompiler)
-    code = compile(prgm)
-    f = eval(code)
+    f = get!(codes, get_structure(prgm)) do
+        eval(compile(prgm))
+    end
     #display(code)
     return invokelatest(f, prgm)
-    #f = get!(hash(get_structure(prgm))) do
-    #    eval(compile(prgm))
-    #end
     #f(prgm)
 end
+
+struct DefaultOptimizer
+    ctx
+end
+
+default_optimizer = DefaultOptimizer(FinchCompiler())
 
 """
     compute(args..., ctx=default_optimizer) -> Any
@@ -725,12 +729,6 @@ function compute_parse(args::Tuple, ctx)
     return compute_impl(prgm, ctx)
 end
 
-struct DefaultOptimizer
-    ctx
-end
-
-default_optimizer = DefaultOptimizer(FinchCompiler())
-
 """
 compute(args..., ctx = ctx) = 
 
@@ -744,9 +742,13 @@ FinchExecutor(ChipCacher(FinchCompiler(DefaultNormalizer())))(prgm)
 """
 
 function compute_impl(prgm, ctx::DefaultOptimizer)
+    compute_impl(prgm, ctx.ctx)
+end
+
+function compute_impl(prgm, ctx::FinchInterpreter)
     prgm = optimize(prgm)
     prgm = format_queries(prgm)
-    FinchInterpreter(Dict())(prgm)
+    ctx(prgm)
 end
 
 function optimize(prgm)
