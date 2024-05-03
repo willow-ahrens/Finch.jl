@@ -557,8 +557,8 @@ only capable of executing programs of the form:
        TABLE  := table(IMMEDIATE | DEFERRED, FIELD...)
 COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, arg::(REORDER | MAPREDUCE)))
   INPUT_QUERY := query(ALIAS, TABLE)
-         STEP := COMPUTE_QUERY | INPUT_QUERY
-         ROOT := PLAN(STEP..., produces(ALIAS...))
+         STEP := COMPUTE_QUERY | INPUT_QUERY | produces(ALIAS...)
+         ROOT := PLAN(STEP...)
 """
 struct FinchCompiler end
 
@@ -684,18 +684,29 @@ function cache_deferred!(ctx, root::LogicNode)
 end
 
 function compile(prgm::LogicNode)
-    code = contain(JuliaContext()) do ctx
-        prgm = defer_tables(freshen(ctx, :prgm), prgm)
-        prgm = cache_deferred!(ctx, prgm)
-        display(prgm)
+    ctx = JuliaContext()
+    freshen(ctx, :prgm)
+    code = contain(ctx) do ctx_2
+        prgm = defer_tables(:prgm, prgm)
+        prgm = cache_deferred!(ctx_2, prgm)
         prgm = optimize(prgm)
         prgm = format_queries(prgm, true)
         FinchCompiler()(prgm)
     end
+    code = pretty(code)
+    fname = gensym(:compute)
+    return quote
+        function $fname(prgm)
+            $code
+        end
+    end |> unblock |> striplines
 end
 
-function compute_impl(prgm, ctx::FinchCompiler)
-    return (compile(prgm) |> pretty,)
+function compute_impl(prgm, ::FinchCompiler)
+    code = compile(prgm)
+    f = eval(code)
+    #display(code)
+    return invokelatest(f, prgm)
     #f = get!(hash(get_structure(prgm))) do
     #    eval(compile(prgm))
     #end
