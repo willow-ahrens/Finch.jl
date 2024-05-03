@@ -111,14 +111,14 @@ query
     produces(args...)
 
 Logical AST statement that returns `args...` from the current plan. Halts
-execution of the plan.
+execution of the program.
 """
 produces
 
 """
-    plan(bodies..., produces(args...))
+    plan(bodies...)
 
-Logical AST statement that executes a sequence of plans `bodies...`.
+Logical AST statement that executes a sequence of statements `bodies...`.
 """
 plan
 
@@ -424,11 +424,11 @@ function getfields(node::LogicNode, bindings=Dict())
 end
 
 function propagate_fields(node::LogicNode, fields = Dict{LogicNode, Any}())
-    if @capture node plan(~stmts..., produces(~args...))
+    if @capture node plan(~stmts...)
         stmts = map(stmts) do stmt
             propagate_fields(stmt, fields)
         end
-        plan(stmts..., produces(args...))
+        plan(stmts...)
     elseif @capture node query(~lhs, ~rhs)
         rhs = propagate_fields(rhs, fields)
         fields[lhs] = getfields(rhs, Dict())
@@ -437,9 +437,20 @@ function propagate_fields(node::LogicNode, fields = Dict{LogicNode, Any}())
         node
     elseif isalias(node)
         relabel(node, fields[node]...)
+    elseif node.kind === produces
+        node
     elseif istree(node)
         similarterm(node, operation(node), map(x -> propagate_fields(x, fields), arguments(node)))
     else
         node
     end
+end
+
+function getproductions(node::LogicNode)
+    for node in PostOrderDFS(node)
+        if node.kind == produces
+            return node.args
+        end
+    end
+    return []
 end
