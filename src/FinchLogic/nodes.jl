@@ -204,6 +204,7 @@ function LogicNode(kind::LogicNodeKind, args::Vector)
     if (kind === immediate || kind === field || kind === alias || kind === deferred) && length(args) == 1
         return LogicNode(kind, args[1], Any, LogicNode[])
     elseif kind === deferred && length(args) == 2
+        @assert !(args[2] <: LogicNode)
         return LogicNode(kind, args[1], args[2], LogicNode[])
     else
         args = LogicNode_concatenate_args(args)

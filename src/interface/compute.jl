@@ -294,16 +294,20 @@ drop_noisy_reorders = Rewrite(Postwalk(
     @rule reorder(relabel(~arg, ~idxs...), ~idxs...) => relabel(arg, idxs...)
 ))
 
-function format_queries(node::LogicNode, bindings=Dict())
+function format_queries(node::LogicNode, defer = false, bindings=Dict())
     if @capture node plan(~stmts..., produces(~args...))
         stmts = map(stmts) do stmt
-            format_queries(stmt, bindings)
+            format_queries(stmt, defer, bindings)
         end
         plan(stmts..., produces(args...))
     elseif (@capture node query(~lhs, ~rhs)) && rhs.kind !== reformat && rhs.kind !== table
         rep = SuitableRep(bindings)(rhs)
         bindings[lhs] = rep
-        tns = immediate(rep_construct(rep))
+        if defer
+            tns = deferred(fiber_ctr(rep), typeof(rep_construct(rep)))
+        else
+            tns = immediate(rep_construct(rep))
+        end
         query(lhs, reformat(tns, rhs))
     elseif @capture node query(~lhs, ~rhs)
         bindings[lhs] = SuitableRep(bindings)(rhs)
@@ -318,8 +322,10 @@ end
 function (ctx::SuitableRep)(ex)
     if ex.kind === alias
         return ctx.bindings[ex]
-    elseif ex.kind === table
+    elseif @capture ex table(~tns::isimmediate, ~idxs...)
         return data_rep(ex.tns.val)
+    elseif @capture ex table(~tns::isdeferred, ~idxs...)
+        return data_rep(ex.tns.type)
     elseif ex.kind === mapjoin
         #This step assumes concordant mapjoin arguments, and also that the
         #mapjoin arguments have the same number of dimensions. It's necessary to
@@ -569,11 +575,23 @@ function finch_pointwise_logic_to_code(ex)
     end
 end
 
-function compile_logic_constant(expr)
-    if ex.kind === immediate
-        tns.val
-    elseif ex.kind === deferred
-        :($(tns.val)::$(tns.type))
+function compile_logic_constant(node)
+    if node.kind === immediate
+        node.val
+    elseif node.kind === deferred
+        :($(node.ex)::$(node.type))
+    else
+        error()
+    end
+end
+
+function logic_constant_type(node)
+    if node.kind === immediate
+        typeof(node.val)
+    elseif node.kind === deferred
+        node.type
+    else
+        error()
     end
 end
 
@@ -587,43 +605,42 @@ function (ctx::FinchCompiler)(ex)
         body = :($(lhs.name)[$(lhs_idxs...)] = $rhs)
         for idx in loop_idxs
             body = :(for $idx = _
-                body
+                $body
             end)
         end
         quote
-            $(lhs.name) = $(compile_logic_constant(tns.val))
+            $(lhs.name) = $(compile_logic_constant(tns))
             @finch begin
-                $(lhs.name) .= $(default(tns.val))
+                $(lhs.name) .= $(default(logic_constant_type(tns)))
                 $body
                 return $(lhs.name)
             end
         end
     elseif @capture ex query(~lhs::isalias, reformat(~tns, mapjoin(~args...)))
-        z = default(tns.val)
+        z = default(logic_constant_type(tns))
         ctx(query(lhs, reformat(tns, aggregate(initwrite(z), immediate(z), mapjoin(args...)))))
-    elseif @capture ex reformat(~tns, aggregate(~op, ~init, ~arg, ~idxs_1...))
+    elseif @capture ex query(~lhs, reformat(~tns, aggregate(~op, ~init, ~arg, ~idxs_1...)))
         idxs_2 = map(idx -> idx.name, getfields(arg))
         idxs_3 = map(idx -> idx.name, setdiff(getfields(arg), idxs_1))
-        lhs = access_instance(res, literal_instance(updater), idxs_3...)
-        rhs = finch_pointwise_logic_to_program(ctx.scope, arg)
-        body = :($(lhs.name)[$(lhs_idxs...)] <<$(compile_logic_constant(op))>>= $rhs)
+        rhs = finch_pointwise_logic_to_code(arg)
+        body = :($(lhs.name)[$(idxs_3...)] <<$(compile_logic_constant(op))>>= $rhs)
         for idx in idxs_2
             body = :(for $idx = _
-                body
+                $body
             end)
         end
         quote
-            $(lhs.name) = $(compile_logic_constant(tns.val))
+            $(lhs.name) = $(compile_logic_constant(tns))
             @finch begin
-                $(lhs.name) .= $(default(tns.val))
+                $(lhs.name) .= $(default(logic_constant_type(tns)))
                 $body
                 return $(lhs.name)
             end
         end
     elseif @capture ex produces(~args...)
-        return :(return (map(arg -> arg.name, args)...))
-    elseif @capture ex plan(args...)
-        Expr(:block, map(ctx, args)...)
+        return :(return ($(map(arg -> arg.name, args)...),))
+    elseif @capture ex plan(~bodies...)
+        Expr(:block, map(ctx, bodies)...)
     else
         error("Unrecognized logic: $(ex)")
     end
@@ -637,7 +654,7 @@ is given as input to the program.
 """
 function defer_tables(ex, node::LogicNode)
     if @capture node table(~tns::isimmediate, ~idxs...)
-        table(deferred(:($ex.tns.val), typeof(tns)), map(enumerate(node.idxs)) do (i, idx)
+        table(deferred(:($ex.tns.val), typeof(tns.val)), map(enumerate(node.idxs)) do (i, idx)
             defer_tables(:($ex.idxs[$i]), idx)
         end)
     elseif istree(node)
@@ -671,12 +688,13 @@ function compile(prgm::LogicNode)
         prgm = cache_deferred!(ctx, prgm)
         display(prgm)
         prgm = optimize(prgm)
+        prgm = format_queries(prgm, true)
         FinchCompiler()(prgm)
     end
 end
 
 function compute_impl(prgm, ctx::FinchCompiler)
-    return (compile(prgm),)
+    return (compile(prgm) |> pretty,)
     #f = get!(hash(get_structure(prgm))) do
     #    eval(compile(prgm))
     #end
@@ -703,6 +721,7 @@ end
 
 function compute_impl(prgm, ctx::DefaultOptimizer)
     prgm = optimize(prgm)
+    prgm = format_queries(prgm)
     FinchInterpreter(Dict())(prgm)
 end
 
@@ -758,11 +777,10 @@ function optimize(prgm)
     #Add reformat statements where there aren't any
     prgm = propagate_into_reformats(prgm)
     prgm = propagate_copy_queries(prgm)
-    prgm = format_queries(prgm)
+    #Normalize names for caching
+    prgm = normalize_names(prgm)
 
     #@info "formatted"
     #display(prgm)
 
-    #Normalize names for caching
-    prgm = normalize_names(prgm)
 end
