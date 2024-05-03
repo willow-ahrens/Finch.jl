@@ -731,6 +731,18 @@ function compute_parse(args::Tuple, ctx)
     return compute_impl(prgm, ctx)
 end
 
+"""
+compute(args..., ctx = ctx) = 
+
+FinchInterpreter(DefaultOptimizer())(prgm)
+FinchInterpreter(DefaultNormalizer(DefaultHeuristic()))(prgm)
+FinchInterpreter(DefaultNormalizer())(prgm)
+FinchCompiler(DefaultNormalizer())(prgm)
+FinchExecutor(FinchCompiler(DefaultNormalizer()))(prgm)
+FinchExecutor(ChipCacher(FinchCompiler(DefaultNormalizer())))(prgm)
+FinchExecutor(ChipCacher(FinchCompiler(DefaultNormalizer())))(prgm)
+"""
+
 function compute_impl(prgm, ctx::DefaultOptimizer)
     prgm = optimize(prgm)
     prgm = format_queries(prgm)
