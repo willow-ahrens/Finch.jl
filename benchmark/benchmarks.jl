@@ -36,7 +36,6 @@ end
 let
     A = Tensor(Dense(SparseList(Element(0.0))), fsprand(1, 1, 1))
     x = rand(1)
-    #@einsum y[i] += A[i, j] * x[j]
     SUITE["high-level"]["einsum_spmv_call_overhead"] = @benchmarkable(
         begin
             A, x = ($A, $x)
