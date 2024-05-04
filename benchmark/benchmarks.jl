@@ -9,7 +9,6 @@ using Finch
 using BenchmarkTools
 using MatrixDepot
 using SparseArrays
-using ProfileView
 
 include(joinpath(@__DIR__, "../docs/examples/bfs.jl"))
 include(joinpath(@__DIR__, "../docs/examples/pagerank.jl"))
