@@ -226,6 +226,17 @@ function propagate_loop_order_helper(node)
 end
 =#
 
+"""
+compute(args..., ctx = ctx) = 
+
+FinchInterpreter(DefaultOptimizer())(prgm)
+FinchInterpreter(DefaultNormalizer(DefaultHeuristic()))(prgm)
+FinchInterpreter(DefaultNormalizer())(prgm)
+FinchCompiler(DefaultNormalizer())(prgm)
+FinchExecutor(FinchCompiler(DefaultNormalizer()))(prgm)
+FinchExecutor(ChipCacher(FinchCompiler(DefaultNormalizer())))(prgm)
+FinchExecutor(ChipCacher(FinchCompiler(DefaultNormalizer())))(prgm)
+"""
 
 #=
 function hash_structure(node::LogicNode, s, cache=IDDict(), names=Dict())
