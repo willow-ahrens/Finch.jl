@@ -63,7 +63,12 @@ struct FinchExtensionError <: Exception
     msg::String
 end
 
-include("util/util.jl")
+include("util/convenience.jl")
+include("util/shims.jl")
+include("util/limits.jl")
+include("util/staging.jl")
+include("util/style.jl")
+include("util/vectors.jl")
 
 include("environment.jl")
 
@@ -71,8 +76,6 @@ include("FinchNotation/FinchNotation.jl")
 using .FinchNotation
 using .FinchNotation: and, or, InitWriter
 include("tensors/abstract_tensor.jl")
-include("semantics.jl")
-include("style.jl")
 include("dimensions.jl")
 include("architecture.jl")
 include("lower.jl")
@@ -135,6 +138,8 @@ include("tensors/combinators/swizzle.jl")
 include("tensors/combinators/scale.jl")
 include("tensors/combinators/product.jl")
 
+include("postprocess.jl")
+
 export fsparse, fsparse!, fsprand, fspzeros, ffindnz, fread, fwrite, countstored
 
 export bspread, bspwrite
@@ -144,6 +149,12 @@ export moveto, postype
 
 include("FinchLogic/FinchLogic.jl")
 using .FinchLogic
+
+include("scheduler/LogicCompiler.jl")
+include("scheduler/LogicInterpreter.jl")
+include("scheduler/optimize.jl")
+include("scheduler/compute.jl")
+
 include("interface/traits.jl")
 include("interface/abstractarrays.jl")
 include("interface/abstractunitranges.jl")
@@ -152,7 +163,6 @@ include("interface/compare.jl")
 include("interface/copy.jl")
 include("interface/fsparse.jl")
 include("interface/fileio/fileio.jl")
-include("interface/compute.jl")
 include("interface/lazy.jl")
 include("interface/eager.jl")
 include("interface/einsum.jl")
