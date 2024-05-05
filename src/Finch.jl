@@ -151,9 +151,9 @@ include("FinchLogic/FinchLogic.jl")
 using .FinchLogic
 
 include("scheduler/LogicCompiler.jl")
+include("scheduler/LogicExecutor.jl")
 include("scheduler/LogicInterpreter.jl")
 include("scheduler/optimize.jl")
-include("scheduler/compute.jl")
 
 include("interface/traits.jl")
 include("interface/abstractarrays.jl")

@@ -37,22 +37,9 @@ function get_structure(
     end
 end
 
-"""
-    FinchCompiler
-
-The finch compiler is a simple compiler for finch logic programs. The interpreter is
-only capable of executing programs of the form:
-      REORDER := reorder(relabel(ALIAS, FIELD...), FIELD...)
-       ACCESS := reorder(relabel(ALIAS, idxs_1::FIELD...), idxs_2::FIELD...) where issubsequence(idxs_1, idxs_2)
-    POINTWISE := ACCESS | mapjoin(IMMEDIATE, POINTWISE...) | reorder(IMMEDIATE, FIELD...) | IMMEDIATE
-    MAPREDUCE := POINTWISE | aggregate(IMMEDIATE, IMMEDIATE, POINTWISE, FIELD...)
-       TABLE  := table(IMMEDIATE | DEFERRED, FIELD...)
-COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, arg::(REORDER | MAPREDUCE)))
-  INPUT_QUERY := query(ALIAS, TABLE)
-         STEP := COMPUTE_QUERY | INPUT_QUERY | produces(ALIAS...)
-         ROOT := PLAN(STEP...)
-"""
-struct FinchCompiler end
+@kwdef struct LogicLowerer
+    mode = :fast
+end
 
 function finch_pointwise_logic_to_code(ex)
     if @capture ex mapjoin(~op, ~args...)
@@ -88,7 +75,7 @@ function logic_constant_type(node)
     end
 end
 
-function (ctx::FinchCompiler)(ex)
+function (ctx::LogicLowerer)(ex)
     if @capture ex query(~lhs::isalias, table(~tns, ~idxs...))
         :($(lhs.name) = $(compile_logic_constant(tns)))
     elseif @capture ex query(~lhs::isalias, reformat(~tns, reorder(relabel(~arg::isalias, ~idxs_1...), ~idxs_2...)))
@@ -103,7 +90,7 @@ function (ctx::FinchCompiler)(ex)
         end
         quote
             $(lhs.name) = $(compile_logic_constant(tns))
-            @finch begin
+            @finch mode = $(ctx.mode) begin
                 $(lhs.name) .= $(default(logic_constant_type(tns)))
                 $body
                 return $(lhs.name)
@@ -124,7 +111,7 @@ function (ctx::FinchCompiler)(ex)
         end
         quote
             $(lhs.name) = $(compile_logic_constant(tns))
-            @finch begin
+            @finch mode = $(ctx.mode) begin
                 $(lhs.name) .= $(default(logic_constant_type(tns)))
                 $body
                 return $(lhs.name)
@@ -139,61 +126,33 @@ function (ctx::FinchCompiler)(ex)
     end
 end
 
-"""
-    defer_tables(root::LogicNode)
 
-Replace immediate tensors with deferred expressions assuming the original program structure
-is given as input to the program.
 """
-function defer_tables(ex, node::LogicNode)
-    if @capture node table(~tns::isimmediate, ~idxs...)
-        table(deferred(:($ex.tns.val), typeof(tns.val)), map(enumerate(node.idxs)) do (i, idx)
-            defer_tables(:($ex.idxs[$i]), idx)
-        end)
-    elseif istree(node)
-        similarterm(node, operation(node), map(enumerate(node.children)) do (i, child)
-            defer_tables(:($ex.children[$i]), child)
-        end)
-    else
-        node
-    end
+    LogicCompiler
+
+The LogicCompiler is a simple compiler for finch logic programs. The interpreter is
+only capable of executing programs of the form:
+      REORDER := reorder(relabel(ALIAS, FIELD...), FIELD...)
+       ACCESS := reorder(relabel(ALIAS, idxs_1::FIELD...), idxs_2::FIELD...) where issubsequence(idxs_1, idxs_2)
+    POINTWISE := ACCESS | mapjoin(IMMEDIATE, POINTWISE...) | reorder(IMMEDIATE, FIELD...) | IMMEDIATE
+    MAPREDUCE := POINTWISE | aggregate(IMMEDIATE, IMMEDIATE, POINTWISE, FIELD...)
+       TABLE  := table(IMMEDIATE | DEFERRED, FIELD...)
+COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, arg::(REORDER | MAPREDUCE)))
+  INPUT_QUERY := query(ALIAS, TABLE)
+         STEP := COMPUTE_QUERY | INPUT_QUERY | produces(ALIAS...)
+         ROOT := PLAN(STEP...)
+"""
+@kwdef struct LogicCompiler
+    mode = :fast
 end
 
-"""
-    cache_deferred(ctx, root::LogicNode, seen)
-
-Replace deferred expressions with simpler expressions, and cache their evaluation in the preamble.
-"""
-function cache_deferred!(ctx, root::LogicNode)
-    seen::Dict{Any, LogicNode} = Dict{Any, LogicNode}()
-    return Rewrite(Postwalk(node -> if isdeferred(node)
-        get!(seen, node.val) do
-            var = freshen(ctx, :V)
-            push!(ctx.preamble, :($var = $(node.ex)::$(node.type)))
-            deferred(var, node.type)
-        end
-    end))(root)
-end
-
-function compile(prgm::LogicNode)
-    ctx = JuliaContext()
-    freshen(ctx, :prgm)
-    code = contain(ctx) do ctx_2
-        prgm = defer_tables(:prgm, prgm)
-        prgm = cache_deferred!(ctx_2, prgm)
-        prgm = optimize(prgm)
-        prgm = format_queries(prgm, true)
-        FinchCompiler()(prgm)
-    end
-    code = pretty(code)
-    fname = gensym(:compute)
-    return :(function $fname(prgm)
-            $code
-        end) |> striplines
+function (ctx::LogicCompiler)(prgm::LogicNode)
+    prgm = format_queries(prgm, true)
+    LogicLowerer(mode=ctx.mode)(prgm)
 end
 
 codes = Dict()
-function compute_impl(prgm, ::FinchCompiler)
+function compute_impl(prgm, ::LogicLowerer)
     f = get!(codes, get_structure(prgm)) do
         eval(compile(prgm))
     end

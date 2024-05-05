@@ -432,10 +432,6 @@ function optimize(prgm)
     prgm = normalize_names(prgm)
 end
 
-struct DefaultLogicOptimizer
-    ctx
-end
-
 """
     DefaultLogicOptimizer(ctx)
 
@@ -443,6 +439,10 @@ The default optimizer for finch logic programs. Optimizes to a structure
 suitable for the LogicCompiler or LogicInterpreter, then calls `ctx` on the
 resulting program.
 """
+struct DefaultLogicOptimizer
+    ctx
+end
+
 function (ctx::DefaultLogicOptimizer)(prgm)
     prgm = optimize(prgm)
     ctx.ctx(prgm)
