@@ -138,7 +138,7 @@ include("tensors/combinators/swizzle.jl")
 include("tensors/combinators/scale.jl")
 include("tensors/combinators/product.jl")
 
-include("postprocessing.jl")
+include("postprocess.jl")
 
 export fsparse, fsparse!, fsprand, fspzeros, ffindnz, fread, fwrite, countstored
 
