@@ -378,6 +378,18 @@ function propagate_map_queries(root)
     ])))(root)
 end
 
+function normalize_names(ex)
+    spc = Namespace()
+    scope = Dict()
+    normname(sym) = get!(scope, sym) do
+        if isgensym(sym)
+            sym = gensymname(sym)
+        end
+        freshen(spc, sym)
+    end
+    Rewrite(Postwalk(@rule ~a::isalias => alias(normname(a.name))))(ex)
+end
+
 function optimize(prgm)
     #deduplicate and lift inline subqueries to regular queries
     prgm = lift_subqueries(prgm)
@@ -395,9 +407,6 @@ function optimize(prgm)
     #I shouldn't use gensym but I do, so this cleans up the names
     prgm = pretty_labels(prgm)
 
-    #@info "split"
-    #display(prgm)
-
     #These steps fuse copy, permutation, and mapjoin statements
     #into later expressions.
     #Only reformat statements preserve intermediate breaks in computation
@@ -405,35 +414,36 @@ function optimize(prgm)
     prgm = propagate_transpose_queries(prgm)
     prgm = propagate_map_queries(prgm)
 
-    #@info "fused"
-    #display(prgm)
-
     #These steps assign a global loop order to each statement.
     prgm = propagate_fields(prgm)
-
-    #@info "propagate_fields"
-    #display(prgm)
 
     prgm = push_fields(prgm)
     prgm = lift_fields(prgm)
     prgm = push_fields(prgm)
 
-    #@info "loops ordered"
-    #display(prgm)
-
     #After we have a global loop order, we concordize the program
     prgm = concordize(prgm)
-
-    #@info "concordized"
-    #display(prgm)
 
     #Add reformat statements where there aren't any
     prgm = propagate_into_reformats(prgm)
     prgm = propagate_copy_queries(prgm)
+
     #Normalize names for caching
     prgm = normalize_names(prgm)
+end
 
-    #@info "formatted"
-    #display(prgm)
+"""
+    DefaultLogicOptimizer(ctx)
 
+The default optimizer for finch logic programs. Optimizes to a structure
+suitable for the LogicCompiler or LogicInterpreter, then calls `ctx` on the
+resulting program.
+"""
+struct DefaultLogicOptimizer
+    ctx
+end
+
+function (ctx::DefaultLogicOptimizer)(prgm)
+    prgm = optimize(prgm)
+    ctx.ctx(prgm)
 end

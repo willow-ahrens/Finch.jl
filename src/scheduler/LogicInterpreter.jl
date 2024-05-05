@@ -1,24 +1,3 @@
-"""
-    FinchInterpreter
-
-The finch interpreter is a simple interpreter for finch logic programs. The interpreter is
-only capable of executing programs of the form:
-      REORDER := reorder(relabel(ALIAS, FIELD...), FIELD...)
-       ACCESS := reorder(relabel(ALIAS, idxs_1::FIELD...), idxs_2::FIELD...) where issubsequence(idxs_1, idxs_2)
-    POINTWISE := ACCESS | mapjoin(IMMEDIATE, POINTWISE...) | reorder(IMMEDIATE, FIELD...) | IMMEDIATE
-    MAPREDUCE := POINTWISE | aggregate(IMMEDIATE, IMMEDIATE, POINTWISE, FIELD...)
-       TABLE  := table(IMMEDIATE, FIELD...)
-COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, arg::(REORDER | MAPREDUCE)))
-  INPUT_QUERY := query(ALIAS, TABLE)
-         STEP := COMPUTE_QUERY | INPUT_QUERY | produces(ALIAS...)
-         ROOT := PLAN(STEP...)
-"""
-struct FinchInterpreter
-    scope::Dict
-end
-
-FinchInterpreter() = FinchInterpreter(Dict())
-
 using Finch.FinchNotation: block_instance, declare_instance, call_instance, loop_instance, index_instance, variable_instance, tag_instance, access_instance, assign_instance, literal_instance, yieldbind_instance
 
 function finch_pointwise_logic_to_program(scope, ex)
@@ -38,7 +17,13 @@ function finch_pointwise_logic_to_program(scope, ex)
     end
 end
 
-function (ctx::FinchInterpreter)(ex)
+@kwdef struct LogicMachine
+    scope = Dict{Any, Any}()
+    verbose = false
+    mode = :fast
+end
+
+function (ctx::LogicMachine)(ex)
     if ex.kind === alias
         ex.scope[ex]
     elseif @capture ex query(~lhs, ~rhs)
@@ -57,8 +42,11 @@ function (ctx::FinchInterpreter)(ex)
             body = loop_instance(idx, dimless, body)
         end
         body = block_instance(declare_instance(res, literal_instance(default(tns.val))), body, yieldbind_instance(res))
-        #display(body) # wow it's really satisfying to uncomment this and type finch ops at the repl.
-        execute(body).res
+        if ctx.verbose
+            print("Running: ")
+            display(body)
+        end
+        execute(body, mode = ctx.mode).res
     elseif @capture ex reformat(~tns, mapjoin(~args...))
         z = default(tns.val)
         ctx(reformat(tns, aggregate(initwrite(z), immediate(z), mapjoin(args...))))
@@ -73,8 +61,11 @@ function (ctx::FinchInterpreter)(ex)
             body = loop_instance(idx, dimless, body)
         end
         body = block_instance(declare_instance(res, literal_instance(default(tns.val))), body, yieldbind_instance(res))
-        #display(body) # wow it's really satisfying to uncomment this and type finch ops at the repl.
-        execute(body).res
+        if ctx.verbose
+            print("Running: ")
+            display(body)
+        end
+        execute(body, mode = ctx.mode).res
     elseif @capture ex produces(~args...)
         return map(arg -> ctx.scope[arg], args)
     elseif @capture ex plan(~head)
@@ -87,14 +78,27 @@ function (ctx::FinchInterpreter)(ex)
     end
 end
 
-function normalize_names(ex)
-    spc = Namespace()
-    scope = Dict()
-    normname(sym) = get!(scope, sym) do
-        if isgensym(sym)
-            sym = gensymname(sym)
-        end
-        freshen(spc, sym)
-    end
-    Rewrite(Postwalk(@rule ~a::isalias => alias(normname(a.name))))(ex)
+"""
+    LogicInterpreter(scope = Dict(), verbose = false, mode = :fast)
+
+The LogicInterpreter is a simple interpreter for finch logic programs. The interpreter is
+only capable of executing programs of the form:
+      REORDER := reorder(relabel(ALIAS, FIELD...), FIELD...)
+       ACCESS := reorder(relabel(ALIAS, idxs_1::FIELD...), idxs_2::FIELD...) where issubsequence(idxs_1, idxs_2)
+    POINTWISE := ACCESS | mapjoin(IMMEDIATE, POINTWISE...) | reorder(IMMEDIATE, FIELD...) | IMMEDIATE
+    MAPREDUCE := POINTWISE | aggregate(IMMEDIATE, IMMEDIATE, POINTWISE, FIELD...)
+       TABLE  := table(IMMEDIATE, FIELD...)
+COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, arg::(REORDER | MAPREDUCE)))
+  INPUT_QUERY := query(ALIAS, TABLE)
+         STEP := COMPUTE_QUERY | INPUT_QUERY | produces(ALIAS...)
+         ROOT := PLAN(STEP...)
+"""
+@kwdef struct LogicInterpreter
+    verbose = false
+    mode = :fast
+end
+
+function (ctx::LogicInterpreter)(prgm)
+    prgm = format_queries(prgm)
+    LogicMachine(verbose = ctx.verbose, mode = ctx.mode)(prgm)
 end
