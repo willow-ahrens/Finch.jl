@@ -409,6 +409,45 @@ function LinearAlgebra.norm(arr::LazyTensor, p::Real = 2)
 end
 
 """
+    lazy(arg)
+
+Create a lazy tensor from an argument. All operations on lazy tensors are
+lazy, and will not be executed until `compute` is called on their result.
+
+for example,
+```julia
+x = lazy(rand(10))
+y = lazy(rand(10))
+z = x + y
+z = z + 1
+z = compute(z)
+```
+will not actually compute `z` until `compute(z)` is called, so the execution of `x + y`
+is fused with the execution of `z + 1`.
+"""
+lazy(arg) = LazyTensor(arg)
+
+default_scheduler = DefaultOptimizer(FinchCompiler())
+
+"""
+    compute(args..., ctx=default_scheduler) -> Any
+
+Compute the value of a lazy tensor. The result is the argument itself, or a
+tuple of arguments if multiple arguments are passed.
+"""
+compute(args...; ctx=default_scheduler) = compute_parse(args, ctx)
+compute(arg; ctx=default_scheduler) = compute_parse((arg,), ctx)[1]
+compute(args::Tuple; ctx=default_scheduler) = compute_parse(args, ctx)
+function compute_parse(args::Tuple, ctx)
+    args = collect(args)
+    vars = map(arg -> alias(gensym(:A)), args)
+    bodies = map((arg, var) -> query(var, arg.data), args, vars)
+    prgm = plan(bodies, produces(vars))
+
+    return ctx(prgm)
+end
+
+"""
     fused(f, args...; [optimizer=DefaultOptimizer()])
 
 This function decorator modifies `f` to fuse the contained array
