@@ -56,7 +56,9 @@ Executes a logic program by compiling it with the given compiler `ctx`. Compiled
 codes are cached, and are only compiled once for each program with the same
 structure.
 """
-struct LogicExecutor end
+struct LogicExecutor
+    ctx
+end
 
 codes = Dict()
 function (ctx::LogicExecutor)(prgm)
@@ -71,7 +73,9 @@ end
 
 Return the code that would normally be used by the LogicExecutor to run a program.
 """
-struct LogicExecutorCode end
+struct LogicExecutorCode
+    ctx
+end
 
 function (ctx::LogicExecutorCode)(prgm)
     return logic_executor_code(ctx.ctx, prgm)

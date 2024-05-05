@@ -90,7 +90,7 @@ function (ctx::LogicLowerer)(ex)
         end
         quote
             $(lhs.name) = $(compile_logic_constant(tns))
-            @finch mode = $(ctx.mode) begin
+            @finch mode = $(QuoteNode(ctx.mode)) begin
                 $(lhs.name) .= $(default(logic_constant_type(tns)))
                 $body
                 return $(lhs.name)
@@ -111,7 +111,7 @@ function (ctx::LogicLowerer)(ex)
         end
         quote
             $(lhs.name) = $(compile_logic_constant(tns))
-            @finch mode = $(ctx.mode) begin
+            @finch mode = $(QuoteNode(ctx.mode)) begin
                 $(lhs.name) .= $(default(logic_constant_type(tns)))
                 $body
                 return $(lhs.name)
