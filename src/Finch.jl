@@ -76,7 +76,6 @@ include("FinchNotation/FinchNotation.jl")
 using .FinchNotation
 using .FinchNotation: and, or, InitWriter
 include("tensors/abstract_tensor.jl")
-include("style.jl")
 include("dimensions.jl")
 include("architecture.jl")
 include("lower.jl")
@@ -150,6 +149,12 @@ export moveto, postype
 
 include("FinchLogic/FinchLogic.jl")
 using .FinchLogic
+
+include("scheduler/LogicCompiler.jl")
+include("scheduler/LogicInterpreter.jl")
+include("scheduler/optimize.jl")
+include("scheduler/compute.jl")
+
 include("interface/traits.jl")
 include("interface/abstractarrays.jl")
 include("interface/abstractunitranges.jl")
@@ -158,7 +163,6 @@ include("interface/compare.jl")
 include("interface/copy.jl")
 include("interface/fsparse.jl")
 include("interface/fileio/fileio.jl")
-include("interface/compute.jl")
 include("interface/lazy.jl")
 include("interface/eager.jl")
 include("interface/einsum.jl")

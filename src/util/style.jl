@@ -1,33 +1,6 @@
 struct DefaultStyle end
 struct UnknownStyle end
 
-@kwdef struct Stylize{Ctx}
-    ctx::Ctx
-    root
-end
-
-function (ctx::Stylize)(node)
-    if istree(node)
-        return mapreduce(ctx, result_style, arguments(node); init=DefaultStyle())
-    end
-    return DefaultStyle()
-end
-
-function (ctx::Stylize)(node::FinchNode)
-    if node.kind === virtual
-        return ctx(node.val)
-    elseif node.kind === access
-        return mapreduce(ctx, result_style, arguments(node); init=stylize_access(ctx, node, node.tns))
-    elseif istree(node)
-        return mapreduce(ctx, result_style, arguments(node); init=DefaultStyle())
-    else
-        return DefaultStyle()
-    end
-end
-
-stylize_access(ctx, node, @nospecialize tns) = DefaultStyle()
-stylize_access(ctx, node, tns::FinchNode) = stylize_access(ctx, node, resolve(ctx, tns))
-
 @nospecialize
 
 result_style(a, b) = _result_style(a, b, combine_style(a, b), combine_style(b, a))
