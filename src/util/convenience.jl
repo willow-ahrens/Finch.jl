@@ -27,9 +27,3 @@ kwfields(x::T) where T = Dict((k=>getfield(x, k) for k ∈ fieldnames(T))...)
 
 (Base.:^)(T::Type, i::Int) = ∘(repeated(T, i)..., identity)
 (Base.:^)(f::Function, i::Int) = ∘(repeated(f, i)..., identity)
-
-include("compile.jl")
-include("limits.jl")
-include("shims.jl")
-include("staging.jl")
-include("vectors.jl")

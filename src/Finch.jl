@@ -63,7 +63,12 @@ struct FinchExtensionError <: Exception
     msg::String
 end
 
-include("util/util.jl")
+include("util/convenience.jl")
+include("util/shims.jl")
+include("util/limits.jl")
+include("util/staging.jl")
+include("util/style.jl")
+include("util/vectors.jl")
 
 include("environment.jl")
 
@@ -133,6 +138,8 @@ include("tensors/combinators/windowed.jl")
 include("tensors/combinators/swizzle.jl")
 include("tensors/combinators/scale.jl")
 include("tensors/combinators/product.jl")
+
+include("postprocessing.jl")
 
 export fsparse, fsparse!, fsprand, fspzeros, ffindnz, fread, fwrite, countstored
 
