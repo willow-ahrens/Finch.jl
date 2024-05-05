@@ -71,7 +71,6 @@ include("FinchNotation/FinchNotation.jl")
 using .FinchNotation
 using .FinchNotation: and, or, InitWriter
 include("tensors/abstract_tensor.jl")
-include("semantics.jl")
 include("style.jl")
 include("dimensions.jl")
 include("architecture.jl")
