@@ -4,6 +4,7 @@ module FinchLogic
 
     export logic_leaf
     export immediate
+    export deferred
     export field
     export alias
     export table
@@ -18,7 +19,7 @@ module FinchLogic
     export plan
     export LogicNode
 
-    export isimmediate, isalias, isfield, isstateful
+    export isimmediate, isdeferred, isalias, isfield, isstateful
     export getbindings, getfields, getproductions, propagate_fields
 
     export isprotocol

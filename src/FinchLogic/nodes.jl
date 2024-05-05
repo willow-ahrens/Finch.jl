@@ -231,6 +231,7 @@ end
 function Base.getproperty(node::LogicNode, sym::Symbol)
     if sym === :kind || sym === :val || sym === :type || sym === :children
         return Base.getfield(node, sym)
+    elseif node.kind === deferred && sym === :ex node.val
     elseif node.kind === field && sym === :name node.val::Symbol
     elseif node.kind === alias && sym === :name node.val::Symbol
     elseif node.kind === table && sym === :tns node.children[1]
