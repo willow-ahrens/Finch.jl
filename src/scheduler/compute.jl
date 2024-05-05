@@ -1,11 +1,3 @@
-struct DefaultLogicOptimizer
-    ctx
-end
-
-function (ctx::DefaultLogicOptimizer)(prgm)
-    prgm = optimize(prgm)
-    ctx.ctx(prgm)
-end
 
 default_scheduler = DefaultLogicOptimizer(FinchCompiler())
 

@@ -78,18 +78,6 @@ function (ctx::LogicMachine)(ex)
     end
 end
 
-function normalize_names(ex)
-    spc = Namespace()
-    scope = Dict()
-    normname(sym) = get!(scope, sym) do
-        if isgensym(sym)
-            sym = gensymname(sym)
-        end
-        freshen(spc, sym)
-    end
-    Rewrite(Postwalk(@rule ~a::isalias => alias(normname(a.name))))(ex)
-end
-
 """
     LogicInterpreter(scope = Dict(), verbose = false, mode = :fast)
 
@@ -111,7 +99,6 @@ COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, arg::(REORDER | MAPREDUCE)))
 end
 
 function (ctx::LogicInterpreter)(prgm)
-    prgm = normalize_names(prgm)
     prgm = format_queries(prgm)
     LogicMachine(verbose = ctx.verbose, mode = ctx.mode)(prgm)
 end
