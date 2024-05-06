@@ -14,7 +14,7 @@ using Finch: AsArray
             b_l = lazy(b)
     
             c = permutedims(broadcast(.+, permutedims(a_l, (2, 1)), permutedims(b_l, (2, 1))), (2, 1))
-            compute(c, ctx=Finch.default_scheduler(verbose=true))
+            compute(c, verbose=true)
         end
 
         @testset "Einsum Tests" begin

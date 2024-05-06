@@ -62,6 +62,9 @@ struct LogicExecutor
 end
 
 LogicExecutor(ctx; verbose = false) = LogicExecutor(ctx, verbose)
+function set_options(ctx::LogicExecutor; verbose = ctx.verbose, kwargs...)
+    LogicExecutor(set_options(ctx.ctx; kwargs...), verbose)
+end
 
 codes = Dict()
 function (ctx::LogicExecutor)(prgm)

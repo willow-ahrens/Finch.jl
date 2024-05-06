@@ -447,3 +447,7 @@ function (ctx::DefaultLogicOptimizer)(prgm)
     prgm = optimize(prgm)
     ctx.ctx(prgm)
 end
+
+function set_options(ctx::DefaultLogicOptimizer; kwargs...)
+    DefaultLogicOptimizer(set_options(ctx.ctx; kwargs...))
+end
