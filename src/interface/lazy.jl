@@ -439,17 +439,17 @@ function fused(f, args...; optimizer=DefaultOptimizer())
     compute(f(map(LazyTensor, args...)), optimizer)
 end
 
-default_scheduler = LogicExecutor(DefaultLogicOptimizer(LogicCompiler()))
+default_scheduler(;verbose=false) = LogicExecutor(DefaultLogicOptimizer(LogicCompiler()), verbose=verbose)
 
 """
-    compute(args..., ctx=default_scheduler) -> Any
+    compute(args..., ctx=default_scheduler()) -> Any
 
 Compute the value of a lazy tensor. The result is the argument itself, or a
 tuple of arguments if multiple arguments are passed.
 """
-compute(args...; ctx=default_scheduler) = compute_parse(ctx, args)
-compute(arg; ctx=default_scheduler) = compute_parse(ctx, (arg,))[1]
-compute(args::Tuple; ctx=default_scheduler) = compute_parse(ctx, args)
+compute(args...; ctx=default_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), args)
+compute(arg; ctx=default_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), (arg,))[1]
+compute(args::Tuple; ctx=default_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), args)
 function compute_parse(ctx, args::Tuple)
     args = collect(args)
     vars = map(arg -> alias(gensym(:A)), args)

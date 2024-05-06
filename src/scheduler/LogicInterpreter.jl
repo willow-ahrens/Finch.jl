@@ -98,6 +98,10 @@ COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, arg::(REORDER | MAPREDUCE)))
     mode = :fast
 end
 
+function set_options(ctx::LogicInterpreter; verbose = ctx.verbose, mode = ctx.mode, kwargs...)
+    LogicInterpreter(verbose=verbose, mode=mode)
+end
+
 function (ctx::LogicInterpreter)(prgm)
     prgm = format_queries(prgm)
     LogicMachine(verbose = ctx.verbose, mode = ctx.mode)(prgm)

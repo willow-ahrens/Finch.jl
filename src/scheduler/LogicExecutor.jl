@@ -50,7 +50,7 @@ function logic_executor_code(ctx, prgm)
 end
 
 """
-    LogicExecutor(ctx)
+    LogicExecutor(ctx, verbose=false)
 
 Executes a logic program by compiling it with the given compiler `ctx`. Compiled
 codes are cached, and are only compiled once for each program with the same
@@ -58,12 +58,22 @@ structure.
 """
 struct LogicExecutor
     ctx
+    verbose
+end
+
+LogicExecutor(ctx; verbose = false) = LogicExecutor(ctx, verbose)
+function set_options(ctx::LogicExecutor; verbose = ctx.verbose, kwargs...)
+    LogicExecutor(set_options(ctx.ctx; kwargs...), verbose)
 end
 
 codes = Dict()
 function (ctx::LogicExecutor)(prgm)
     f = get!(codes, get_structure(prgm)) do
         eval(logic_executor_code(ctx.ctx, prgm))
+    end
+    if ctx.verbose
+        println("Executing:")
+        display(logic_executor_code(ctx.ctx, prgm))
     end
     return Base.invokelatest(f, prgm)
 end

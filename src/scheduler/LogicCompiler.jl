@@ -146,6 +146,10 @@ COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, arg::(REORDER | MAPREDUCE)))
     mode = :fast
 end
 
+function set_options(ctx::LogicCompiler; mode = ctx.mode, kwargs...)
+    LogicCompiler(mode = mode)
+end
+
 function (ctx::LogicCompiler)(prgm::LogicNode)
     prgm = format_queries(prgm, true)
     LogicLowerer(mode=ctx.mode)(prgm)

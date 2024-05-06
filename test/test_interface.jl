@@ -7,6 +7,16 @@ using Finch: AsArray
     let
         using Test
 
+        @testset "Verbose" begin
+            a = [1 2; 3 4]
+            b = [5 6; 7 8]
+            a_l = lazy(a)
+            b_l = lazy(b)
+    
+            c = permutedims(broadcast(.+, permutedims(a_l, (2, 1)), permutedims(b_l, (2, 1))), (2, 1))
+            compute(c, verbose=true)
+        end
+
         @testset "Einsum Tests" begin
             # Test 0
             A = [1 2; 3 4]
