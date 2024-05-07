@@ -3,19 +3,29 @@ using Finch: AsArray
 @testset "interface" begin
     @info "Testing Finch Interface"
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/528
+    let
+        tns = swizzle(Tensor(ones(10, 10)), 1, 2)
+        @test tns[:, :] == ones(10, 10)
+        @test tns[nothing, :, :] == ones(1, 10, 10)
+        @test tns[:, nothing, :] == ones(10, 1, 10)
+        @test tns[:, :, nothing] == ones(10, 10, 1)
+    end
+
     #https://github.com/willow-ahrens/Finch.jl/issues/428
     let
-        using Test
-
         @testset "Verbose" begin
             a = [1 2; 3 4]
             b = [5 6; 7 8]
             a_l = lazy(a)
             b_l = lazy(b)
-    
+
             c = permutedims(broadcast(.+, permutedims(a_l, (2, 1)), permutedims(b_l, (2, 1))), (2, 1))
             compute(c, verbose=true)
         end
+    end
+
+    let
 
         @testset "Einsum Tests" begin
             # Test 0
