@@ -11,6 +11,9 @@ mutable struct LazyTensor{T, N}
 end
 LazyTensor{T}(data, extrude::NTuple{N, Bool}, default) where {T, N} = LazyTensor{T, N}(data, extrude, default)
 
+islazy(arg) = false
+islazy(arg::LazyTensor) = true
+
 Base.ndims(::Type{LazyTensor{T, N}}) where {T, N} = N
 Base.ndims(tns::LazyTensor) = ndims(typeof(tns))
 Base.eltype(::Type{<:LazyTensor{T}}) where {T} = T
@@ -447,9 +450,9 @@ default_scheduler(;verbose=false) = LogicExecutor(DefaultLogicOptimizer(LogicCom
 Compute the value of a lazy tensor. The result is the argument itself, or a
 tuple of arguments if multiple arguments are passed.
 """
-compute(args...; ctx=default_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), args)
-compute(arg; ctx=default_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), (arg,))[1]
-compute(args::Tuple; ctx=default_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), args)
+compute(args...; ctx=default_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), map(lazy, args))
+compute(arg; ctx=default_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), (lazy(arg),))[1]
+compute(args::Tuple; ctx=default_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), map(lazy, args))
 function compute_parse(ctx, args::Tuple)
     args = collect(args)
     vars = map(arg -> alias(gensym(:A)), args)
