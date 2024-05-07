@@ -3,6 +3,15 @@ using Finch: AsArray
 @testset "interface" begin
     @info "Testing Finch Interface"
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/527
+    let
+        tns_1 = swizzle(Tensor(ones(10, 10)), 1, 2)
+        @test tns_1[:, :] == tns_1
+
+        tns_2 = swizzle(Tensor(ones(10)), 1)
+        @test tns_2[:] == tns_2
+    end
+
     #https://github.com/willow-ahrens/Finch.jl/issues/528
     let
         tns = swizzle(Tensor(ones(10, 10)), 1, 2)
