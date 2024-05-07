@@ -179,7 +179,8 @@ function broadcast_to_query(bc::Broadcast.Broadcasted, idxs)
 end
 
 function broadcast_to_query(tns::LazyTensor{T, N}, idxs) where {T, N}
-    data_2 = relabel(tns.data, idxs[1:N]...)
+    idxs_2 = [tns.extrude[i] ? field(gensym(:idx)) : idxs[i] for i in 1:N]
+    data_2 = relabel(tns.data, idxs_2...)
     reorder(data_2, idxs[findall(!, tns.extrude)]...)
 end
 

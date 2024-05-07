@@ -45,7 +45,7 @@ function finch_pointwise_logic_to_code(ex)
     if @capture ex mapjoin(~op, ~args...)
         :($(op.val)($(map(arg -> finch_pointwise_logic_to_code(arg), args)...)))
     elseif (@capture ex reorder(relabel(~arg::isalias, ~idxs_1...), ~idxs_2...))
-        :($(arg.name)[$(map(idx -> idx.name, idxs_1)...)])
+        :($(arg.name)[$(map(idx -> idx in idxs_2 ? idx.name : 1, idxs_1)...)]) #TODO need a trait for the first index
     elseif (@capture ex reorder(~arg::isimmediate, ~idxs...))
         arg.val
     elseif ex.kind === immediate
