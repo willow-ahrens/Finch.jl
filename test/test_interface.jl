@@ -3,6 +3,18 @@ using Finch: AsArray
 @testset "interface" begin
     @info "Testing Finch Interface"
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/524
+    let
+        arr3d = rand(Int, 3, 2, 3) .% 10
+        tns = Tensor(Dense(Dense(Dense(Element(0)))), arr3d)
+        
+        tns_l = lazy(tns)
+        reduced = sum(tns_l, dims=(1, 2))
+        
+        plan = broadcast(+, tns_l, reduced)
+        result = compute(plan)
+    end
+
     #https://github.com/willow-ahrens/Finch.jl/issues/527
     let
         tns_1 = swizzle(Tensor(ones(10, 10)), 1, 2)

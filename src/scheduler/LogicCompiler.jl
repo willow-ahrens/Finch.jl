@@ -24,8 +24,9 @@ function get_structure(
         get!(aliases, node.name, immediate(length(fields) + length(aliases)))
     elseif node.kind === subquery
         if haskey(aliases, node.lhs.name)
-            names[node.lhs]
+            aliases[node.lhs.name]
         else
+            #this will define the alias in aliases dict
             subquery(get_structure(node.lhs, fields, aliases), get_structure(node.arg, fields, aliases))
         end
     elseif node.kind === table
