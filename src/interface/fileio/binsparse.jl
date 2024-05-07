@@ -36,7 +36,6 @@ be fully conformant. Please file bug reports if you see anything amiss.
 function bspread end
 
 using Finch: level_ndims, SwizzleArray
-using CIndices
 
 bspread_type_lookup = OrderedDict(
     "uint8" => UInt8,

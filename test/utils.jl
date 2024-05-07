@@ -36,12 +36,6 @@ isstructequal(a::T, b::T) where {T <: Element} =
 isstructequal(a::T, b::T) where {T <: Separate} =
   all(isstructequal(x,y) for (x,y) in zip(a.val, b.val)) && isstructequal(a.lvl, b.lvl)
 
-isstructequal(a::T, b::T) where {T <: RepeatRLE} =
-    a.shape == b.shape &&
-    a.ptr == b.ptr &&
-    a.idx == b.idx &&
-    a.val == b.val
-
 isstructequal(a::T, b::T) where {T <: Dense} =
     a.shape == b.shape &&
     isstructequal(a.lvl, b.lvl)
@@ -94,10 +88,6 @@ isstructequal(a::T, b::T) where {T <: SparseByteMap} =
     a.ptr == b.ptr &&
     a.tbl == b.tbl &&
     a.srt == b.srt &&
-    isstructequal(a.lvl, b.lvl)
-
-isstructequal(a::T, b::T) where {T <: SparseTriangle} =
-    a.shape == b.shape &&
     isstructequal(a.lvl, b.lvl)
 
 isstructequal(a::T, b::T) where {T <: SparseRLE} =

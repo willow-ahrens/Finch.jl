@@ -1,9 +1,9 @@
 using Pkg
-# tempdir = mktempdir()
-# Pkg.activate(tempdir)
-# Pkg.develop(PackageSpec(path = joinpath(@__DIR__, "..")))
-# Pkg.add(["BenchmarkTools", "PkgBenchmark", "MatrixDepot"])
-# Pkg.resolve()
+#tempdir = mktempdir()
+#Pkg.activate(tempdir)
+#Pkg.develop(PackageSpec(path = joinpath(@__DIR__, "..")))
+#Pkg.add(["BenchmarkTools", "PkgBenchmark", "MatrixDepot"])
+#Pkg.resolve()
 
 using Finch
 using BenchmarkTools
@@ -17,6 +17,57 @@ include(joinpath(@__DIR__, "../docs/examples/spgemm.jl"))
 include(joinpath(@__DIR__, "../docs/examples/triangle_counting.jl"))
 
 SUITE = BenchmarkGroup()
+
+SUITE["high-level"] = BenchmarkGroup()
+
+let
+    k = Ref(0.0)
+    x = rand(1)
+    y = rand(1)
+    SUITE["high-level"]["einsum_spmv_compile_overhead"] = @benchmarkable(
+        begin
+            A, x, y = (A, $x, $y)
+            @einsum y[i] += A[i, j] * x[j]
+        end,
+        setup = (A = Tensor(Dense(SparseList(Element($k[] += 1))), fsprand(1, 1, 1)))
+    )
+end
+
+let
+    A = Tensor(Dense(SparseList(Element(0.0))), fsprand(1, 1, 1))
+    x = rand(1)
+    SUITE["high-level"]["einsum_spmv_call_overhead"] = @benchmarkable(
+        begin
+            A, x = ($A, $x)
+            @einsum y[i] += A[i, j] * x[j]
+        end,
+        seconds = 10.0 #Bug in benchmarktools, will be fixed soon.
+    )
+end
+
+eval(let
+    A = Tensor(Dense(SparseList(Element(0.0))), fsprand(1, 1, 1))
+    x = rand(1)
+    y = rand(1)
+    @finch_kernel function spmv(y, A, x)
+        for j=_, i=_
+            y[i] += A[i, j] * x[j]
+        end
+    end
+end)
+
+let
+    A = Tensor(Dense(SparseList(Element(0.0))), fsprand(1, 1, 1))
+    x = rand(1)
+    y = rand(1)
+    SUITE["high-level"]["einsum_spmv_baremetal"] = @benchmarkable(
+        begin
+            A, x, y = ($A, $x, $y)
+            spmv(y, A, x)
+        end,
+        evals = 1000
+    )
+end
 
 SUITE["compile"] = BenchmarkGroup()
 
@@ -120,5 +171,3 @@ for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     x = Tensor(Dense{Int64}(Element{0.0, Float64, Int64}()), rand(size(A)[2]))
     SUITE["indices"]["SpMV_64"][mtx] = @benchmarkable spmv64($A, $x) 
 end
-
-foreach(((k, v),) -> BenchmarkTools.warmup(v), SUITE)

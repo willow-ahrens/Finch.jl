@@ -1,4 +1,31 @@
 """
+    getunbound(stmt)
+
+Return an iterator over the indices in a Finch program that have yet to be bound.
+```julia
+julia> getunbound(@finch_program for i=_; :a[i, j] += 2 end)
+[j]
+julia> getunbound(@finch_program i + j * 2 * i)
+[i, j]
+```
+"""
+getunbound(ex) = istree(ex) ? mapreduce(getunbound, union, arguments(ex), init=[]) : []
+
+function getunbound(ex::FinchNode)
+    if ex.kind === index
+        return [ex]
+    elseif @capture ex call(d, ~idx...)
+        return []
+    elseif ex.kind === loop
+        return setdiff(union(getunbound(ex.body), getunbound(ex.ext)), getunbound(ex.idx))
+    elseif istree(ex)
+        return mapreduce(Finch.getunbound, union, arguments(ex), init=[])
+    else
+        return []
+    end
+end
+
+"""
     get_program_rules(alg, shash)
 
 Return the program rule set for Finch. One can dispatch on the `alg` trait to
@@ -184,9 +211,9 @@ struct SimplifyStyle end
 combine_style(a::SimplifyStyle, b::SimplifyStyle) = a
 
 
-function lower(root, ctx::AbstractCompiler,  ::SimplifyStyle)
+function lower(ctx::AbstractCompiler, root, ::SimplifyStyle)
     root = Rewrite(Prewalk((x) -> if x.kind === virtual visit_simplify(x.val) end))(root)
-    root = simplify(root, ctx)
+    root = simplify(ctx, root)
     ctx(root)
 end
 
@@ -204,7 +231,7 @@ function visit_simplify(node::FinchNode)
     end
 end
 
-function simplify(root, ctx)
+function simplify(ctx, root)
     Rewrite(Fixpoint(Chain([
         Prewalk(Fixpoint(Chain(ctx.program_rules))),
         #these rules are non-customizeable:

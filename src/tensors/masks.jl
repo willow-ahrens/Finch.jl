@@ -13,11 +13,11 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::DiagMask)
     print(io, "diagmask")
 end
 
-virtualize(ex, ::Type{DiagMask}, ctx) = diagmask
+virtualize(ctx, ex, ::Type{DiagMask}) = diagmask
 FinchNotation.finch_leaf(x::DiagMask) = virtual(x)
-Finch.virtual_size(::DiagMask, ctx) = (dimless, dimless)
+Finch.virtual_size(ctx, ::DiagMask) = (dimless, dimless)
 
-function instantiate(arr::DiagMask, ctx, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
+function instantiate(ctx, arr::DiagMask, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
     Unfurled(
         arr = arr,
         body = Furlable(
@@ -55,11 +55,11 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::UpTriMask)
     print(io, "uptrimask")
 end
 
-virtualize(ex, ::Type{UpTriMask}, ctx) = uptrimask
+virtualize(ctx, ex, ::Type{UpTriMask}) = uptrimask
 FinchNotation.finch_leaf(x::UpTriMask) = virtual(x)
-Finch.virtual_size(::UpTriMask, ctx) = (dimless, dimless)
+Finch.virtual_size(ctx, ::UpTriMask) = (dimless, dimless)
 
-function instantiate(arr::UpTriMask, ctx, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
+function instantiate(ctx, arr::UpTriMask, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
     Unfurled(
         arr = arr,
         body = Furlable(
@@ -95,11 +95,11 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::LoTriMask)
     print(io, "lotrimask")
 end
 
-virtualize(ex, ::Type{LoTriMask}, ctx) = lotrimask
+virtualize(ctx, ex, ::Type{LoTriMask}) = lotrimask
 FinchNotation.finch_leaf(x::LoTriMask) = virtual(x)
-Finch.virtual_size(::LoTriMask, ctx) = (dimless, dimless)
+Finch.virtual_size(ctx, ::LoTriMask) = (dimless, dimless)
 
-function instantiate(arr::LoTriMask, ctx, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
+function instantiate(ctx, arr::LoTriMask, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
     Unfurled(
         arr = arr,
         body = Furlable(
@@ -135,11 +135,11 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::BandMask)
     print(io, "bandmask")
 end
 
-virtualize(ex, ::Type{BandMask}, ctx) = bandmask
+virtualize(ctx, ex, ::Type{BandMask}) = bandmask
 FinchNotation.finch_leaf(x::BandMask) = virtual(x)
-Finch.virtual_size(::BandMask, ctx) = (dimless, dimless, dimless)
+Finch.virtual_size(ctx, ::BandMask) = (dimless, dimless, dimless)
 
-function instantiate(arr::BandMask, ctx, mode, subprotos, ::typeof(defaultread), ::typeof(defaultread), ::typeof(defaultread))
+function instantiate(ctx, arr::BandMask, mode, subprotos, ::typeof(defaultread), ::typeof(defaultread), ::typeof(defaultread))
     Unfurled(
         arr = arr,
         tns = Furlable(
@@ -181,14 +181,14 @@ struct VirtualSplitMask
     P
 end
 
-function virtualize(ex, ::Type{SplitMask}, ctx)
+function virtualize(ctx, ex, ::Type{SplitMask})
     return VirtualSplitMask(value(:($ex.P), Int))
 end
 
 FinchNotation.finch_leaf(x::VirtualSplitMask) = virtual(x)
-Finch.virtual_size(arr::VirtualSplitMask, ctx) = (dimless, Extent(literal(1), arr.P))
+Finch.virtual_size(ctx, arr::VirtualSplitMask) = (dimless, Extent(literal(1), arr.P))
 
-function instantiate(arr::VirtualSplitMask, ctx, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
+function instantiate(ctx, arr::VirtualSplitMask, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
     Unfurled(
         arr = arr,
         body = Furlable(
@@ -228,10 +228,10 @@ struct VirtualChunkMask
     dim
 end
 
-function virtualize(ex, ::Type{ChunkMask{Dim}}, ctx) where {Dim}
+function virtualize(ctx, ex, ::Type{ChunkMask{Dim}}) where {Dim}
     return VirtualChunkMask(
         value(:($ex.b), Int),
-        virtualize(:($ex.dim), Dim, ctx))
+        virtualize(ctx, :($ex.dim), Dim))
 end
 
 """
@@ -243,16 +243,16 @@ that this specializes each column for the cases where `i < b * (j - 1)`, `b * (j
 """
 function chunkmask end
 
-function Finch.virtual_call(::typeof(chunkmask), ctx, b, dim)
+function Finch.virtual_call(ctx, ::typeof(chunkmask), b, dim)
     if dim.kind === virtual
         return VirtualChunkMask(b, dim.val)
     end
 end
 
 FinchNotation.finch_leaf(x::VirtualChunkMask) = virtual(x)
-Finch.virtual_size(arr::VirtualChunkMask, ctx) = (arr.dim, Extent(literal(1), call(cld, measure(arr.dim), arr.b)))
+Finch.virtual_size(ctx, arr::VirtualChunkMask) = (arr.dim, Extent(literal(1), call(cld, measure(arr.dim), arr.b)))
 
-function instantiate(arr::VirtualChunkMask, ctx, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
+function instantiate(ctx, arr::VirtualChunkMask, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
     Unfurled(
         arr = arr,
         body = Furlable(

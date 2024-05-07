@@ -1,12 +1,12 @@
 isfoldable(x) = isconstant(x) || (x.kind === call && isliteral(x.op) && all(isfoldable, x.args))
 
 """
-    evaluate_partial(root, ctx)
+    evaluate_partial(ctx, root)
 
 This pass evaluates tags, global variable definitions, and foldable functions
 into the context bindings.
 """
-function evaluate_partial(root, ctx)
+function evaluate_partial(ctx, root)
     root = Rewrite(Fixpoint(Postwalk(Chain([
         (@rule tag(~var, ~bind::isindex) => bind),
         (@rule tag(~var, ~bind::isvariable) => bind),
@@ -26,7 +26,7 @@ function evaluate_partial(root, ctx)
         end),
         Postwalk(Fixpoint(Chain([
             (@rule call(~f::isliteral, ~a::(All(Or(isvariable, isvirtual, isfoldable)))...) => begin
-               x = virtual_call(f.val, ctx, a...)
+               x = virtual_call(ctx, f.val, a...)
                if x !== nothing
                    finch_leaf(x)
                end
@@ -53,11 +53,11 @@ function evaluate_partial(root, ctx)
     ])))(root)
 end
 
-virtual_call(f, ctx, a...) = nothing
+virtual_call(ctx, f, a...) = nothing
 
-function virtual_call(::typeof(default), ctx, a) 
+function virtual_call(ctx, ::typeof(default), a) 
     if haskey(ctx.bindings, getroot(a))
-        return virtual_default(a, ctx)
+        return virtual_default(ctx, a)
     end
 end
 

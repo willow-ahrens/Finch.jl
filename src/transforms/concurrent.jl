@@ -3,7 +3,7 @@ struct FinchConcurrencyError
 end
 
 """
-    is_injective(tns, ctx)
+    is_injective(ctx, tns)
 
 Returns a vector of booleans, one for each dimension of the tensor, indicating
 whether the access is injective in that dimension.  A dimension is injective if
@@ -13,7 +13,7 @@ array.
 function is_injective end
 
 """
-    is_atomic(tns, ctx)
+    is_atomic(ctx, tns)
 
 Returns a boolean indicating whether it is safe to update the same element of the
 tensor from multiple simultaneous threads.
@@ -56,15 +56,15 @@ function ensure_concurrent(root, ctx)
         acc = first(accs)
 
         if !(
-                (@capture(acc, access(~tns, ~mode, ~i..., idx)) && is_injective(tns, ctx)[length(i) + 1]) ||
+                (@capture(acc, access(~tns, ~mode, ~i..., idx)) && is_injective(ctx, tns)[length(i) + 1]) ||
                 isassociative(ctx.algebra, first(ops))
             )
             throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not associative"))
         end
 
         if !(
-            (is_atomic(acc.tns, ctx)) ||
-            (@capture(acc, access(~tns, ~mode, ~i..., idx)) && is_injective(tns, ctx)[length(i) + 1])
+            (is_atomic(ctx, acc.tns)) ||
+            (@capture(acc, access(~tns, ~mode, ~i..., idx)) && is_injective(ctx, tns)[length(i) + 1])
         )
             throw(FinchConcurrencyError("Cannot prove that $(acc) is safe to update from multiple threads"))
         end

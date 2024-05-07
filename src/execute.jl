@@ -1,25 +1,22 @@
-abstract type CompileMode end
-struct DebugFinch <: CompileMode end
-const debugfinch = DebugFinch()
-virtualize(ex, ::Type{DebugFinch}, ctx) = DebugFinch()
-struct SafeFinch <: CompileMode end
-const safefinch = SafeFinch()
-virtualize(ex, ::Type{SafeFinch}, ctx) = SafeFinch()
-struct FastFinch <: CompileMode end
-const fastfinch = FastFinch()
-virtualize(ex, ::Type{FastFinch}, ctx) = FastFinch()
-
-issafe(::DebugFinch) = true
-issafe(::SafeFinch) = true
-issafe(::FastFinch) = false
+function issafe(mode)
+    if mode === :debug
+        return true
+    elseif mode === :safe
+        return true
+    elseif mode === :fast
+        return false
+    else
+        throw(ArgumentError("Unknown mode: $mode"))
+    end
+end
 
 """
-    instantiate!(prgm, ctx)
+    instantiate!(ctx, prgm)
 
 A transformation to instantiate readers and updaters before executing an
 expression.
 """
-function instantiate!(prgm, ctx) 
+function instantiate!(ctx, prgm) 
     prgm = InstantiateTensors(ctx=ctx)(prgm)
     return prgm
 end
@@ -47,7 +44,7 @@ function (ctx::InstantiateTensors)(node::FinchNode)
     elseif (@capture node access(~tns, ~mode, ~idxs...)) && !(getroot(tns) in ctx.escape)
         #@assert get(ctx.ctx.modes, tns, reader) === node.mode.val
         protos = [(mode.val === reader ? defaultread : defaultupdate) for _ in idxs]
-        tns_2 = instantiate(tns, ctx.ctx, mode.val, protos)
+        tns_2 = instantiate(ctx.ctx, tns, mode.val, protos)
         access(tns_2, mode, idxs...)
     elseif istree(node)
         return similarterm(node, operation(node), map(ctx, arguments(node)))
@@ -56,53 +53,62 @@ function (ctx::InstantiateTensors)(node::FinchNode)
     end
 end
 
-execute(ex) = execute(ex, NamedTuple())
+execute(ex; algebra = DefaultAlgebra(), mode = :safe) =
+    execute_impl(ex, Val(algebra), Val(mode))
 
-@staged function execute(ex, opts)
-    contain(JuliaContext()) do ctx
-        code = execute_code(:ex, ex; virtualize(:opts, opts, ctx)...)
-        quote
-            # try
-                @inbounds @fastmath begin
+getvalue(::Type{Val{v}}) where {v} = v
+
+@staged function execute_impl(ex, algebra, mode)
+    code = execute_code(:ex, ex; algebra=getvalue(algebra), mode=getvalue(mode))
+    if mode === :debug
+        return quote
+            try
+                begin
                     $(code |> unblock)
                 end
-            # catch
-            #    println("Error executing code:")
-            #    println($(QuoteNode(code |> unblock |> pretty |> unquote_literals)))
-            #    rethrow()
-            #end
+            catch
+                println("Error executing code:")
+                println($(QuoteNode(code |> unblock |> pretty |> unquote_literals)))
+                rethrow()
+            end
+        end
+    else
+        return quote
+            @inbounds @fastmath begin
+                $(code |> unblock |> pretty |> unquote_literals)
+            end
         end
     end
 end
 
-function execute_code(ex, T; algebra = DefaultAlgebra(), mode = safefinch, ctx = LowerJulia(algebra = algebra, mode=mode))
+function execute_code(ex, T; algebra = DefaultAlgebra(), mode = :safe, ctx = LowerJulia(algebra = algebra, mode=mode))
     code = contain(ctx) do ctx_2
         prgm = nothing
-        prgm = virtualize(ex, T, ctx_2.code)
-        lower_global(prgm, ctx_2)
+        prgm = virtualize(ctx_2.code, ex, T)
+        lower_global(ctx_2, prgm)
     end
 end
 
 """
-    lower_global(prgm, ctx)
+    lower_global(ctx, prgm)
 
 lower the program `prgm` at global scope in the context `ctx`.
 """
-function lower_global(prgm, ctx)
+function lower_global(ctx, prgm)
     prgm = enforce_scopes(prgm)
-    prgm = evaluate_partial(prgm, ctx)
+    prgm = evaluate_partial(ctx, prgm)
     code = contain(ctx) do ctx_2
         quote
             $(ctx.needs_return) = true
             $(ctx.result) = nothing
             $(begin
-                prgm = wrapperize(prgm, ctx_2)
+                prgm = wrapperize(ctx_2, prgm)
                 prgm = enforce_lifecycles(prgm)
                 prgm = dimensionalize!(prgm, ctx_2)
-                prgm = concordize(prgm, ctx_2)
-                prgm = evaluate_partial(prgm, ctx_2)
-                prgm = simplify(prgm, ctx_2) #appears necessary
-                prgm = instantiate!(prgm, ctx_2)
+                prgm = concordize(ctx_2, prgm)
+                prgm = evaluate_partial(ctx_2, prgm)
+                prgm = simplify(ctx_2, prgm) #appears necessary
+                prgm = instantiate!(ctx_2, prgm)
                 contain(ctx_2) do ctx_3
                     ctx_3(prgm)
                 end
@@ -154,8 +160,11 @@ sparsity information to reliably skip iterations when possible.
 `options` are optional keyword arguments:
 
  - `algebra`: the algebra to use for the program. The default is `DefaultAlgebra()`.
- - `mode`: the optimization mode to use for the program. The default is `fastfinch`.
- - `ctx`: the context to use for the program. The default is a `LowerJulia` context with the given options.
+ - `mode`: the optimization mode to use for the program. Possible modes are:
+    - `:debug`: run the program in debug mode, with bounds checking and better error handling.
+    - `:safe`: run the program in safe mode, with modest checks for performance and correctness.
+    - `:fast`: run the program in fast mode, with no checks or warnings, this mode is for power users.
+    The default is `:safe`.
 
 See also: [`@finch_code`](@ref)
 """
@@ -173,7 +182,7 @@ macro finch(opts_ex...)
     )
     res = esc(:res)
     thunk = quote
-        res = $execute($prgm, (;$(map(esc, opts)...),))
+        res = $execute($prgm, ;$(map(esc, opts)...),)
     end
     for tns in something(FinchNotation.finch_parse_yieldbind(ex), FinchNotation.finch_parse_default_yieldbind(ex))
         push!(thunk.args, quote
@@ -219,11 +228,11 @@ type `prgm`. Here, `fname` is the name of the function and `args` is a
 
 See also: [`@finch`](@ref)
 """
-function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = safefinch, ctx = LowerJulia(algebra=algebra, mode=mode))
+function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = :safe, ctx = LowerJulia(algebra=algebra, mode=mode))
     maybe_typeof(x) = x isa Type ? x : typeof(x)
     code = contain(ctx) do ctx_2
         foreach(args) do (key, val)
-            ctx_2.bindings[variable(key)] = finch_leaf(virtualize(key, maybe_typeof(val), ctx_2.code, key))
+            ctx_2.bindings[variable(key)] = finch_leaf(virtualize(ctx_2.code, key, maybe_typeof(val), key))
         end
         execute_code(:UNREACHABLE, prgm, algebra = algebra, mode = mode, ctx = ctx_2)
     end |> pretty |> unresolve |> dataflow |> unquote_literals

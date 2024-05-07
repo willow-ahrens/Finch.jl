@@ -143,12 +143,12 @@ mutable struct VirtualSparseIntervalLevel <: AbstractVirtualLevel
     prev_pos
 end
 
-is_level_injective(lvl::VirtualSparseIntervalLevel, ctx) = [false, is_level_injective(lvl.lvl, ctx)...]
-is_level_concurrent(lvl::VirtualSparseIntervalLevel, ctx) = [false, is_level_concurrent(lvl.lvl, ctx)...]
-is_level_atomic(lvl::VirtualSparseIntervalLevel, ctx) = false
+is_level_injective(ctx, lvl::VirtualSparseIntervalLevel) = [false, is_level_injective(ctx, lvl.lvl)...]
+is_level_concurrent(ctx, lvl::VirtualSparseIntervalLevel) = [false, is_level_concurrent(ctx, lvl.lvl)...]
+is_level_atomic(ctx, lvl::VirtualSparseIntervalLevel) = false
   
 
-function virtualize(ex, ::Type{SparseIntervalLevel{Ti, Ptr, Left, Right, Lvl}}, ctx, tag=:lvl) where {Ti, Ptr, Left, Right, Lvl}
+function virtualize(ctx, ex, ::Type{SparseIntervalLevel{Ti, Ptr, Left, Right, Lvl}}, tag=:lvl) where {Ti, Ptr, Left, Right, Lvl}
     sym = freshen(ctx, tag)
     ptr = freshen(ctx, tag, :_ptr)
     left = freshen(ctx, tag, :_left)
@@ -159,14 +159,14 @@ function virtualize(ex, ::Type{SparseIntervalLevel{Ti, Ptr, Left, Right, Lvl}}, 
         $left = $sym.left
         $right = $sym.right
     end)
-    lvl_2 = virtualize(:($sym.lvl), Lvl, ctx, sym)
+    lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
     shape = value(:($sym.shape), Int)
     qos_fill = freshen(ctx, sym, :_qos_fill)
     qos_stop = freshen(ctx, sym, :_qos_stop)
     prev_pos = freshen(ctx, sym, :_prev_pos)
     VirtualSparseIntervalLevel(lvl_2, sym, Ti, ptr, left, right, shape, qos_fill, qos_stop, prev_pos)
 end
-function lower(lvl::VirtualSparseIntervalLevel, ctx::AbstractCompiler, ::DefaultStyle)
+function lower(ctx::AbstractCompiler, lvl::VirtualSparseIntervalLevel, ::DefaultStyle)
     quote
         $SparseIntervalLevel{$(lvl.Ti)}(
             $(ctx(lvl.lvl)),
@@ -180,14 +180,14 @@ end
 
 Base.summary(lvl::VirtualSparseIntervalLevel) = "SparseInterval($(summary(lvl.lvl)))"
 
-function virtual_level_size(lvl::VirtualSparseIntervalLevel, ctx)
+function virtual_level_size(ctx, lvl::VirtualSparseIntervalLevel)
     ext = make_extent(lvl.Ti, literal(lvl.Ti(1)), lvl.shape)
-    (virtual_level_size(lvl.lvl, ctx)..., ext)
+    (virtual_level_size(ctx, lvl.lvl)..., ext)
 end
 
-function virtual_level_resize!(lvl::VirtualSparseIntervalLevel, ctx, dims...)
+function virtual_level_resize!(ctx, lvl::VirtualSparseIntervalLevel, dims...)
     lvl.shape = getstop(dims[end])
-    lvl.lvl = virtual_level_resize!(lvl.lvl, ctx, dims[1:end-1]...)
+    lvl.lvl = virtual_level_resize!(ctx, lvl.lvl, dims[1:end-1]...)
     lvl
 end
 
@@ -196,7 +196,7 @@ virtual_level_eltype(lvl::VirtualSparseIntervalLevel) = virtual_level_eltype(lvl
 virtual_level_default(lvl::VirtualSparseIntervalLevel) = virtual_level_default(lvl.lvl)
 postype(lvl::VirtualSparseIntervalLevel) = postype(lvl.lvl)
 
-function declare_level!(lvl::VirtualSparseIntervalLevel, ctx::AbstractCompiler, pos, init)
+function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseIntervalLevel, pos, init)
     Ti = lvl.Ti
     Tp = postype(lvl) 
     push!(ctx.code.preamble, quote
@@ -208,11 +208,11 @@ function declare_level!(lvl::VirtualSparseIntervalLevel, ctx::AbstractCompiler, 
             $(lvl.prev_pos) = $(Tp(0))
         end)
     end
-    lvl.lvl = declare_level!(lvl.lvl, ctx, literal(Tp(0)), init)
+    lvl.lvl = declare_level!(ctx, lvl.lvl, literal(Tp(0)), init)
     return lvl
 end
 
-function assemble_level!(lvl::VirtualSparseIntervalLevel, ctx, pos_start, pos_stop)
+function assemble_level!(ctx, lvl::VirtualSparseIntervalLevel, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     return quote
@@ -221,9 +221,9 @@ function assemble_level!(lvl::VirtualSparseIntervalLevel, ctx, pos_start, pos_st
     end
 end
 
-function freeze_level!(lvl::VirtualSparseIntervalLevel, ctx::AbstractCompiler, pos_stop)
+function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseIntervalLevel, pos_stop)
     p = freshen(ctx.code, :p)
-    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(ctx, pos_stop)))
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
         resize!($(lvl.ptr), $pos_stop + 1)
@@ -234,13 +234,13 @@ function freeze_level!(lvl::VirtualSparseIntervalLevel, ctx::AbstractCompiler, p
         resize!($(lvl.left), $qos_stop)
         resize!($(lvl.right), $qos_stop)
     end)
-    lvl.lvl = freeze_level!(lvl.lvl, ctx, value(qos_stop))
+    lvl.lvl = freeze_level!(ctx, lvl.lvl, value(qos_stop))
     return lvl
 end
 
-function thaw_level!(lvl::VirtualSparseIntervalLevel, ctx::AbstractCompiler, pos_stop)
+function thaw_level!(ctx::AbstractCompiler, lvl::VirtualSparseIntervalLevel, pos_stop)
     p = freshen(ctx.code, :p)
-    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(pos_stop, ctx)))
+    pos_stop = ctx(cache!(ctx, :pos_stop, simplify(ctx, pos_stop)))
     qos_stop = freshen(ctx.code, :qos_stop)
     push!(ctx.code.preamble, quote
         $(lvl.qos_fill) = $(lvl.ptr)[$pos_stop + 1] - 1
@@ -255,11 +255,11 @@ function thaw_level!(lvl::VirtualSparseIntervalLevel, ctx::AbstractCompiler, pos
             $(lvl.ptr)[$p + 1] -= $(lvl.ptr)[$p]
         end
     end)
-    lvl.lvl = thaw_level!(lvl.lvl, ctx, value(qos_stop))
+    lvl.lvl = thaw_level!(ctx, lvl.lvl, value(qos_stop))
     return lvl
 end
 
-function instantiate(fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, ctx, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
     Tp = postype(lvl) 
@@ -291,7 +291,7 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, ctx, mode
                 ),
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop, lvl.Ti),
-                    body = (ctx, ext) -> Run(Simplify(instantiate(VirtualSubFiber(lvl.lvl, value(my_q)), ctx, mode, subprotos))),
+                    body = (ctx, ext) -> Run(Simplify(instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q)), mode, subprotos))),
                 ),
                 Phase(
                     stop = (ctx, ext) -> lvl.shape,
@@ -302,10 +302,10 @@ function instantiate(fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, ctx, mode
     )
 end
 
-instantiate(fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, ctx, mode::Updater, protos) = 
-    instantiate(VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), ctx, mode, protos)
+instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, mode::Updater, protos) = 
+    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), mode, protos)
 
-function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseIntervalLevel}, ctx, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseIntervalLevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
     Tp = postype(lvl) 
@@ -330,11 +330,11 @@ function instantiate(fbr::VirtualHollowSubFiber{VirtualSparseIntervalLevel}, ctx
                             $qos_stop = max($qos_stop << 1, 1)
                             Finch.resize_if_smaller!($(lvl.left), $qos_stop)
                             Finch.resize_if_smaller!($(lvl.right), $qos_stop)
-                            $(contain(ctx_2->assemble_level!(lvl.lvl, ctx_2, value(qos, Tp), value(qos_stop, Tp)), ctx))
+                            $(contain(ctx_2->assemble_level!(ctx_2, lvl.lvl, value(qos, Tp), value(qos_stop, Tp)), ctx))
                         end
                         $dirty = false
                     end,
-                    body = (ctx) -> instantiate(VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), ctx, mode, subprotos),
+                    body = (ctx) -> instantiate(ctx, VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), mode, subprotos),
                     epilogue = quote
                         if $dirty
                             $(fbr.dirty) = true

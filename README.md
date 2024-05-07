@@ -45,13 +45,13 @@ Finch supports a wide variety of array structure beyond sparsity. Whether you're
 ## Why Finch.jl?
 
 ### Faster Sparse Kernel Development:
-If you often find yourself needing to write sparse code for unusual or specific problems that don't have existing library solutions, Finch.jl is for you. Finch lets you outline a high-level plan and then compiles it into efficient code, making your task much easier.
+Finch.jl helps you write sparse code for unusual or specific problems that don't have existing library solutions. Finch lets you outline a high-level plan and then compiles it into efficient code, making your task much easier.
 
 ### Customizeable Array Formats:
-If you're trying to implement a new array type (e.g. blocked, padded, ragged, etc...), Finch can help. You can use the Finch tensor interface to describe the structure of the array, and Finch will take care of creating a full implementation. This includes functionalities like getindex, map, reduce, and more, all of which will work inside other Finch kernels.
+Finch makes it easier to implement a new array type (e.g. blocked, padded, ragged, etc...). You can use the Finch tensor interface to describe the structure of the array, and Finch will take care of creating a full implementation. This includes functionalities like getindex, map, reduce, and more, all of which will work inside other Finch kernels.
 
 ### Convenient Sparse Operations:
-If you need flexible and convenient support for sparse array operations, Finch.jl may be a good choice. The formats in Finch can adapt to many use cases, and it supports high-level commands like broadcast and reduce, as well as fused execution. By understanding how Finch generates implementations, you can get decent performance for a variety of problems.
+Finch is flexible and supports many convenient sparse array operations. The formats in Finch can adapt to many use cases, and it supports high-level commands like broadcast and reduce, as well as fused execution. By understanding how Finch generates implementations, you can get decent performance for a variety of problems.
 
 Note: Finch is currently optimized for sparse code and does not implement traditional dense optimizations. We are currently adding these features, but if you need dense performance, you may want to look at [JuliaGPU](https://github.com/JuliaGPU)
 
@@ -109,9 +109,18 @@ julia> using Pkg; Pkg.add("Finch")
 
 ## Learn More
 
+### Finch System
+
+The following manuscript provides a good overview of the Finch System:
+
+[https://arxiv.org/abs/2404.16730](https://arxiv.org/abs/2404.16730)
+
+### Looplets IR
+
 At it's heart, Finch is powered by a new domain specific language for
 coiteration, breaking structured iterators into control flow units we call
 **Looplets**. Looplets are lowered progressively with
-several stages for rewriting and simplification.
+several stages for rewriting and simplification. More on Looplets:
 
-The technologies enabling Finch are described in our [manuscript](https://doi.org/10.1145/3579990.3580020).
+[https://doi.org/10.1145/3579990.3580020](https://doi.org/10.1145/3579990.3580020)
+[https://arxiv.org/abs/2209.05250](https://arxiv.org/abs/2209.05250)
