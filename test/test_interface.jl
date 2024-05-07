@@ -551,6 +551,15 @@ using Finch: AsArray
         @test permutedims(A_tns, perm) == A_t
     end
 
+    #https://github.com/willow-ahrens/Finch.jl/pull/477
+    let
+        A = zeros(2, 3, 3)
+        A_tns = Tensor(Dense(Dense(Dense(Element(0.0)))), A)
+
+        @test compute(A) == A #If the scheduler improves, we can change this to ===
+        @test compute(A_tns) == A_tns #If the scheduler improves, we can change this to ===
+    end
+
     #https://github.com/willow-ahrens/Finch.jl/issues/481
     let
         r = fsprand(1, 10, 10, 0.01)
