@@ -447,7 +447,6 @@ end
 
 function (ctx::DefaultLogicOptimizer)(prgm)
     prgm = optimize(prgm)
-    display(prgm)
     ctx.ctx(prgm)
 end
 
