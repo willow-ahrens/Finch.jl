@@ -30,11 +30,21 @@ function Base.copy(bc::Broadcasted{FinchStyle{N}}) where {N}
     return compute(copy(Broadcasted{LazyStyle{N}}(bc.f, bc.args)))
 end
 
-function Base.reduce(op, src::Tensor; kw...)
-    reduce(op, broadcasted(identity, src); kw...)
+function Base.reduce(op, src::Tensor; dims=:, init= initial_value(op, eltype(src)))
+    res = compute(reduce(op, lazy(src); dims=dims, init=init))
+    if dims === Colon()
+        return res[]
+    else
+        return res
+    end
 end
-function Base.reduce(op, src::SwizzleArray; kw...)
-    reduce(op, broadcasted(identity, src); kw...)
+function Base.reduce(op, src::SwizzleArray; dims=:, init= initial_value(op, eltype(src)))
+    res = compute(reduce(op, lazy(src); dims=dims, init=init))
+    if dims === Colon()
+        return res[]
+    else
+        return res
+    end
 end
 
 function Base.mapreduce(f, op, src::Tensor, args::Union{Tensor, Base.AbstractArrayOrBroadcasted, Number}...; kw...)

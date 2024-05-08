@@ -4,18 +4,19 @@ const ID = 4
 
 @enum LogicNodeKind begin
     immediate =  0ID
-    field     =  1ID
-    alias     =  2ID
-    table     =  3ID | IS_TREE
-    mapjoin   =  4ID | IS_TREE
-    aggregate =  5ID | IS_TREE
-    reorder   =  6ID | IS_TREE
-    relabel   =  7ID | IS_TREE
-    reformat  =  8ID | IS_TREE
-    subquery  =  9ID | IS_TREE
-    query     = 10ID | IS_TREE | IS_STATEFUL
-    produces  = 11ID | IS_TREE | IS_STATEFUL
-    plan      = 12ID | IS_TREE | IS_STATEFUL
+    deferred  =  1ID
+    field     =  2ID
+    alias     =  3ID
+    table     =  4ID | IS_TREE
+    mapjoin   =  5ID | IS_TREE
+    aggregate =  6ID | IS_TREE
+    reorder   =  7ID | IS_TREE
+    relabel   =  8ID | IS_TREE
+    reformat  =  9ID | IS_TREE
+    subquery  = 10ID | IS_TREE
+    query     = 11ID | IS_TREE | IS_STATEFUL
+    produces  = 12ID | IS_TREE | IS_STATEFUL
+    plan      = 13ID | IS_TREE | IS_STATEFUL
 end
 
 """
@@ -24,6 +25,13 @@ end
 Logical AST expression for the literal value `val`.
 """
 immediate
+
+"""
+    deferred(ex, [type])
+
+Logical AST expression for an expression `ex` of type `type`, yet to be evaluated.
+"""
+deferred
 
 """
     field(name)
@@ -86,9 +94,9 @@ Logical AST statement that reformats `arg` into the tensor `tns`.
 reformat
 
 """
-    subquery(body, arg)
+    subquery(lhs, arg)
 
-Logical AST statement that executes `body`, then evaluates `arg` in the resulting scope.
+Logical AST statement that evaluates `arg`, binding the result to `lhs`, and returns `arg`.
 """
 subquery
 
@@ -103,14 +111,14 @@ query
     produces(args...)
 
 Logical AST statement that returns `args...` from the current plan. Halts
-execution of the plan.
+execution of the program.
 """
 produces
 
 """
-    plan(bodies..., produces(args...))
+    plan(bodies...)
 
-Logical AST statement that executes a sequence of plans `bodies...`.
+Logical AST statement that executes a sequence of statements `bodies...`.
 """
 plan
 
@@ -126,6 +134,7 @@ differentiated by a `FinchLogic.LogicNodeKind` enum.
 mutable struct LogicNode
     kind::LogicNodeKind
     val::Any
+    type::Type
     children::Vector{LogicNode}
 end
 
@@ -135,6 +144,13 @@ end
 Returns true if the node is a finch immediate
 """
 isimmediate(ex::LogicNode) = ex.kind === immediate
+
+"""
+    isdeferred(node)
+
+Returns true if the node is a finch immediate
+"""
+isdeferred(ex::LogicNode) = ex.kind === deferred
 
 """
     isalias(node)
@@ -158,14 +174,39 @@ SyntaxInterface.operation(node::LogicNode) = node.kind
 
 function SyntaxInterface.similarterm(::Type{LogicNode}, op::LogicNodeKind, args)
     @assert Int(op) & IS_TREE != 0
-    LogicNode(op, nothing, args)
+    LogicNode(op, nothing, Any, args)
+end
+
+function LogicNode_concatenate_args(args)
+    n_args = 0
+    for arg in args
+        if arg isa AbstractArray
+            n_args += length(arg)
+        else
+            n_args += 1
+        end
+    end
+    args_2 = Vector{LogicNode}(undef, n_args)
+    i = 0
+    for arg in args
+        if arg isa AbstractArray
+            for arg_2 in arg
+                args_2[i += 1] = arg_2
+            end
+        else
+            args_2[i += 1] = arg
+        end
+    end
+    args_2
 end
 
 function LogicNode(kind::LogicNodeKind, args::Vector)
-    if (kind === immediate || kind === field || kind === alias) && length(args) == 1
-        return LogicNode(kind, args[1], LogicNode[])
+    if (kind === immediate || kind === field || kind === alias || kind === deferred) && length(args) == 1
+        return LogicNode(kind, args[1], Any, LogicNode[])
+    elseif kind === deferred && length(args) == 2
+        return LogicNode(kind, args[1], args[2], LogicNode[])
     else
-        args = vcat(args...)
+        args = LogicNode_concatenate_args(args)
         if (kind === table && length(args) >= 1) ||
             (kind === mapjoin && length(args) >= 1) ||
             (kind === aggregate && length(args) >= 3) ||
@@ -176,7 +217,7 @@ function LogicNode(kind::LogicNodeKind, args::Vector)
             (kind === query && length(args) == 2) ||
             (kind === produces) ||
             (kind === plan)
-            return LogicNode(kind, nothing, args)
+            return LogicNode(kind, nothing, Any, args)
         else
             error("wrong number of arguments to $kind(...)")
         end
@@ -190,6 +231,7 @@ end
 function Base.getproperty(node::LogicNode, sym::Symbol)
     if sym === :kind || sym === :val || sym === :type || sym === :children
         return Base.getfield(node, sym)
+    elseif node.kind === deferred && sym === :ex node.val
     elseif node.kind === field && sym === :name node.val::Symbol
     elseif node.kind === alias && sym === :name node.val::Symbol
     elseif node.kind === table && sym === :tns node.children[1]
@@ -206,7 +248,7 @@ function Base.getproperty(node::LogicNode, sym::Symbol)
     elseif node.kind === relabel && sym === :idxs @view node.children[2:end]
     elseif node.kind === reformat && sym === :tns node.children[1]
     elseif node.kind === reformat && sym === :arg node.children[2]
-    elseif node.kind === subquery && sym === :body node.children[1]
+    elseif node.kind === subquery && sym === :lhs node.children[1]
     elseif node.kind === subquery && sym === :arg node.children[2]
     elseif node.kind === query && sym === :lhs node.children[1]
     elseif node.kind === query && sym === :rhs node.children[2]
@@ -220,7 +262,7 @@ end
 function Base.show(io::IO, node::LogicNode) 
     if node.kind === immediate || node.kind === field || node.kind === alias
         print(io, node.kind, "(", node.val, ")")
-    elseif node.kind === value
+    elseif node.kind === deferred
         print(io, node.kind, "(", node.val, ", ", node.type, ")")
     else
         print(io, node.kind, "("); join(io, node.children, ", "); print(io, ")")
@@ -272,14 +314,18 @@ end
 function display_expression(io, mime, node)
     if operation(node) === immediate
         print(io, node.val)
+    elseif operation(node) === deferred
+        print(io, node.ex)
+        print(io, "::")
+        print(io, node.type)
     elseif operation(node) === field
         print(io, node.name)
     elseif operation(node) === alias
         print(io, node.name)
     elseif operation(node) == subquery
         print(io, "(")
-        display_expression(io, mime, node.body)
-        print(io, " ; ")
+        display_expression(io, mime, node.lhs)
+        print(io, " = ")
         display_expression(io, mime, node.arg)
         print(io, ")")
     elseif istree(node)
@@ -302,6 +348,8 @@ function Base.:(==)(a::LogicNode, b::LogicNode)
         return b.kind === value && a.val == b.val && a.type === b.type
     elseif a.kind === immediate
         return b.kind === immediate && a.val === b.val
+    elseif a.kind === deferred
+        return b.kind === deferred && a.val === b.val && a.type === b.type
     elseif a.kind === field
         return b.kind === field && a.name == b.name
     elseif a.kind === alias
@@ -318,6 +366,8 @@ function Base.hash(a::LogicNode, h::UInt)
         return hash(a.kind, hash(a.val, h))
     elseif istree(a)
         return hash(a.kind, hash(a.children, h))
+    elseif a.kind === deferred
+        return hash(a.kind, hash(a.val, hash(a.type, h)))
     else
         error("unimplemented")
     end
@@ -375,11 +425,11 @@ function getfields(node::LogicNode, bindings=Dict())
 end
 
 function propagate_fields(node::LogicNode, fields = Dict{LogicNode, Any}())
-    if @capture node plan(~stmts..., produces(~args...))
+    if @capture node plan(~stmts...)
         stmts = map(stmts) do stmt
             propagate_fields(stmt, fields)
         end
-        plan(stmts..., produces(args...))
+        plan(stmts...)
     elseif @capture node query(~lhs, ~rhs)
         rhs = propagate_fields(rhs, fields)
         fields[lhs] = getfields(rhs, Dict())
@@ -388,9 +438,20 @@ function propagate_fields(node::LogicNode, fields = Dict{LogicNode, Any}())
         node
     elseif isalias(node)
         relabel(node, fields[node]...)
+    elseif node.kind === produces
+        node
     elseif istree(node)
         similarterm(node, operation(node), map(x -> propagate_fields(x, fields), arguments(node)))
     else
         node
     end
+end
+
+function getproductions(node::LogicNode)
+    for node in PostOrderDFS(node)
+        if node.kind == produces
+            return node.args
+        end
+    end
+    return []
 end

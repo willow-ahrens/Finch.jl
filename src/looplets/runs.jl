@@ -80,7 +80,7 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::AcceptRunStyle)
                 end
             end
         ))(root.body)
-        if root.idx in getunbound(body)
+        if root.idx in PostOrderDFS(body)
             #The loop body isn't constant after removing AcceptRuns, lower with a for-loop
             return ctx(root, LookupStyle())
         else
