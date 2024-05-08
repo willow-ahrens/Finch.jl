@@ -11,9 +11,6 @@ mutable struct LazyTensor{T, N}
 end
 LazyTensor{T}(data, extrude::NTuple{N, Bool}, default) where {T, N} = LazyTensor{T, N}(data, extrude, default)
 
-islazy(arg) = false
-islazy(arg::LazyTensor) = true
-
 Base.ndims(::Type{LazyTensor{T, N}}) where {T, N} = N
 Base.ndims(tns::LazyTensor) = ndims(typeof(tns))
 Base.eltype(::Type{<:LazyTensor{T}}) where {T} = T
@@ -113,7 +110,7 @@ function fixpoint_type(op, z, tns)
     T = typeof(z)
     while T != S
         S = T
-        T = Union{T, combine_eltypes(op, (T, eltype(tns)))}
+        T = Union{T, Base.promote_op(op, T, eltype(tns))}
     end
     T
 end
@@ -179,7 +176,8 @@ function broadcast_to_query(bc::Broadcast.Broadcasted, idxs)
 end
 
 function broadcast_to_query(tns::LazyTensor{T, N}, idxs) where {T, N}
-    data_2 = relabel(tns.data, idxs[1:N]...)
+    idxs_2 = [tns.extrude[i] ? field(gensym(:idx)) : idxs[i] for i in 1:N]
+    data_2 = relabel(tns.data, idxs_2...)
     reorder(data_2, idxs[findall(!, tns.extrude)]...)
 end
 

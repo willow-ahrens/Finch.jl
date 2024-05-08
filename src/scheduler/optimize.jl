@@ -341,14 +341,16 @@ function (ctx::SuitableRep)(ex)
         idxs = getfields(ex.arg)
         return aggregate_rep(ex.op.val, ex.init.val, ctx(ex.arg), map(idx->findfirst(isequal(idx), idxs), ex.idxs))
     elseif ex.kind === reorder
-        #In this step, we need to consider that the reorder may add or permute
-        #dims. I haven't considered whether this is robust to dropping dims (it
-        #probably isn't)
+        rep = ctx(ex.arg)
         idxs = getfields(ex.arg)
-        perm = sortperm(idxs, by=idx->findfirst(isequal(idx), ex.idxs))
-        rep = permutedims_rep(ctx(ex.arg), perm)
+        #first reduce dropped dimensions
+        rep = aggregate_rep(initwrite(default(rep)), default(rep), rep, setdiff(idxs, ex.idxs))
+        #then permute remaining dimensions to match
+        perm = sortperm(intersect(idxs, ex.idxs), by=idx->findfirst(isequal(idx), ex.idxs))
+        rep = permutedims_rep(rep, perm)
         dims = findall(idx -> idx in idxs, ex.idxs)
-        return extrude_rep(rep, dims)
+        #then add new dimensions
+        return pad_data_rep(extrude_rep(rep, dims), length(ex.idxs))
     elseif ex.kind === relabel
         return ctx(ex.arg)
     elseif ex.kind === reformat
