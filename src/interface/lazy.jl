@@ -110,7 +110,7 @@ function fixpoint_type(op, z, tns)
     T = typeof(z)
     while T != S
         S = T
-        T = Union{T, combine_eltypes(op, (T, eltype(tns)))}
+        T = Union{T, Base.promote_op(op, T, eltype(tns))}
     end
     T
 end
