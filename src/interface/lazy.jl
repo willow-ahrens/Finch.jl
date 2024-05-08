@@ -36,7 +36,7 @@ end
 
 function identify(data)
     lhs = alias(gensym(:A))
-    subquery(query(lhs, data), lhs)
+    subquery(lhs, data)
 end
 
 LazyTensor(data::Number) = LazyTensor{typeof(data), 0}(immediate(data), (), data)
@@ -46,7 +46,7 @@ function LazyTensor{T}(arr::Base.AbstractArrayOrBroadcasted) where {T}
     name = alias(gensym(:A))
     idxs = [field(gensym(:i)) for _ in 1:ndims(arr)]
     extrude = ntuple(n -> size(arr, n) == 1, ndims(arr))
-    tns = subquery(query(name, table(immediate(arr), idxs...)), name)
+    tns = subquery(name, table(immediate(arr), idxs...))
     LazyTensor{eltype(arr), ndims(arr)}(tns, extrude, default(arr))
 end
 LazyTensor(arr::Tensor) = LazyTensor{eltype(arr)}(arr)
@@ -55,7 +55,7 @@ function LazyTensor{T}(arr::Tensor) where {T}
     name = alias(gensym(:A))
     idxs = [field(gensym(:i)) for _ in 1:ndims(arr)]
     extrude = ntuple(n -> size(arr)[n] == 1, ndims(arr))
-    tns = subquery(query(name, table(immediate(arr), idxs...)), name)
+    tns = subquery(name, table(immediate(arr), idxs...))
     LazyTensor{eltype(arr), ndims(arr)}(tns, extrude, default(arr))
 end
 LazyTensor(data::LazyTensor) = data
@@ -110,7 +110,7 @@ function fixpoint_type(op, z, tns)
     T = typeof(z)
     while T != S
         S = T
-        T = Union{T, combine_eltypes(op, (T, eltype(tns)))}
+        T = Union{T, Base.promote_op(op, T, eltype(tns))}
     end
     T
 end
@@ -176,7 +176,8 @@ function broadcast_to_query(bc::Broadcast.Broadcasted, idxs)
 end
 
 function broadcast_to_query(tns::LazyTensor{T, N}, idxs) where {T, N}
-    data_2 = relabel(tns.data, idxs[1:N]...)
+    idxs_2 = [tns.extrude[i] ? field(gensym(:idx)) : idxs[i] for i in 1:N]
+    data_2 = relabel(tns.data, idxs_2...)
     reorder(data_2, idxs[findall(!, tns.extrude)]...)
 end
 
@@ -409,6 +410,25 @@ function LinearAlgebra.norm(arr::LazyTensor, p::Real = 2)
 end
 
 """
+    lazy(arg)
+
+Create a lazy tensor from an argument. All operations on lazy tensors are
+lazy, and will not be executed until `compute` is called on their result.
+
+for example,
+```julia
+x = lazy(rand(10))
+y = lazy(rand(10))
+z = x + y
+z = z + 1
+z = compute(z)
+```
+will not actually compute `z` until `compute(z)` is called, so the execution of `x + y`
+is fused with the execution of `z + 1`.
+"""
+lazy(arg) = LazyTensor(arg)
+
+"""
     fused(f, args...; [optimizer=DefaultOptimizer()])
 
 This function decorator modifies `f` to fuse the contained array
@@ -418,4 +438,24 @@ optimizer to use.
 """
 function fused(f, args...; optimizer=DefaultOptimizer())
     compute(f(map(LazyTensor, args...)), optimizer)
+end
+
+default_scheduler(;verbose=false) = LogicExecutor(DefaultLogicOptimizer(LogicCompiler()), verbose=verbose)
+
+"""
+    compute(args..., ctx=default_scheduler()) -> Any
+
+Compute the value of a lazy tensor. The result is the argument itself, or a
+tuple of arguments if multiple arguments are passed.
+"""
+compute(args...; ctx=default_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), map(lazy, args))
+compute(arg; ctx=default_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), (lazy(arg),))[1]
+compute(args::Tuple; ctx=default_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), map(lazy, args))
+function compute_parse(ctx, args::Tuple)
+    args = collect(args)
+    vars = map(arg -> alias(gensym(:A)), args)
+    bodies = map((arg, var) -> query(var, arg.data), args, vars)
+    prgm = plan(bodies, produces(vars))
+
+    return ctx(prgm)
 end

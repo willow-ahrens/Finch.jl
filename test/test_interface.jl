@@ -3,9 +3,50 @@ using Finch: AsArray
 @testset "interface" begin
     @info "Testing Finch Interface"
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/524
+    let
+        arr3d = rand(Int, 3, 2, 3) .% 10
+        tns = Tensor(Dense(Dense(Dense(Element(0)))), arr3d)
+        
+        tns_l = lazy(tns)
+        reduced = sum(tns_l, dims=(1, 2))
+        
+        plan = broadcast(+, tns_l, reduced)
+        result = compute(plan)
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/527
+    let
+        tns_1 = swizzle(Tensor(ones(10, 10)), 1, 2)
+        tns_1[:, :] # == tns_1 https://github.com/willow-ahrens/Finch.jl/issues/530
+
+        tns_2 = swizzle(Tensor(ones(10)), 1)
+        tns_2[:]# == tns_2 https://github.com/willow-ahrens/Finch.jl/issues/530
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/528
+    let
+        tns = swizzle(Tensor(ones(10, 10)), 1, 2)
+        @test tns[:, :] == ones(10, 10)
+        @test tns[nothing, :, :] == ones(1, 10, 10)
+        @test tns[:, nothing, :] == ones(10, 1, 10)
+        @test tns[:, :, nothing] == ones(10, 10, 1)
+    end
+
     #https://github.com/willow-ahrens/Finch.jl/issues/428
     let
-        using Test
+        @testset "Verbose" begin
+            a = [1 2; 3 4]
+            b = [5 6; 7 8]
+            a_l = lazy(a)
+            b_l = lazy(b)
+
+            c = permutedims(broadcast(.+, permutedims(a_l, (2, 1)), permutedims(b_l, (2, 1))), (2, 1))
+            compute(c, verbose=true)
+        end
+    end
+
+    let
 
         @testset "Einsum Tests" begin
             # Test 0
@@ -539,6 +580,15 @@ using Finch: AsArray
 
         @test Array(A_result) == A_t
         @test permutedims(A_tns, perm) == A_t
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/pull/477
+    let
+        A = zeros(2, 3, 3)
+        A_tns = Tensor(Dense(Dense(Dense(Element(0.0)))), A)
+
+        @test compute(A) == A #If the scheduler improves, we can change this to ===
+        @test compute(A_tns) == A_tns #If the scheduler improves, we can change this to ===
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/481

@@ -123,6 +123,6 @@ julia> sum(map(last, B))
 16
 
 julia> sum(map(first, B))
-4
+4.0
 
 ```

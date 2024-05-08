@@ -14,11 +14,13 @@ default(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = default(Body)
 
 Base.to_indices(A::SwizzleArray, I::Tuple{AbstractVector}) = Base.to_indices(A, axes(A), I)
 
+Base.IndexStyle(::Type{<:SwizzleArray}) = Base.IndexCartesian()
+
 function Base.getindex(arr::SwizzleArray{perm}, inds...) where {perm}
     if nothing in inds && inds isa Tuple{Vararg{Union{Nothing, Colon}}}
         return compute(lazy(arr)[inds...])
     else
-        inds_2 = Base.to_indices(arr, inds)
+        inds_2 = Base.to_indices(arr, axes(arr), inds)
         perm_2 = collect(invperm(perm))
         res = getindex(arr.body, inds_2[perm_2]...)
         perm_3 = sortperm(filter(n -> ndims(inds_2[n]) > 0, perm_2))

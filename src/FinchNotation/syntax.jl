@@ -57,7 +57,7 @@ or(x, y, tail...) = x || or(y, tail...)
 struct InitWriter{D} end
 
 (f::InitWriter{D})(x) where {D} = x
-@inline function (f::InitWriter{D})(x, y) where {D}
+function (f::InitWriter{D})(x, y) where {D}
     @debug begin
         @assert isequal(x, D)
     end
