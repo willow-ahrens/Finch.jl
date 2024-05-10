@@ -176,6 +176,25 @@ using Finch: AsArray
 
             # Test to ensure the results match
             @test A == A_ref
+
+
+            # Test for multiplying a vector by a Scalar
+            v = Tensor(Dense(Element(0)), rand(Int, 5))
+            n = 7
+
+            #Perform scalar multiplcation
+            @einsum A[] = n*v[i]
+
+            # Reference Calculation using explicit loop for validation
+            A_ref = Tensor(Dense(Element(0)), rand(Int, 5))
+            for i = 1:5
+                A_ref[i] = v[i]*n
+            end
+
+            #Test to ensure the results match
+            @test A == A_ref
+
+            
         end
     end
 
