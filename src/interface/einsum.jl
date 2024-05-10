@@ -99,7 +99,7 @@ function (ctx::EinsumArgumentParserVisitor)(ex)
     elseif ex isa Expr
         throw(FinchSyntaxError("Invalid einsum expression: $ex"))
     else
-        return :($einsum_immediate($ex))
+        return :($einsum_immediate($(esc(ex))))
     end
 end
 
