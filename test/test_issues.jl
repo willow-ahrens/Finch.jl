@@ -9,7 +9,7 @@ using SparseArrays
         B = Tensor(Dense(SparseList(Element(0.0))))
         C = Tensor(Dense(SparseList(Element(0.0))))
         w = Tensor(SparseByteMap(Element(0.0)))
-        @test_throws FinchNotation.FinchSyntaxError begin
+        @test_throws Finch.FinchNotation.FinchSyntaxError begin
             @finch_kernel function foo(A, B, C)
                 C .= 0
                 for j=_
