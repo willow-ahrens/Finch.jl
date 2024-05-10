@@ -89,3 +89,36 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           BINDER_CACHE: true
           PUBLIC_REGISTRY_CHECK: true
+
+  finch-tensor-tests:
+    name: Python tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Finch.jl
+        uses: actions/checkout@v4
+      - name: Setup Julia
+        uses: julia-actions/setup-julia@v1
+        with:
+          version: '1'
+      - name: Build Finch.jl package
+        uses: julia-actions/julia-buildpkg@v1
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+      - name: Checkout finch-tensor
+        uses: actions/checkout@v4
+        with:
+          repository: willow-ahrens/finch-tensor
+          ref: 'main'
+          path: 'finch-tensor'
+      - name: Install package
+        run: |
+          cd finch-tensor
+          poetry install --with test
+      - name: Run finch-tensor tests
+        run: |
+          cd finch-tensor
+          FINCH_REPO_PATH=${GITHUB_WORKSPACE} poetry run pytest tests/
