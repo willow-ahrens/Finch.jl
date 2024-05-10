@@ -230,12 +230,17 @@ See also: [`@finch`](@ref)
 """
 function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = :safe, ctx = LowerJulia(algebra=algebra, mode=mode))
     maybe_typeof(x) = x isa Type ? x : typeof(x)
+    unreachable = gensym(:unreachable)
     code = contain(ctx) do ctx_2
         foreach(args) do (key, val)
             ctx_2.bindings[variable(key)] = finch_leaf(virtualize(ctx_2.code, key, maybe_typeof(val), key))
         end
-        execute_code(:UNREACHABLE, prgm, algebra = algebra, mode = mode, ctx = ctx_2)
-    end |> pretty |> unresolve |> dataflow |> unquote_literals
+        execute_code(unreachable, prgm, algebra = algebra, mode = mode, ctx = ctx_2)
+    end
+    if unreachable in PostOrderDFS(code)
+        throw(FinchNotation.FinchSyntaxError("Attempting to interpolate value from local scope into @finch_kernel, pass values as function arguments or use \$ to interpolate explicitly."))
+    end
+    code = code |> pretty |> unresolve |> dataflow |> unquote_literals
     arg_defs = map(((key, val),) -> :($key::$(maybe_typeof(val))), args)
     striplines(:(function $fname($(arg_defs...))
         @inbounds @fastmath $(striplines(unblock(code)))
