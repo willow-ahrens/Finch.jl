@@ -102,18 +102,12 @@ function ensure_concurrent(root, ctx)
             #Since all operations/acceses are the same, a more fine grained analysis takes place:
             #Every access must be injective or they must all be atomic.
             if (@capture(acc, access(~tns, ~mode, ~i...)))
-                parallel_modes = []
                 injectivities:: Vector{Bool} = is_injective(ctx, tns)
                 concurrencies = is_concurrent(ctx, acc.tns)
-                for loc in 1:length(i)
-                    if i[loc] in indices_in_region
-                        push!(parallel_modes, loc + 1)
-                        #off by one should go away
-                    end
-                end
+                parallel_modes = findall(indices_in_region[1:length(i)])
                 if length(parallel_modes) == 0
-                    (atomicities, overall) = is_atomic(ctx, acc.tns)
-                    if !atomicities[1]
+                    (_, overall) = is_atomic(ctx, acc.tns)
+                    if !overall
                         throw(FinchConcurrencyError("Assignment $(acc) requires last level atomics!"))
                         # FIXME: we could do atomic operations here.
                     else
@@ -122,12 +116,12 @@ function ensure_concurrent(root, ctx)
                 end
 
                 #TODO If we could prove that some indices do not depend on the parallel index, we could exempt them from this somehow.
-                if all(injectivities[[x-1 for x in parallel_modes]]) && all(concurrencies[[x-1 for x in parallel_modes]])
+                if all(injectivities[parallel_modes]) && all(concurrencies[parallel_modes])
                     continue # We pass due to injectivity!
                 end
                 # FIXME: This could be more fine grained: atomics need to only protect the non-injectivity. 
                 (atomicities, _) = is_atomic(ctx, acc.tns)
-                if all(atomicities[parallel_modes .- 1]) && all(concurrencies[[x-1 for x in parallel_modes]])
+                if all(atomicities[parallel_modes]) && all(concurrencies[parallel_modes])
                     continue # we pass due to atomics!
                 else
                     throw(FinchConcurrencyError("Assignment $(acc) requires injectivity or atomics in at least modes $(parallel_modes), but does not have them, due to injectivity=$(injectivities) and atomics=$(atomicities) and concurrency=$(concurrencies)."))
