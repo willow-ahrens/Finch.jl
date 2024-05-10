@@ -121,4 +121,4 @@ jobs:
       - name: Run finch-tensor tests
         run: |
           cd finch-tensor
-          FINCH_REPO_PATH=${GITHUB_WORKSPACE} poetry run pytest tests/
+          FINCH_REPO_PATH="${GITHUB_WORKSPACE}" poetry run pytest tests/
