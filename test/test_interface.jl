@@ -183,7 +183,7 @@ using Finch: AsArray
             n = 7
 
             #Perform scalar multiplcation
-            @einsum A[] = n*v[i]
+            @einsum A[i] = n*v[i]
 
             # Reference Calculation using explicit loop for validation
             A_ref = Tensor(Dense(Element(0)), rand(Int, 5))
