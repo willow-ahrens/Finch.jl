@@ -716,7 +716,7 @@ using SparseArrays
         expected = broadcast(.*, A_sw, A_sw)
 
         @test actual == expected
-        
+
         B = zeros(size(A_sw)...)
         copyto!(B, A_sw)
 
@@ -777,5 +777,26 @@ using SparseArrays
 
         sum(a, dims=(1, 2))
         sum(a_tns, dims=(1, 2))
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/546
+    let
+        n = 100
+        A = Tensor(Dense(SparseList(Element(0.0))), fsprand(n, n, .001))
+        B = Tensor(Dense(SparseList(Element(0.0))), fsprand(n, n,  .001))
+        C = Tensor(SparseList(Element(0.0)), fsprand(n, .1))
+        D = Scalar(0.0)
+
+        check_output("issues/protocol_issue.jl",
+        @finch_code begin
+            D .= 0
+            for i=_
+                for j=_
+                    for k=_
+                        D[] += C[gallop(j)] * B[walk(k), follow(j)] * A[gallop(j), follow(i)]
+                    end
+                end
+            end
+        end)
     end
 end
