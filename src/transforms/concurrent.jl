@@ -129,7 +129,7 @@ function ensure_concurrent(root, ctx)
                 end
                 # FIXME: This could be more fine grained: atomics need to only protect the non-injectivity. 
                 (below, _) = is_atomic(ctx, acc.tns)
-                if all(below[locations_with_parallel_vars]) && all(concurrencyInfo[[x-1 for x in locations_with_parallel_vars]])
+                if all(below[locations_with_parallel_vars .- 1]) && all(concurrencyInfo[[x-1 for x in locations_with_parallel_vars]])
                     continue # we pass due to atomics!
                 else
                     throw(FinchConcurrencyError("Assignment $(acc) requires injectivity or atomics in at least places $(locations_with_parallel_vars), but does not have them, due to injectivity=$(injectivity) and atomics=$(below) and concurrency=$(concurrencyInfo)."))
