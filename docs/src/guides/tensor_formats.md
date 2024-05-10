@@ -90,7 +90,7 @@ some general descriptions.
 | SparseDict           | Advanced | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ❌              | ✅️     |
 | AtomicLevel          | Modifier | No Data               | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️ |
 | SeperationLevel      | Modifier | No Data               | ✅                  | ✅            | ✅                        | ✅                  | ✅              | ⚙️ |
-| SparseCOO            | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ✅              | ✅️    |
+| SuperSparseCOO            | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ❌                  | ✅              | ✅️    |
 | SparseHash           | Legacy   | Sparse                | ✅                  | ✅            | ✅                        | ✅                  | ✅              | 🕸️   |
 
 The "Level Format Name" is the name of the level datatype. Other columns have descriptions below.
@@ -155,8 +155,8 @@ Finch levels can be used to construct a variety of popular sparse formats. A few
 | CSC Matrix                   | `Tensor(Dense(SparseList(Element(0.0))), args...)`             |
 | CSF 3-Tensor                 | `Tensor(Dense(SparseList(SparseList(Element(0.0)))), args...)` |
 | DCSC (Hypersparse) Matrix    | `Tensor(SparseList(SparseList(Element(0.0))), args...)`        |
-| COO Matrix                   | `Tensor(SparseCOO{2}(Element(0.0)), args...)`                  |
-| COO 3-Tensor                 | `Tensor(SparseCOO{3}(Element(0.0)), args...)`                  |
+| COO Matrix                   | `Tensor(SuperSparseCOO{2}(Element(0.0)), args...)`                  |
+| COO 3-Tensor                 | `Tensor(SuperSparseCOO{3}(Element(0.0)), args...)`                  |
 | Dictionary-Of-Keys           | `Tensor(SparseHash{2}(Element(0.0)), args...)`                 |
 | Run-Length-Encoded Image     | `Tensor(Dense(DenseRLE(Element(0.0))), args...)`            |
 
@@ -201,7 +201,7 @@ SeparateLevel
 
 ## Legacy Levels
 ```@docs
-SparseCOOLevel
+SuperSparseCOOLevel
 SparseHashLevel
 ```
 

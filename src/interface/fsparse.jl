@@ -21,7 +21,7 @@ julia> I = (
 julia> V = [1.0; 2.0; 3.0];
 
 julia> fsparse(I, V)
-SparseCOO (0.0) [1:3×1:3×1:3]
+SuperSparseCOO (0.0) [1:3×1:3×1:3]
 │ │ │
 └─└─└─[1, 1, 1] [2, 2, 2] [3, 3, 3]
       1.0       2.0       3.0
@@ -68,7 +68,7 @@ fsparse!_parse(I, i::AbstractVector, args...; kwargs...) = fsparse!_parse((I...,
 fsparse!_parse(I, V::AbstractVector; kwargs...) = fsparse!_impl(I, V; kwargs...)
 fsparse!_parse(I, V::AbstractVector, M::Tuple; kwargs...) = fsparse!_impl(I, V, M; kwargs...)
 function fsparse!_impl(I::Tuple, V, shape = map(maximum, I); default = zero(eltype(V)))
-    return Tensor(SparseCOO{length(I), Tuple{map(eltype, I)...}}(Element{default, eltype(V), Int}(V), shape, [1, length(V) + 1], I))
+    return Tensor(SuperSparseCOO{length(I), Tuple{map(eltype, I)...}}(Element{default, eltype(V), Int}(V), shape, [1, length(V) + 1], I))
 end
 
 """
@@ -90,7 +90,7 @@ See also: (`sprand`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spars
 # Examples
 ```julia
 julia> fsprand(Bool, 3, 3, 0.5)
-SparseCOO (false) [1:3,1:3]
+SuperSparseCOO (false) [1:3,1:3]
 ├─├─[1, 1]: true
 ├─├─[3, 1]: true
 ├─├─[2, 2]: true
@@ -98,7 +98,7 @@ SparseCOO (false) [1:3,1:3]
 ├─├─[3, 3]: true
 
 julia> fsprand(Float64, 2, 2, 2, 0.5)
-SparseCOO (0.0) [1:2,1:2,1:2]
+SuperSparseCOO (0.0) [1:2,1:2,1:2]
 ├─├─├─[2, 2, 1]: 0.6478553157718558
 ├─├─├─[1, 1, 2]: 0.996665291437684
 ├─├─├─[2, 1, 2]: 0.7491940599574348
@@ -232,10 +232,10 @@ See also: (`spzeros`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spar
 # Examples
 ```jldoctest
 julia> fspzeros(Bool, 3, 3)
-SparseCOO{2} (false) [:,1:3]
+SuperSparseCOO{2} (false) [:,1:3]
 
 julia> fspzeros(Float64, 2, 2, 2)
-SparseCOO{3} (0.0) [:,:,1:2]
+SuperSparseCOO{3} (0.0) [:,:,1:2]
 ```
 """
 fspzeros(M...) = fspzeros(Float64, M...)
@@ -255,7 +255,7 @@ See also: (`findnz`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spars
 """
 function ffindnz(src)
     tmp = Tensor(
-        SparseCOOLevel{ndims(src)}(
+        SuperSparseCOOLevel{ndims(src)}(
             ElementLevel{zero(eltype(src)), eltype(src)}()))
     tmp = copyto!(tmp, src)
     nnz = tmp.lvl.ptr[2] - 1

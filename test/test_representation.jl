@@ -28,7 +28,7 @@
     ]
 
     multi_levels = [
-        (key = "SparseCOO", Lvl = SparseCOO),
+        (key = "SuperSparseCOO", Lvl = SuperSparseCOO),
         (key = "SparseHash", Lvl = SparseHash),
     ]
     

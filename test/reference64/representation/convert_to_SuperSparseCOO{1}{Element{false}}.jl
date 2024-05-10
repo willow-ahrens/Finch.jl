@@ -13,7 +13,7 @@ quote
     Finch.resize_if_smaller!(tmp_lvl_ptr, 1 + 1)
     Finch.fill_range!(tmp_lvl_ptr, 0, 1 + 1, 1 + 1)
     tmp_lvl_q = 0 + 1
-    0 < 1 || throw(FinchProtocolError("SparseCOOLevels cannot be updated multiple times"))
+    0 < 1 || throw(FinchProtocolError("SuperSparseCOOLevels cannot be updated multiple times"))
     tmp_lvl_prev_coord_2 = ()
     ref_lvl_q = ref_lvl_ptr[1]
     ref_lvl_q_stop = ref_lvl_ptr[1 + 1]
@@ -35,10 +35,10 @@ quote
                     tmp_lvl_qos_stop = max(tmp_lvl_qos_stop << 1, 1)
                     Finch.resize_if_smaller!(tmp_lvl_tbl1, tmp_lvl_qos_stop)
                     Finch.resize_if_smaller!(tmp_lvl_val, tmp_lvl_qos_stop)
-                    Finch.fill_range!(tmp_lvl_val, 0.0, tmp_lvl_q, tmp_lvl_qos_stop)
+                    Finch.fill_range!(tmp_lvl_val, false, tmp_lvl_q, tmp_lvl_qos_stop)
                 end
                 tmp_lvl_val[tmp_lvl_q] = ref_lvl_2_val
-                tmp_lvl_prev_coord_2 < (ref_lvl_i,) || throw(FinchProtocolError("SparseCOOLevels cannot be updated multiple times"))
+                tmp_lvl_prev_coord_2 < (ref_lvl_i,) || throw(FinchProtocolError("SuperSparseCOOLevels cannot be updated multiple times"))
                 tmp_lvl_prev_coord_2 = (ref_lvl_i,)
                 tmp_lvl_tbl1[tmp_lvl_q] = ref_lvl_i
                 tmp_lvl_q += 1
@@ -51,10 +51,10 @@ quote
                         tmp_lvl_qos_stop = max(tmp_lvl_qos_stop << 1, 1)
                         Finch.resize_if_smaller!(tmp_lvl_tbl1, tmp_lvl_qos_stop)
                         Finch.resize_if_smaller!(tmp_lvl_val, tmp_lvl_qos_stop)
-                        Finch.fill_range!(tmp_lvl_val, 0.0, tmp_lvl_q, tmp_lvl_qos_stop)
+                        Finch.fill_range!(tmp_lvl_val, false, tmp_lvl_q, tmp_lvl_qos_stop)
                     end
                     tmp_lvl_val[tmp_lvl_q] = ref_lvl_2_val
-                    tmp_lvl_prev_coord_2 < (phase_stop_3,) || throw(FinchProtocolError("SparseCOOLevels cannot be updated multiple times"))
+                    tmp_lvl_prev_coord_2 < (phase_stop_3,) || throw(FinchProtocolError("SuperSparseCOOLevels cannot be updated multiple times"))
                     tmp_lvl_prev_coord_2 = (phase_stop_3,)
                     tmp_lvl_tbl1[tmp_lvl_q] = phase_stop_3
                     tmp_lvl_q += 1
@@ -72,6 +72,6 @@ quote
     qos_stop = tmp_lvl_ptr[1 + 1] - 1
     resize!(tmp_lvl_tbl1, qos_stop)
     resize!(tmp_lvl_val, qos_stop)
-    result = (tmp = Tensor((SparseCOOLevel){1, Tuple{Int32}}(tmp_lvl_2, (ref_lvl.shape,), tmp_lvl_ptr, (tmp_lvl_tbl1,))),)
+    result = (tmp = Tensor((SuperSparseCOOLevel){1, Tuple{Int64}}(tmp_lvl_2, (ref_lvl.shape,), tmp_lvl_ptr, (tmp_lvl_tbl1,))),)
     result
 end

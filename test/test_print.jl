@@ -8,7 +8,7 @@
         "byte" => SparseByteMap,
         "dict" => SparseDict,
         "hash1" => SparseHash{1},
-        "coo1" => SparseCOO{1},
+        "coo1" => SuperSparseCOO{1},
     ]
 
     for (rown, rowf) in formats
@@ -33,7 +33,7 @@
 
     formats = [
         "hash2" => SparseHash{2},
-        "coo2" =>SparseCOO{2},
+        "coo2" =>SuperSparseCOO{2},
         ]
 
     for (rowcoln, rowcolf) in formats

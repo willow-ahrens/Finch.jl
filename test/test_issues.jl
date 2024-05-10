@@ -287,7 +287,7 @@ using SparseArrays
         A = fsprand(10, 11, 0.5)
         B = fsprand(10, 10, 0.5)
         @test_throws Finch.FinchProtocolError @finch for j=_, i=_; A[i, j] = B[i, follow(j)] end
-        @test_throws ArgumentError Tensor(SparseCOO(Element(0.0)))
+        @test_throws ArgumentError Tensor(SuperSparseCOO(Element(0.0)))
         @test_throws ArgumentError Tensor(SparseHash(Element(0.0)))
         @test_throws ArgumentError Tensor(SparseList(Element("hello")))
     end

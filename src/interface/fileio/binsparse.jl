@@ -372,7 +372,7 @@ function bspwrite_level(f, desc, fmt, lvl::SparseListLevel)
     fmt["subformat"] = OrderedDict()
     bspwrite_level(f, desc, fmt["subformat"], lvl.lvl)
 end
-function bspwrite_level(f, desc, fmt, lvl::SparseCOOLevel{R}) where {R}
+function bspwrite_level(f, desc, fmt, lvl::SuperSparseCOOLevel{R}) where {R}
     fmt["level"] = "sparse"
     fmt["rank"] = R
     n = level_ndims(typeof(lvl))
@@ -404,6 +404,6 @@ function bspread_level(f, desc, fmt, ::Val{:sparse})
     if R == 1
         SparseListLevel(lvl, shape[1], ptr, tbl[1])
     else
-        SparseCOOLevel{Int(R), typeof(shape)}(lvl, shape, ptr, tbl)
+        SuperSparseCOOLevel{Int(R), typeof(shape)}(lvl, shape, ptr, tbl)
     end
 end

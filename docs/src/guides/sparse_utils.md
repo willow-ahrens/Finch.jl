@@ -21,7 +21,7 @@ Finch tensors support an arbitrary "background" value for sparse arrays. While m
 
 ```jldoctest example1; setup = :(using Finch)
 julia> A = fsparse([1, 1, 2, 3], [2, 4, 5, 6], [1.0, 2.0, 3.0])
-SparseCOO{2} (0.0) [:,1:6]
+SuperSparseCOO{2} (0.0) [:,1:6]
 ├─ [1, 2]: 1.0
 ├─ [1, 4]: 2.0
 └─ [2, 5]: 3.0
@@ -57,7 +57,7 @@ julia> default(A)
 0.0
 
 julia> B = redefault!(A, -Inf)
-SparseCOO{2} (-Inf) [:,1:6]
+SuperSparseCOO{2} (-Inf) [:,1:6]
 ├─ [1, 2]: 1.0
 ├─ [1, 4]: 2.0
 └─ [2, 5]: 3.0
@@ -75,7 +75,7 @@ julia> countstored(A)
 3
 
 julia> pattern!(A)
-SparseCOO{2} (false) [:,1:6]
+SuperSparseCOO{2} (false) [:,1:6]
 ├─ [1, 2]: true
 ├─ [1, 4]: true
 └─ [2, 5]: true
@@ -103,7 +103,7 @@ instead store a tensor of tuples of the form `(value, is_fill)`. For example,
 
 ```jldoctest example3; setup = :(using Finch)
 julia> A = fsparse([1, 1, 2, 3], [2, 4, 5, 6], [(1.0, false), (0.0, true), (3.0, false)]; default=(0.0, true))
-SparseCOO{2} ((0.0, true)) [:,1:6]
+SuperSparseCOO{2} ((0.0, true)) [:,1:6]
 ├─ [1, 2]: (1.0, false)
 ├─ [1, 4]: (0.0, true)
 └─ [2, 5]: (3.0, false)

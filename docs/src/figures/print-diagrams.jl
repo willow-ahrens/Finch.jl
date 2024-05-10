@@ -1,5 +1,5 @@
 using Finch
-using Finch: Tensor, SubFiber, ElementLevel, DenseLevel, SparseListLevel, SparseCOOLevel
+using Finch: Tensor, SubFiber, ElementLevel, DenseLevel, SparseListLevel, SuperSparseCOOLevel
 
 tikzshow(io, fbr::Tensor) = tikzshow(io, SubFiber(fbr.lvl, 1), "A", "A", 0, 0)
 tikzshow(io, fbr) = tikzshow(io, fbr, 0)
@@ -41,7 +41,7 @@ function tikzwidth(fbr::SubFiber{<:SparseListLevel})
     w += lvl.shape - length(qoss)
 end
 
-function tikzwidth(fbr::SubFiber{<:SparseCOOLevel})
+function tikzwidth(fbr::SubFiber{<:SuperSparseCOOLevel})
     lvl = fbr.lvl
     qoss = lvl.ptr[fbr.pos]:lvl.ptr[fbr.pos + 1]-1
     w = sum(p->max(tikzwidth(SubFiber(lvl.lvl, p)), 1), qoss, init=1.5)
@@ -81,7 +81,7 @@ function tikzshow(io, fbr::SubFiber{<:SparseListLevel}, tag, anchor, y0, x0)
     lbl
 end
 
-function tikzshow(io, fbr::SubFiber{<:SparseCOOLevel{N}}, tag, anchor, y0, x0) where {N}
+function tikzshow(io, fbr::SubFiber{<:SuperSparseCOOLevel{N}}, tag, anchor, y0, x0) where {N}
     lvl = fbr.lvl
     mtx = "$(tag)d$(ndims(fbr))p$(fbr.pos)"
     lbl = "$(mtx)l"
@@ -167,13 +167,13 @@ function highlight_level(io, lvl::SparseListLevel, tag, x0, x1, y0)
     highlight_level(io, lvl.lvl, tag, x0, x1, y0)
 end
 
-function highlight_level(io, lvl::SparseCOOLevel{N}, tag, x0, x1, y0) where {N}
+function highlight_level(io, lvl::SuperSparseCOOLevel{N}, tag, x0, x1, y0) where {N}
     mtx = "$(tag)d$(Finch.level_ndims(typeof(lvl)))p1"
     lbl = "$(mtx)l"
     #lbl_2 = "$(tag)d$(Finch.level_ndims(typeof(lvl)))p1l"
     println(io, """
     \\draw [whclsty, anchor=north east] let \\p1 = ($(mtx)-1-1.north) in ($x0, \\y1) node {fibers:};
-    \\draw [whclsty, anchor=north east] let \\p1 = ($(lbl).north) in ($x0, \\y1) node {SparseCOO{$N} positions:};
+    \\draw [whclsty, anchor=north east] let \\p1 = ($(lbl).north) in ($x0, \\y1) node {SuperSparseCOO{$N} positions:};
     """)
     #\\draw [hlsty] let \\p1 = ($lbl.south), \\p2 = ($lbl.north) in ($x0*\\myunit, \\y1 - 1*\\myunit) rectangle ($x1*\\myunit, \\y2 - 1*\\myunit);
     #\\draw [hlsty] let \\p1 = ($lbl_2.south), \\p2 = ($lbl_2.north) in ($x0*\\myunit, \\y1) rectangle ($x1*\\myunit, \\y2);
@@ -214,7 +214,7 @@ tikzdisplay("levels-A-sl-sl-e.tex") do io
 end
 
 tikzdisplay("levels-A-sc2-e.tex") do io
-    fbr = Tensor(SparseCOO{2}(Element(0.0)), A)
+    fbr = Tensor(SuperSparseCOO{2}(Element(0.0)), A)
     tikzshow(io, fbr)
     highlight(io, fbr)
 end

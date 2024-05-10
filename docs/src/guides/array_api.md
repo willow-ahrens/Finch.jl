@@ -10,7 +10,7 @@ For example:
 
 ```jldoctest example1; setup = :(using Finch)
 julia> A = fsparse([1, 1, 2, 3], [2, 4, 5, 6], [1.0, 2.0, 3.0])
-SparseCOO{2} (0.0) [:,1:6]
+SuperSparseCOO{2} (0.0) [:,1:6]
 ├─ [1, 2]: 1.0
 ├─ [1, 4]: 2.0
 └─ [2, 5]: 3.0

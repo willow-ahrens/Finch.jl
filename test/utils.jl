@@ -56,7 +56,7 @@ isstructequal(a::T, b::T) where {T <: Sparse} =
     a.tbl == b.tbl &&
     isstructequal(a.lvl, b.lvl)
 
-isstructequal(a::T, b::T) where {T <: SparseCOO} =
+isstructequal(a::T, b::T) where {T <: SuperSparseCOO} =
     a.shape == b.shape &&
     a.ptr == b.ptr &&
     a.tbl == b.tbl &&

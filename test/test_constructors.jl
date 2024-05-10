@@ -104,7 +104,7 @@
     end
 
     multi_levels = [
-        ("SparseCOO", SparseCOO, (;), [
+        ("SuperSparseCOO", SuperSparseCOO, (;), [
             [0.0, 2.0, 2.0, 0.0, 3.0, 3.0],
             [0.0 2.0 2.0; 0.0 3.0 3.0]
         ]),
@@ -252,7 +252,7 @@
 
         # test off-by-one in a tensor
         coo = Tensor(
-            SparseCOO{2}(
+            SuperSparseCOO{2}(
                 Element(0, Vector([1, 2, 3])),  # data
                 (3, 3),  # shape
                 Vector([1, 4]),  # ptr
