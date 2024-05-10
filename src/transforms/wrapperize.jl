@@ -10,27 +10,12 @@ after simplification so one can expect constants to be folded.
 function get_wrapper_rules(ctx, depth, alg)
     return [
         (@rule access(~A, ~m, ~i1..., call(~proto::isliteral, ~j), ~i2...) => if isprotocol(proto.val)
-            protos = []
-            for i in i1
-                if (@capture i call(~i_proto::isliteral, ~i_idx)) && isprotocol(i_proto.val)
-                    push!(protos, i_proto.val)
-                else
-                    push!(protos, nothing)
-                end
-            end
-            push!(protos, proto.val)
-            for i in i2
-                if (@capture i call(~i_proto::isliteral, ~i_idx)) && isprotocol(i_proto.val)
-                    push!(protos, i_proto.val)
-                else
-                    push!(protos, nothing)
-                end
-            end
+            protos = ([nothing for _ in i1]..., proto.val, [nothing for _ in i2]...)
             access(call(protocolize, A, protos...), m, i1..., j, i2...)
         end),
         (@rule call(protocolize, call(protocolize, ~A, ~protos_1...), ~protos_2...) => begin
             protos_3 = map(protos_1, protos_2) do proto_1, proto_2
-                something(proto_1.val, proto_2.val, Some(nothing))
+                something(getval(proto_1), getval(proto_2), Some(nothing))
             end
             call(protocolize, A, protos_3...)
         end),
@@ -81,11 +66,11 @@ function get_wrapper_rules(ctx, depth, alg)
                 end
             end
         end),
-        (@rule call(scale, call(scale, ~A, ~s1...), ~s2...) => begin
-            s3 = map(s1, s2) do proto_1, proto_2
-                call(*, s1, s2)
+        (@rule call(scale, call(scale, ~A, ~factors_1...), ~factors_2...) => begin
+            factors_3 = map(factors_1, factors_2) do factor_1, factor_2
+                call(*, factor_1, factor_2)
             end
-            call(scale, A, s3...)
+            call(scale, A, factors_3...)
         end),
         (@rule access(~A, ~m, ~i1::(All(isindex))..., call(+, ~j1..., ~k, ~j2...), ~i2...) => begin
             if (!isempty(j1) || !isempty(j2))
@@ -169,11 +154,11 @@ function get_wrapper_rules(ctx, depth, alg)
                 end
             end
         end),
-        (@rule call(offset, call(offset, ~A, ~delta_1...), ~delta_2...) => begin
-            delta_3 = map(delta_1, delta_2) do proto_1, proto_2
-                call(+, proto_1, proto_2)
+        (@rule call(offset, call(offset, ~A, ~deltas_1...), ~deltas_2...) => begin
+            deltas_3 = map(deltas_1, deltas_2) do delta_1, delta_2
+                call(+, delta_1, delta_2)
             end
-            call(offset, A, delta_3...)
+            call(offset, A, deltas_3...)
         end),
         (@rule call(offset, call(swizzle, ~A, ~sigma...), ~delta...) =>
             call(swizzle, call(offset, A, delta[invperm(getval.(sigma))]...), sigma...)),
