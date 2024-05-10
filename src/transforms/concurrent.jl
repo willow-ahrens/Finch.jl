@@ -15,7 +15,7 @@ function is_injective end
 """
     is_atomic(ctx, tns)
 
-    Returns a tuple (below, overall) where below is a vector, indicating which indicies have an atomic that guards them, 
+    Returns a tuple (atomicities, overall) where atomicities is a vector, indicating which indices have an atomic that guards them, 
     and overall is a boolean that indicates is the last level had an atomic guarding it.
 """
 function is_atomic end
@@ -53,13 +53,11 @@ function ensure_concurrent(root, ctx)
         end
     end
 
-    # Get all indicies in the parallel region.
-    indicies_in_region = [idx]
+    # Get all indices in the parallel region.
+    indices_in_region = Set([idx])
     for node in PostOrderDFS(body)
-        if  @capture node loop(~idxp, ~ext, ~body)
-            if !(idxp in indicies_in_region)
-                push!(indicies_in_region, idxp)
-            end
+        if  @capture node loop(~idx_2, ~ext, ~body)
+            push!(indices_in_region, idx_2)
         end
     end
 
@@ -72,14 +70,14 @@ function ensure_concurrent(root, ctx)
         accs = map(agn -> (@capture agn assign(~lhs, ~op, ~rhs); lhs), agns)
         acc = first(accs)
         # The operation must be associative.
-        oper = first(ops)
-        if !(isassociative(ctx.algebra, oper))
+        op = first(ops)
+        if !(isassociative(ctx.algebra, op))
             if (length(ops) == 1)
                 if (@capture(acc, access(~tns, ~mode, ~i...)))
-                    injectivityIdp:: Vector{Bool} = is_injective(ctx, tns)
-                    concurrencyInfo = is_concurrent(ctx, tns)
-                    if !all(injectivityIdp) || !all(concurrencyInfo)
-                        throw(FinchConcurrencyError("Non-associative operations can only be parallelized in the case of a single injective acceses, but the injectivity is $(injectivity) and the concurrency is $(concurrencyInfo)."))
+                    injectivities = is_injective(ctx, tns)
+                    concurrencies = is_concurrent(ctx, tns)
+                    if !all(injectivities) || !all(concurrencies)
+                        throw(FinchConcurrencyError("Non-associative operations can only be parallelized in the case of a single injective acceses, but the injectivities is $(injectivities) and the concurrency is $(concurrencies)."))
                     else
 
                         continue # We pass via a single assignment that is completely injective.
@@ -88,14 +86,14 @@ function ensure_concurrent(root, ctx)
                     throw(FinchConcurrencyError("Assignment $(acc) is invalid!"))
                 end
             end
-            throw(FinchConcurrencyError("Nonlocal assignments to $(root) via $(oper) are not associative"))
+            throw(FinchConcurrencyError("Nonlocal assignments to $(root) via $(op) are not associative"))
         end
         # If the acceses are different, then all acceses must be atomic.
         if !allequal(accs)
             for acc in accs
-                (below, _) = is_atomic(ctx, acc.tns)
-                concurrencyInfo = is_concurrent(ctx, acc.tns)
-                if !all(below) || !all(concurrencyInfo)
+                (atomicities, _) = is_atomic(ctx, acc.tns)
+                concurrencies = is_concurrent(ctx, acc.tns)
+                if !all(atomicities) || !all(concurrencies)
                     throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not all the same access so concurrency and atomics are needed on all acceses!"))
                 end
             end 
@@ -104,18 +102,18 @@ function ensure_concurrent(root, ctx)
             #Since all operations/acceses are the same, a more fine grained analysis takes place:
             #Every access must be injective or they must all be atomic.
             if (@capture(acc, access(~tns, ~mode, ~i...)))
-                locations_with_parallel_vars = []
-                injectivity:: Vector{Bool} = is_injective(ctx, tns)
-                concurrencyInfo = is_concurrent(ctx, acc.tns)
+                parallel_modes = []
+                injectivities:: Vector{Bool} = is_injective(ctx, tns)
+                concurrencies = is_concurrent(ctx, acc.tns)
                 for loc in 1:length(i)
-                    if i[loc] in indicies_in_region
-                        push!(locations_with_parallel_vars, loc + 1)
+                    if i[loc] in indices_in_region
+                        push!(parallel_modes, loc + 1)
                         #off by one should go away
                     end
                 end
-                if length(locations_with_parallel_vars) == 0
-                    (below, overall) = is_atomic(ctx, acc.tns)
-                    if !below[1]
+                if length(parallel_modes) == 0
+                    (atomicities, overall) = is_atomic(ctx, acc.tns)
+                    if !atomicities[1]
                         throw(FinchConcurrencyError("Assignment $(acc) requires last level atomics!"))
                         # FIXME: we could do atomic operations here.
                     else
@@ -124,15 +122,15 @@ function ensure_concurrent(root, ctx)
                 end
 
                 #TODO If we could prove that some indices do not depend on the parallel index, we could exempt them from this somehow.
-                if all(injectivity[[x-1 for x in locations_with_parallel_vars]]) && all(concurrencyInfo[[x-1 for x in locations_with_parallel_vars]])
+                if all(injectivities[[x-1 for x in parallel_modes]]) && all(concurrencies[[x-1 for x in parallel_modes]])
                     continue # We pass due to injectivity!
                 end
                 # FIXME: This could be more fine grained: atomics need to only protect the non-injectivity. 
-                (below, _) = is_atomic(ctx, acc.tns)
-                if all(below[locations_with_parallel_vars .- 1]) && all(concurrencyInfo[[x-1 for x in locations_with_parallel_vars]])
+                (atomicities, _) = is_atomic(ctx, acc.tns)
+                if all(atomicities[parallel_modes .- 1]) && all(concurrencies[[x-1 for x in parallel_modes]])
                     continue # we pass due to atomics!
                 else
-                    throw(FinchConcurrencyError("Assignment $(acc) requires injectivity or atomics in at least places $(locations_with_parallel_vars), but does not have them, due to injectivity=$(injectivity) and atomics=$(below) and concurrency=$(concurrencyInfo)."))
+                    throw(FinchConcurrencyError("Assignment $(acc) requires injectivity or atomics in at least modes $(parallel_modes), but does not have them, due to injectivity=$(injectivities) and atomics=$(atomicities) and concurrency=$(concurrencies)."))
                 end
 
                 #TODO perhaps if the last access is the parallel index, we only need injectivity or atomics on the parallel one, and concurrency on that one only
