@@ -107,14 +107,14 @@ end
 
 function virtualize(ctx, ex, ::Type{SeparateLevel{Lvl, Val}}, tag=:lvl) where {Lvl, Val}
     sym = freshen(ctx, tag)
-    pointers = freshen(ctx, tag, :_pointers)
+    val = freshen(ctx, tag, :_val)
 
     push!(ctx.preamble, quote
               $sym = $ex
-              $pointers = $ex.val
+              $val = $ex.val
     end)
     lvl_2 = virtualize(ctx, :($ex.lvl), Lvl, sym)
-    VirtualSeparateLevel(lvl_2, sym, pointers, typeof(level_default(Lvl)), Lvl, Val)
+    VirtualSeparateLevel(lvl_2, sym, val, typeof(level_default(Lvl)), Lvl, Val)
 end
 
 Base.summary(lvl::VirtualSeparateLevel) = "Separate($(lvl.Lvl))"
@@ -127,13 +127,13 @@ virtual_level_default(lvl::VirtualSeparateLevel) = virtual_level_default(lvl.lvl
 function virtual_moveto_level(ctx, lvl::VirtualSeparateLevel, arch)
     
     # Need to move each pointer...
-    pointers = freshen(ctx.code, lvl.val)
+    val_2 = freshen(ctx.code, lvl.val)
     push!(ctx.code.preamble, quote
-              $pointers = $(lvl.val)
+              $val_2 = $(lvl.val)
               $(lvl.val) = $moveto($(lvl.val), $(ctx(arch)))
           end)
     push!(ctx.code.epilogue, quote
-              $(lvl.val) = $pointers
+              $(lvl.val) = $val_2
           end)
     virtual_moveto_level(ctx, lvl.lvl, arch)
 end
