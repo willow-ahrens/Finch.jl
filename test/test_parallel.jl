@@ -576,7 +576,6 @@
         end)
     end
 
-    #=
     let
         y = Tensor(Dense(Atomic(Element(0.0))))
         A = Tensor(Dense(SparseList(Element(0.0))))
@@ -599,5 +598,4 @@
             end
         end)
     end
-    =#
 end

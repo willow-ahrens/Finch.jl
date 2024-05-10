@@ -35,6 +35,8 @@ function virtualize(ctx, ex, ::Type{Scalar{D, Tv}}, tag) where {D, Tv}
     VirtualScalar(sym, Tv, D, tag, val)
 end
 
+virtual_moveto(ctx, lvl::VirtualScalar, arch) = lvl
+
 virtual_size(ctx, ::VirtualScalar) = ()
 
 virtual_default(ctx, tns::VirtualScalar) = tns.D
@@ -120,6 +122,8 @@ virtual_size(ctx, ::VirtualSparseScalar) = ()
 
 virtual_default(ctx, tns::VirtualSparseScalar) = tns.D
 virtual_eltype(tns::VirtualSparseScalar, ctx) = tns.Tv
+
+virtual_moveto(ctx, lvl::VirtualSparseScalar, arch) = lvl
 
 function declare!(ctx, tns::VirtualSparseScalar, init)
     push!(ctx.code.preamble, quote
@@ -226,6 +230,8 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualShortCircuitScala
     return tns.val
 end
 
+virtual_moveto(ctx, lvl::VirtualShortCircuitScalar, arch) = lvl
+
 function short_circuit_cases(ctx, tns::VirtualShortCircuitScalar, op)
     [:(Finch.isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Simplify(Fill(Null()))]
 end
@@ -276,6 +282,8 @@ virtual_size(ctx, ::VirtualSparseShortCircuitScalar) = ()
 
 virtual_default(ctx, tns::VirtualSparseShortCircuitScalar) = tns.D
 virtual_eltype(tns::VirtualSparseShortCircuitScalar, ctx) = tns.Tv
+
+virtual_moveto(ctx, lvl::VirtualSparseShortCircuitScalar, arch) = lvl
 
 function declare!(ctx, tns::VirtualSparseShortCircuitScalar, init)
     push!(ctx.code.preamble, quote

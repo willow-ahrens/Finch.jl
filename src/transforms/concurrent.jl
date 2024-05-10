@@ -62,8 +62,6 @@ function ensure_concurrent(root, ctx)
             end
         end
     end
-    
-
 
     for (root, agns) in nonlocal_assigns
         ops = map(agn -> (@capture agn assign(~lhs, ~op, ~rhs); op), agns)
