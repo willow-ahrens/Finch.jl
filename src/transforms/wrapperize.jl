@@ -10,12 +10,27 @@ after simplification so one can expect constants to be folded.
 function get_wrapper_rules(ctx, depth, alg)
     return [
         (@rule access(~A, ~m, ~i1..., call(~proto::isliteral, ~j), ~i2...) => if isprotocol(proto.val)
-            protos = ([nothing for _ in i1]..., proto.val, [nothing for _ in i2]...)
+            protos = []
+            for i in i1
+                if (@capture i call(~i_proto::isliteral, ~i_idx)) && isprotocol(i_proto.val)
+                    push!(protos, i_proto.val)
+                else
+                    push!(protos, nothing)
+                end
+            end
+            push!(protos, proto.val)
+            for i in i2
+                if (@capture i call(~i_proto::isliteral, ~i_idx)) && isprotocol(i_proto.val)
+                    push!(protos, i_proto.val)
+                else
+                    push!(protos, nothing)
+                end
+            end
             access(call(protocolize, A, protos...), m, i1..., j, i2...)
         end),
         (@rule call(protocolize, call(protocolize, ~A, ~protos_1...), ~protos_2...) => begin
             protos_3 = map(protos_1, protos_2) do proto_1, proto_2
-                something(proto_1, proto_2, Some(nothing)) 
+                something(proto_1.val, proto_2.val, Some(nothing))
             end
             call(protocolize, A, protos_3...)
         end),
@@ -28,7 +43,7 @@ function get_wrapper_rules(ctx, depth, alg)
         (@rule call(permissive, call(permissive, ~A, ~dims_1...), ~dims_2...) => begin
             union_dims = getval.(dims_1) .| getval.(dims_2)
             call(permissive, A, union_dims...)
-        end), 
+        end),
         (@rule call(permissive, call(swizzle, ~A, ~sigma...), ~dims...) =>
             call(swizzle, call(permissive, A, dims[invperm(getval.(sigma))]...), sigma...)),
         (@rule access(~A, ~m, ~i1..., call(-, ~j, ~k), ~i2...) =>
@@ -51,7 +66,7 @@ function get_wrapper_rules(ctx, depth, alg)
             end
         end),
         (@rule access(~A, ~m, ~i1..., call(*, ~j1..., ~k, ~j2...), ~i2...) => begin
-            if !isempty(j1) || !isempty(j2) 
+            if !isempty(j1) || !isempty(j2)
                 if length(j1) == 1 && isempty(j2)
                     k_2 = j1[1]
                 elseif isempty(j1) && length(j2) == 1
@@ -60,7 +75,7 @@ function get_wrapper_rules(ctx, depth, alg)
                     k_2 = call(*, ~j1..., ~j2...)
                 end
 
-                if depth(k_2) == 0 
+                if depth(k_2) == 0
                     s1 = ([1 for _ in i1]..., k_2, [1 for _ in i2]...)
                     access(call(scale, A, s1...), m, i1..., k, i2...)
                 end
@@ -68,7 +83,7 @@ function get_wrapper_rules(ctx, depth, alg)
         end),
         (@rule call(scale, call(scale, ~A, ~s1...), ~s2...) => begin
             s3 = map(s1, s2) do proto_1, proto_2
-                call(*, s1, s2) 
+                call(*, s1, s2)
             end
             call(scale, A, s3...)
         end),
@@ -146,7 +161,7 @@ function get_wrapper_rules(ctx, depth, alg)
             call(swizzle, call(toeplitz, A, idim), sigma[1:idim-1]..., sigma[idim], sigma[idim], sigma[idim+1:end]...)
         end),
         (@rule access(~A, ~m, ~i1..., call(+, ~j1..., ~k, ~j2...), ~i2...) => begin
-            if !isempty(j1) || !isempty(j2) 
+            if !isempty(j1) || !isempty(j2)
                 k_2 = call(+, ~j1..., ~j2...)
                 if depth(k_2) == 0
                     delta = ([0 for _ in i1]..., k_2, [0 for _ in i2]...)
@@ -156,7 +171,7 @@ function get_wrapper_rules(ctx, depth, alg)
         end),
         (@rule call(offset, call(offset, ~A, ~delta_1...), ~delta_2...) => begin
             delta_3 = map(delta_1, delta_2) do proto_1, proto_2
-                call(+, proto_1, proto_2) 
+                call(+, proto_1, proto_2)
             end
             call(offset, A, delta_3...)
         end),
@@ -264,7 +279,7 @@ function unwrap_roots(ctx, root)
             A
         elseif @capture(node, thaw(~A))
             A
-        end 
+        end
     end))
     root = Rewrite(Postwalk(@rule access(~A, ~m, ~i...) => access(unwrap(ctx, A, getroot(A)), m, i...)))(root)
     for tns in tnss
