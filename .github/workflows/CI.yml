@@ -71,24 +71,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
-  binder:
-    name: Binder
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    needs: docs
-    steps:
-      - name: Checkout built code
-        uses: actions/checkout@v3
-        with:
-          ref: gh-pages
-      - name: update jupyter dependencies with repo2docker
-        uses: jupyterhub/repo2docker-action@master
-        continue-on-error: true
-        with:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          BINDER_CACHE: true
-          PUBLIC_REGISTRY_CHECK: true
 
   finch-tensor-tests:
     name: Python tests
