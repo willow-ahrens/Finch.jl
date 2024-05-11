@@ -29,9 +29,9 @@
 
     let
         io = IOBuffer()
-        A = fsprand(42, 42, 0.1)
-        B = fsprand(42, 42, 0.1)
-        CR = Tensor(Dense(Dense(Element(0.0))), zeros(42, 42))
+        A = fsprand(UInt, 42, 42, 0.1)
+        B = fsprand(UInt, 42, 42, 0.1)
+        CR = Tensor(Dense(Dense(Element(UInt(0)))), undef, 42, 42)
         @finch begin
             CR .= 0
             for i = _
@@ -43,11 +43,11 @@
             end
         end
 
-        AFormat = SparseList(Dense(Element(0.0)))
+        AFormat = SparseList(Dense(Element(UInt(0))))
         At = Tensor(AFormat, A)
-        BFormat = Dense(SparseList(Element(0.0)))
+        BFormat = Dense(SparseList(Element(UInt(0))))
         Bt = Tensor(BFormat, B)
-        Ct = Tensor(Dense(Dense(Element(0.0))), zeros(42, 42))
+        Ct = Tensor(Dense(Dense(Element(UInt(0)))), undef, 42, 42)
         check_output("parallel/parallel_spmms_no_atomics_1.txt", @finch_code begin
             Ct .= 0
             for i = parallel(_)
@@ -170,14 +170,14 @@
     formats = [Dense, SparseList]
     for fmatA1 in formats
         for fmatA2 in formats
-            Af = fmatA2(fmatA1(Element(0.0)))
+            Af = fmatA2(fmatA1(Element(UInt(0))))
             At = Tensor(Af, A)
             for fmatB1 in formats
                 for fmatB2 in formats 
-                    Bf = fmatB2(fmatB1(Element(0.0)))
+                    Bf = fmatB2(fmatB1(Element(UInt(0))))
                     Bt = Tensor(Bf, B)
 
-                    Ct = Tensor(Dense(Dense(Element(0.0))), zeros(42, 42))
+                    Ct = Tensor(Dense(Dense(Element(UInt(0)))), undef, 42, 42)
                     check_output("parallel/debug_spmm_atomics_$fmtA1_$fmtA2_1.txt", @finch_code begin
                         Ct .= 0
                         for i = parallel(_)
@@ -279,9 +279,9 @@
     =#
 
     let
-        A = fsprand(Int, 42, 42, 0.9)
-        B = fsprand(Int, 42, 42, 0.9)
-        CR = Tensor(Dense(Dense(Element(0))), zeros(42, 42))
+        A = fsprand(UInt, 42, 42, 0.9)
+        B = fsprand(UInt, 42, 42, 0.9)
+        CR = Tensor(Dense(Dense(Element(UInt(0)))), undef, 42, 42)
 
         check_output("parallel/debug_spmm_atomics_1.txt", @finch_code begin 
             CR .= 0
@@ -305,12 +305,12 @@
             end
         end
 
-        AFormat = SparseList(Dense(Element(0)))
+        AFormat = SparseList(Dense(Element(UInt(0))))
         At = Tensor(AFormat, A)
-        BFormat = Dense(SparseList(Element(0)))
+        BFormat = Dense(SparseList(Element(UInt(0))))
         Bt = Tensor(BFormat, B)
-        Ct = Tensor(Dense(Dense(Atomic(Element(0)))), zeros(42, 42))
-        CBad = Tensor(Dense(Dense((Element(0)))), zeros(42, 42))
+        Ct = Tensor(Dense(Dense(Atomic(Element(UInt(0))))), undef, 42, 42)
+        CBad = Tensor(Dense(Dense((Element(UInt(0))))), undef, 42, 42)
 
         #=
 
@@ -392,9 +392,9 @@
 
     let
         io = IOBuffer()
-        A = Tensor(Dense(SparseList(Element(0.0))), [1 2; 3 4])
-        x = Tensor(Dense(Element(0.0)), [1, 1])
-        y = Tensor(Dense(Atomic(Element(0.0))))
+        A = Tensor(Dense(SparseList(Element(0))), [1 2; 3 4])
+        x = Tensor(Dense(Element(0)), [1, 1])
+        y = Tensor(Dense(Atomic(Element(0))))
         @repl io @finch_code begin
             y .= 0
             for j = parallel(_)
@@ -413,16 +413,14 @@
             end
         end
 
-        
-
         @test check_output("parallel/parallel_spmv_atomics.txt", String(take!(io)))
     end
 
     let
         io = IOBuffer()
 
-        x = Tensor(Dense(Element(Int(0)), 100))
-        y = Tensor(Dense(Atomic(Element(0.0)), 5))
+        x = Tensor(Dense(Element(0)), undef, 100)
+        y = Tensor(Dense(Atomic(Element(0))), undef, 5)
         @repl io @finch_code begin
             x .= 0
             for j = _
@@ -444,8 +442,8 @@
             end
         end
 
-        xp = Tensor(Dense(Element(Int(0)), 100))
-        yp = Tensor(Dense(Element(0.0), 5))
+        xp = Tensor(Dense(Element(Int(0))), undef, 100)
+        yp = Tensor(Dense(Element(0.0)), undef, 5)
 
         @repl io @finch begin
             xp .= 0

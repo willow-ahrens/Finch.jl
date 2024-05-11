@@ -19,7 +19,7 @@ begin
     result = nothing
     pos_stop = A_lvl.shape[1] * B_lvl.shape[2]
     Finch.resize_if_smaller!(CR_lvl_2_val, pos_stop)
-    Finch.fill_range!(CR_lvl_2_val, 0, 1, pos_stop)
+    Finch.fill_range!(CR_lvl_2_val, 0x0000000000000000, 1, pos_stop)
     for i_4 = 1:A_lvl.shape[1]
         B_lvl_q = B_lvl_ptr[1]
         B_lvl_q_stop = B_lvl_ptr[1 + 1]

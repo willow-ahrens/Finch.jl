@@ -18,7 +18,7 @@ begin
     result = nothing
     pos_stop = A_lvl.shape[1] * B_lvl.shape[2]
     Finch.resize_if_smaller!(Ct_lvl_2_val, pos_stop)
-    Finch.fill_range!(Ct_lvl_2_val, 0.0, 1, pos_stop)
+    Finch.fill_range!(Ct_lvl_2_val, 0x0000000000000000, 1, pos_stop)
     val = Ct_lvl_2_val
     Ct_lvl_2_val = (Finch).moveto(Ct_lvl_2_val, CPU(Threads.nthreads()))
     B_lvl_ptr = (Finch).moveto(B_lvl_ptr, CPU(Threads.nthreads()))
