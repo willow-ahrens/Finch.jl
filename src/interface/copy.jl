@@ -14,45 +14,48 @@
     end
 end
 
-function Base.copyto!(dst::Tensor, src::Union{Tensor, AbstractArray})
-    return copyto_helper!(dst, src)
+Base.copyto!(dst::AbstractTensor, src::AbstractTensor) =
+    copyto_helper!(dst, src)
+
+Base.copyto!(dst::AbstractTensor, src::AbstractArray) =
+    copyto_helper!(dst, src)
+
+Base.copyto!(dst::AbstractArray, src::AbstractTensor) =
+    copyto_helper!(dst, src)
+
+function copyto_swizzled!(dst, src, perm)
+    if issorted(perm)
+        return copyto_helper!(dst, src)
+    else 
+        tmp = rep_construct(permutedims_rep(data_rep(src), perm))
+        tmp = copyto_helper!(swizzle(tmp, invperm(perm)...), src)
+        return copyto_helper!(dst, tmp.body)
+    end
 end
 
-function Base.copyto!(dst::Array, src::Tensor)
-    return copyto_helper!(dst, src)
-end
+Base.copyto!(dst::AbstractArray, src::SwizzleArray{dims}) where {dims} =
+    copyto_swizzled!(dst, src.body, dims)
 
-function Base.permutedims(src::Tensor)
+Base.copyto!(dst::AbstractTensor, src::SwizzleArray{dims}) where {dims} =
+    copyto_swizzled!(dst, src.body, dims)
+
+Base.copyto!(dst::SwizzleArray{dims}, src::SwizzleArray{dims2}) where {dims, dims2} =
+    swizzle(copyto!(dst.body, swizzle(src, invperm(dims)...)), dims...)
+
+Base.copyto!(dst::SwizzleArray{dims}, src::AbstractTensor) where {dims} =
+    swizzle(copyto!(dst.body, swizzle(src, invperm(dims)...)), dims...)
+
+Base.copyto!(dst::SwizzleArray{dims}, src::AbstractArray) where {dims} =
+    swizzle(copyto!(dst.body, swizzle(src, invperm(dims)...)), dims...)
+
+function Base.permutedims(src::AbstractTensor)
     @assert ndims(src) == 2
     permutedims(src, (2, 1))
 end
-function Base.permutedims(src::Tensor, perm)
+
+function Base.permutedims(src::AbstractTensor, perm)
     dst = similar(src)
     copyto!(dst, swizzle(src, perm...))
-end
-
-function Base.copyto!(dst::AbstractArray, src::SwizzleArray{dims}) where {dims}
-    ret = copyto!(swizzle(dst, invperm(dims)...), src.body)
-    return ret.body
-end
-
-function Base.copyto!(dst::Tensor, src::SwizzleArray{dims}) where {dims}
-    ret = copyto!(swizzle(dst, invperm(dims)...), src.body)
-    return ret.body
-end
-
-function Base.copyto!(dst::SwizzleArray{dims1}, src::SwizzleArray{dims2}) where {dims1, dims2}
-    ret = copyto!(swizzle(dst, invperm(dims2)...), src.body)
-    return swizzle(ret, dims2...)
-end
-
-function Base.copyto!(dst::SwizzleArray{dims}, src::Union{Tensor, AbstractArray}) where {dims}
-    if ndims(src) == 0
-        return copyto_helper!(dst, src)
-    end
-    tmp = Tensor(SparseHash{ndims(src)}(Element(default(src))))
-    tmp = copyto_helper!(swizzle(tmp, dims...), src).body
-    swizzle(copyto_helper!(dst.body, tmp), dims...)
 end
 
 """
@@ -69,7 +72,8 @@ dropdefaults(src) = dropdefaults!(similar(src), src)
 Copy only the non- default values from `src` into `dst`. The shape and format of
 `dst` must match `src`
 """
-dropdefaults!(dst::Tensor, src) = dropdefaults_helper!(dst, src)
+dropdefaults!(dst::AbstractTensor, src) = dropdefaults_helper!(dst, src)
+dropdefaults!(dst::SwizzleArray{dims}, src::SwizzleArray{dims}) where {dims} = swizzle(dropdefaults_helper!(dst.body, src.body), dims...)
 
 @staged function dropdefaults_helper!(dst, src)
     ndims(dst) > ndims(src) && throw(DimensionMismatch("more dimensions in destination than source"))

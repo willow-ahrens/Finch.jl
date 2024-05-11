@@ -1,4 +1,4 @@
-mutable struct Scalar{D, Tv}# <: AbstractArray{Tv, 0}
+mutable struct Scalar{D, Tv} <: AbstractTensor
     val::Tv
 end
 
@@ -76,7 +76,7 @@ function short_circuit_cases(ctx, tns::VirtualScalar, op)
     end
 end
 
-mutable struct SparseScalar{D, Tv}# <: AbstractArray{Tv, 0}
+mutable struct SparseScalar{D, Tv} <: AbstractTensor
     val::Tv
     dirty::Bool
 end
@@ -162,7 +162,7 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualSparseScalar)
     return tns.val
 end
 
-mutable struct ShortCircuitScalar{D, Tv}# <: AbstractArray{Tv, 0}
+mutable struct ShortCircuitScalar{D, Tv} <: AbstractTensor
     val::Tv
 end
 
@@ -236,7 +236,7 @@ function short_circuit_cases(ctx, tns::VirtualShortCircuitScalar, op)
     [:(Finch.isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Simplify(Fill(Null()))]
 end
 
-mutable struct SparseShortCircuitScalar{D, Tv}# <: AbstractArray{Tv, 0}
+mutable struct SparseShortCircuitScalar{D, Tv} <: AbstractTensor
     val::Tv
     dirty::Bool
 end

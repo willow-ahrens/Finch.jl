@@ -2,6 +2,10 @@ struct Drop{Idx}
     idx::Idx
 end
 
+Base.to_indices(A::AbstractTensor, I::Tuple{AbstractVector}) = Base.to_indices(A, axes(A), I)
+
+Base.IndexStyle(::Type{<:AbstractTensor}) = Base.IndexCartesian()
+
 """
     getindex_rep(tns, idxs...)
 
@@ -25,12 +29,29 @@ getindex_rep_def(lvl::RepeatData, idx::Drop) = SolidData(ElementData(lvl.default
 getindex_rep_def(lvl::RepeatData, idx) = SolidData(ElementData(lvl.default, lvl.eltype))
 getindex_rep_def(lvl::RepeatData, idx::Type{<:AbstractUnitRange}) = SolidData(ElementData(lvl.default, lvl.eltype))
 
-Base.getindex(arr::Tensor, inds::AbstractVector) = getindex_helper(arr, to_indices(arr, axes(arr), (inds,)))
-function Base.getindex(arr::Tensor, inds...)
+Base.getindex(arr::AbstractTensor, inds::AbstractVector) = getindex_helper(arr, to_indices(arr, axes(arr), (inds,)))
+function Base.getindex(arr::AbstractTensor, inds...)
     if nothing in inds && inds isa Tuple{Vararg{Union{Nothing, Colon}}}
         return compute(lazy(arr)[inds...])
     else
         getindex_helper(arr, to_indices(arr, inds))
+    end
+end
+
+Base.getindex(arr::SwizzleArray{perm}, inds::AbstractVector) where {perm} = getindex_helper(arr, to_indices(arr, axes(arr), (inds,)))
+function Base.getindex(arr::SwizzleArray{perm}, inds...) where {perm}
+    if nothing in inds && inds isa Tuple{Vararg{Union{Nothing, Colon}}}
+        return compute(lazy(arr)[inds...])
+    else
+        inds_2 = Base.to_indices(arr, axes(arr), inds)
+        perm_2 = collect(invperm(perm))
+        res = getindex(arr.body, inds_2[perm_2]...)
+        perm_3 = sortperm(filter(n -> ndims(inds_2[n]) > 0, perm_2))
+        if issorted(perm_3)
+            return res
+        else 
+            return swizzle(res, perm_3...)
+        end
     end
 end
 
@@ -79,7 +100,15 @@ end
     end
 end
 
-Base.setindex!(arr::Tensor, src, inds...) = setindex_helper(arr, src, to_indices(arr, inds))
+Base.setindex!(arr::AbstractTensor, src, inds...) = setindex_helper(arr, src, to_indices(arr, inds))
+
+function Base.setindex!(arr::SwizzleArray{perm}, v, inds...) where {perm}
+    inds_2 = Base.to_indices(arr, inds)
+    perm_2 = collect(invperm(perm))
+    res = setindex!(arr.body, v, inds_2[perm_2]...)
+    arr
+end
+
 @staged function setindex_helper(arr, src, inds)
     inds <: Type{<:Tuple}
     inds = inds.parameters
