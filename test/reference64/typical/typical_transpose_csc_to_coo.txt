@@ -95,9 +95,9 @@ quote
             end
         end
     end
-    qos_stop_4 = Finch.freeze_table!(B_lvl_tbl, 1)
-    qos_stop_5 = Finch.freeze_table!(B_lvl_tbl_2, qos_stop_4)
-    resize!(B_lvl_2_val, qos_stop_5)
+    qos_stop = Finch.freeze_table!(B_lvl_tbl, 1)
+    qos_stop_2 = Finch.freeze_table!(B_lvl_tbl_2, qos_stop)
+    resize!(B_lvl_2_val, qos_stop_2)
     result = (B = Tensor((SparseLevel){Int64}((SparseLevel){Int64}(B_lvl_3, A_lvl.shape, B_lvl_tbl_2), A_lvl_2.shape, B_lvl_tbl)),)
     result
 end
