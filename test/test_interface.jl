@@ -631,9 +631,6 @@ using Finch: AsArray
         a = fsprand(10, 1, 0.8)
         b = fsprand(10, 1, 0.8)
 
-        println(a)
-        println(permutedims(a, (2, 1)))
-        println(permutedims(b, (2, 1)))
         permutedims(broadcast(+, permutedims(a, (2, 1)), permutedims(b, (2, 1))), (2, 1))  # passes
 
         a_l = lazy(a)
