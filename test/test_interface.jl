@@ -3,6 +3,15 @@ using Finch: AsArray
 @testset "interface" begin
     @info "Testing Finch Interface"
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/536
+    A = [1 2; 3 4]
+    swizzle(lazy(A), 2, 1) == permutedims(A)
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/530
+    A_tns = Tensor(Dense(Dense(Dense(Element(0.0)))), zeros(3, 3, 3))
+    A_sw = swizzle(A_tns, 2, 3, 1)
+    A_tns == A_sw #fails
+
     #https://github.com/willow-ahrens/Finch.jl/issues/524
     let
         arr3d = rand(Int, 3, 2, 3) .% 10
@@ -619,15 +628,18 @@ using Finch: AsArray
 
     #https://github.com/willow-ahrens/Finch.jl/issues/487
     let
-        a = fsprand(100, 1, 0.8)
-        b = fsprand(100, 1, 0.8)
+        a = fsprand(10, 1, 0.8)
+        b = fsprand(10, 1, 0.8)
 
-        permutedims(broadcast(.+, permutedims(a, (2, 1)), permutedims(b, (2, 1))), (2, 1))  # passes
+        println(a)
+        println(permutedims(a, (2, 1)))
+        println(permutedims(b, (2, 1)))
+        permutedims(broadcast(+, permutedims(a, (2, 1)), permutedims(b, (2, 1))), (2, 1))  # passes
 
         a_l = lazy(a)
         b_l = lazy(b)
 
-        plan = permutedims(broadcast(.+, permutedims(a_l, (2, 1)), permutedims(b_l, (2, 1))), (2, 1))
+        plan = permutedims(broadcast(+, permutedims(a_l, (2, 1)), permutedims(b_l, (2, 1))), (2, 1))
         compute(plan)  # fails
     end
 end

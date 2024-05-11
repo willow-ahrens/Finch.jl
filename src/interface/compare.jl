@@ -11,15 +11,15 @@
     end
 end
 
-function Base.:(==)(A::Tensor, B::Tensor)
+function Base.:(==)(A::AbstractTensor, B::AbstractTensor)
     return helper_equal(A, B)
 end
 
-function Base.:(==)(A::Tensor, B::AbstractArray)
+function Base.:(==)(A::AbstractTensor, B::AbstractArray)
     return helper_equal(A, B)
 end
 
-function Base.:(==)(A::AbstractArray, B::Tensor)
+function Base.:(==)(A::AbstractArray, B::AbstractTensor)
     return helper_equal(A, B)
 end
 
@@ -36,14 +36,14 @@ end
     end
 end
 
-function Base.isequal(A:: Tensor, B::Tensor)
+function Base.isequal(A:: AbstractTensor, B::AbstractTensor)
     return helper_isequal(A, B)
 end
 
-function Base.isequal(A:: Tensor, B::AbstractArray)
+function Base.isequal(A::AbstractTensor, B::AbstractArray)
     return helper_isequal(A, B)
 end
 
-function Base.isequal(A:: AbstractArray, B::Tensor)
+function Base.isequal(A:: AbstractArray, B::AbstractTensor)
     return helper_isequal(A, B)
 end

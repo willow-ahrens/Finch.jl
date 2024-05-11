@@ -1,4 +1,4 @@
-struct DiagMask end
+struct DiagMask <: AbstractTensor end
 
 """
     diagmask
@@ -13,11 +13,13 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::DiagMask)
     print(io, "diagmask")
 end
 
-virtualize(ctx, ex, ::Type{DiagMask}) = diagmask
-FinchNotation.finch_leaf(x::DiagMask) = virtual(x)
-Finch.virtual_size(ctx, ::DiagMask) = (dimless, dimless)
+struct VirtualDiagMask <: AbstractVirtualTensor end
 
-function instantiate(ctx, arr::DiagMask, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
+virtualize(ctx, ex, ::Type{DiagMask}) = VirtualDiagMask()
+FinchNotation.finch_leaf(x::VirtualDiagMask) = virtual(x)
+Finch.virtual_size(ctx, ::VirtualDiagMask) = (dimless, dimless)
+
+function instantiate(ctx, arr::VirtualDiagMask, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
     Unfurled(
         arr = arr,
         body = Furlable(
@@ -40,7 +42,7 @@ function instantiate(ctx, arr::DiagMask, mode::Reader, subprotos, ::typeof(defau
     )
 end
 
-struct UpTriMask end
+struct UpTriMask <: AbstractTensor end
 
 """
     uptrimask
@@ -55,11 +57,13 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::UpTriMask)
     print(io, "uptrimask")
 end
 
-virtualize(ctx, ex, ::Type{UpTriMask}) = uptrimask
-FinchNotation.finch_leaf(x::UpTriMask) = virtual(x)
-Finch.virtual_size(ctx, ::UpTriMask) = (dimless, dimless)
+struct VirtualUpTriMask <: AbstractVirtualTensor end
 
-function instantiate(ctx, arr::UpTriMask, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
+virtualize(ctx, ex, ::Type{UpTriMask}) = VirtualUpTriMask()
+FinchNotation.finch_leaf(x::VirtualUpTriMask) = virtual(x)
+Finch.virtual_size(ctx, ::VirtualUpTriMask) = (dimless, dimless)
+
+function instantiate(ctx, arr::VirtualUpTriMask, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
     Unfurled(
         arr = arr,
         body = Furlable(
@@ -80,7 +84,7 @@ function instantiate(ctx, arr::UpTriMask, mode::Reader, subprotos, ::typeof(defa
     )
 end
 
-struct LoTriMask end
+struct LoTriMask <: AbstractTensor end
 
 """
     lotrimask
@@ -95,11 +99,13 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::LoTriMask)
     print(io, "lotrimask")
 end
 
-virtualize(ctx, ex, ::Type{LoTriMask}) = lotrimask
-FinchNotation.finch_leaf(x::LoTriMask) = virtual(x)
-Finch.virtual_size(ctx, ::LoTriMask) = (dimless, dimless)
+struct VirtualLoTriMask <: AbstractVirtualTensor end
 
-function instantiate(ctx, arr::LoTriMask, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
+virtualize(ctx, ex, ::Type{LoTriMask}) = VirtualLoTriMask()
+FinchNotation.finch_leaf(x::VirtualLoTriMask) = virtual(x)
+Finch.virtual_size(ctx, ::VirtualLoTriMask) = (dimless, dimless)
+
+function instantiate(ctx, arr::VirtualLoTriMask, mode::Reader, subprotos, ::typeof(defaultread), ::typeof(defaultread))
     Unfurled(
         arr = arr,
         body = Furlable(
@@ -120,7 +126,7 @@ function instantiate(ctx, arr::LoTriMask, mode::Reader, subprotos, ::typeof(defa
     )
 end
 
-struct BandMask end
+struct BandMask <: AbstractTensor end
 
 """
     bandmask
@@ -135,11 +141,13 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::BandMask)
     print(io, "bandmask")
 end
 
-virtualize(ctx, ex, ::Type{BandMask}) = bandmask
-FinchNotation.finch_leaf(x::BandMask) = virtual(x)
-Finch.virtual_size(ctx, ::BandMask) = (dimless, dimless, dimless)
+struct VirtualBandMask <: AbstractVirtualTensor end
 
-function instantiate(ctx, arr::BandMask, mode, subprotos, ::typeof(defaultread), ::typeof(defaultread), ::typeof(defaultread))
+virtualize(ctx, ex, ::Type{BandMask}) = VirtualBandMask()
+FinchNotation.finch_leaf(x::VirtualBandMask) = virtual(x)
+Finch.virtual_size(ctx, ::VirtualBandMask) = (dimless, dimless, dimless)
+
+function instantiate(ctx, arr::VirtualBandMask, mode, subprotos, ::typeof(defaultread), ::typeof(defaultread), ::typeof(defaultread))
     Unfurled(
         arr = arr,
         tns = Furlable(
@@ -168,7 +176,7 @@ function instantiate(ctx, arr::BandMask, mode, subprotos, ::typeof(defaultread),
     )
 end
 
-struct SplitMask
+struct SplitMask <: AbstractTensor
     P::Int
 end
 
@@ -213,7 +221,7 @@ function instantiate(ctx, arr::VirtualSplitMask, mode::Reader, subprotos, ::type
     )
 end
 
-struct ChunkMask{Dim}
+struct ChunkMask{Dim} <: AbstractTensor
     b::Int
     dim::Dim
 end
