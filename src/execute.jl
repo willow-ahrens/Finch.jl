@@ -68,14 +68,14 @@ getvalue(::Type{Val{v}}) where {v} = v
                 end
             catch
                 println("Error executing code:")
-                println($(QuoteNode(code |> unblock |> pretty |> unquote_literals)))
+                println($(QuoteNode(code |> pretty |> unquote_literals)))
                 rethrow()
             end
         end
     else
         return quote
             @inbounds @fastmath begin
-                $(code |> unblock |> pretty |> unquote_literals)
+                $(code |> pretty |> unquote_literals)
             end
         end
     end
@@ -240,7 +240,7 @@ function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = :saf
     if unreachable in PostOrderDFS(code)
         throw(FinchNotation.FinchSyntaxError("Attempting to interpolate value from local scope into @finch_kernel, pass values as function arguments or use \$ to interpolate explicitly."))
     end
-    code = code |> pretty |> unresolve |> dataflow |> unquote_literals
+    code = code |> pretty |> unresolve |> unquote_literals
     arg_defs = map(((key, val),) -> :($key::$(maybe_typeof(val))), args)
     striplines(:(function $fname($(arg_defs...))
         @inbounds @fastmath $(striplines(unblock(code)))
