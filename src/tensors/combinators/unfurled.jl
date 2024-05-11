@@ -124,6 +124,7 @@ getroot(tns::Unfurled) = getroot(tns.arr)
 
 is_injective(ctx, lvl::Unfurled) = is_injective(ctx, lvl.arr)
 is_atomic(ctx, lvl::Unfurled) = is_atomic(ctx, lvl.arr)
+is_concurrent(ctx, lvl::Unfurled) = is_concurrent(ctx, lvl.arr)
 
 function lower_access(ctx::AbstractCompiler, node, tns::Unfurled)
     if !isempty(node.idxs)

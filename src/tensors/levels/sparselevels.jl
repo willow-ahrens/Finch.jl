@@ -254,7 +254,15 @@ mutable struct VirtualSparseLevel <: AbstractVirtualLevel
 end
   
 is_level_injective(ctx, lvl::VirtualSparseLevel) = [is_level_injective(ctx, lvl.lvl)..., false]
-is_level_atomic(ctx, lvl::VirtualSparseLevel) = false
+function is_level_atomic(ctx, lvl::VirtualSparseLevel)
+    (below, atomic) = is_level_atomic(ctx, lvl.lvl)
+    return ([below; [atomic]], atomic)
+end
+function is_level_concurrent(ctx, lvl::VirtualSparseLevel)
+    (data, _) = is_level_concurrent(ctx, lvl.lvl)
+    #FIXME:
+    return ([data; [false]], false)
+end
 
 function virtualize(ctx, ex, ::Type{SparseLevel{Ti, Tbl, Lvl}}, tag=:lvl) where {Ti, Tbl, Lvl}
     sym = freshen(ctx, tag)

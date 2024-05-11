@@ -1,5 +1,6 @@
 quote
     tmp_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
+    tmp_lvl_val = ((ex.bodies[1]).bodies[1]).tns.bind.lvl.val
     tmp_lvl_2 = ((ex.bodies[1]).bodies[1]).tns.bind.lvl.lvl
     tmp_lvl_3 = tmp_lvl_2.lvl
     ref_lvl = ((ex.bodies[1]).bodies[2]).body.rhs.tns.bind.lvl
@@ -7,7 +8,7 @@ quote
     ref_lvl_idx = ref_lvl.idx
     ref_lvl_val = ref_lvl.lvl.val
     result = nothing
-    Finch.resize_if_smaller!(tmp_lvl.val, 1)
+    Finch.resize_if_smaller!(tmp_lvl_val, 1)
     for pos = 1:1
         pointer_to_lvl = similar_level(tmp_lvl.lvl, level_default(typeof(tmp_lvl.lvl)), level_eltype(typeof(tmp_lvl.lvl)), ref_lvl.shape)
         pointer_to_lvl_3 = pointer_to_lvl.lvl
@@ -15,9 +16,9 @@ quote
         Finch.resize_if_smaller!(pointer_to_lvl_2_val, ref_lvl.shape)
         Finch.fill_range!(pointer_to_lvl_2_val, 0.0, 1, ref_lvl.shape)
         resize!(pointer_to_lvl_2_val, ref_lvl.shape)
-        tmp_lvl.val[pos] = (DenseLevel){Int32}(pointer_to_lvl_3, ref_lvl.shape)
+        tmp_lvl_val[pos] = (DenseLevel){Int32}(pointer_to_lvl_3, ref_lvl.shape)
     end
-    pointer_to_lvl_5 = tmp_lvl.val[1]
+    pointer_to_lvl_5 = tmp_lvl_val[1]
     pointer_to_lvl_6 = pointer_to_lvl_5.lvl
     pointer_to_lvl_5_val = pointer_to_lvl_5.lvl.val
     Finch.resize_if_smaller!(pointer_to_lvl_5_val, pointer_to_lvl_5.shape)
@@ -54,7 +55,7 @@ quote
         end
     end
     resize!(pointer_to_lvl_5_val, pointer_to_lvl_5.shape)
-    tmp_lvl.val[1] = (DenseLevel){Int32}(pointer_to_lvl_6, pointer_to_lvl_5.shape)
-    result = (tmp = Tensor((SeparateLevel){DenseLevel{Int32, ElementLevel{0.0, Float64, Int32, Vector{Float64}}}, Vector{DenseLevel{Int32, ElementLevel{0.0, Float64, Int32, Vector{Float64}}}}}((DenseLevel){Int32}(tmp_lvl_3, ref_lvl.shape), tmp_lvl.val)),)
+    tmp_lvl_val[1] = (DenseLevel){Int32}(pointer_to_lvl_6, pointer_to_lvl_5.shape)
+    result = (tmp = Tensor((SeparateLevel){DenseLevel{Int32, ElementLevel{0.0, Float64, Int32, Vector{Float64}}}, Vector{DenseLevel{Int32, ElementLevel{0.0, Float64, Int32, Vector{Float64}}}}}((DenseLevel){Int32}(tmp_lvl_3, ref_lvl.shape), tmp_lvl_val)),)
     result
 end

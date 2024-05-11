@@ -81,6 +81,7 @@ countstored_level(lvl::SeparateLevel, pos) = pos
 mutable struct VirtualSeparateLevel <: AbstractVirtualLevel
     lvl  # stand in for the sublevel for virutal resize, etc.
     ex
+    val
     Tv
     Lvl
     Val
@@ -88,23 +89,32 @@ end
 
 postype(lvl:: VirtualSeparateLevel) = postype(lvl.lvl)
 
-is_level_injective(ctx, ::VirtualSeparateLevel) = [is_level_injective(ctx, lvl.lvl)..., true]
-is_level_concurrent(ctx, ::VirtualSeparateLevel) = [is_level_concurrent(ctx, lvl.lvl)..., true]
-is_level_atomic(ctx, lvl::VirtualSeparateLevel) = is_level_atomic(ctx, lvl.lvl)
+is_level_injective(ctx, lvl::VirtualSeparateLevel) = [is_level_injective(ctx, lvl.lvl)..., true]
+function is_level_atomic(ctx, lvl::VirtualSeparateLevel)
+    (below, atomic) = is_level_atomic(ctx, lvl.lvl)
+    return ([below; [atomic]], atomic)
+end
+function is_level_concurrent(ctx, lvl::VirtualSeparateLevel)
+    (data, _) = is_level_concurrent(ctx, lvl.lvl)
+    return (data, true)
+end
 
 function lower(ctx::AbstractCompiler, lvl::VirtualSeparateLevel, ::DefaultStyle)
     quote
-        $SeparateLevel{$(lvl.Lvl), $(lvl.Val)}($(ctx(lvl.lvl)), $(lvl.ex).val)
+        $SeparateLevel{$(lvl.Lvl), $(lvl.Val)}($(ctx(lvl.lvl)), $(lvl.val))
     end
 end
 
 function virtualize(ctx, ex, ::Type{SeparateLevel{Lvl, Val}}, tag=:lvl) where {Lvl, Val}
     sym = freshen(ctx, tag)
+    val = freshen(ctx, tag, :_val)
+
     push!(ctx.preamble, quote
-        $sym = $ex
+              $sym = $ex
+              $val = $ex.val
     end)
     lvl_2 = virtualize(ctx, :($ex.lvl), Lvl, sym)
-    VirtualSeparateLevel(lvl_2, sym, typeof(level_default(Lvl)), Lvl, Val)
+    VirtualSeparateLevel(lvl_2, sym, val, typeof(level_default(Lvl)), Lvl, Val)
 end
 
 Base.summary(lvl::VirtualSeparateLevel) = "Separate($(lvl.Lvl))"
@@ -114,8 +124,23 @@ virtual_level_size(ctx, lvl::VirtualSeparateLevel) = virtual_level_size(ctx, lvl
 virtual_level_eltype(lvl::VirtualSeparateLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_default(lvl::VirtualSeparateLevel) = virtual_level_default(lvl.lvl)
 
+function virtual_moveto_level(ctx, lvl::VirtualSeparateLevel, arch)
+    
+    # Need to move each pointer...
+    val_2 = freshen(ctx.code, lvl.val)
+    push!(ctx.code.preamble, quote
+              $val_2 = $(lvl.val)
+              $(lvl.val) = $moveto($(lvl.val), $(ctx(arch)))
+          end)
+    push!(ctx.code.epilogue, quote
+              $(lvl.val) = $val_2
+          end)
+    virtual_moveto_level(ctx, lvl.lvl, arch)
+end
+
+
 function declare_level!(ctx, lvl::VirtualSeparateLevel, pos, init)
-    #declare_level!(ctx_2, lvl.lvl, literal(1), init)
+    #declare_level!(lvl.lvl, ctx_2, literal(1), init)
     return lvl
 end
 
@@ -125,7 +150,7 @@ function assemble_level!(ctx, lvl::VirtualSeparateLevel, pos_start, pos_stop)
     pos = freshen(ctx.code, :pos)
     sym = freshen(ctx.code, :pointer_to_lvl)
     push!(ctx.code.preamble, quote
-        Finch.resize_if_smaller!($(lvl.ex).val, $(ctx(pos_stop)))
+        Finch.resize_if_smaller!($(lvl.val), $(ctx(pos_stop)))
         for $pos in $(ctx(pos_start)):$(ctx(pos_stop))
             $sym = similar_level(
                 $(lvl.ex).lvl,
@@ -140,7 +165,7 @@ function assemble_level!(ctx, lvl::VirtualSeparateLevel, pos_start, pos_stop)
                 push!(ctx_2.code.preamble, assemble_level!(ctx_2, lvl_2, literal(1), literal(1)))
                 contain(ctx_2) do ctx_3
                     lvl_2 = freeze_level!(ctx_3, lvl_2, literal(1))
-                    :($(lvl.ex).val[$(ctx_3(pos))] = $(ctx_3(lvl_2)))
+                    :($(lvl.val)[$(ctx_3(pos))] = $(ctx_3(lvl_2)))
                 end
             end)
         end
@@ -156,12 +181,12 @@ function reassemble_level!(ctx, lvl::VirtualSeparateLevel, pos_start, pos_stop)
     push!(ctx.code.preamble, quote
         for $idx in $(ctx(pos_start)):$(ctx(pos_stop))
             $(contain(ctx) do ctx_2
-                lvl_2 = virtualize(ctx_2.code, :($(lvl.ex).val[$idx]), lvl.Lvl, sym)
+                lvl_2 = virtualize(ctx_2.code, :($(lvl.val)[$idx]), lvl.Lvl, sym)
                 push!(ctx_2.code.preamble, assemble_level!(ctx_2, lvl_2, literal(1), literal(1)))
                 lvl_2 = declare_level!(ctx_2, lvl_2, literal(1), init)
                 contain(ctx_2) do ctx_3
                     lvl_2 = freeze_level!(ctx_3, lvl_2, literal(1))
-                    :($(lvl.ex).val[$(ctx_3(pos))] = $(ctx_3(lvl_2)))
+                    :($(lvl.val)[$(ctx_3(pos))] = $(ctx_3(lvl_2)))
                 end
             end)
         end
@@ -186,7 +211,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSeparateLevel}, mode::Read
     val = freshen(ctx.code, lvl.ex, :_val)
     return body = Thunk(
         body = (ctx) -> begin
-            lvl_2 = virtualize(ctx.code, :($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, sym)
+            lvl_2 = virtualize(ctx.code, :($(lvl.val)[$(ctx(pos))]), lvl.Lvl, sym)
             instantiate(ctx, VirtualSubFiber(lvl_2, literal(1)), mode, protos)
         end,
     )
@@ -199,14 +224,14 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSeparateLevel}, mode::Upda
 
     return body = Thunk(
         body = (ctx) -> begin
-            lvl_2 = virtualize(ctx.code, :($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, sym)
+            lvl_2 = virtualize(ctx.code, :($(lvl.val)[$(ctx(pos))]), lvl.Lvl, sym)
             lvl_2 = thaw_level!(ctx, lvl_2, literal(1))
             push!(ctx.code.preamble, assemble_level!(ctx, lvl_2, literal(1), literal(1)))
             res = instantiate(ctx, VirtualSubFiber(lvl_2, literal(1)), mode, protos)
             push!(ctx.code.epilogue, 
                 contain(ctx) do ctx_2
                     lvl_2 = freeze_level!(ctx_2, lvl_2, literal(1))
-                    :($(lvl.ex).val[$(ctx_2(pos))] = $(ctx_2(lvl_2)))
+                    :($(lvl.val)[$(ctx_2(pos))] = $(ctx_2(lvl_2)))
                 end
             )
             res
@@ -220,14 +245,14 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSeparateLevel}, mode
 
     return body = Thunk(
         body = (ctx) -> begin
-            lvl_2 = virtualize(ctx.code, :($(lvl.ex).val[$(ctx(pos))]), lvl.Lvl, sym)
+            lvl_2 = virtualize(ctx.code, :($(lvl.val)[$(ctx(pos))]), lvl.Lvl, sym)
             lvl_2 = thaw_level!(ctx, lvl_2, literal(1))
             push!(ctx.code.preamble, assemble_level!(ctx, lvl_2, literal(1), literal(1)))
             res = instantiate(ctx, VirtualHollowSubFiber(lvl_2, literal(1), fbr.dirty), mode, protos)
             push!(ctx.code.epilogue, 
                 contain(ctx) do ctx_2
                     lvl_2 = freeze_level!(ctx_2, lvl_2, literal(1))
-                    :($(lvl.ex).val[$(ctx_2(pos))] = $(ctx_2(lvl_2)))
+                    :($(lvl.val)[$(ctx_2(pos))] = $(ctx_2(lvl_2)))
                 end
             )
             res

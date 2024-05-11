@@ -17,6 +17,8 @@ end
 
 is_injective(ctx, lvl::VirtualProtocolizedArray) = is_injective(ctx, lvl.body)
 is_atomic(ctx, lvl::VirtualProtocolizedArray) = is_atomic(ctx, lvl.body)
+is_concurrent(ctx, lvl::VirtualProtocolizedArray) = is_concurrent(ctx, lvl.body)
+
 
 Base.:(==)(a::VirtualProtocolizedArray, b::VirtualProtocolizedArray) = a.body == b.body && a.protos == b.protos
 

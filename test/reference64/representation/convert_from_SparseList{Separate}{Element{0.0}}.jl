@@ -7,7 +7,7 @@ quote
     tmp_lvl = ((ex.bodies[1]).bodies[2]).body.rhs.tns.bind.lvl
     tmp_lvl_ptr = tmp_lvl.ptr
     tmp_lvl_idx = tmp_lvl.idx
-    tmp_lvl_2 = tmp_lvl.lvl
+    tmp_lvl_val = tmp_lvl.lvl.val
     result = nothing
     res_lvl_qos_stop = 0
     Finch.resize_if_smaller!(res_lvl_ptr, 1 + 1)
@@ -29,7 +29,7 @@ quote
         while true
             tmp_lvl_i = tmp_lvl_idx[tmp_lvl_q]
             if tmp_lvl_i < phase_stop
-                pointer_to_lvl_val = (tmp_lvl_2.val[tmp_lvl_q]).val
+                pointer_to_lvl_val = (tmp_lvl_val[tmp_lvl_q]).val
                 pointer_to_lvl_2_val = pointer_to_lvl_val[1]
                 if res_lvl_qos > res_lvl_qos_stop
                     res_lvl_qos_stop = max(res_lvl_qos_stop << 1, 1)
@@ -44,7 +44,7 @@ quote
             else
                 phase_stop_3 = min(tmp_lvl_i, phase_stop)
                 if tmp_lvl_i == phase_stop_3
-                    pointer_to_lvl_val_2 = (tmp_lvl_2.val[tmp_lvl_q]).val
+                    pointer_to_lvl_val_2 = (tmp_lvl_val[tmp_lvl_q]).val
                     pointer_to_lvl_3_val = pointer_to_lvl_val_2[1]
                     if res_lvl_qos > res_lvl_qos_stop
                         res_lvl_qos_stop = max(res_lvl_qos_stop << 1, 1)

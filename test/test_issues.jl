@@ -3,6 +3,23 @@ using SparseArrays
 @testset "issues" begin
     @info "Testing Github Issues"
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/290
+    let
+        A = Tensor(Dense(SparseList(Element(0.0))))
+        B = Tensor(Dense(SparseList(Element(0.0))))
+        C = Tensor(Dense(SparseList(Element(0.0))))
+        w = Tensor(SparseByteMap(Element(0.0)))
+        @test_throws Finch.FinchNotation.FinchSyntaxError begin
+            @finch_kernel function foo(A, B, C)
+                C .= 0
+                for j=_
+                    w .= 0
+                    for k=_, i=_; w[i] += A[i, k] * B[k, j] end
+                    for i=_; C[i, j] = w[i] end
+                end
+            end
+        end
+    end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/500
     let
@@ -716,7 +733,7 @@ using SparseArrays
         expected = broadcast(.*, A_sw, A_sw)
 
         @test actual == expected
-        
+
         B = zeros(size(A_sw)...)
         copyto!(B, A_sw)
 
@@ -777,5 +794,26 @@ using SparseArrays
 
         sum(a, dims=(1, 2))
         sum(a_tns, dims=(1, 2))
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/546
+    let
+        n = 100
+        A = Tensor(Dense(SparseList(Element(0.0))), fsprand(n, n, .001))
+        B = Tensor(Dense(SparseList(Element(0.0))), fsprand(n, n,  .001))
+        C = Tensor(SparseList(Element(0.0)), fsprand(n, .1))
+        D = Scalar(0.0)
+
+        check_output("issues/protocol_issue.jl",
+        @finch_code begin
+            D .= 0
+            for i=_
+                for j=_
+                    for k=_
+                        D[] += C[gallop(j)] * B[walk(k), follow(j)] * A[gallop(j), follow(i)]
+                    end
+                end
+            end
+        end)
     end
 end

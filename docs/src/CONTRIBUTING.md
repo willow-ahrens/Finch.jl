@@ -78,6 +78,21 @@ test suites by specifying them as positional arguments, e.g.
 
 This information is summarized with `./test/runtests.jl --help`
 
+### Python test suite
+
+[finch-tensor](https://github.com/willow-ahrens/finch-tensor) contains
+a separate Array API compatible test suite written in Python. It requires
+Python 3.10 or later and Poetry installed.
+
+It can be run with:
+
+```sh
+git clone https://github.com/willow-ahrens/finch-tensor.git
+cd finch-tensor
+poetry install --with test
+FINCH_REPO_PATH=<PATH_TO_FINCH_REPO> poetry run pytest tests/
+```
+
 ## Benchmarking
 
 The Finch test suite includes a benchmarking script that measures Finch

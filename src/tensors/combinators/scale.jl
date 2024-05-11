@@ -17,6 +17,8 @@ end
 
 is_injective(ctx, lvl::VirtualScaleArray) = is_injective(ctx, lvl.body)
 is_atomic(ctx, lvl::VirtualScaleArray) = is_atomic(ctx, lvl.body)
+is_concurrent(ctx, lvl::VirtualScaleArray) = is_concurrent(ctx, lvl.body)
+
 
 Base.show(io::IO, ex::VirtualScaleArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualScaleArray)

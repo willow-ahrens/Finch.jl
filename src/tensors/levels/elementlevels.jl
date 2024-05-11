@@ -88,7 +88,10 @@ mutable struct VirtualElementLevel <: AbstractVirtualLevel
 end
 
 is_level_injective(ctx, ::VirtualElementLevel) = []
-is_level_atomic(ctx, lvl::VirtualElementLevel) = false
+is_level_atomic(ctx, lvl::VirtualElementLevel) = ([], false)
+function is_level_concurrent(ctx, lvl::VirtualElementLevel)
+    return ([], true)
+end
 
 lower(ctx::AbstractCompiler, lvl::VirtualElementLevel, ::DefaultStyle) = lvl.ex
 

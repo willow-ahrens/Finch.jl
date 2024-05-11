@@ -145,8 +145,14 @@ mutable struct VirtualDenseRLELevel <: AbstractVirtualLevel
 end
 
 is_level_injective(ctx, lvl::VirtualDenseRLELevel) = [false, is_level_injective(ctx, lvl.lvl)...]
-is_level_concurrent(ctx, lvl::VirtualDenseRLELevel) = [false, is_level_concurrent(ctx, lvl.lvl)...]
-is_level_atomic(ctx, lvl::VirtualDenseRLELevel) = false
+function is_level_atomic(ctx, lvl::VirtualDenseRLELevel)
+    (below, atomic) = is_level_atomic(ctx, lvl.lvl)
+    return ([below; [atomic]], atomic)
+end
+function is_level_concurrent(ctx, lvl::VirtualDenseRLELevel)
+    (data, _) = is_level_concurrent(ctx, lvl.lvl)
+    return ([data; [false]], false)
+end
 
 postype(lvl::VirtualDenseRLELevel) = postype(lvl.lvl)
 

@@ -107,7 +107,14 @@ mutable struct VirtualDenseLevel <: AbstractVirtualLevel
 end
 
 is_level_injective(ctx, lvl::VirtualDenseLevel) = [is_level_injective(ctx, lvl.lvl)..., true]
-is_level_atomic(ctx, lvl::VirtualDenseLevel) = is_level_atomic(ctx, lvl.lvl)
+function is_level_atomic(ctx, lvl::VirtualDenseLevel)
+    (data, atomic) = is_level_atomic(ctx, lvl.lvl)
+    return ([data; atomic], atomic)
+end
+function is_level_concurrent(ctx, lvl::VirtualDenseLevel)
+    (data, concurrent) = is_level_concurrent(ctx, lvl.lvl)
+    return ([data; concurrent], concurrent)
+end
 
 function virtualize(ctx, ex, ::Type{DenseLevel{Ti, Lvl}}, tag=:lvl) where {Ti, Lvl}
     sym = freshen(ctx, tag)
@@ -206,3 +213,5 @@ function instantiate(ctx, trv::DenseTraversal, mode, subprotos, ::Union{typeof(d
         )
     )
 end
+
+
