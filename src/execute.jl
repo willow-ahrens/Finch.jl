@@ -240,7 +240,7 @@ function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = :saf
     if unreachable in PostOrderDFS(code)
         throw(FinchNotation.FinchSyntaxError("Attempting to interpolate value from local scope into @finch_kernel, pass values as function arguments or use \$ to interpolate explicitly."))
     end
-    code = code |> pretty |> unresolve |> unquote_literals
+    code = code |> pretty |> unresolve |> dataflow |> unquote_literals
     arg_defs = map(((key, val),) -> :($key::$(maybe_typeof(val))), args)
     striplines(:(function $fname($(arg_defs...))
         @inbounds @fastmath $(striplines(unblock(code)))
