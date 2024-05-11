@@ -321,10 +321,8 @@ end
 function assemble_level!(ctx, lvl::VirtualSparseLevel, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
-    qos_start = freshen(ctx.code, :qos_start)
-    qos_stop = freshen(ctx.code, :qos_stop)
     quote
-        ($qos_start, $qos_stop) = assemble_table!($(lvl.tbl), $(ctx(pos_start)), $(ctx(pos_stop)))
+        assemble_table!($(lvl.tbl), $(ctx(pos_start)), $(ctx(pos_stop)))
     end
 end
 
