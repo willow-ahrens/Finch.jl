@@ -279,8 +279,8 @@
     =#
 
     let
-        A = fsprand(Int64, 42, 42, 0.9)
-        B = fsprand(Int64, 42, 42, 0.9)
+        A = fsprand(Int, 42, 42, 0.9)
+        B = fsprand(Int, 42, 42, 0.9)
         CR = Tensor(Dense(Dense(Element(0))), zeros(42, 42))
 
         check_output("parallel/debug_spmm_atomics_1.txt", @finch_code begin 
