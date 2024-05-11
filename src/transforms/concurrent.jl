@@ -104,10 +104,10 @@ function ensure_concurrent(root, ctx)
             if (@capture(acc, access(~tns, ~mode, ~i...)))
                 injectivities:: Vector{Bool} = is_injective(ctx, tns)
                 concurrencies = is_concurrent(ctx, acc.tns)
-                parallel_modes = findall(indices_in_region[1:length(i)])
+                parallel_modes = findall(j -> j in indices_in_region, i)
                 if length(parallel_modes) == 0
-                    (_, overall) = is_atomic(ctx, acc.tns)
-                    if !overall
+                    (atomicities, overall) = is_atomic(ctx, acc.tns)
+                    if !([atomicities; overall])[1]
                         throw(FinchConcurrencyError("Assignment $(acc) requires last level atomics!"))
                         # FIXME: we could do atomic operations here.
                     else
