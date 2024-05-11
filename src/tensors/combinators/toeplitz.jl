@@ -28,7 +28,15 @@ function is_injective(ctx, lvl::VirtualToeplitzArray)
     sub = is_injective(ctx, lvl.body)
     return [sub[1:lvl.dim]..., false, sub[lvl.dim + 1:end]...]
 end
-is_atomic(ctx, lvl::VirtualToeplitzArray) = is_atomic(ctx, lvl.body)
+function is_atomic(ctx, lvl::VirtualToeplitzArray)
+    (below, overall) = is_atomic(ctx, lvl.body)
+    below_2 = [below[1:lvl.dim]..., below[lvl.dim], below[lvl.dim + 1:end]...]
+    return (below_2, overall)
+end
+function is_concurrent(ctx, lvl::VirtualToeplitzArray)
+    sub = is_concurrent(ctx, lvl.body)
+    return [sub[1:lvl.dim]..., false, sub[lvl.dim + 1:end]...]
+end
 
 Base.show(io::IO, ex::VirtualToeplitzArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualToeplitzArray)

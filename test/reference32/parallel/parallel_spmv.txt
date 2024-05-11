@@ -1,12 +1,4 @@
-julia> @finch_code begin
-        y .= 0
-        for j = parallel(_)
-            for i = _
-                y[j] += x[i] * A[walk(i), j]
-            end
-        end
-    end
-quote
+begin
     y_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
     y_lvl_2 = y_lvl.lvl
     y_lvl_val = y_lvl.lvl.val
@@ -74,13 +66,3 @@ quote
     result = (y = Tensor((DenseLevel){Int32}(y_lvl_2, A_lvl.shape)),)
     result
 end
-julia> @finch begin
-        y .= 0
-        for j = parallel(_)
-            for i = _
-                y[j] += x[i] * A[walk(i), j]
-            end
-        end
-    end
-(y = Tensor(Dense{Int32}(Element{0.0, Float64, Int32}([4.0, 6.0]), 2)),)
-

@@ -154,7 +154,14 @@ mutable struct VirtualSparseCOOLevel <: AbstractVirtualLevel
 end
 
 is_level_injective(ctx, lvl::VirtualSparseCOOLevel) = [is_level_injective(ctx, lvl.lvl)..., (true for _ in 1:lvl.N)...]
-is_level_atomic(ctx, lvl::VirtualSparseCOOLevel) = false
+function is_level_atomic(ctx, lvl::VirtualSparseCOOLevel)
+    (below, atomic) = is_level_atomic(ctx, lvl.lvl)
+    return ([below; [atomic for _ in 1:lvl.N]], atomic)
+end
+function is_level_concurrent(ctx, lvl::VirtualSparseCOOLevel)
+    (data, _) = is_level_concurrent(ctx, lvl.lvl)
+    return ([data; [false for _ in 1:lvl.N]], false)
+end
 
 function virtualize(ctx, ex, ::Type{SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}}, tag=:lvl) where {N, TI, Ptr, Tbl, Lvl}
     sym = freshen(ctx, tag)

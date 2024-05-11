@@ -17,6 +17,7 @@ end
 
 is_injective(ctx, lvl::VirtualWindowedArray) = is_injective(ctx, lvl.body)
 is_atomic(ctx, lvl::VirtualWindowedArray) = is_atomic(ctx, lvl.body)
+is_concurrent(ctx, lvl::VirtualWindowedArray) = is_concurrent(ctx, lvl.body)
 
 Base.show(io::IO, ex::VirtualWindowedArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualWindowedArray)

@@ -69,6 +69,8 @@ mutable struct VirtualFiber{Lvl} <: AbstractVirtualFiber{Lvl}
 end
 
 is_injective(ctx, tns::VirtualFiber) = is_level_injective(ctx, tns.lvl)
+is_concurrent(ctx, tns::VirtualFiber) = is_level_concurrent(ctx, tns.lvl)[1]
+
 is_atomic(ctx, tns::VirtualFiber) = is_level_atomic(ctx, tns.lvl)
 
 function virtualize(ctx, ex, ::Type{<:Tensor{Lvl}}, tag=freshen(ctx, :tns)) where {Lvl}

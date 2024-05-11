@@ -1,6 +1,9 @@
 abstract type AbstractLevel end
 abstract type AbstractVirtualLevel end
 
+virtual_level_ndims(lvl:: AbstractVirtualLevel, ctx) = length(virtual_level_size(lvl, ctx))
+
+
 #is_laminable_updater(lvl::AbstractVirtualLevel, ctx, ::Union{::typeof(defaultread), ::typeof(walk), ::typeof(gallop), ::typeof(follow), typeof(defaultupdate), typeof(laminate), typeof(extrude)}, protos...) = false
 
 #is_laminable_updater(lvl::AbstractVirtualLevel, ctx) = false

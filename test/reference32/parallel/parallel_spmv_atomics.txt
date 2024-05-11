@@ -26,7 +26,7 @@ quote
             y_lvl_locks[idx] = make_lock(eltype(Vector{Base.Threads.SpinLock}))
         end
     Finch.resize_if_smaller!(y_lvl_2_val, A_lvl.shape)
-    Finch.fill_range!(y_lvl_2_val, 0.0, 1, A_lvl.shape)
+    Finch.fill_range!(y_lvl_2_val, 0, 1, A_lvl.shape)
     locksArray = y_lvl_locks
     y_lvl_locks = (Finch).moveto(y_lvl_locks, CPU(Threads.nthreads()))
     val = y_lvl_2_val
@@ -83,7 +83,7 @@ quote
         end
     resize!(locksArray, A_lvl.shape)
     resize!(val, A_lvl.shape)
-    result = (y = Tensor((DenseLevel){Int32}((AtomicLevel){Vector{Base.Threads.SpinLock}, ElementLevel{0.0, Float64, Int32, Vector{Float64}}}(y_lvl_3, locksArray), A_lvl.shape)),)
+    result = (y = Tensor((DenseLevel){Int32}((AtomicLevel){Vector{Base.Threads.SpinLock}, ElementLevel{0, Int32, Int32, Vector{Int32}}}(y_lvl_3, locksArray), A_lvl.shape)),)
     result
 end
 julia> @finch begin
@@ -94,5 +94,5 @@ julia> @finch begin
             end
         end
     end
-(y = Tensor(Dense{Int32}(Atomic(Element{0.0, Float64, Int32}([4.0, 6.0]), [Base.Threads.SpinLock(0), Base.Threads.SpinLock(0)]), 2)),)
+(y = Tensor(Dense{Int32}(Atomic(Element{0, Int32, Int32}([4, 6]), [Base.Threads.SpinLock(0), Base.Threads.SpinLock(0)]), 2)),)
 

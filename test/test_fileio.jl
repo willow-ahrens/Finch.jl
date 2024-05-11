@@ -4,7 +4,7 @@ using Pkg
         using HDF5
         @info "Testing HDF5 fileio"
         @testset "h5 binsparse" begin
-            mktempdir() do f
+            let f = mktempdir()
                 A = [0.0 1.0 2.0 2.0 ;
                 0.0 0.0 0.0 0.0 ;
                 1.0 1.0 2.0 0.0 ;
@@ -61,7 +61,7 @@ using Pkg
         using NPZ
         @info "Testing NPY fileio"
         @testset "npy binsparse" begin
-            mktempdir() do f
+            let f = mktempdir()
                 A = [0.0 1.0 2.0 2.0 ;
                 0.0 0.0 0.0 0.0 ;
                 1.0 1.0 2.0 0.0 ;
@@ -121,7 +121,7 @@ using Pkg
             0.0 0.0 0.0 0.0 ;
             1.0 1.0 2.0 0.0 ;
             0.0 0.0 0.0 1.0 ]
-        mktempdir() do f
+        let f = mktempdir()
             A_COO = Tensor(SparseCOO{2}(Element(0.0)), A)
             A_COO_fname = joinpath(f, "A_COO.ttx")
             fttwrite(A_COO_fname, A_COO)

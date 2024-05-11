@@ -19,6 +19,8 @@ end
 
 is_injective(ctx, lvl::VirtualPermissiveArray) = is_injective(ctx, lvl.body)
 is_atomic(ctx, lvl::VirtualPermissiveArray) = is_atomic(ctx, lvl.body)
+is_concurrent(ctx, lvl::VirtualPermissiveArray) = is_concurrent(ctx, lvl.body)
+
 
 Base.show(io::IO, ex::VirtualPermissiveArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualPermissiveArray)

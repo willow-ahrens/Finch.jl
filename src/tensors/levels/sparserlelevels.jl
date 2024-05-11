@@ -146,8 +146,14 @@ mutable struct VirtualSparseRLELevel <: AbstractVirtualLevel
 end
 
 is_level_injective(ctx, lvl::VirtualSparseRLELevel) = [false, is_level_injective(ctx, lvl.lvl)...]
-is_level_concurrent(ctx, lvl::VirtualSparseRLELevel) = [false, is_level_concurrent(ctx, lvl.lvl)...]
-is_level_atomic(ctx, lvl::VirtualSparseRLELevel) = false
+function is_level_atomic(ctx, lvl::VirtualSparseRLELevel)
+    (below, atomic) = is_level_atomic(ctx, lvl.lvl)
+    return ([below; [atomic]], atomic)
+end
+function is_level_concurrent(ctx, lvl::VirtualSparseRLELevel)
+    (data, _) = is_level_concurrent(ctx, lvl.lvl)
+    return ([data; [false]], false)
+end
 
 postype(lvl::VirtualSparseRLELevel) = postype(lvl.lvl)
 
