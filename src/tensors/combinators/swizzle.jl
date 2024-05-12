@@ -11,6 +11,7 @@ Base.eltype(arr::SwizzleArray) = eltype(typeof(arr.body))
 Base.eltype(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = eltype(Body)
 default(arr::SwizzleArray) = default(typeof(arr))
 default(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = default(Body)
+Base.similar(arr::SwizzleArray{dims}) where {dims} = SwizzleArray{dims}(similar(arr.body))
 
 Base.size(arr::SwizzleArray{dims}) where {dims} = map(n->size(arr.body)[n], dims)
 
