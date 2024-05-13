@@ -16,6 +16,9 @@ using Compat
 using DataStructures
 using JSON
 using Distributions: Binomial, Normal, Poisson
+using Pkg
+using TOML
+using UUIDs
 
 export @finch, @finch_program, @finch_code, @finch_kernel, value
 
@@ -62,6 +65,9 @@ end
 struct FinchExtensionError <: Exception
     msg::String
 end
+
+const FINCH_VERSION = VersionNumber(TOML.parsefile(joinpath(dirname(@__DIR__), "Project.toml"))["version"])
+const FINCH_INFO = Pkg.dependencies()[UUID("9177782c-1635-4eb9-9bfb-d9dfa25e6bce")]
 
 include("util/convenience.jl")
 include("util/shims.jl")
@@ -167,7 +173,6 @@ include("interface/fileio/fileio.jl")
 include("interface/lazy.jl")
 include("interface/eager.jl")
 include("interface/einsum.jl")
-
 
 @static if !isdefined(Base, :get_extension)
     function __init__()

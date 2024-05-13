@@ -10,7 +10,7 @@ let
     #We will use Bool, Int, and Float64, and default values will be 0 and 1
 
     formats = []
-    Ts = [Bool, Int, Float32, Float64]
+    Ts = [Bool, Int, Float64]
     
     tik = time()
     for (n, T) in enumerate(Ts)
@@ -22,25 +22,20 @@ let
             @info "Precompiling common tensor formats..."
         end
         f = zero(T)
-        for N in 0:3
+        for N in 0:2
             vals = rand(T, [2 for _ in 1:N]...)
             if N == 0
                 push!(formats, Scalar(f))
             else
                 bases = []
                 push!(bases, Element(f))
-                if T == Bool
-                    push!(bases, Pattern())
-                end
                 for base in bases
-                    if !(base isa Pattern)
-                        #Dense
-                        format = deepcopy(base)
-                        for i in 1:N
-                            format = Dense(format)
-                        end
-                        push!(formats, Tensor(format, vals))
+                    #Dense
+                    format = deepcopy(base)
+                    for i in 1:N
+                        format = Dense(format)
                     end
+                    push!(formats, Tensor(format, vals))
 
                     #DCSF
                     format = deepcopy(base)
