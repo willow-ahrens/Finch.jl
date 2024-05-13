@@ -183,7 +183,7 @@ function broadcast_to_query(tns::LazyTensor{T, N}, idxs) where {T, N}
 end
 
 function broadcast_to_extrude(bc::Broadcast.Broadcasted, n)
-    any(map(arg -> broadcast_to_extrude(arg, n), bc.args))
+    all(map(arg -> broadcast_to_extrude(arg, n), bc.args))
 end
 
 function broadcast_to_extrude(tns::LazyTensor, n)
