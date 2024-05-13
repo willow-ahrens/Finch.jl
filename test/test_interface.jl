@@ -3,14 +3,38 @@ using Finch: AsArray
 @testset "interface" begin
     @info "Testing Finch Interface"
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/535
+    let
+        LEN = 10;
+        a_raw = rand(LEN, LEN - 5) * 10;
+        b_raw = rand(LEN, LEN - 5) * 10;
+        c_raw = rand(LEN, LEN) * 10;
+        
+        a = lazy(swizzle(Tensor(a_raw), 1, 2));
+        b = lazy(swizzle(Tensor(b_raw), 1, 2));
+        c = lazy(swizzle(Tensor(c_raw), 1, 2));
+
+        ref = reshape(c_raw, 10, 10, 1) .* reshape(a_raw, 10, 1, 5) .* reshape(b_raw, 1, 10, 5);
+
+        plan = c[:, :, nothing] .* a[:, nothing, :] .* b[nothing, :, :];
+        @test compute(plan) == ref
+
+        plan = broadcast(*, broadcast(*, c[:, :, nothing], a[:, nothing, :]), b[nothing, :, :]);
+        @test compute(plan) == ref
+    end
+
     #https://github.com/willow-ahrens/Finch.jl/issues/536
-    A = [1 2; 3 4]
-    swizzle(lazy(A), 2, 1) == permutedims(A)
+    let
+        A = [1 2; 3 4]
+        swizzle(lazy(A), 2, 1) == permutedims(A)
+    end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/530
-    A_tns = Tensor(Dense(Dense(Dense(Element(0.0)))), zeros(3, 3, 3))
-    A_sw = swizzle(A_tns, 2, 3, 1)
-    A_tns == A_sw #fails
+    let
+        A_tns = Tensor(Dense(Dense(Dense(Element(0.0)))), zeros(3, 3, 3))
+        A_sw = swizzle(A_tns, 2, 3, 1)
+        A_tns == A_sw #fails
+    end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/524
     let
