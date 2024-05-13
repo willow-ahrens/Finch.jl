@@ -11,8 +11,10 @@ using Finch: AsArray
             #https://github.com/willow-ahrens/Finch.jl/issues/520
             let
                 A = rand(2, 2)
-                x = lazy(rand(2))
-                @test @einsum y[i] = A[i, j] * x[j]
+                x = rand(2)
+                lx = lazy(x)
+                y = compute(@einsum y[i] += A[i, j] * lx[j])
+                @test y == A * x
             end
 
             #https://github.com/willow-ahrens/Finch.jl/issues/554
