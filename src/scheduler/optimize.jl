@@ -344,13 +344,12 @@ function (ctx::SuitableRep)(ex)
         rep = ctx(ex.arg)
         idxs = getfields(ex.arg)
         #first reduce dropped dimensions
-        rep = aggregate_rep(initwrite(default(rep)), default(rep), rep, setdiff(idxs, ex.idxs))
+        rep = aggregate_rep(initwrite(default(rep)), default(rep), rep, findall(idx -> idx in setdiff(idxs, ex.idxs), idxs))
         #then permute remaining dimensions to match
         perm = sortperm(intersect(idxs, ex.idxs), by=idx->findfirst(isequal(idx), ex.idxs))
         rep = permutedims_rep(rep, perm)
-        dims = findall(idx -> idx in idxs, ex.idxs)
         #then add new dimensions
-        return pad_data_rep(extrude_rep(rep, dims), length(ex.idxs))
+        return expanddims_rep(rep, findall(idx -> !(idx in idxs), ex.idxs))
     elseif ex.kind === relabel
         return ctx(ex.arg)
     elseif ex.kind === reformat

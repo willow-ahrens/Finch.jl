@@ -26,12 +26,20 @@ function Base.getindex(arr::LazyTensor{T, N}, idxs::Vararg{Union{Nothing, Colon}
     if length(idxs) - count(isnothing, idxs) != N
         throw(ArgumentError("Cannot index a lazy tensor with more or fewer `:` dims than it had original dims."))
     end
-    fields = [field(gensym(:i)) for _ in 1:length(idxs)]
-    original_fields = fields[findall(!isnothing, idxs)]
-    data = reorder(relabel(arr.data, original_fields...), fields...)
-    extrude = [true for _ in 1:length(idxs)]
-    extrude[findall(!isnothing, idxs)] .= arr.extrude
-    return LazyTensor{T}(data, (extrude...,), arr.default)
+    return expanddims(arr, findall(isnothing, idxs))
+end
+
+function expanddims(arr::LazyTensor{T}, dims) where {T}
+    @assert allunique(dims)
+    @assert issubset(dims,1:ndims(arr) + length(dims))
+    antidims = setdiff(1:ndims(arr) + length(dims), dims)
+    idxs_1 = [field(gensym(:i)) for _ in 1:ndims(arr)]
+    idxs_2 = [field(gensym(:i)) for _ in 1:ndims(arr) + length(dims)]
+    idxs_2[antidims] .= idxs_1
+    data_2 = reorder(relabel(arr.data, idxs_1...), idxs_2...)
+    extrude_2 = [false for _ in 1:ndims(arr) + length(dims)]
+    extrude_2[antidims] .= arr.extrude
+    return LazyTensor{T, ndims(arr) + length(dims)}(data_2, tuple(extrude_2...), default(arr))
 end
 
 function identify(data)
@@ -183,7 +191,7 @@ function broadcast_to_query(tns::LazyTensor{T, N}, idxs) where {T, N}
 end
 
 function broadcast_to_extrude(bc::Broadcast.Broadcasted, n)
-    any(map(arg -> broadcast_to_extrude(arg, n), bc.args))
+    all(map(arg -> broadcast_to_extrude(arg, n), bc.args))
 end
 
 function broadcast_to_extrude(tns::LazyTensor, n)
@@ -423,19 +431,50 @@ is fused with the execution of `z + 1`.
 """
 lazy(arg) = LazyTensor(arg)
 
+default_scheduler(;verbose=false) = LogicExecutor(DefaultLogicOptimizer(LogicCompiler()), verbose=verbose)
+
 """
-    fused(f, args...; [optimizer=DefaultOptimizer()])
+    fused(f, args...; kwargs...)
 
 This function decorator modifies `f` to fuse the contained array
 operations and optimize the resulting program. The function must return a single
-array or tuple of arrays. The `optimizer` keyword argument specifies the
-optimizer to use.
+array or tuple of arrays. `kwargs` are passed to [`compute`](@ref)
 """
-function fused(f, args...; optimizer=DefaultOptimizer())
-    compute(f(map(LazyTensor, args...)), optimizer)
+function fused(f, args...; kwargs...)
+    compute(f(map(LazyTensor, args...)), kwargs...)
 end
 
-default_scheduler(;verbose=false) = LogicExecutor(DefaultLogicOptimizer(LogicCompiler()), verbose=verbose)
+current_scheduler = Ref{Any}(default_scheduler())
+
+"""
+    set_scheduler!(scheduler)
+
+Set the current scheduler to `scheduler`. The scheduler is used by `compute` to
+execute lazy tensor programs.
+"""
+set_scheduler!(scheduler) = current_scheduler[] = scheduler
+
+"""
+    get_scheduler()
+
+Get the current Finch scheduler used by `compute` to execute lazy tensor programs.
+"""
+get_scheduler() = current_scheduler[]
+
+"""
+    with_scheduler(f, scheduler)
+
+Execute `f` with the current scheduler set to `scheduler`.
+"""
+function with_scheduler(f, scheduler)
+    old_scheduler = get_scheduler()
+    set_scheduler!(scheduler)
+    try
+        return f()
+    finally
+        set_scheduler!(old_scheduler)
+    end
+end
 
 """
     compute(args..., ctx=default_scheduler()) -> Any
@@ -443,9 +482,9 @@ default_scheduler(;verbose=false) = LogicExecutor(DefaultLogicOptimizer(LogicCom
 Compute the value of a lazy tensor. The result is the argument itself, or a
 tuple of arguments if multiple arguments are passed.
 """
-compute(args...; ctx=default_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), map(lazy, args))
-compute(arg; ctx=default_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), (lazy(arg),))[1]
-compute(args::Tuple; ctx=default_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), map(lazy, args))
+compute(args...; ctx=get_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), map(lazy, args))
+compute(arg; ctx=get_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), (lazy(arg),))[1]
+compute(args::Tuple; ctx=get_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), map(lazy, args))
 function compute_parse(ctx, args::Tuple)
     args = collect(args)
     vars = map(arg -> alias(gensym(:A)), args)
