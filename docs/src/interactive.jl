@@ -1,7 +1,7 @@
 # 
 # An example generating sparse code with Finch, make some changes and give it a try!
 # 
-# A note to visitors using Binder: it may take a minute or
+# A note to visitors: it may take a minute or
 # two to compile the first kernel, perhaps enjoy a nice little coffee break ^.^
 #
 

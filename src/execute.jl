@@ -68,14 +68,14 @@ getvalue(::Type{Val{v}}) where {v} = v
                 end
             catch
                 println("Error executing code:")
-                println($(QuoteNode(code |> unblock |> pretty |> unquote_literals)))
+                println($(QuoteNode(code |> pretty |> unquote_literals)))
                 rethrow()
             end
         end
     else
         return quote
             @inbounds @fastmath begin
-                $(code |> unblock |> pretty |> unquote_literals)
+                $(code |> pretty |> unquote_literals)
             end
         end
     end

@@ -49,15 +49,16 @@ function LazyTensor{T}(arr::Base.AbstractArrayOrBroadcasted) where {T}
     tns = subquery(name, table(immediate(arr), idxs...))
     LazyTensor{eltype(arr), ndims(arr)}(tns, extrude, default(arr))
 end
-LazyTensor(arr::Tensor) = LazyTensor{eltype(arr)}(arr)
+LazyTensor(arr::AbstractTensor) = LazyTensor{eltype(arr)}(arr)
 LazyTensor(swizzle_arr::SwizzleArray{dims, <:Tensor}) where {dims} = permutedims(LazyTensor(swizzle_arr.body), dims)
-function LazyTensor{T}(arr::Tensor) where {T}
+function LazyTensor{T}(arr::AbstractTensor) where {T}
     name = alias(gensym(:A))
     idxs = [field(gensym(:i)) for _ in 1:ndims(arr)]
     extrude = ntuple(n -> size(arr)[n] == 1, ndims(arr))
     tns = subquery(name, table(immediate(arr), idxs...))
     LazyTensor{eltype(arr), ndims(arr)}(tns, extrude, default(arr))
 end
+LazyTensor{T}(swizzle_arr::SwizzleArray{dims, <:Tensor}) where {T, dims} = permutedims(LazyTensor{T}(swizzle_arr.body), dims)
 LazyTensor(data::LazyTensor) = data
 
 swizzle(arr::LazyTensor, dims...) = permutedims(arr, dims)
@@ -230,18 +231,18 @@ Base.permutedims(arr::SwizzleArray, perm) = swizzle(arr, perm...)
 
 Base.:+(
     x::LazyTensor,
-    y::Union{LazyTensor, Base.AbstractArrayOrBroadcasted, Number},
-    z::Union{LazyTensor, Base.AbstractArrayOrBroadcasted, Number}...
+    y::Union{LazyTensor, AbstractTensor, Base.AbstractArrayOrBroadcasted, Number},
+    z::Union{LazyTensor, AbstractTensor, Base.AbstractArrayOrBroadcasted, Number}...
 ) = map(+, x, y, z...)
 Base.:+(
-    x::Union{LazyTensor, Base.AbstractArrayOrBroadcasted, Number},
+    x::Union{LazyTensor, AbstractTensor, Base.AbstractArrayOrBroadcasted, Number},
     y::LazyTensor,
-    z::Union{LazyTensor, Base.AbstractArrayOrBroadcasted, Number}...
+    z::Union{LazyTensor, AbstractTensor, Base.AbstractArrayOrBroadcasted, Number}...
 ) = map(+, y, x, z...)
 Base.:+(
     x::LazyTensor,
     y::LazyTensor,
-    z::Union{LazyTensor, Base.AbstractArrayOrBroadcasted, Number}...
+    z::Union{LazyTensor, AbstractTensor, Base.AbstractArrayOrBroadcasted, Number}...
 ) = map(+, x, y, z...)
 Base.:*(
     x::LazyTensor,
@@ -256,8 +257,8 @@ Base.:*(
 
 Base.:-(x::LazyTensor) = map(-, x)
 
-Base.:-(x::LazyTensor, y::Union{LazyTensor, Base.AbstractArrayOrBroadcasted, Number}) = map(-, x, y)
-Base.:-(x::Union{LazyTensor, Base.AbstractArrayOrBroadcasted, Number}, y::LazyTensor) = map(-, x, y)
+Base.:-(x::LazyTensor, y::Union{LazyTensor, AbstractTensor, Base.AbstractArrayOrBroadcasted, Number}) = map(-, x, y)
+Base.:-(x::Union{LazyTensor, AbstractTensor, Base.AbstractArrayOrBroadcasted, Number}, y::LazyTensor) = map(-, x, y)
 Base.:-(x::LazyTensor, y::LazyTensor) = map(-, x, y)
 
 Base.:/(x::LazyTensor, y::Number) = map(/, x, y)

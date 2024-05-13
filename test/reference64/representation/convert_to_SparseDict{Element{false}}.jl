@@ -53,8 +53,8 @@ quote
             end
         end
     end
-    qos_stop_2 = Finch.freeze_table!(tmp_lvl_tbl, 1)
-    resize!(tmp_lvl_val, qos_stop_2)
+    qos_stop = Finch.freeze_table!(tmp_lvl_tbl, 1)
+    resize!(tmp_lvl_val, qos_stop)
     result = (tmp = Tensor((SparseLevel){Int64}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_tbl)),)
     result
 end
