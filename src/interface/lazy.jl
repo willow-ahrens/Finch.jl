@@ -31,8 +31,8 @@ end
 
 function expanddims(arr::LazyTensor{T}, dims) where {T}
     @assert allunique(dims)
+    @assert issubset(dims,1:ndims(arr) + length(dims))
     antidims = setdiff(1:ndims(arr) + length(dims), dims)
-    @assert length(antidims) == ndims(arr)
     idxs_1 = [field(gensym(:i)) for _ in 1:ndims(arr)]
     idxs_2 = [field(gensym(:i)) for _ in 1:ndims(arr) + length(dims)]
     idxs_2[antidims] .= idxs_1

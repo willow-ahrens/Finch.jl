@@ -137,15 +137,24 @@ paddims_rep(rep, n) = ndims(rep) < n ? paddims_rep(ExtrudeData(rep), n) : rep
 
 """
     expanddims_rep(tns, dims)
-Expand the representation of `tns` to the dimensions `dims`, which must have length(ndims(tns)) and be in ascending order.
+Expand the representation of `tns` by inserting singleton dimensions `dims`.
 """
-expanddims_rep(tns, dims) = expanddims_rep_def(tns, reverse(dims)...)
-expanddims_rep_def(tns) = tns
-expanddims_rep_def(tns::HollowData, dims...) = HollowData(expanddims_rep_def(tns.lvl, dims...))
-expanddims_rep_def(tns::SparseData, dim, dims...) = SparseData(paddims_rep(expanddims_rep_def(tns.lvl, dims...), dim - 1))
-expanddims_rep_def(tns::RepeatData, dim, dims...) = RepeatData(paddims_rep(expanddims_rep_def(tns.lvl, dims...), dim - 1))
-expanddims_rep_def(tns::DenseData, dim, dims...) = DenseData(paddims_rep(expanddims_rep_def(tns.lvl, dims...), dim - 1))
-expanddims_rep_def(tns::ExtrudeData, dim, dims...) = ExtrudeData(paddims_rep(expanddims_rep_def(tns.lvl, dims...), dim - 1))
+function expanddims_rep(tns, dims)
+    @assert allunique(dims)
+    @assert issubset(dims,1:ndims(tns) + length(dims))
+    expanddims_rep_def(tns, ndims(tns) + length(dims), dims)
+end
+expanddims_rep_def(tns::HollowData, dim, dims) = HollowData(expanddims_rep_def(tns.lvl, dim, dims))
+expanddims_rep_def(tns::ElementData, dim, dims) =
+    dim in dims ? ExtrudeData(expanddims_rep_def(tns, dim-1, dims)) : tns
+expanddims_rep_def(tns::SparseData, dim, dims) =
+    dim in dims ? ExtrudeData(expanddims_rep_def(tns, dim-1, dims)) : SparseData(expanddims_rep_def(tns.lvl, dim-1, dims))
+expanddims_rep_def(tns::RepeatData, dim, dims) =
+    dim in dims ? ExtrudeData(expanddims_rep_def(tns, dim-1, dims)) : RepeatData(expanddims_rep_def(tns.lvl, dim-1, dims))
+expanddims_rep_def(tns::DenseData, dim, dims) =
+    dim in dims ? ExtrudeData(expanddims_rep_def(tns, dim-1, dims)) : DenseData(expanddims_rep_def(tns.lvl, dim-1, dims))
+expanddims_rep_def(tns::ExtrudeData, dim, dims) =
+    dim in dims ? ExtrudeData(expanddims_rep_def(tns, dim-1, dims)) : ExtrudeData(expanddims_rep_def(tns.lvl, dim-1, dims))
 
 struct MapRepExtrudeStyle end
 struct MapRepSparseStyle end
@@ -309,12 +318,12 @@ function permutedims_rep(tns, perm)
         end
         n += 1
     end
-    src = expanddims_rep(tns, src_dims)
+    src = expanddims_rep(tns, setdiff(1:maximum(src_dims, init=0), src_dims))
     for mask_dims in diags
-        mask = expanddims_rep(DenseData(SparseData(ElementData(false, Bool))), mask_dims)
-        src = map_rep(filterop(default(src)), paddims_rep(mask, ndims(src)), src)
+        mask = expanddims_rep(DenseData(SparseData(ElementData(false, Bool))), setdiff(1:ndims(src), mask_dims))
+        src = map_rep(filterop(default(src)), mask, src)
     end
-    aggregate_rep(initwrite(default(tns)), default(tns), src, setdiff(src_dims, dst_dims))
+    res = aggregate_rep(initwrite(default(tns)), default(tns), src, setdiff(src_dims, dst_dims))
 end
 
 """
