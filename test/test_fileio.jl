@@ -1,54 +1,53 @@
+using MatrixMarket
 using Pkg
 @testset "fileio" begin
-    if haskey(Pkg.project().dependencies, "HDF5")
-        using HDF5
-        @info "Testing HDF5 fileio"
-        @testset "h5 binsparse" begin
-            let f = mktempdir()
-                A = [0.0 1.0 2.0 2.0 ;
+    using HDF5
+    @info "Testing HDF5 fileio"
+    @testset "h5 binsparse" begin
+        let f = mktempdir()
+            A = [0.0 1.0 2.0 2.0 ;
+            0.0 0.0 0.0 0.0 ;
+            1.0 1.0 2.0 0.0 ;
+            0.0 0.0 0.0 1.0 ]
+            A_COO = Tensor(SparseCOO{2}(Element(0.0)), A)
+            A_COO_fname = joinpath(f, "A_COO.bsp.h5")
+            fwrite(A_COO_fname, A_COO)
+            A_COO_test = fread(A_COO_fname)
+            @test A_COO_test == A_COO
+
+            for (iA, A) in enumerate([
+                [false true false false ;
+                true true true true],
+                [0 1 2 2 ;
+                0 0 0 0 ;
+                1 1 2 0 ;
+                0 0 0 0 ],
+                [0.0 1.0 2.0 2.0 ;
                 0.0 0.0 0.0 0.0 ;
                 1.0 1.0 2.0 0.0 ;
-                0.0 0.0 0.0 1.0 ]
-                A_COO = Tensor(SparseCOO{2}(Element(0.0)), A)
-                A_COO_fname = joinpath(f, "A_COO.bsp.h5")
-                fwrite(A_COO_fname, A_COO)
-                A_COO_test = fread(A_COO_fname)
-                @test A_COO_test == A_COO
-
-                for (iA, A) in enumerate([
-                    [false true false false ;
-                    true true true true],
-                    [0 1 2 2 ;
-                    0 0 0 0 ;
-                    1 1 2 0 ;
-                    0 0 0 0 ],
-                    [0.0 1.0 2.0 2.0 ;
-                    0.0 0.0 0.0 0.0 ;
-                    1.0 1.0 2.0 0.0 ;
-                    0.0 0.0 0.0 0.0 ],
-                    [0 + 1im 1 + 0im 0 + 0im ;
-                    0 + 0im 1 + 0im 0 + 0im ]
-                ])
-                    @testset "$(typeof(A))" begin
-                        for (iD, D) in [
-                            0 => zero(eltype(A)),
-                            1 => one(eltype(A)),
+                0.0 0.0 0.0 0.0 ],
+                [0 + 1im 1 + 0im 0 + 0im ;
+                0 + 0im 1 + 0im 0 + 0im ]
+            ])
+                @testset "$(typeof(A))" begin
+                    for (iD, D) in [
+                        0 => zero(eltype(A)),
+                        1 => one(eltype(A)),
+                    ]
+                        elem = Element{D, eltype(A), Int}()
+                        for (name, fmt) in [
+                            "A_dense" => swizzle(Tensor(Dense{Int}(Dense{Int}(elem))), 2, 1),
+                            "A_denseC" => Tensor(Dense{Int}(Dense{Int}(elem))),
+                            "A_CSC" => Tensor(Dense{Int}(SparseList{Int}(elem))),
+                            "A_CSR" => swizzle(Tensor(Dense{Int}(SparseList{Int}(elem))), 2, 1),
+                            "A_COO" => swizzle(Tensor(SparseCOO{2, Tuple{Int, Int}}(elem)), 2, 1),
+                            "A_COOC" => Tensor(SparseCOO{2, Tuple{Int, Int}}(elem)),
                         ]
-                            elem = Element{D, eltype(A), Int}()
-                            for (name, fmt) in [
-                                "A_dense" => swizzle(Tensor(Dense{Int}(Dense{Int}(elem))), 2, 1),
-                                "A_denseC" => Tensor(Dense{Int}(Dense{Int}(elem))),
-                                "A_CSC" => Tensor(Dense{Int}(SparseList{Int}(elem))),
-                                "A_CSR" => swizzle(Tensor(Dense{Int}(SparseList{Int}(elem))), 2, 1),
-                                "A_COO" => swizzle(Tensor(SparseCOO{2, Tuple{Int, Int}}(elem)), 2, 1),
-                                "A_COOC" => Tensor(SparseCOO{2, Tuple{Int, Int}}(elem)),
-                            ]
-                                @testset "binsparse $name($D)" begin
-                                    fmt = copyto!(fmt, A)
-                                    fname = joinpath(f, "foo.bsp.h5")
-                                    bspwrite(fname, fmt)
-                                    @test Structure(fmt) == Structure(bspread(fname))
-                                end
+                            @testset "binsparse $name($D)" begin
+                                fmt = copyto!(fmt, A)
+                                fname = joinpath(f, "foo.bsp.h5")
+                                bspwrite(fname, fmt)
+                                @test Structure(fmt) == Structure(bspread(fname))
                             end
                         end
                     end
@@ -148,6 +147,12 @@ using Pkg
             fwrite(A_COO_fname2, A_COO)
             A_COO_test = fread(A_COO_fname2)
             @test A_COO_test == A_COO
+
+            #A test to ensure some level of canonical interpretation.
+            A = mmread(joinpath(@__DIR__, "Trec4.mtx"))
+            fwrite(joinpath(f, "test.ttx"), Tensor(A))
+            str = String(read(joinpath(f, "test.ttx")))
+            check_output("fileio/Trec4.ttx", str)
         end
     end
 end
