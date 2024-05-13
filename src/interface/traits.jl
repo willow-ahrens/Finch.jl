@@ -130,22 +130,22 @@ Return a storage trait object representing the result of mapping `f` over
 storage traits `args`. Assumes representation is collapsed.
 """
 function map_rep(f, args...)
-    map_rep_def(f, map(arg -> pad_data_rep(arg, maximum(ndims, args)), args))
+    map_rep_def(f, map(arg -> paddims_rep(arg, maximum(ndims, args)), args))
 end
 
-pad_data_rep(rep, n) = ndims(rep) < n ? pad_data_rep(ExtrudeData(rep), n) : rep
+paddims_rep(rep, n) = ndims(rep) < n ? paddims_rep(ExtrudeData(rep), n) : rep
 
 """
-    extrude_rep(tns, dims)
+    expanddims_rep(tns, dims)
 Expand the representation of `tns` to the dimensions `dims`, which must have length(ndims(tns)) and be in ascending order.
 """
-extrude_rep(tns, dims) = extrude_rep_def(tns, reverse(dims)...)
-extrude_rep_def(tns) = tns
-extrude_rep_def(tns::HollowData, dims...) = HollowData(extrude_rep_def(tns.lvl, dims...))
-extrude_rep_def(tns::SparseData, dim, dims...) = SparseData(pad_data_rep(extrude_rep_def(tns.lvl, dims...), dim - 1))
-extrude_rep_def(tns::RepeatData, dim, dims...) = RepeatData(pad_data_rep(extrude_rep_def(tns.lvl, dims...), dim - 1))
-extrude_rep_def(tns::DenseData, dim, dims...) = DenseData(pad_data_rep(extrude_rep_def(tns.lvl, dims...), dim - 1))
-extrude_rep_def(tns::ExtrudeData, dim, dims...) = ExtrudeData(pad_data_rep(extrude_rep_def(tns.lvl, dims...), dim - 1))
+expanddims_rep(tns, dims) = expanddims_rep_def(tns, reverse(dims)...)
+expanddims_rep_def(tns) = tns
+expanddims_rep_def(tns::HollowData, dims...) = HollowData(expanddims_rep_def(tns.lvl, dims...))
+expanddims_rep_def(tns::SparseData, dim, dims...) = SparseData(paddims_rep(expanddims_rep_def(tns.lvl, dims...), dim - 1))
+expanddims_rep_def(tns::RepeatData, dim, dims...) = RepeatData(paddims_rep(expanddims_rep_def(tns.lvl, dims...), dim - 1))
+expanddims_rep_def(tns::DenseData, dim, dims...) = DenseData(paddims_rep(expanddims_rep_def(tns.lvl, dims...), dim - 1))
+expanddims_rep_def(tns::ExtrudeData, dim, dims...) = ExtrudeData(paddims_rep(expanddims_rep_def(tns.lvl, dims...), dim - 1))
 
 struct MapRepExtrudeStyle end
 struct MapRepSparseStyle end
@@ -309,10 +309,10 @@ function permutedims_rep(tns, perm)
         end
         n += 1
     end
-    src = extrude_rep(tns, src_dims)
+    src = expanddims_rep(tns, src_dims)
     for mask_dims in diags
-        mask = extrude_rep(DenseData(SparseData(ElementData(false, Bool))), mask_dims)
-        src = map_rep(filterop(default(src)), pad_data_rep(mask, ndims(src)), src)
+        mask = expanddims_rep(DenseData(SparseData(ElementData(false, Bool))), mask_dims)
+        src = map_rep(filterop(default(src)), paddims_rep(mask, ndims(src)), src)
     end
     aggregate_rep(initwrite(default(tns)), default(tns), src, setdiff(src_dims, dst_dims))
 end

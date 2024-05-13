@@ -350,7 +350,7 @@ function (ctx::SuitableRep)(ex)
         rep = permutedims_rep(rep, perm)
         dims = findall(idx -> idx in idxs, ex.idxs)
         #then add new dimensions
-        return pad_data_rep(extrude_rep(rep, dims), length(ex.idxs))
+        return paddims_rep(expanddims_rep(rep, dims), length(ex.idxs))
     elseif ex.kind === relabel
         return ctx(ex.arg)
     elseif ex.kind === reformat

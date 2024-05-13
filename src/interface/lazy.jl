@@ -26,12 +26,20 @@ function Base.getindex(arr::LazyTensor{T, N}, idxs::Vararg{Union{Nothing, Colon}
     if length(idxs) - count(isnothing, idxs) != N
         throw(ArgumentError("Cannot index a lazy tensor with more or fewer `:` dims than it had original dims."))
     end
-    fields = [field(gensym(:i)) for _ in 1:length(idxs)]
-    original_fields = fields[findall(!isnothing, idxs)]
-    data = reorder(relabel(arr.data, original_fields...), fields...)
-    extrude = [true for _ in 1:length(idxs)]
-    extrude[findall(!isnothing, idxs)] .= arr.extrude
-    return LazyTensor{T}(data, (extrude...,), arr.default)
+    return expanddims(arr, findall(isnothing, idxs))
+end
+
+function expanddims(arr::LazyTensor{T}, dims) where {T}
+    @assert allunique(dims)
+    antidims = setdiff(1:ndims(arr) + length(dims), dims)
+    @assert length(antidims) == ndims(arr)
+    idxs_1 = [field(gensym(:i)) for _ in 1:ndims(arr)]
+    idxs_2 = [field(gensym(:i)) for _ in 1:ndims(arr) + length(dims)]
+    idxs_2[antidims] .= idxs_1
+    data_2 = reorder(relabel(arr.data, idxs_1...), idxs_2...)
+    extrude_2 = [false for _ in 1:ndims(arr) + length(dims)]
+    extrude_2[antidims] .= arr.extrude
+    return LazyTensor{T, ndims(arr) + length(dims)}(data_2, tuple(extrude_2...), default(arr))
 end
 
 function identify(data)
