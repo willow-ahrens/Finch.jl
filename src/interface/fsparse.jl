@@ -222,7 +222,7 @@ end
 fsprandn(args...) = fsprand(args..., randn)
 
 """
-    fspzeros([type], M::Tuple)
+    fspzeros([type], M...)
 
 Create a random zero tensor of size `M`, with elements of type `type`. The
 tensor is in COO format.
