@@ -1,8 +1,9 @@
 #!/usr/bin/env julia
 if abspath(PROGRAM_FILE) == @__FILE__
     using Pkg
-    Pkg.develop(PackageSpec(path = joinpath(@__DIR__, "..")))
     Pkg.activate(@__DIR__)
+    Pkg.develop(PackageSpec(path = joinpath(@__DIR__, "..")))
+    Pkg.resolve()
     Pkg.instantiate()
 end
 

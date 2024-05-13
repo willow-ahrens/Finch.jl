@@ -115,3 +115,11 @@ function LinearAlgebra.norm(arr::AbstractTensorOrBroadcast, p::Real = 2)
         return root(sum(broadcasted(power, broadcasted(norm, arr, p), p)))
     end
 end
+
+"""
+    expanddims(arr::AbstractTensor, dims)
+
+Expand the dimensions of an array by inserting a new singleton axis or axes that
+will appear at the `dims` position in the expanded array shape.
+"""
+expanddims(arr::AbstractTensor, dims) = compute(expanddims(lazy(arr), dims))

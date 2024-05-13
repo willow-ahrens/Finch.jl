@@ -197,7 +197,7 @@ end
         ))
 
         if @load_preference("precompile", true)
-            @info "Running enhanced precompilation... (to disable, run `using Preferences; Preferences.set_preference(\"Finch\", \"precompile\"=>false)`"
+            @info "Running enhanced precompilation... (to disable, run `using Preferences; Preferences.set_preferences!(\"Finch\", \"precompile\"=>false)`"
             include("../test/precompile.jl")
         end
     end

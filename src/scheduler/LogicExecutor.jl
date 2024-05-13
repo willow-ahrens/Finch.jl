@@ -68,12 +68,13 @@ end
 
 codes = Dict()
 function (ctx::LogicExecutor)(prgm)
-    f = get!(codes, get_structure(prgm)) do
-        eval(logic_executor_code(ctx.ctx, prgm))
+    (f, code) = get!(codes, get_structure(prgm)) do
+        thunk = logic_executor_code(ctx.ctx, prgm)
+        (eval(thunk), thunk)
     end
     if ctx.verbose
         println("Executing:")
-        display(logic_executor_code(ctx.ctx, prgm))
+        display(code)
     end
     return Base.invokelatest(f, prgm)
 end

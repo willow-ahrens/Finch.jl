@@ -42,10 +42,22 @@ end
     mode = :fast
 end
 
-function finch_pointwise_logic_to_code(ex)
+@kwdef struct PointwiseLowerer
+    bound_idxs = []
+end
+
+function compile_pointwise_logic(ex)
+    ctx = PointwiseLowerer()
+    code = ctx(ex)
+    bound_idxs = ctx.bound_idxs
+    (code, bound_idxs)
+end
+    
+function (ctx::PointwiseLowerer)(ex)
     if @capture ex mapjoin(~op, ~args...)
-        :($(op.val)($(map(arg -> finch_pointwise_logic_to_code(arg), args)...)))
+        :($(op.val)($(map(ctx, args)...)))
     elseif (@capture ex reorder(relabel(~arg::isalias, ~idxs_1...), ~idxs_2...))
+        append!(ctx.bound_idxs, idxs_1)
         :($(arg.name)[$(map(idx -> idx in idxs_2 ? idx.name : 1, idxs_1)...)]) #TODO need a trait for the first index
     elseif (@capture ex reorder(~arg::isimmediate, ~idxs...))
         arg.val
@@ -82,12 +94,18 @@ function (ctx::LogicLowerer)(ex)
     elseif @capture ex query(~lhs::isalias, reformat(~tns, reorder(relabel(~arg::isalias, ~idxs_1...), ~idxs_2...)))
         loop_idxs = map(idx -> idx.name, withsubsequence(intersect(idxs_1, idxs_2), idxs_2))
         lhs_idxs = map(idx -> idx.name, idxs_2)
-        rhs = finch_pointwise_logic_to_code(reorder(relabel(arg, idxs_1...), idxs_2...))
+        (rhs, rhs_idxs) = compile_pointwise_logic(reorder(relabel(arg, idxs_1...), idxs_2...))
         body = :($(lhs.name)[$(lhs_idxs...)] = $rhs)
         for idx in loop_idxs
-            body = :(for $idx = _
-                $body
-            end)
+            if field(idx) in rhs_idxs
+                body = :(for $idx = _
+                    $body
+                end)
+            elseif idx in lhs_idxs
+                body = :(for $idx = 1:1
+                    $body
+                end)
+            end
         end
         quote
             $(lhs.name) = $(compile_logic_constant(tns))
@@ -102,13 +120,19 @@ function (ctx::LogicLowerer)(ex)
         ctx(query(lhs, reformat(tns, aggregate(initwrite(z), immediate(z), mapjoin(args...)))))
     elseif @capture ex query(~lhs, reformat(~tns, aggregate(~op, ~init, ~arg, ~idxs_1...)))
         idxs_2 = map(idx -> idx.name, getfields(arg))
-        idxs_3 = map(idx -> idx.name, setdiff(getfields(arg), idxs_1))
-        rhs = finch_pointwise_logic_to_code(arg)
-        body = :($(lhs.name)[$(idxs_3...)] <<$(compile_logic_constant(op))>>= $rhs)
+        lhs_idxs = map(idx -> idx.name, setdiff(getfields(arg), idxs_1))
+        (rhs, rhs_idxs) = compile_pointwise_logic(arg)
+        body = :($(lhs.name)[$(lhs_idxs...)] <<$(compile_logic_constant(op))>>= $rhs)
         for idx in idxs_2
-            body = :(for $idx = _
-                $body
-            end)
+            if field(idx) in rhs_idxs
+                body = :(for $idx = _
+                    $body
+                end)
+            elseif idx in lhs_idxs
+                body = :(for $idx = 1:1
+                    $body
+                end)
+            end
         end
         quote
             $(lhs.name) = $(compile_logic_constant(tns))
