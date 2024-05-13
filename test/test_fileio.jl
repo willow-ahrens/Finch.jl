@@ -152,7 +152,7 @@ using Pkg
             A = mmread(joinpath(@__DIR__, "Trec4.mtx"))
             fwrite(joinpath(f, "test.ttx"), Tensor(A))
             str = String(read(joinpath(f, "test.ttx")))
-            check_output("fileio/Trec4.ttx", str)
+            @test check_output("fileio/Trec4.ttx", str)
         end
     end
 end
