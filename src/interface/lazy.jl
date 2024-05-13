@@ -431,19 +431,57 @@ is fused with the execution of `z + 1`.
 """
 lazy(arg) = LazyTensor(arg)
 
+default_scheduler(;verbose=false) = LogicExecutor(DefaultLogicOptimizer(LogicCompiler()), verbose=verbose)
+
 """
-    fused(f, args...; [optimizer=DefaultOptimizer()])
+    fused(f, args...; kwargs...)
 
 This function decorator modifies `f` to fuse the contained array
 operations and optimize the resulting program. The function must return a single
-array or tuple of arrays. The `optimizer` keyword argument specifies the
-optimizer to use.
+array or tuple of arrays. `kwargs` are passed to [`compute`](@ref)
 """
-function fused(f, args...; optimizer=DefaultOptimizer())
-    compute(f(map(LazyTensor, args...)), optimizer)
+function fused(f, args...; kwargs...)
+    compute(f(map(LazyTensor, args...)), kwargs...)
 end
 
-default_scheduler(;verbose=false) = LogicExecutor(DefaultLogicOptimizer(LogicCompiler()), verbose=verbose)
+current_scheduler = Ref{Any}(default_scheduler())
+
+"""
+    set_scheduler!(scheduler)
+
+Set the current scheduler to `scheduler`. The scheduler is used by `compute` to
+execute lazy tensor programs.
+"""
+set_scheduler!(scheduler) = current_scheduler[] = scheduler
+
+"""
+    get_scheduler()
+
+Get the current Finch scheduler used by `compute` to execute lazy tensor programs.
+"""
+get_scheduler() = current_scheduler[]
+
+"""
+    with_scheduler(f, scheduler)
+
+Execute `f` with the current scheduler set to `scheduler`. For example,
+```jldoctest
+with_scheduler(LogicExecutor(DefaultLogicOptimizer(LogicCompiler()), verbose=true)) do
+    x = lazy([1, 2])
+    y = lazy([3, 4])
+    compute(x + y)
+end
+```
+"""
+function with_scheduler(f, scheduler)
+    old_scheduler = get_scheduler()
+    set_scheduler!(scheduler)
+    try
+        return f()
+    finally
+        set_scheduler!(old_scheduler)
+    end
+end
 
 """
     compute(args..., ctx=default_scheduler()) -> Any
@@ -451,9 +489,9 @@ default_scheduler(;verbose=false) = LogicExecutor(DefaultLogicOptimizer(LogicCom
 Compute the value of a lazy tensor. The result is the argument itself, or a
 tuple of arguments if multiple arguments are passed.
 """
-compute(args...; ctx=default_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), map(lazy, args))
-compute(arg; ctx=default_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), (lazy(arg),))[1]
-compute(args::Tuple; ctx=default_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), map(lazy, args))
+compute(args...; ctx=get_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), map(lazy, args))
+compute(arg; ctx=get_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), (lazy(arg),))[1]
+compute(args::Tuple; ctx=get_scheduler(), kwargs...) = compute_parse(set_options(ctx; kwargs...), map(lazy, args))
 function compute_parse(ctx, args::Tuple)
     args = collect(args)
     vars = map(arg -> alias(gensym(:A)), args)
