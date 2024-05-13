@@ -125,10 +125,10 @@ function (ctx::EinsumParserVisitor)(ex)
                 $(esc(tns)) = $einsum($(esc(op)), $arg, $(map(QuoteNode, idxs)...);$(map(esc, ctx.opts)...),)
             end
         else
-            throw(FinchSyntaxError("Invalid einsum expression: $ex"))
+            throw(FinchNotation.FinchSyntaxError("Invalid einsum expression: $ex"))
         end
     else
-        throw(FinchSyntaxError("Invalid einsum expression type: $ex"))
+        throw(FinchNotation.FinchSyntaxError("Invalid einsum expression type: $ex"))
     end
 end
 

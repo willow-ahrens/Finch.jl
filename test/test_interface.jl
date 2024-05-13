@@ -8,6 +8,13 @@ using Finch: AsArray
         Finch.with_scheduler(scheduler) do
             @info "Testing $scheduler"
 
+            #https://github.com/willow-ahrens/Finch.jl/issues/520
+            let
+                A = rand(2, 2)
+                x = lazy(rand(2))
+                @test @einsum y[i] = A[i, j] * x[j]
+            end
+
             #https://github.com/willow-ahrens/Finch.jl/issues/554
             let
                 @test broadcast(trunc, swizzle(Tensor(ones(1)), 1)) == Tensor(ones(1))
