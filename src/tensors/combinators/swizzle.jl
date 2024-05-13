@@ -13,6 +13,8 @@ default(arr::SwizzleArray) = default(typeof(arr))
 default(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = default(Body)
 Base.similar(arr::SwizzleArray{dims}) where {dims} = SwizzleArray{dims}(similar(arr.body))
 
+countstored(arr::SwizzleArray) = countstored(arr.body)
+
 Base.size(arr::SwizzleArray{dims}) where {dims} = map(n->size(arr.body)[n], dims)
 
 Base.show(io::IO, ex::SwizzleArray) = Base.show(io, MIME"text/plain"(), ex)

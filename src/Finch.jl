@@ -50,7 +50,7 @@ export lazy, compute, tensordot, @einsum
 
 export choose, minby, maxby, overwrite, initwrite, filterop, d
 
-export default, AsArray
+export default, AsArray, expanddims
 
 export parallelAnalysis, ParallelAnalysisResults
 export parallel, realextent, extent, dimless
