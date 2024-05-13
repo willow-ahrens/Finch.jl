@@ -27,33 +27,29 @@ let
             if N == 0
                 push!(formats, Scalar(f))
             else
-                bases = []
-                push!(bases, Element(f))
-                for base in bases
-                    #Dense
-                    format = deepcopy(base)
-                    for i in 1:N
-                        format = Dense(format)
-                    end
-                    push!(formats, Tensor(format, vals))
+                #Dense
+                format = Element(f)
+                for i in 1:N
+                    format = Dense(format)
+                end
+                push!(formats, Tensor(format, vals))
 
-                    #DCSF
-                    format = deepcopy(base)
-                    for i in 1:N
-                        format = SparseList(format)
-                    end
-                    push!(formats, Tensor(format, vals))
+                #DCSF
+                format = Element(f)
+                for i in 1:N
+                    format = SparseList(format)
+                end
+                push!(formats, Tensor(format, vals))
 
-                    if N >= 1
-                        #CSF
-                        if N >= 2
-                            format = deepcopy(base)
-                            for i in 1:(N - 1)
-                                format = SparseList(format)
-                            end
-                            format = Dense(format)
-                            push!(formats, Tensor(format, vals))
+                if N >= 1
+                    #CSF
+                    if N >= 2
+                        format = Element(f)
+                        for i in 1:(N - 1)
+                            format = SparseList(format)
                         end
+                        format = Dense(format)
+                        push!(formats, Tensor(format, vals))
                     end
                 end
             end
