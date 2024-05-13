@@ -198,13 +198,7 @@ function broadcast_to_default(tns::LazyTensor)
     tns.default
 end
 
-function Base.materialize!(dest, bc::Broadcasted{<:LazyStyle})
-    return copyto!(dest, bc)
-end
-
-function Base.materialize(bc::Broadcasted{<:LazyStyle})
-    return copy(bc)
-end
+Base.Broadcast.instantiate(bc::Broadcasted{LazyStyle{N}}) where {N} = bc
 
 Base.copyto!(out, bc::Broadcasted{LazyStyle{N}}) where {N} = copyto!(out, copy(bc))
 

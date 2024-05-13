@@ -7,11 +7,14 @@ Scalar{D}(args...) where {D} = Scalar{D, typeof(D)}(args...)
 Scalar{D, Tv}() where {D, Tv} = Scalar{D, Tv}(D)
 
 @inline Base.ndims(::Type{<:Scalar}) = 0
+@inline Base.ndims(::Scalar) = 0
 @inline Base.size(::Scalar) = ()
 @inline Base.axes(::Scalar) = ()
 @inline Base.eltype(::Scalar{D, Tv}) where {D, Tv} = Tv
+@inline Base.eltype(::Type{Scalar{D, Tv}}) where {D, Tv} = Tv
 @inline default(::Type{<:Scalar{D}}) where {D} = D
 @inline default(::Scalar{D}) where {D} = D
+Base.similar(tns::Scalar{D, Tv}) where {D, Tv} = Scalar{D, Tv}()
 
 (tns::Scalar)() = tns.val
 @inline Base.getindex(tns::Scalar) = tns.val
@@ -87,11 +90,14 @@ SparseScalar{D, Tv}() where {D, Tv} = SparseScalar{D, Tv}(D, false)
 SparseScalar{D, Tv}(val) where {D, Tv} = SparseScalar{D, Tv}(val, true)
 
 @inline Base.ndims(::Type{<:SparseScalar}) = 0
+@inline Base.ndims(::SparseScalar) = 0
 @inline Base.size(::SparseScalar) = ()
 @inline Base.axes(::SparseScalar) = ()
 @inline Base.eltype(::SparseScalar{D, Tv}) where {D, Tv} = Tv
+@inline Base.eltype(::Type{SparseScalar{D, Tv}}) where {D, Tv} = Tv
 @inline default(::Type{<:SparseScalar{D}}) where {D} = D
 @inline default(::SparseScalar{D}) where {D} = D
+Base.similar(tns::SparseScalar{D, Tv}) where {D, Tv} = SparseScalar{D, Tv}()
 
 (tns::SparseScalar)() = tns.val
 @inline Base.getindex(tns::SparseScalar) = tns.val
@@ -171,11 +177,14 @@ ShortCircuitScalar{D}(args...) where {D} = ShortCircuitScalar{D, typeof(D)}(args
 ShortCircuitScalar{D, Tv}() where {D, Tv} = ShortCircuitScalar{D, Tv}(D)
 
 @inline Base.ndims(::Type{<:ShortCircuitScalar}) = 0
+@inline Base.ndims(::ShortCircuitScalar) = 0
 @inline Base.size(::ShortCircuitScalar) = ()
 @inline Base.axes(::ShortCircuitScalar) = ()
 @inline Base.eltype(::ShortCircuitScalar{D, Tv}) where {D, Tv} = Tv
+@inline Base.eltype(::Type{ShortCircuitScalar{D, Tv}}) where {D, Tv} = Tv
 @inline default(::Type{<:ShortCircuitScalar{D}}) where {D} = D
 @inline default(::ShortCircuitScalar{D}) where {D} = D
+Base.similar(tns::ShortCircuitScalar{D, Tv}) where {D, Tv} = ShortCircuitScalar{D, Tv}()
 
 (tns::ShortCircuitScalar)() = tns.val
 @inline Base.getindex(tns::ShortCircuitScalar) = tns.val
@@ -247,11 +256,14 @@ SparseShortCircuitScalar{D, Tv}() where {D, Tv} = SparseShortCircuitScalar{D, Tv
 SparseShortCircuitScalar{D, Tv}(val) where {D, Tv} = SparseShortCircuitScalar{D, Tv}(val, true)
 
 @inline Base.ndims(::Type{<:SparseShortCircuitScalar}) = 0
+@inline Base.ndims(::SparseShortCircuitScalar) = 0
 @inline Base.size(::SparseShortCircuitScalar) = ()
 @inline Base.axes(::SparseShortCircuitScalar) = ()
 @inline Base.eltype(::SparseShortCircuitScalar{D, Tv}) where {D, Tv} = Tv
+@inline Base.eltype(::Type{SparseShortCircuitScalar{D, Tv}}) where {D, Tv} = Tv
 @inline default(::Type{<:SparseShortCircuitScalar{D}}) where {D} = D
 @inline default(::SparseShortCircuitScalar{D}) where {D} = D
+Base.similar(tns::SparseShortCircuitScalar{D, Tv}) where {D, Tv} = SparseShortCircuitScalar{D, Tv}()
 
 (tns::SparseShortCircuitScalar)() = tns.val
 @inline Base.getindex(tns::SparseShortCircuitScalar) = tns.val

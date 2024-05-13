@@ -16,6 +16,9 @@ using Compat
 using DataStructures
 using JSON
 using Distributions: Binomial, Normal, Poisson
+using TOML
+using UUIDs
+using Preferences
 
 export @finch, @finch_program, @finch_code, @finch_kernel, value
 
@@ -62,6 +65,8 @@ end
 struct FinchExtensionError <: Exception
     msg::String
 end
+
+const FINCH_VERSION = VersionNumber(TOML.parsefile(joinpath(dirname(@__DIR__), "Project.toml"))["version"])
 
 include("util/convenience.jl")
 include("util/shims.jl")
@@ -168,7 +173,6 @@ include("interface/lazy.jl")
 include("interface/eager.jl")
 include("interface/einsum.jl")
 
-
 @static if !isdefined(Base, :get_extension)
     function __init__()
         @require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("../ext/SparseArraysExt.jl")
@@ -192,6 +196,10 @@ end
             end
         ))
 
+        if @load_preference("precompile", true)
+            @info "Running enhanced precompilation... (to disable, run `using Preferences; Preferences.set_preference(\"Finch\", \"precompile\"=>false)`"
+            include("../test/precompile.jl")
+        end
     end
 end
 

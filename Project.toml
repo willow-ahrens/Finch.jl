@@ -1,7 +1,23 @@
+authors = ["Willow Ahrens"]
 name = "Finch"
 uuid = "9177782c-1635-4eb9-9bfb-d9dfa25e6bce"
-authors = ["Willow Ahrens"]
 version = "0.6.26"
+
+[compat]
+AbstractTrees = "0.3.4, 0.4"
+Compat = "3.29, 4"
+DataStructures = "0.18"
+Distributions = "0.25"
+JSON = "0.21"
+Pkg = "1.10.0"
+PrecompileTools = "1"
+Preferences = "v1.4.3"
+Requires = "1"
+RewriteTools = "0.2.1"
+SyntaxInterface = "0.2.1"
+TOML = "1.0"
+UUIDs = "1.4"
+julia = "1.6.7"
 
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
@@ -11,34 +27,19 @@ Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
+Preferences = "21216c6a-2e73-6563-6e65-726566657250"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 RewriteTools = "5969e224-3634-4c61-9f66-721b69e98b8a"
 SyntaxInterface = "b33eeca9-aacb-4496-a840-e75f1646a4fb"
-
-[weakdeps]
-HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
-NPZ = "15e1cf62-19b3-5cfa-8e77-841668bca605"
-SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-TensorMarket = "8b7d4fe7-0b45-4d0d-9dd8-5cc9b23b4b77"
+TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
+UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
 [extensions]
 HDF5Ext = "HDF5"
 NPZExt = "NPZ"
 SparseArraysExt = "SparseArrays"
 TensorMarketExt = "TensorMarket"
-
-[compat]
-AbstractTrees = "0.3.4, 0.4"
-Compat = "3.29, 4"
-DataStructures = "0.18"
-Distributions = "0.25"
-JSON = "0.21"
-PrecompileTools = "1"
-Requires = "1"
-RewriteTools = "0.2"
-SyntaxInterface = "0.2.1"
-julia = "1.6.7"
 
 [extras]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
@@ -57,3 +58,9 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["Test", "ArgParse", "LinearAlgebra", "Random", "SparseArrays", "Graphs", "SimpleWeightedGraphs", "HDF5", "NPZ", "Pkg", "TensorMarket", "Documenter", "Literate"]
+
+[weakdeps]
+HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+NPZ = "15e1cf62-19b3-5cfa-8e77-841668bca605"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+TensorMarket = "8b7d4fe7-0b45-4d0d-9dd8-5cc9b23b4b77"

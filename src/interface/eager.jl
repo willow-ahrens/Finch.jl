@@ -12,13 +12,7 @@ Base.Broadcast.BroadcastStyle(a::FinchStyle{N}, b::FinchStyle{M}) where {M, N} =
 Base.Broadcast.BroadcastStyle(a::LazyStyle{M}, b::FinchStyle{N}) where {M, N} = LazyStyle{max(M, N)}()
 Base.Broadcast.BroadcastStyle(a::FinchStyle{N}, b::Broadcast.AbstractArrayStyle{M}) where {M, N} = FinchStyle{max(M, N)}()
 
-function Base.materialize!(dest, bc::Broadcasted{<:FinchStyle})
-    return copyto!(dest, bc)
-end
-
-function Base.materialize(bc::Broadcasted{<:FinchStyle})
-    return copy(bc)
-end
+Base.Broadcast.instantiate(bc::Broadcasted{FinchStyle{N}}) where {N} = bc
 
 function Base.copyto!(out, bc::Broadcasted{FinchStyle{N}}) where {N}
     compute(copyto!(out, copy(Broadcasted{LazyStyle{N}}(bc.f, bc.args))))
