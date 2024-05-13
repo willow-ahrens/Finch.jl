@@ -16,9 +16,9 @@ using Compat
 using DataStructures
 using JSON
 using Distributions: Binomial, Normal, Poisson
-using Pkg
 using TOML
 using UUIDs
+using Preferences
 
 export @finch, @finch_program, @finch_code, @finch_kernel, value
 
@@ -67,7 +67,6 @@ struct FinchExtensionError <: Exception
 end
 
 const FINCH_VERSION = VersionNumber(TOML.parsefile(joinpath(dirname(@__DIR__), "Project.toml"))["version"])
-const FINCH_INFO = Pkg.dependencies()[UUID("9177782c-1635-4eb9-9bfb-d9dfa25e6bce")]
 
 include("util/convenience.jl")
 include("util/shims.jl")
@@ -190,7 +189,9 @@ end
         # all calls in this block will be precompiled, regardless of whether
         # they belong to your package or not (on Julia 1.8 and higher)
 
-        include("../test/precompile.jl")
+        if @load_preference("enhanced_precompile", true)
+            include("../test/precompile.jl")
+        end
     end
 end
 
