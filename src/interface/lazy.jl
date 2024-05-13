@@ -464,14 +464,7 @@ get_scheduler() = current_scheduler[]
 """
     with_scheduler(f, scheduler)
 
-Execute `f` with the current scheduler set to `scheduler`. For example,
-```jldoctest
-with_scheduler(LogicExecutor(DefaultLogicOptimizer(LogicCompiler()), verbose=true)) do
-    x = lazy([1, 2])
-    y = lazy([3, 4])
-    compute(x + y)
-end
-```
+Execute `f` with the current scheduler set to `scheduler`.
 """
 function with_scheduler(f, scheduler)
     old_scheduler = get_scheduler()
