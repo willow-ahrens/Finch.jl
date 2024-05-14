@@ -18,8 +18,8 @@ using Finch: AsArray
                 
                 
                 broadcast(/, tns, tns2)  # passes
-                broadcast(Finch.warn_fld, tns, tns2)  # fails with RewriteTools.RuleRewriteError
-                broadcast(Finch.warn_rem, tns, tns2) 
+                broadcast(Finch.fld_nothrow, tns, tns2)  # fails with RewriteTools.RuleRewriteError
+                broadcast(Finch.rem_nothrow, tns, tns2) 
             end
 
             #https://github.com/willow-ahrens/Finch.jl/issues/520

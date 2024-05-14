@@ -96,12 +96,12 @@ julia> x[]
 maxby(a, b) = a[1] < b[1] ? b : a
 
 """
-    warn_rem(x, y)
+    rem_nothrow(x, y)
 
 Return the remainder of `x` divided by `y`, and issue a warning if `y` is zero.
 If `y` is zero, return zero.
 """
-function warn_rem(x, y)
+function rem_nothrow(x, y)
     if iszero(y)
         @warn "Division by zero in rem"
         zero(y)
@@ -111,12 +111,12 @@ function warn_rem(x, y)
 end
 
 """
-    warn_fld(x, y)
+    fld_nothrow(x, y)
 
 Return the floor of `x` divided by `y`, and issue a warning if `y` is zero.
 If `y` is zero, return zero.
 """
-function warn_fld(x, y)
+function fld_nothrow(x, y)
     if iszero(y)
         @warn "Division by zero in fld"
         zero(y)
@@ -126,12 +126,12 @@ function warn_fld(x, y)
 end
 
 """
-    warn_cld(x, y)
+    cld_nothrow(x, y)
 
 Return the ceiling of `x` divided by `y`, and issue a warning if `y` is zero.
 If `y` is zero, return zero.
 """
-function warn_cld(x, y)
+function cld_nothrow(x, y)
     if iszero(y)
         @warn "Division by zero in fld"
         zero(y)
