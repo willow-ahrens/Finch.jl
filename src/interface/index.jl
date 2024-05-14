@@ -25,9 +25,9 @@ getindex_rep_def(lvl::DenseData, idx, idxs...) = DenseData(getindex_rep_def(lvl.
 
 getindex_rep_def(lvl::ElementData) = lvl
 
-getindex_rep_def(lvl::RepeatData, idx::Drop) = SolidData(ElementData(lvl.default, lvl.eltype))
-getindex_rep_def(lvl::RepeatData, idx) = SolidData(ElementData(lvl.default, lvl.eltype))
-getindex_rep_def(lvl::RepeatData, idx::Type{<:AbstractUnitRange}) = SolidData(ElementData(lvl.default, lvl.eltype))
+getindex_rep_def(lvl::RepeatData, idx::Drop) = SolidData(ElementData(lvl.fill_value, lvl.eltype))
+getindex_rep_def(lvl::RepeatData, idx) = SolidData(ElementData(lvl.fill_value, lvl.eltype))
+getindex_rep_def(lvl::RepeatData, idx::Type{<:AbstractUnitRange}) = SolidData(ElementData(lvl.fill_value, lvl.eltype))
 
 Base.getindex(arr::AbstractTensor, inds::AbstractVector) = getindex_helper(arr, to_indices(arr, axes(arr), (inds,)))
 function Base.getindex(arr::AbstractTensor, inds...)
@@ -64,7 +64,7 @@ end
     inds_ndims = ndims.(inds)
     if sum(inds_ndims, init=0) == 0
         return quote
-            scl = Scalar($(default(arr)))
+            scl = Scalar($(fill_value(arr)))
             @finch scl[] = arr[inds...]
             return scl[]
         end
@@ -91,7 +91,7 @@ end
         win = $dst
         ($(syms...), ) = (inds...,)
         @finch begin
-            win .= $(default(arr))
+            win .= $(fill_value(arr))
             $(Expr(:for, exts, quote
                 win[$(dst_modes...)] = arr[$(coords...)]
             end))

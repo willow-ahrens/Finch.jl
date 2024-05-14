@@ -38,7 +38,7 @@ function moveto(lvl::AtomicLevel, device)
 end
 
 pattern!(lvl::AtomicLevel) = AtomicLevel(pattern!(lvl.lvl), lvl.locks)
-redefault!(lvl::AtomicLevel, init) = AtomicLevel(redefault!(lvl.lvl, init), lvl.locks)
+set_fill_value!(lvl::AtomicLevel, init) = AtomicLevel(set_fill_value!(lvl.lvl, init), lvl.locks)
 # TODO: FIXME: Need toa dopt the number of dims
 Base.resize!(lvl::AtomicLevel, dims...) = AtomicLevel(resize!(lvl.lvl, dims...), lvl.locks)
 
@@ -69,7 +69,7 @@ end
 @inline level_size(lvl::AtomicLevel{AVal, Lvl}) where {AVal, Lvl} = level_size(lvl.lvl)
 @inline level_axes(lvl::AtomicLevel{AVal, Lvl}) where {AVal, Lvl} = level_axes(lvl.lvl)
 @inline level_eltype(::Type{AtomicLevel{AVal, Lvl}}) where {AVal, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:AtomicLevel{AVal, Lvl}}) where {AVal, Lvl} = level_default(Lvl)
+@inline level_fill_value(::Type{<:AtomicLevel{AVal, Lvl}}) where {AVal, Lvl} = level_fill_value(Lvl)
 
 # FIXME: These.
 (fbr::Tensor{<:AtomicLevel})() = SubFiber(fbr.lvl, 1)()
@@ -117,7 +117,7 @@ function virtualize(ctx, ex, ::Type{AtomicLevel{AVal, Lvl}}, tag=:lvl) where {AV
             $atomics = $ex.locks
         end)
     lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
-    temp = VirtualAtomicLevel(lvl_2, sym, atomics, typeof(level_default(Lvl)), Val, AVal, Lvl)
+    temp = VirtualAtomicLevel(lvl_2, sym, atomics, typeof(level_fill_value(Lvl)), Val, AVal, Lvl)
     temp
 end
 
@@ -126,7 +126,7 @@ virtual_level_resize!(ctx, lvl::VirtualAtomicLevel, dims...) = (lvl.lvl = virtua
 virtual_level_size(ctx, lvl::VirtualAtomicLevel) = virtual_level_size(ctx, lvl.lvl)
 virtual_level_ndims(ctx, lvl::VirtualAtomicLevel) = length(virtual_level_size(ctx, lvl.lvl))
 virtual_level_eltype(lvl::VirtualAtomicLevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualAtomicLevel) = virtual_level_default(lvl.lvl)
+virtual_level_fill_value(lvl::VirtualAtomicLevel) = virtual_level_fill_value(lvl.lvl)
 
 function declare_level!(ctx, lvl::VirtualAtomicLevel, pos, init)
     lvl.lvl = declare_level!(ctx, lvl.lvl, pos, init)

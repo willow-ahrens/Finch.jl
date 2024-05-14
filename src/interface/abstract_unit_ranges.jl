@@ -42,5 +42,5 @@ instantiate(ctx::AbstractCompiler, arr::VirtualAbstractUnitRange, mode::Updater,
 
 FinchNotation.finch_leaf(x::VirtualAbstractUnitRange) = virtual(x)
 
-virtual_default(ctx, ::VirtualAbstractUnitRange) = 0
+virtual_fill_value(ctx, ::VirtualAbstractUnitRange) = 0
 virtual_eltype(ctx, tns::VirtualAbstractUnitRange) = tns.eltype

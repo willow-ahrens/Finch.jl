@@ -2,7 +2,7 @@
     SparseListLevel{[Ti=Int], [Ptr, Idx]}(lvl, [dim])
 
 A subfiber of a sparse level does not need to represent slices `A[:, ..., :, i]`
-which are entirely [`default`](@ref). Instead, only potentially non-default
+which are entirely [`fill_value`](@ref). Instead, only potentially non-fill
 slices are stored as subfibers in `lvl`.  A sorted list is used to record which
 slices are stored. Optionally, `dim` is the size of the last dimension.
 
@@ -69,8 +69,8 @@ end
 pattern!(lvl::SparseListLevel{Ti}) where {Ti} = 
     SparseListLevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.idx)
 
-redefault!(lvl::SparseListLevel{Ti}, init) where {Ti} = 
-    SparseListLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx)
+set_fill_value!(lvl::SparseListLevel{Ti}, init) where {Ti} = 
+    SparseListLevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx)
 
 Base.resize!(lvl::SparseListLevel{Ti}, dims...) where {Ti} = 
     SparseListLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.idx)
@@ -96,7 +96,7 @@ function Base.show(io::IO, lvl::SparseListLevel{Ti, Ptr, Idx, Lvl}) where {Ti, L
 end
 
 labelled_show(io::IO, fbr::SubFiber{<:SparseListLevel}) =
-    print(io, "SparseList (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+    print(io, "SparseList (", fill_value(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
 function labelled_children(fbr::SubFiber{<:SparseListLevel})
     lvl = fbr.lvl
@@ -111,7 +111,7 @@ end
 @inline level_size(lvl::SparseListLevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::SparseListLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
 @inline level_eltype(::Type{<:SparseListLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseListLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = level_default(Lvl)
+@inline level_fill_value(::Type{<:SparseListLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = level_fill_value(Lvl)
 data_rep_level(::Type{<:SparseListLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseListLevel})() = fbr
@@ -122,7 +122,7 @@ function (fbr::SubFiber{<:SparseListLevel{Ti}})(idxs...) where {Ti}
     r = searchsorted(@view(lvl.idx[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end])
     q = lvl.ptr[p] + first(r) - 1
     fbr_2 = SubFiber(lvl.lvl, q)
-    length(r) == 0 ? default(fbr_2) : fbr_2(idxs[1:end-1]...)
+    length(r) == 0 ? fill_value(fbr_2) : fbr_2(idxs[1:end-1]...)
 end
 
 mutable struct VirtualSparseListLevel <: AbstractVirtualLevel
@@ -188,12 +188,12 @@ function virtual_level_resize!(ctx, lvl::VirtualSparseListLevel, dims...)
 end
 
 virtual_level_eltype(lvl::VirtualSparseListLevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualSparseListLevel) = virtual_level_default(lvl.lvl)
+virtual_level_fill_value(lvl::VirtualSparseListLevel) = virtual_level_fill_value(lvl.lvl)
 
 postype(lvl::VirtualSparseListLevel) = postype(lvl.lvl)
 
 function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseListLevel, pos, init)
-    #TODO check that init == default
+    #TODO check that init == fill_value
     Ti = lvl.Ti
     Tp = postype(lvl)
     push!(ctx.code.preamble, quote
@@ -306,14 +306,14 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Re
                         preamble = :($my_i = $(lvl.idx)[$my_q]),
                         stop = (ctx, ext) -> value(my_i),
                         chunk = Spike(
-                            body = FillLeaf(virtual_level_default(lvl)),
+                            body = FillLeaf(virtual_level_fill_value(lvl)),
                             tail = Simplify(instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Ti)), mode, subprotos))
                         ),
                         next = (ctx, ext) -> :($my_q += $(Tp(1))) 
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl)))
                 )
             ])
         )
@@ -358,14 +358,14 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Re
                         preamble = :($my_i2 = $(lvl.idx)[$my_q]),
                         stop = (ctx, ext) -> value(my_i2),
                         chunk =  Spike(
-                            body = FillLeaf(virtual_level_default(lvl)),
+                            body = FillLeaf(virtual_level_fill_value(lvl)),
                             tail = instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Ti)), mode, subprotos),
                         ),
                         next = (ctx, ext) -> :($my_q += $(Tp(1))),
                     )  
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl)))
                 )
             ])
         )

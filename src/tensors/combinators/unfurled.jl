@@ -29,7 +29,7 @@ FinchNotation.finch_leaf(x::Unfurled) = virtual(x)
 
 virtual_size(ctx, tns::Unfurled) = virtual_size(ctx, tns.arr)[1 : end - tns.ndims]
 virtual_resize!(ctx, tns::Unfurled, dims...) = virtual_resize!(ctx, tns.arr, dims...) # TODO SHOULD NOT HAPPEN BREAKS LIFECYCLES
-virtual_default(ctx, tns::Unfurled) = virtual_default(ctx, tns.arr)
+virtual_fill_value(ctx, tns::Unfurled) = virtual_fill_value(ctx, tns.arr)
 
 instantiate(ctx, tns::Unfurled, mode, protos) = tns
 

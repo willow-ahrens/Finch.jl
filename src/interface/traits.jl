@@ -3,7 +3,7 @@ using Base.Broadcast: Broadcasted
 """
     SparseData(lvl)
     
-Represents a tensor `A` where `A[:, ..., :, i]` is sometimes entirely default(lvl)
+Represents a tensor `A` where `A[:, ..., :, i]` is sometimes entirely fill_value(lvl)
 and is sometimes represented by `lvl`.
 """
 struct SparseData
@@ -12,13 +12,13 @@ end
 Finch.finch_leaf(x::SparseData) = virtual(x)
 
 Base.ndims(fbr::SparseData) = 1 + ndims(fbr.lvl)
-default(fbr::SparseData) = default(fbr.lvl)
+fill_value(fbr::SparseData) = fill_value(fbr.lvl)
 Base.eltype(fbr::SparseData) = eltype(fbr.lvl)
 
 """
     RepeatData(lvl)
     
-Represents a tensor `A` where `A[:, ..., :, i]` is sometimes entirely default(lvl)
+Represents a tensor `A` where `A[:, ..., :, i]` is sometimes entirely fill_value(lvl)
 and is sometimes represented by repeated runs of `lvl`.
 """
 struct RepeatData
@@ -27,7 +27,7 @@ end
 Finch.finch_leaf(x::RepeatData) = virtual(x)
 
 Base.ndims(fbr::RepeatData) = 1 + ndims(fbr.lvl)
-default(fbr::RepeatData) = default(fbr.lvl)
+fill_value(fbr::RepeatData) = fill_value(fbr.lvl)
 Base.eltype(fbr::RepeatData) = eltype(fbr.lvl)
 
 """
@@ -39,7 +39,7 @@ struct DenseData
     lvl
 end
 Finch.finch_leaf(x::DenseData) = virtual(x)
-default(fbr::DenseData) = default(fbr.lvl)
+fill_value(fbr::DenseData) = fill_value(fbr.lvl)
 
 Base.ndims(fbr::DenseData) = 1 + ndims(fbr.lvl)
 Base.eltype(fbr::DenseData) = eltype(fbr.lvl)
@@ -53,35 +53,35 @@ struct ExtrudeData
     lvl
 end
 Finch.finch_leaf(x::ExtrudeData) = virtual(x)
-default(fbr::ExtrudeData) = default(fbr.lvl)
+fill_value(fbr::ExtrudeData) = fill_value(fbr.lvl)
 Base.ndims(fbr::ExtrudeData) = 1 + ndims(fbr.lvl)
 Base.eltype(fbr::ExtrudeData) = eltype(fbr.lvl)
 
 """
     HollowData(lvl)
     
-Represents a tensor which is represented by `lvl` but is sometimes entirely `default(lvl)`.
+Represents a tensor which is represented by `lvl` but is sometimes entirely `fill_value(lvl)`.
 """
 struct HollowData
     lvl
 end
 Finch.finch_leaf(x::HollowData) = virtual(x)
-default(fbr::HollowData) = default(fbr.lvl)
+fill_value(fbr::HollowData) = fill_value(fbr.lvl)
 
 Base.ndims(fbr::HollowData) = ndims(fbr.lvl)
 Base.eltype(fbr::HollowData) = eltype(fbr.lvl)
 
 """
-    ElementData(default, eltype)
+    ElementData(fill_value, eltype)
     
-Represents a scalar element of type `eltype` and default `default`.
+Represents a scalar element of type `eltype` and fill_value `fill_value`.
 """
 struct ElementData
-    default
+    fill_value
     eltype
 end
 Finch.finch_leaf(x::ElementData) = virtual(x)
-default(fbr::ElementData) = fbr.default
+fill_value(fbr::ElementData) = fbr.fill_value
 
 Base.ndims(fbr::ElementData) = 0
 Base.eltype(fbr::ElementData) = fbr.eltype
@@ -92,7 +92,7 @@ Base.eltype(fbr::ElementData) = fbr.eltype
 Return a trait object representing everything that can be learned about the data
 based on the storage format (type) of the tensor
 """
-data_rep(tns) = (DenseData^(ndims(tns)))(ElementData(default(tns), eltype(tns)))
+data_rep(tns) = (DenseData^(ndims(tns)))(ElementData(fill_value(tns), eltype(tns)))
 
 data_rep(T::Type{<:Number}) = ElementData(zero(T), T)
 
@@ -205,8 +205,8 @@ function map_rep_def(::MapRepSparseStyle, f, args)
     for (n, arg) in enumerate(args)
         if arg isa SparseData
             args_2 = map(arg -> value(gensym(), eltype(arg)), collect(args))
-            args_2[n] = literal(default(arg))
-            if finch_leaf(simplify(LowerJulia(), call(f, args_2...))) == literal(default(lvl))
+            args_2[n] = literal(fill_value(arg))
+            if finch_leaf(simplify(LowerJulia(), call(f, args_2...))) == literal(fill_value(lvl))
                 return SparseData(lvl)
             end
         end
@@ -222,8 +222,8 @@ function map_rep_def(::MapRepRepeatStyle, f, args)
     for (n, arg) in enumerate(args)
         if arg isa RepeatData
             args_2 = map(arg -> value(gensym(), eltype(arg)), collect(args))
-            args_2[n] = literal(default(arg))
-            if finch_leaf(simplify(LowerJulia(), call(f, args_2...))) == literal(default(lvl))
+            args_2[n] = literal(fill_value(arg))
+            if finch_leaf(simplify(LowerJulia(), call(f, args_2...))) == literal(fill_value(lvl))
                 return RepeatData(lvl)
             end
         end
@@ -232,7 +232,7 @@ function map_rep_def(::MapRepRepeatStyle, f, args)
 end
 
 function map_rep_def(::MapRepElementStyle, f, args)
-    return ElementData(f(map(default, args)...), combine_eltypes(f, (args...,)))
+    return ElementData(f(map(fill_value, args)...), combine_eltypes(f, (args...,)))
 end
 
 """
@@ -248,7 +248,7 @@ end
 #TODO I think HollowData here is wrong
 aggregate_rep_def(op, z, fbr::HollowData, drops...) = HollowData(aggregate_rep_def(op, z, fbr.lvl, drops...))
 function aggregate_rep_def(op, z, lvl::HollowData, drop, drops...)
-    if op(z, default(lvl)) == z
+    if op(z, fill_value(lvl)) == z
         HollowData(aggregate_rep_def(op, z, lvl.lvl, drops...))
     else
         HollowData(aggregate_rep_def(op, z, lvl.lvl, drops...))
@@ -259,7 +259,7 @@ function aggregate_rep_def(op, z, lvl::SparseData, drop, drops...)
     if drop
         aggregate_rep_def(op, z, lvl.lvl, drops...)
     else
-        if op(z, default(lvl)) == z
+        if op(z, fill_value(lvl)) == z
             SparseData(aggregate_rep_def(op, z, lvl.lvl, drops...))
         else
             DenseData(aggregate_rep_def(op, z, lvl.lvl, drops...))
@@ -321,9 +321,9 @@ function permutedims_rep(tns, perm)
     src = expanddims_rep(tns, setdiff(1:maximum(src_dims, init=0), src_dims))
     for mask_dims in diags
         mask = expanddims_rep(DenseData(SparseData(ElementData(false, Bool))), setdiff(1:ndims(src), mask_dims))
-        src = map_rep(filterop(default(src)), mask, src)
+        src = map_rep(filterop(fill_value(src)), mask, src)
     end
-    res = aggregate_rep(initwrite(default(tns)), default(tns), src, setdiff(src_dims, dst_dims))
+    res = aggregate_rep(initwrite(fill_value(tns)), fill_value(tns), src, setdiff(src_dims, dst_dims))
 end
 
 """
@@ -347,7 +347,7 @@ construct_level_rep(fbr::RepeatData, proto::Union{Nothing, typeof(walk), typeof(
 construct_level_rep(fbr::RepeatData, proto::Union{typeof(laminate)}, protos...) = SparseDict(construct_level_rep(fbr.lvl, protos...))
 construct_level_rep(fbr::DenseData, proto, protos...) = Dense(construct_level_rep(fbr.lvl, protos...))
 construct_level_rep(fbr::ExtrudeData, proto, protos...) = Dense(construct_level_rep(fbr.lvl, protos...), 1)
-construct_level_rep(fbr::ElementData) = Element{fbr.default, fbr.eltype}()
+construct_level_rep(fbr::ElementData) = Element{fbr.fill_value, fbr.eltype}()
 
 """
     fiber_ctr(tns, protos...)
@@ -370,6 +370,6 @@ level_ctr(fbr::RepeatData, proto::Union{Nothing, typeof(walk), typeof(extrude)},
 level_ctr(fbr::RepeatData, proto::Union{typeof(laminate)}, protos...) = :(SparseDict($(level_ctr(fbr.lvl, protos...))))
 level_ctr(fbr::DenseData, proto, protos...) = :(Dense($(level_ctr(fbr.lvl, protos...))))
 level_ctr(fbr::ExtrudeData, proto, protos...) = :(Dense($(level_ctr(fbr.lvl, protos...)), 1))
-level_ctr(fbr::RepeatData, proto::Union{Nothing, typeof(walk), typeof(extrude)}) = :(Repeat{$(fbr.default), $(fbr.eltype)}())
-level_ctr(fbr::RepeatData, proto::Union{typeof(laminate)}) = level_ctr(DenseData(ElementData(fbr.default, fbr.eltype)), proto)
-level_ctr(fbr::ElementData) = :(Element{$(fbr.default), $(fbr.eltype)}())
+level_ctr(fbr::RepeatData, proto::Union{Nothing, typeof(walk), typeof(extrude)}) = :(Repeat{$(fbr.fill_value), $(fbr.eltype)}())
+level_ctr(fbr::RepeatData, proto::Union{typeof(laminate)}) = level_ctr(DenseData(ElementData(fbr.fill_value, fbr.eltype)), proto)
+level_ctr(fbr::ElementData) = :(Element{$(fbr.fill_value), $(fbr.eltype)}())

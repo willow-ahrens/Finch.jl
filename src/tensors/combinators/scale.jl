@@ -64,7 +64,7 @@ function virtual_resize!(ctx::AbstractCompiler, arr::VirtualScaleArray, dims...)
     virtual_resize!(ctx, arr.body, dims_2...)
 end
 
-virtual_default(ctx::AbstractCompiler, arr::VirtualScaleArray) = virtual_default(ctx, arr.body)
+virtual_fill_value(ctx::AbstractCompiler, arr::VirtualScaleArray) = virtual_fill_value(ctx, arr.body)
 
 function instantiate(ctx, arr::VirtualScaleArray, mode, protos)
     VirtualScaleArray(instantiate(ctx, arr.body, mode, protos), arr.scale)

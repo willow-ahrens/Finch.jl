@@ -66,7 +66,7 @@ function virtual_resize!(ctx::AbstractCompiler, arr::VirtualWindowedArray, dims.
     virtual_resize!(ctx, arr.body, something.(arr.dims, dims)...)
 end
 
-virtual_default(ctx::AbstractCompiler, arr::VirtualWindowedArray) = virtual_default(ctx, arr.body)
+virtual_fill_value(ctx::AbstractCompiler, arr::VirtualWindowedArray) = virtual_fill_value(ctx, arr.body)
 
 function instantiate(ctx, arr::VirtualWindowedArray, mode, protos)
     VirtualWindowedArray(instantiate(ctx, arr.body, mode, protos), arr.dims)

@@ -62,8 +62,8 @@ end
 pattern!(lvl::SparseByteMapLevel{Ti}) where {Ti} = 
     SparseByteMapLevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
 
-redefault!(lvl::SparseByteMapLevel{Ti}, init) where {Ti} = 
-    SparseByteMapLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
+set_fill_value!(lvl::SparseByteMapLevel{Ti}, init) where {Ti} = 
+    SparseByteMapLevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
 
 Base.resize!(lvl::SparseByteMapLevel{Ti}, dims...) where {Ti} = 
     SparseByteMapLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.tbl, lvl.srt)
@@ -95,7 +95,7 @@ function Base.show(io::IO, lvl::SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl},) whe
 end
 
 labelled_show(io::IO, fbr::SubFiber{<:SparseByteMapLevel}) =
-    print(io, "SparseByteMap (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+    print(io, "SparseByteMap (", fill_value(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
 function labelled_children(fbr::SubFiber{<:SparseByteMapLevel})
     lvl = fbr.lvl
@@ -110,7 +110,7 @@ end
 @inline level_size(lvl::SparseByteMapLevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::SparseByteMapLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
 @inline level_eltype(::Type{<:SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}}) where {Ti, Ptr, Tbl, Srt, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}}) where {Ti, Ptr, Tbl, Srt, Lvl}= level_default(Lvl)
+@inline level_fill_value(::Type{<:SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}}) where {Ti, Ptr, Tbl, Srt, Lvl}= level_fill_value(Lvl)
 data_rep_level(::Type{<:SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}}) where {Ti, Ptr, Tbl, Srt, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseByteMapLevel})() = fbr
@@ -123,7 +123,7 @@ function (fbr::SubFiber{<:SparseByteMapLevel{Ti}})(idxs...) where {Ti}
         fbr_2 = SubFiber(lvl.lvl, q)
         fbr_2(idxs[1:end-1]...)
     else
-        default(fbr)
+        fill_value(fbr)
     end
 end
 
@@ -213,7 +213,7 @@ function virtual_level_resize!(ctx, lvl::VirtualSparseByteMapLevel, dims...)
 end
 
 virtual_level_eltype(lvl::VirtualSparseByteMapLevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualSparseByteMapLevel) = virtual_level_default(lvl.lvl)
+virtual_level_fill_value(lvl::VirtualSparseByteMapLevel) = virtual_level_fill_value(lvl.lvl)
 
 postype(lvl::VirtualSparseByteMapLevel) = postype(lvl.lvl)
 
@@ -342,7 +342,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode:
                         preamble = :($my_i = last($(lvl.srt)[$my_r])),
                         stop = (ctx, ext) -> value(my_i),
                         chunk = Spike(
-                            body = FillLeaf(virtual_level_default(lvl)),
+                            body = FillLeaf(virtual_level_fill_value(lvl)),
                             tail = Thunk(
                                 preamble = :($my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i),
                                 body = (ctx) -> instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), mode, subprotos),
@@ -352,7 +352,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode:
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl)))
                 )
             ])
         )
@@ -396,7 +396,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode:
                         preamble = :($my_i = last($(lvl.srt)[$my_r])),
                         stop = (ctx, ext) -> value(my_i),
                         chunk =  Spike(
-                            body = FillLeaf(virtual_level_default(lvl)),
+                            body = FillLeaf(virtual_level_fill_value(lvl)),
                             tail = Thunk(
                                 preamble = :($my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i),
                                 body = (ctx) -> instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), mode, subprotos),
@@ -406,7 +406,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode:
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl)))
                 )
             ])
         )
@@ -429,7 +429,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode:
                 end,
                 body = (ctx) -> Switch([
                     value(:($(lvl.tbl)[$my_q])) => instantiate(ctx, VirtualSubFiber(lvl.lvl, pos), mode, subprotos),
-                    literal(true) => FillLeaf(virtual_level_default(lvl))
+                    literal(true) => FillLeaf(virtual_level_fill_value(lvl))
                 ])
             )
         )

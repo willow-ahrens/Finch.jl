@@ -9,8 +9,8 @@ Base.ndims(arr::SwizzleArray) = ndims(typeof(arr))
 Base.ndims(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = ndims(Body)
 Base.eltype(arr::SwizzleArray) = eltype(typeof(arr.body))
 Base.eltype(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = eltype(Body)
-default(arr::SwizzleArray) = default(typeof(arr))
-default(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = default(Body)
+fill_value(arr::SwizzleArray) = fill_value(typeof(arr))
+fill_value(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = fill_value(Body)
 Base.similar(arr::SwizzleArray{dims}) where {dims} = SwizzleArray{dims}(similar(arr.body))
 
 Base.size(arr::SwizzleArray{dims}) where {dims} = map(n->size(arr.body)[n], dims)
@@ -60,8 +60,8 @@ unwrap(ctx, arr::VirtualSwizzleArray, var) = call(swizzle, unwrap(ctx, arr.body,
 
 lower(ctx::AbstractCompiler, tns::VirtualSwizzleArray, ::DefaultStyle) = :(SwizzleArray($(ctx(tns.body)), $((tns.dims...,))))
 
-function virtual_default(ctx::AbstractCompiler, arr::VirtualSwizzleArray)
-    virtual_default(ctx, arr.body)
+function virtual_fill_value(ctx::AbstractCompiler, arr::VirtualSwizzleArray)
+    virtual_fill_value(ctx, arr.body)
 end
 
 function virtual_size(ctx::AbstractCompiler, arr::VirtualSwizzleArray)

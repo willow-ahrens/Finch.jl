@@ -2,8 +2,8 @@
     SparseIntervalLevel{[Ti=Int], [Ptr, Left, Right]}(lvl, [dim])
 
 The single RLE level represent runs of equivalent slices `A[:, ..., :, i]`
-which are not entirely [`default`](@ref). A main difference compared to SparseRLE 
-level is that SparseInterval level only stores a 'single' non-default run. It emits
+which are not entirely [`fill_value`](@ref). A main difference compared to SparseRLE 
+level is that SparseInterval level only stores a 'single' non-fill run. It emits
 an error if the program tries to write multiple (>=2) runs into SparseInterval. 
 
 `Ti` is the type of the last tensor index. The types `Ptr`, `Left`, and 'Right' 
@@ -70,8 +70,8 @@ end
 pattern!(lvl::SparseIntervalLevel{Ti}) where {Ti} = 
     SparseIntervalLevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.left, lvl.right)
 
-redefault!(lvl::SparseIntervalLevel{Ti}, init) where {Ti} = 
-    SparseIntervalLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.left, lvl.right)
+set_fill_value!(lvl::SparseIntervalLevel{Ti}, init) where {Ti} = 
+    SparseIntervalLevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.left, lvl.right)
 
 Base.resize!(lvl::SparseIntervalLevel{Ti}, dims...) where {Ti} = 
     SparseIntervalLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.left, lvl.right)
@@ -99,7 +99,7 @@ function Base.show(io::IO, lvl::SparseIntervalLevel{Ti, Ptr, Left, Right, Lvl}) 
 end
 
 labelled_show(io::IO, fbr::SubFiber{<:SparseIntervalLevel}) =
-    print(io, "SparseInterval (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+    print(io, "SparseInterval (", fill_value(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
 function labelled_children(fbr::SubFiber{<:SparseIntervalLevel})
     lvl = fbr.lvl
@@ -114,7 +114,7 @@ end
 @inline level_size(lvl::SparseIntervalLevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::SparseIntervalLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
 @inline level_eltype(::Type{<:SparseIntervalLevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseIntervalLevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl}= level_default(Lvl)
+@inline level_fill_value(::Type{<:SparseIntervalLevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl}= level_fill_value(Lvl)
 data_rep_level(::Type{<:SparseIntervalLevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseIntervalLevel})() = fbr
@@ -126,7 +126,7 @@ function (fbr::SubFiber{<:SparseIntervalLevel})(idxs...)
     r2 = searchsortedfirst(@view(lvl.right[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end])
     q = lvl.ptr[p] + first(r1) - 1
     fbr_2 = SubFiber(lvl.lvl, q)
-    r1 != r2 ? default(fbr_2) : fbr_2(idxs[1:end-1]...)
+    r1 != r2 ? fill_value(fbr_2) : fbr_2(idxs[1:end-1]...)
 end
 
 
@@ -198,7 +198,7 @@ end
 
 
 virtual_level_eltype(lvl::VirtualSparseIntervalLevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualSparseIntervalLevel) = virtual_level_default(lvl.lvl)
+virtual_level_fill_value(lvl::VirtualSparseIntervalLevel) = virtual_level_fill_value(lvl.lvl)
 postype(lvl::VirtualSparseIntervalLevel) = postype(lvl.lvl)
 
 function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseIntervalLevel, pos, init)
@@ -292,7 +292,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, mode
                 Phase(
                     start = (ctx, ext) -> literal(lvl.Ti(1)),
                     stop = (ctx, ext) -> call(-, value(my_i_start, lvl.Ti), getunit(ext)),
-                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl))),
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl))),
                 ),
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop, lvl.Ti),
@@ -300,7 +300,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, mode
                 ),
                 Phase(
                     stop = (ctx, ext) -> lvl.shape,
-                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl)))
                 )
             ])
         )

@@ -2,7 +2,7 @@
     SparseRLELevel{[Ti=Int], [Ptr, Left, Right]}(lvl, [dim]; [merge = true])
 
 The sparse RLE level represent runs of equivalent slices `A[:, ..., :, i]`
-which are not entirely [`default`](@ref). A sorted list is used to record the
+which are not entirely [`fill_value`](@ref). A sorted list is used to record the
 left and right endpoints of each run. Optionally, `dim` is the size of the last dimension.
 
 `Ti` is the type of the last tensor index, and `Tp` is the type used for
@@ -67,8 +67,8 @@ function countstored_level(lvl::SparseRLELevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1]-1)
 end
 
-redefault!(lvl::SparseRLELevel{Ti}, init) where {Ti} = 
-    SparseRLELevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.left, lvl.right, redefault!(lvl.buf, init); merge = getmerge(lvl))
+set_fill_value!(lvl::SparseRLELevel{Ti}, init) where {Ti} = 
+    SparseRLELevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.left, lvl.right, set_fill_value!(lvl.buf, init); merge = getmerge(lvl))
 
 Base.resize!(lvl::SparseRLELevel{Ti}, dims...) where {Ti} = 
     SparseRLELevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.left, lvl.right, resize!(lvl.buf, dims[1:end-1]...); merge = getmerge(lvl))
@@ -100,7 +100,7 @@ function Base.show(io::IO, lvl::SparseRLELevel{Ti, Ptr, Left, Right, merge, Lvl}
 end
 
 labelled_show(io::IO, fbr::SubFiber{<:SparseRLELevel}) =
-    print(io, "SparseRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+    print(io, "SparseRLE (", fill_value(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
 function labelled_children(fbr::SubFiber{<:SparseRLELevel})
     lvl = fbr.lvl
@@ -115,7 +115,7 @@ end
 @inline level_size(lvl::SparseRLELevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::SparseRLELevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
 @inline level_eltype(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, merge, Lvl}}) where {Ti, Ptr, Left, Right, merge, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, merge, Lvl}}) where {Ti, Ptr, Left, Right, merge, Lvl}= level_default(Lvl)
+@inline level_fill_value(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, merge, Lvl}}) where {Ti, Ptr, Left, Right, merge, Lvl}= level_fill_value(Lvl)
 data_rep_level(::Type{<:SparseRLELevel{Ti, Ptr, Left, Right, merge, Lvl}}) where {Ti, Ptr, Left, Right, merge, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseRLELevel})() = fbr
@@ -127,7 +127,7 @@ function (fbr::SubFiber{<:SparseRLELevel})(idxs...)
     r2 = searchsortedfirst(@view(lvl.right[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end])
     q = lvl.ptr[p] + first(r1) - 1
     fbr_2 = SubFiber(lvl.lvl, q)
-    r1 != r2 ? default(fbr_2) : fbr_2(idxs[1:end-1]...)
+    r1 != r2 ? fill_value(fbr_2) : fbr_2(idxs[1:end-1]...)
 end
 
 mutable struct VirtualSparseRLELevel <: AbstractVirtualLevel
@@ -229,7 +229,7 @@ function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualSparseRLELevel,
 end
 
 virtual_level_eltype(lvl::VirtualSparseRLELevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualSparseRLELevel) = virtual_level_default(lvl.lvl)
+virtual_level_fill_value(lvl::VirtualSparseRLELevel) = virtual_level_fill_value(lvl.lvl)
 
 function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseRLELevel, pos, init)
     Tp = postype(lvl)
@@ -291,7 +291,7 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseRLELevel, pos_st
     end)
     if lvl.merge
         lvl.buf = freeze_level!(ctx, lvl.buf, value(qos_stop))
-        lvl.lvl = declare_level!(ctx, lvl.lvl, literal(1), literal(virtual_level_default(lvl.buf)))
+        lvl.lvl = declare_level!(ctx, lvl.lvl, literal(1), literal(virtual_level_fill_value(lvl.buf)))
         unit = ctx(get_smallest_measure(virtual_level_size(ctx, lvl)[end]))
         p = freshen(ctx.code, :p)
         q = freshen(ctx.code, :q)
@@ -339,7 +339,7 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseRLELevel, pos_st
                         ctx_2.bindings[dst] = virtual(VirtualSubFiber(lvl.lvl, value(q_2, Tp)))
                         exts = virtual_level_size(ctx_2, lvl.buf)
                         inds = [index(freshen(ctx_2.code, :i, n)) for n = 1:length(exts)]
-                        prgm = assign(access(dst, updater, inds...), initwrite(virtual_level_default(lvl.lvl)), access(src, reader, inds...))
+                        prgm = assign(access(dst, updater, inds...), initwrite(virtual_level_fill_value(lvl.lvl)), access(src, reader, inds...))
                         for (ind, ext) in zip(inds, exts)
                             prgm = loop(ind, ext, prgm)
                         end
@@ -356,7 +356,7 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseRLELevel, pos_st
             $qos_stop = $q_2 - 1
         end)
         lvl.lvl = freeze_level!(ctx, lvl.lvl, value(qos_stop))
-        lvl.buf = declare_level!(ctx, lvl.buf, literal(1), literal(virtual_level_default(lvl.buf)))
+        lvl.buf = declare_level!(ctx, lvl.buf, literal(1), literal(virtual_level_fill_value(lvl.buf)))
         lvl.buf = freeze_level!(ctx, lvl.buf, literal(0))
         return lvl
     else
@@ -433,7 +433,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseRLELevel}, mode::Rea
                             body = (ctx) -> Sequence([
                                 Phase(
                                     stop = (ctx, ext) -> call(-, value(my_i_start), getunit(ext)),
-                                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl))),
+                                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl))),
                                 ),
                                 Phase(
                                     body = (ctx,ext) -> Run(
@@ -448,7 +448,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseRLELevel}, mode::Rea
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl)))
                 )
             ])
         )

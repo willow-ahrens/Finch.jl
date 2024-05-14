@@ -41,7 +41,7 @@ export Atomic, AtomicLevel
 export Pattern, PatternLevel
 export Scalar, SparseScalar, ShortCircuitScalar, SparseShortCircuitScalar
 export walk, gallop, follow, extrude, laminate
-export Tensor, pattern!, dropdefaults, dropdefaults!, redefault!
+export Tensor, pattern!, dropfills, dropfills!, set_fill_value!
 export diagmask, lotrimask, uptrimask, bandmask, chunkmask
 export scale, products, offset, permissive, protocolize, swizzle, toeplitz, window
 export PlusOneVector
@@ -50,7 +50,7 @@ export lazy, compute, tensordot, @einsum
 
 export choose, minby, maxby, overwrite, initwrite, filterop, d
 
-export default, AsArray
+export fill_value, AsArray
 
 export parallelAnalysis, ParallelAnalysisResults
 export parallel, realextent, extent, dimless

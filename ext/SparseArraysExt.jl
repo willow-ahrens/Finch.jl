@@ -3,7 +3,7 @@ module SparseArraysExt
 using Finch
 using Finch: AbstractCompiler, DefaultStyle, Extent
 using Finch: Unfurled, Furlable, Stepper, Jumper, Run, FillLeaf, Lookup, Simplify, Sequence, Phase, Thunk, Spike 
-using Finch: virtual_size, virtual_default, getstart, getstop, freshen, SwizzleArray
+using Finch: virtual_size, virtual_fill_value, getstart, getstop, freshen, SwizzleArray
 using Finch: FinchProtocolError
 using Finch.FinchNotation
 
@@ -27,12 +27,12 @@ end
 Construct a sparse matrix from a tensor or swizzle. May reuse the underlying storage if possible.
 """
 function SparseArrays.SparseMatrixCSC(arr::Union{Tensor, SwizzleArray})
-    default(arr) === zero(eltype(arr)) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero default values, was given $(default(arr)) as default"))
+    fill_value(arr) === zero(eltype(arr)) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero fill values, was given $(fill_value(arr)) as fill_value"))
     return SparseMatrixCSC(Tensor(Dense(SparseList(Element(0.0))), arr))
 end
 
 function SparseArrays.SparseMatrixCSC(arr::Tensor{<:Dense{Ti, <:SparseList{Ti, Ptr, Idx, <:Element{D, Tv}}}}) where {D, Ti, Ptr, Idx, Tv}
-    D === zero(Tv) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero default values, was given $D as default"))
+    D === zero(Tv) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero fill values, was given $D as fill_value"))
     return SparseMatrixCSC{Tv, Ti}(size(arr)..., arr.lvl.lvl.ptr, arr.lvl.lvl.idx, arr.lvl.lvl.lvl.val)
 end
 
@@ -145,7 +145,7 @@ end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseMatrixCSC) = virtual(x)
 
-Finch.virtual_default(ctx, arr::VirtualSparseMatrixCSC) = zero(arr.Tv)
+Finch.virtual_fill_value(ctx, arr::VirtualSparseMatrixCSC) = zero(arr.Tv)
 Finch.virtual_eltype(ctx, tns::VirtualSparseMatrixCSC) = tns.Tv
 
 """
@@ -154,12 +154,12 @@ Finch.virtual_eltype(ctx, tns::VirtualSparseMatrixCSC) = tns.Tv
 Construct a sparse matrix from a tensor or swizzle. May reuse the underlying storage if possible.
 """
 function SparseArrays.SparseVector(arr::Union{Tensor, SwizzleArray})
-    default(arr) === zero(eltype(arr)) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero default values, was given $(default(arr)) as default"))
+    fill_value(arr) === zero(eltype(arr)) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero fill values, was given $(fill_value(arr)) as fill_value"))
     return SparseVector(Tensor(SparseList(Element(0.0)), arr))
 end
 
 function SparseArrays.SparseVector(arr::Tensor{<:SparseList{Ti, Ptr, Idx, <:Element{D, Tv}}}) where {Ti, Ptr, Idx, Tv, D}
-    D === zero(Tv) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero default values, was given $D as default"))
+    D === zero(Tv) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero fill values, was given $D as fill_value"))
     return SparseVector{Tv, Ti}(size(arr)..., arr.lvl.idx, arr.lvl.lvl.val)
 end
 @kwdef mutable struct VirtualSparseVector
@@ -252,7 +252,7 @@ end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseVector) = virtual(x)
 
-Finch.virtual_default(ctx, arr::VirtualSparseVector) = zero(arr.Tv)
+Finch.virtual_fill_value(ctx, arr::VirtualSparseVector) = zero(arr.Tv)
 Finch.virtual_eltype(ctx, tns::VirtualSparseVector) = tns.Tv
 
 SparseArrays.nnz(fbr::Tensor) = countstored(fbr)

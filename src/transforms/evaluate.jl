@@ -55,9 +55,9 @@ end
 
 virtual_call(ctx, f, a...) = nothing
 
-function virtual_call(ctx, ::typeof(default), a) 
+function virtual_call(ctx, ::typeof(fill_value), a) 
     if haskey(ctx.bindings, getroot(a))
-        return virtual_default(ctx, a)
+        return virtual_fill_value(ctx, a)
     end
 end
 

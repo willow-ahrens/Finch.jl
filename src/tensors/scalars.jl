@@ -12,8 +12,8 @@ Scalar{D, Tv}() where {D, Tv} = Scalar{D, Tv}(D)
 @inline Base.axes(::Scalar) = ()
 @inline Base.eltype(::Scalar{D, Tv}) where {D, Tv} = Tv
 @inline Base.eltype(::Type{Scalar{D, Tv}}) where {D, Tv} = Tv
-@inline default(::Type{<:Scalar{D}}) where {D} = D
-@inline default(::Scalar{D}) where {D} = D
+@inline fill_value(::Type{<:Scalar{D}}) where {D} = D
+@inline fill_value(::Scalar{D}) where {D} = D
 Base.similar(tns::Scalar{D, Tv}) where {D, Tv} = Scalar{D, Tv}()
 
 (tns::Scalar)() = tns.val
@@ -42,7 +42,7 @@ virtual_moveto(ctx, lvl::VirtualScalar, arch) = lvl
 
 virtual_size(ctx, ::VirtualScalar) = ()
 
-virtual_default(ctx, tns::VirtualScalar) = tns.D
+virtual_fill_value(ctx, tns::VirtualScalar) = tns.D
 virtual_eltype(tns::VirtualScalar, ctx) = tns.Tv
 
 FinchNotation.finch_leaf(x::VirtualScalar) = virtual(x)
@@ -72,7 +72,7 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualScalar)
 end
 
 function short_circuit_cases(ctx, tns::VirtualScalar, op)
-    if isannihilator(ctx, virtual_default(ctx, tns), op)
+    if isannihilator(ctx, virtual_fill_value(ctx, tns), op)
         [:(tns.val == 0) => Simplify(FillLeaf(Null()))]
     else
         []
@@ -95,8 +95,8 @@ SparseScalar{D, Tv}(val) where {D, Tv} = SparseScalar{D, Tv}(val, true)
 @inline Base.axes(::SparseScalar) = ()
 @inline Base.eltype(::SparseScalar{D, Tv}) where {D, Tv} = Tv
 @inline Base.eltype(::Type{SparseScalar{D, Tv}}) where {D, Tv} = Tv
-@inline default(::Type{<:SparseScalar{D}}) where {D} = D
-@inline default(::SparseScalar{D}) where {D} = D
+@inline fill_value(::Type{<:SparseScalar{D}}) where {D} = D
+@inline fill_value(::SparseScalar{D}) where {D} = D
 Base.similar(tns::SparseScalar{D, Tv}) where {D, Tv} = SparseScalar{D, Tv}()
 
 (tns::SparseScalar)() = tns.val
@@ -126,7 +126,7 @@ end
 
 virtual_size(ctx, ::VirtualSparseScalar) = ()
 
-virtual_default(ctx, tns::VirtualSparseScalar) = tns.D
+virtual_fill_value(ctx, tns::VirtualSparseScalar) = tns.D
 virtual_eltype(tns::VirtualSparseScalar, ctx) = tns.Tv
 
 virtual_moveto(ctx, lvl::VirtualSparseScalar, arch) = lvl
@@ -182,8 +182,8 @@ ShortCircuitScalar{D, Tv}() where {D, Tv} = ShortCircuitScalar{D, Tv}(D)
 @inline Base.axes(::ShortCircuitScalar) = ()
 @inline Base.eltype(::ShortCircuitScalar{D, Tv}) where {D, Tv} = Tv
 @inline Base.eltype(::Type{ShortCircuitScalar{D, Tv}}) where {D, Tv} = Tv
-@inline default(::Type{<:ShortCircuitScalar{D}}) where {D} = D
-@inline default(::ShortCircuitScalar{D}) where {D} = D
+@inline fill_value(::Type{<:ShortCircuitScalar{D}}) where {D} = D
+@inline fill_value(::ShortCircuitScalar{D}) where {D} = D
 Base.similar(tns::ShortCircuitScalar{D, Tv}) where {D, Tv} = ShortCircuitScalar{D, Tv}()
 
 (tns::ShortCircuitScalar)() = tns.val
@@ -210,7 +210,7 @@ end
 
 virtual_size(ctx, ::VirtualShortCircuitScalar) = ()
 
-virtual_default(ctx, tns::VirtualShortCircuitScalar) = tns.D
+virtual_fill_value(ctx, tns::VirtualShortCircuitScalar) = tns.D
 virtual_eltype(tns::VirtualShortCircuitScalar, ctx) = tns.Tv
 
 FinchNotation.finch_leaf(x::VirtualShortCircuitScalar) = virtual(x)
@@ -261,8 +261,8 @@ SparseShortCircuitScalar{D, Tv}(val) where {D, Tv} = SparseShortCircuitScalar{D,
 @inline Base.axes(::SparseShortCircuitScalar) = ()
 @inline Base.eltype(::SparseShortCircuitScalar{D, Tv}) where {D, Tv} = Tv
 @inline Base.eltype(::Type{SparseShortCircuitScalar{D, Tv}}) where {D, Tv} = Tv
-@inline default(::Type{<:SparseShortCircuitScalar{D}}) where {D} = D
-@inline default(::SparseShortCircuitScalar{D}) where {D} = D
+@inline fill_value(::Type{<:SparseShortCircuitScalar{D}}) where {D} = D
+@inline fill_value(::SparseShortCircuitScalar{D}) where {D} = D
 Base.similar(tns::SparseShortCircuitScalar{D, Tv}) where {D, Tv} = SparseShortCircuitScalar{D, Tv}()
 
 (tns::SparseShortCircuitScalar)() = tns.val
@@ -292,7 +292,7 @@ end
 
 virtual_size(ctx, ::VirtualSparseShortCircuitScalar) = ()
 
-virtual_default(ctx, tns::VirtualSparseShortCircuitScalar) = tns.D
+virtual_fill_value(ctx, tns::VirtualSparseShortCircuitScalar) = tns.D
 virtual_eltype(tns::VirtualSparseShortCircuitScalar, ctx) = tns.Tv
 
 virtual_moveto(ctx, lvl::VirtualSparseShortCircuitScalar, arch) = lvl

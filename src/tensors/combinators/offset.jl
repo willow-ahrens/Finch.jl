@@ -62,7 +62,7 @@ function virtual_resize!(ctx::AbstractCompiler, arr::VirtualOffsetArray, dims...
     virtual_resize!(ctx, arr.body, dims_2...)
 end
 
-virtual_default(ctx::AbstractCompiler, arr::VirtualOffsetArray) = virtual_default(ctx, arr.body)
+virtual_fill_value(ctx::AbstractCompiler, arr::VirtualOffsetArray) = virtual_fill_value(ctx, arr.body)
 
 function instantiate(ctx, arr::VirtualOffsetArray, mode, protos)
     VirtualOffsetArray(instantiate(ctx, arr.body, mode, protos), arr.delta)

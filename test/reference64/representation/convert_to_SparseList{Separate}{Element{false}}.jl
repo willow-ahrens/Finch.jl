@@ -36,7 +36,7 @@ quote
                     Finch.resize_if_smaller!(tmp_lvl_idx, tmp_lvl_qos_stop)
                     Finch.resize_if_smaller!(tmp_lvl_val, tmp_lvl_qos_stop)
                     for pos = tmp_lvl_qos:tmp_lvl_qos_stop
-                        pointer_to_lvl = similar_level(tmp_lvl_2.lvl, level_default(typeof(tmp_lvl_2.lvl)), level_eltype(typeof(tmp_lvl_2.lvl)))
+                        pointer_to_lvl = similar_level(tmp_lvl_2.lvl, level_fill_value(typeof(tmp_lvl_2.lvl)), level_eltype(typeof(tmp_lvl_2.lvl)))
                         pointer_to_lvl_val = pointer_to_lvl.val
                         Finch.resize_if_smaller!(pointer_to_lvl_val, 1)
                         Finch.fill_range!(pointer_to_lvl_val, false, 1, 1)
@@ -63,7 +63,7 @@ quote
                         Finch.resize_if_smaller!(tmp_lvl_idx, tmp_lvl_qos_stop)
                         Finch.resize_if_smaller!(tmp_lvl_val, tmp_lvl_qos_stop)
                         for pos_2 = tmp_lvl_qos:tmp_lvl_qos_stop
-                            pointer_to_lvl_5 = similar_level(tmp_lvl_2.lvl, level_default(typeof(tmp_lvl_2.lvl)), level_eltype(typeof(tmp_lvl_2.lvl)))
+                            pointer_to_lvl_5 = similar_level(tmp_lvl_2.lvl, level_fill_value(typeof(tmp_lvl_2.lvl)), level_eltype(typeof(tmp_lvl_2.lvl)))
                             pointer_to_lvl_5_val = pointer_to_lvl_5.val
                             Finch.resize_if_smaller!(pointer_to_lvl_5_val, 1)
                             Finch.fill_range!(pointer_to_lvl_5_val, false, 1, 1)

@@ -45,7 +45,7 @@ end
 
 pattern!(lvl::ElementLevel{D, Tv, Tp}) where  {D, Tv, Tp} =
     Pattern{Tp}()
-redefault!(lvl::ElementLevel{D, Tv, Tp}, init) where {D, Tv, Tp} = 
+set_fill_value!(lvl::ElementLevel{D, Tv, Tp}, init) where {D, Tv, Tp} = 
     ElementLevel{init, Tv, Tp}(lvl.val)
 Base.resize!(lvl::ElementLevel) = lvl
 
@@ -68,7 +68,7 @@ labelled_show(io::IO, fbr::SubFiber{<:ElementLevel}) =
 @inline level_size(::ElementLevel) = ()
 @inline level_axes(::ElementLevel) = ()
 @inline level_eltype(::Type{<:ElementLevel{D, Tv}}) where {D, Tv} = Tv
-@inline level_default(::Type{<:ElementLevel{D}}) where {D} = D
+@inline level_fill_value(::Type{<:ElementLevel{D}}) where {D} = D
 data_rep_level(::Type{<:ElementLevel{D, Tv}}) where {D, Tv} = ElementData(D, Tv)
 
 (fbr::Tensor{<:ElementLevel})() = SubFiber(fbr.lvl, 1)()
@@ -110,12 +110,12 @@ Base.summary(lvl::VirtualElementLevel) = "Element($(lvl.D))"
 virtual_level_resize!(ctx, lvl::VirtualElementLevel) = lvl
 virtual_level_size(ctx, ::VirtualElementLevel) = ()
 virtual_level_eltype(lvl::VirtualElementLevel) = lvl.Tv
-virtual_level_default(lvl::VirtualElementLevel) = lvl.D
+virtual_level_fill_value(lvl::VirtualElementLevel) = lvl.D
 
 postype(lvl::VirtualElementLevel) = lvl.Tp
 
 function declare_level!(ctx, lvl::VirtualElementLevel, pos, init)
-    init == literal(lvl.D) || throw(FinchProtocolError("Cannot initialize Element Levels to non-default values (have $init expected $(lvl.D))"))
+    init == literal(lvl.D) || throw(FinchProtocolError("Cannot initialize Element Levels to non-fill values (have $init expected $(lvl.D))"))
     lvl
 end
 

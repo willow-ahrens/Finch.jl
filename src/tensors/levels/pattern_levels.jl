@@ -1,7 +1,7 @@
 """
     PatternLevel{[Tp=Int]}()
 
-A subfiber of a pattern level is the Boolean value true, but it's `default` is
+A subfiber of a pattern level is the Boolean value true, but it's `fill_value` is
 false. PatternLevels are used to create tensors that represent which values
 are stored by other fibers. See [`pattern!`](@ref) for usage examples.
 
@@ -38,7 +38,7 @@ end
 @inline level_size(::PatternLevel) = ()
 @inline level_axes(::PatternLevel) = ()
 @inline level_eltype(::Type{<:PatternLevel}) = Bool
-@inline level_default(::Type{<:PatternLevel}) = false
+@inline level_fill_value(::Type{<:PatternLevel}) = false
 (fbr::AbstractFiber{<:PatternLevel})() = true
 data_rep_level(::Type{<:PatternLevel}) = ElementData(false, Bool)
 
@@ -53,7 +53,7 @@ end
     pattern!(fbr)
 
 Return the pattern of `fbr`. That is, return a tensor which is true wherever
-`fbr` is structurally unequal to it's default. May reuse memory and render the
+`fbr` is structurally unequal to its fill_value. May reuse memory and render the
 original tensor unusable when modified.
 
 ```jldoctest
@@ -93,7 +93,7 @@ virtualize(ctx, ex, ::Type{PatternLevel{Tp}}) where {Tp} = VirtualPatternLevel(T
 
 virtual_level_resize!(ctx, lvl::VirtualPatternLevel) = lvl
 virtual_level_size(ctx, ::VirtualPatternLevel) = ()
-virtual_level_default(::VirtualPatternLevel) = false
+virtual_level_fill_value(::VirtualPatternLevel) = false
 virtual_level_eltype(::VirtualPatternLevel) = Bool
 
 postype(lvl::VirtualPatternLevel) = lvl.Tp

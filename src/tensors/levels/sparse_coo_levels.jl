@@ -2,7 +2,7 @@
     SparseCOOLevel{[N], [TI=Tuple{Int...}], [Ptr, Tbl]}(lvl, [dims])
 
 A subfiber of a sparse level does not need to represent slices which are
-entirely [`default`](@ref). Instead, only potentially non-default slices are
+entirely [`fill_value`](@ref). Instead, only potentially non-fill slices are
 stored as subfibers in `lvl`. The sparse coo level corresponds to `N` indices in
 the subfiber, so fibers in the sublevel are the slices `A[:, ..., :, i_1, ...,
 i_n]`.  A set of `N` lists (one for each index) are used to record which slices
@@ -77,8 +77,8 @@ function countstored_level(lvl::SparseCOOLevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
 
-redefault!(lvl::SparseCOOLevel{N, TI}, init) where {N, TI} = 
-    SparseCOOLevel{N, TI}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl)
+set_fill_value!(lvl::SparseCOOLevel{N, TI}, init) where {N, TI} = 
+    SparseCOOLevel{N, TI}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl)
 
 Base.resize!(lvl::SparseCOOLevel{N, TI}, dims...) where {N, TI} = 
     SparseCOOLevel{N, TI}(resize!(lvl.lvl, dims[1:end-N]...), (dims[end-N + 1:end]...,), lvl.ptr, lvl.tbl)
@@ -108,7 +108,7 @@ function Base.show(io::IO, lvl::SparseCOOLevel{N, TI}) where {N, TI}
 end
 
 labelled_show(io::IO, fbr::SubFiber{<:SparseCOOLevel{N}}) where {N} =
-    print(io, "SparseCOO{", N, "} (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+    print(io, "SparseCOO{", N, "} (", fill_value(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
 function labelled_children(fbr::SubFiber{<:SparseCOOLevel{N}}) where {N}
     lvl = fbr.lvl
@@ -123,7 +123,7 @@ end
 @inline level_size(lvl::SparseCOOLevel) = (level_size(lvl.lvl)..., lvl.shape...)
 @inline level_axes(lvl::SparseCOOLevel) = (level_axes(lvl.lvl)..., map(Base.OneTo, lvl.shape)...)
 @inline level_eltype(::Type{<:SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}}) where {N, TI, Ptr, Tbl, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}}) where {N, TI, Ptr, Tbl, Lvl} = level_default(Lvl)
+@inline level_fill_value(::Type{<:SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}}) where {N, TI, Ptr, Tbl, Lvl} = level_fill_value(Lvl)
 data_rep_level(::Type{<:SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}}) where {N, TI, Ptr, Tbl, Lvl} = (SparseData^N)(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseCOOLevel})() = fbr
@@ -136,7 +136,7 @@ function (fbr::SubFiber{<:SparseCOOLevel{N, TI}})(idxs...) where {N, TI}
     for n = N:-1:1
         target = searchsorted(view(lvl.tbl[n], target), idx[n]) .+ (first(target) - 1)
     end
-    isempty(target) ? default(fbr) : SubFiber(lvl.lvl, first(target))(idxs[1:end-N]...)
+    isempty(target) ? fill_value(fbr) : SubFiber(lvl.lvl, first(target))(idxs[1:end-N]...)
 end
 
 mutable struct VirtualSparseCOOLevel <: AbstractVirtualLevel
@@ -209,7 +209,7 @@ function virtual_level_resize!(ctx::AbstractCompiler, lvl::VirtualSparseCOOLevel
 end
 
 virtual_level_eltype(lvl::VirtualSparseCOOLevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualSparseCOOLevel) = virtual_level_default(lvl.lvl)
+virtual_level_fill_value(lvl::VirtualSparseCOOLevel) = virtual_level_fill_value(lvl.lvl)
 
 postype(lvl::VirtualSparseCOOLevel) = postype(lvl.lvl)
 
@@ -334,7 +334,7 @@ function instantiate(ctx, trv::SparseCOOWalkTraversal, mode::Reader, subprotos, 
                                 preamble = :($my_i = $(lvl.tbl[R])[$my_q]),
                                 stop =  (ctx, ext) -> value(my_i),
                                 chunk = Spike(
-                                    body = FillLeaf(virtual_level_default(lvl)),
+                                    body = FillLeaf(virtual_level_fill_value(lvl)),
                                     tail = instantiate(ctx, VirtualSubFiber(lvl.lvl, my_q), mode, subprotos),
                                 ),
                                 next = (ctx, ext) -> :($my_q += $(Tp(1)))
@@ -355,7 +355,7 @@ function instantiate(ctx, trv::SparseCOOWalkTraversal, mode::Reader, subprotos, 
                                 end,
                                 stop = (ctx, ext) -> value(my_i),
                                 chunk = Spike(
-                                    body = FillLeaf(virtual_level_default(lvl)),
+                                    body = FillLeaf(virtual_level_fill_value(lvl)),
                                     tail = instantiate(ctx, SparseCOOWalkTraversal(lvl, R - 1, value(my_q, Tp), value(my_q_step, Tp)), mode, subprotos),
                                 ),
                                 next = (ctx, ext) -> :($my_q = $my_q_step)
@@ -363,7 +363,7 @@ function instantiate(ctx, trv::SparseCOOWalkTraversal, mode::Reader, subprotos, 
                         end
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl)))
                 )
             ])
         )

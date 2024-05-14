@@ -344,7 +344,7 @@ function (ctx::SuitableRep)(ex)
         rep = ctx(ex.arg)
         idxs = getfields(ex.arg)
         #first reduce dropped dimensions
-        rep = aggregate_rep(initwrite(default(rep)), default(rep), rep, findall(idx -> idx in setdiff(idxs, ex.idxs), idxs))
+        rep = aggregate_rep(initwrite(fill_value(rep)), fill_value(rep), rep, findall(idx -> idx in setdiff(idxs, ex.idxs), idxs))
         #then permute remaining dimensions to match
         perm = sortperm(intersect(idxs, ex.idxs), by=idx->findfirst(isequal(idx), ex.idxs))
         rep = permutedims_rep(rep, perm)
