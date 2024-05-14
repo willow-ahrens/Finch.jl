@@ -1,20 +1,20 @@
-mutable struct Scalar{D, Tv} <: AbstractTensor
+mutable struct Scalar{Vf, Tv} <: AbstractTensor
     val::Tv
 end
 
-Scalar(D, args...) = Scalar{D}(args...)
-Scalar{D}(args...) where {D} = Scalar{D, typeof(D)}(args...)
-Scalar{D, Tv}() where {D, Tv} = Scalar{D, Tv}(D)
+Scalar(Vf, args...) = Scalar{Vf}(args...)
+Scalar{Vf}(args...) where {Vf} = Scalar{Vf, typeof(Vf)}(args...)
+Scalar{Vf, Tv}() where {Vf, Tv} = Scalar{Vf, Tv}(Vf)
 
 @inline Base.ndims(::Type{<:Scalar}) = 0
 @inline Base.ndims(::Scalar) = 0
 @inline Base.size(::Scalar) = ()
 @inline Base.axes(::Scalar) = ()
-@inline Base.eltype(::Scalar{D, Tv}) where {D, Tv} = Tv
-@inline Base.eltype(::Type{Scalar{D, Tv}}) where {D, Tv} = Tv
-@inline default(::Type{<:Scalar{D}}) where {D} = D
-@inline default(::Scalar{D}) where {D} = D
-Base.similar(tns::Scalar{D, Tv}) where {D, Tv} = Scalar{D, Tv}()
+@inline Base.eltype(::Scalar{Vf, Tv}) where {Vf, Tv} = Tv
+@inline Base.eltype(::Type{Scalar{Vf, Tv}}) where {Vf, Tv} = Tv
+@inline fill_value(::Type{<:Scalar{Vf}}) where {Vf} = Vf
+@inline fill_value(::Scalar{Vf}) where {Vf} = Vf
+Base.similar(tns::Scalar{Vf, Tv}) where {Vf, Tv} = Scalar{Vf, Tv}()
 
 (tns::Scalar)() = tns.val
 @inline Base.getindex(tns::Scalar) = tns.val
@@ -22,27 +22,27 @@ Base.similar(tns::Scalar{D, Tv}) where {D, Tv} = Scalar{D, Tv}()
 struct VirtualScalar
     ex
     Tv
-    D
+    Vf
     name
     val
 end
 
 lower(ctx::AbstractCompiler, tns::VirtualScalar, ::DefaultStyle) = tns.ex
-function virtualize(ctx, ex, ::Type{Scalar{D, Tv}}, tag) where {D, Tv}
+function virtualize(ctx, ex, ::Type{Scalar{Vf, Tv}}, tag) where {Vf, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
     push!(ctx.preamble, quote
         $sym = $ex
         $val = $sym.val
     end)
-    VirtualScalar(sym, Tv, D, tag, val)
+    VirtualScalar(sym, Tv, Vf, tag, val)
 end
 
 virtual_moveto(ctx, lvl::VirtualScalar, arch) = lvl
 
 virtual_size(ctx, ::VirtualScalar) = ()
 
-virtual_default(ctx, tns::VirtualScalar) = tns.D
+virtual_fill_value(ctx, tns::VirtualScalar) = tns.Vf
 virtual_eltype(tns::VirtualScalar, ctx) = tns.Tv
 
 FinchNotation.finch_leaf(x::VirtualScalar) = virtual(x)
@@ -72,32 +72,32 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualScalar)
 end
 
 function short_circuit_cases(ctx, tns::VirtualScalar, op)
-    if isannihilator(ctx, virtual_default(ctx, tns), op)
-        [:(tns.val == 0) => Simplify(Fill(Null()))]
+    if isannihilator(ctx, virtual_fill_value(ctx, tns), op)
+        [:(tns.val == 0) => Simplify(FillLeaf(Null()))]
     else
         []
     end
 end
 
-mutable struct SparseScalar{D, Tv} <: AbstractTensor
+mutable struct SparseScalar{Vf, Tv} <: AbstractTensor
     val::Tv
     dirty::Bool
 end
 
-SparseScalar(D, args...) = SparseScalar{D}(args...)
-SparseScalar{D}(args...) where {D} = SparseScalar{D, typeof(D)}(args...)
-SparseScalar{D, Tv}() where {D, Tv} = SparseScalar{D, Tv}(D, false)
-SparseScalar{D, Tv}(val) where {D, Tv} = SparseScalar{D, Tv}(val, true)
+SparseScalar(Vf, args...) = SparseScalar{Vf}(args...)
+SparseScalar{Vf}(args...) where {Vf} = SparseScalar{Vf, typeof(Vf)}(args...)
+SparseScalar{Vf, Tv}() where {Vf, Tv} = SparseScalar{Vf, Tv}(Vf, false)
+SparseScalar{Vf, Tv}(val) where {Vf, Tv} = SparseScalar{Vf, Tv}(val, true)
 
 @inline Base.ndims(::Type{<:SparseScalar}) = 0
 @inline Base.ndims(::SparseScalar) = 0
 @inline Base.size(::SparseScalar) = ()
 @inline Base.axes(::SparseScalar) = ()
-@inline Base.eltype(::SparseScalar{D, Tv}) where {D, Tv} = Tv
-@inline Base.eltype(::Type{SparseScalar{D, Tv}}) where {D, Tv} = Tv
-@inline default(::Type{<:SparseScalar{D}}) where {D} = D
-@inline default(::SparseScalar{D}) where {D} = D
-Base.similar(tns::SparseScalar{D, Tv}) where {D, Tv} = SparseScalar{D, Tv}()
+@inline Base.eltype(::SparseScalar{Vf, Tv}) where {Vf, Tv} = Tv
+@inline Base.eltype(::Type{SparseScalar{Vf, Tv}}) where {Vf, Tv} = Tv
+@inline fill_value(::Type{<:SparseScalar{Vf}}) where {Vf} = Vf
+@inline fill_value(::SparseScalar{Vf}) where {Vf} = Vf
+Base.similar(tns::SparseScalar{Vf, Tv}) where {Vf, Tv} = SparseScalar{Vf, Tv}()
 
 (tns::SparseScalar)() = tns.val
 @inline Base.getindex(tns::SparseScalar) = tns.val
@@ -105,14 +105,14 @@ Base.similar(tns::SparseScalar{D, Tv}) where {D, Tv} = SparseScalar{D, Tv}()
 struct VirtualSparseScalar
     ex
     Tv
-    D
+    Vf
     name
     val
     dirty
 end
 
-lower(ctx::AbstractCompiler, tns::VirtualSparseScalar, ::DefaultStyle) = :($SparseScalar{$(tns.D), $(tns.Tv)}($(tns.val), $(tns.dirty)))
-function virtualize(ctx, ex, ::Type{SparseScalar{D, Tv}}, tag) where {D, Tv}
+lower(ctx::AbstractCompiler, tns::VirtualSparseScalar, ::DefaultStyle) = :($SparseScalar{$(tns.Vf), $(tns.Tv)}($(tns.val), $(tns.dirty)))
+function virtualize(ctx, ex, ::Type{SparseScalar{Vf, Tv}}, tag) where {Vf, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
     dirty = Symbol(tag, :_dirty) #TODO hmm this is risky
@@ -121,12 +121,12 @@ function virtualize(ctx, ex, ::Type{SparseScalar{D, Tv}}, tag) where {D, Tv}
         $val = $sym.val
         $dirty = $sym.dirty
     end)
-    VirtualSparseScalar(sym, Tv, D, tag, val, dirty)
+    VirtualSparseScalar(sym, Tv, Vf, tag, val, dirty)
 end
 
 virtual_size(ctx, ::VirtualSparseScalar) = ()
 
-virtual_default(ctx, tns::VirtualSparseScalar) = tns.D
+virtual_fill_value(ctx, tns::VirtualSparseScalar) = tns.Vf
 virtual_eltype(tns::VirtualSparseScalar, ctx) = tns.Tv
 
 virtual_moveto(ctx, lvl::VirtualSparseScalar, arch) = lvl
@@ -154,7 +154,7 @@ instantiate(ctx, tns::VirtualSparseScalar, mode::Updater, subprotos) = tns
 function instantiate(ctx, tns::VirtualSparseScalar, mode::Reader, subprotos)
     Switch(
         tns.dirty => tns,
-        true => Simplify(Fill(tns.D)),
+        true => Simplify(FillLeaf(tns.Vf)),
     )
 end
 
@@ -168,23 +168,23 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualSparseScalar)
     return tns.val
 end
 
-mutable struct ShortCircuitScalar{D, Tv} <: AbstractTensor
+mutable struct ShortCircuitScalar{Vf, Tv} <: AbstractTensor
     val::Tv
 end
 
-ShortCircuitScalar(D, args...) = ShortCircuitScalar{D}(args...)
-ShortCircuitScalar{D}(args...) where {D} = ShortCircuitScalar{D, typeof(D)}(args...)
-ShortCircuitScalar{D, Tv}() where {D, Tv} = ShortCircuitScalar{D, Tv}(D)
+ShortCircuitScalar(Vf, args...) = ShortCircuitScalar{Vf}(args...)
+ShortCircuitScalar{Vf}(args...) where {Vf} = ShortCircuitScalar{Vf, typeof(Vf)}(args...)
+ShortCircuitScalar{Vf, Tv}() where {Vf, Tv} = ShortCircuitScalar{Vf, Tv}(Vf)
 
 @inline Base.ndims(::Type{<:ShortCircuitScalar}) = 0
 @inline Base.ndims(::ShortCircuitScalar) = 0
 @inline Base.size(::ShortCircuitScalar) = ()
 @inline Base.axes(::ShortCircuitScalar) = ()
-@inline Base.eltype(::ShortCircuitScalar{D, Tv}) where {D, Tv} = Tv
-@inline Base.eltype(::Type{ShortCircuitScalar{D, Tv}}) where {D, Tv} = Tv
-@inline default(::Type{<:ShortCircuitScalar{D}}) where {D} = D
-@inline default(::ShortCircuitScalar{D}) where {D} = D
-Base.similar(tns::ShortCircuitScalar{D, Tv}) where {D, Tv} = ShortCircuitScalar{D, Tv}()
+@inline Base.eltype(::ShortCircuitScalar{Vf, Tv}) where {Vf, Tv} = Tv
+@inline Base.eltype(::Type{ShortCircuitScalar{Vf, Tv}}) where {Vf, Tv} = Tv
+@inline fill_value(::Type{<:ShortCircuitScalar{Vf}}) where {Vf} = Vf
+@inline fill_value(::ShortCircuitScalar{Vf}) where {Vf} = Vf
+Base.similar(tns::ShortCircuitScalar{Vf, Tv}) where {Vf, Tv} = ShortCircuitScalar{Vf, Tv}()
 
 (tns::ShortCircuitScalar)() = tns.val
 @inline Base.getindex(tns::ShortCircuitScalar) = tns.val
@@ -192,25 +192,25 @@ Base.similar(tns::ShortCircuitScalar{D, Tv}) where {D, Tv} = ShortCircuitScalar{
 struct VirtualShortCircuitScalar
     ex
     Tv
-    D
+    Vf
     name
     val
 end
 
-lower(ctx::AbstractCompiler, tns::VirtualShortCircuitScalar, ::DefaultStyle) = :($ShortCircuitScalar{$(tns.D), $(tns.Tv)}($(tns.val)))
-function virtualize(ctx, ex, ::Type{ShortCircuitScalar{D, Tv}}, tag) where {D, Tv}
+lower(ctx::AbstractCompiler, tns::VirtualShortCircuitScalar, ::DefaultStyle) = :($ShortCircuitScalar{$(tns.Vf), $(tns.Tv)}($(tns.val)))
+function virtualize(ctx, ex, ::Type{ShortCircuitScalar{Vf, Tv}}, tag) where {Vf, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
     push!(ctx.preamble, quote
         $sym = $ex
         $val = $sym.val
     end)
-    VirtualShortCircuitScalar(sym, Tv, D, tag, val)
+    VirtualShortCircuitScalar(sym, Tv, Vf, tag, val)
 end
 
 virtual_size(ctx, ::VirtualShortCircuitScalar) = ()
 
-virtual_default(ctx, tns::VirtualShortCircuitScalar) = tns.D
+virtual_fill_value(ctx, tns::VirtualShortCircuitScalar) = tns.Vf
 virtual_eltype(tns::VirtualShortCircuitScalar, ctx) = tns.Tv
 
 FinchNotation.finch_leaf(x::VirtualShortCircuitScalar) = virtual(x)
@@ -242,28 +242,28 @@ end
 virtual_moveto(ctx, lvl::VirtualShortCircuitScalar, arch) = lvl
 
 function short_circuit_cases(ctx, tns::VirtualShortCircuitScalar, op)
-    [:(Finch.isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Simplify(Fill(Null()))]
+    [:(Finch.isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Simplify(FillLeaf(Null()))]
 end
 
-mutable struct SparseShortCircuitScalar{D, Tv} <: AbstractTensor
+mutable struct SparseShortCircuitScalar{Vf, Tv} <: AbstractTensor
     val::Tv
     dirty::Bool
 end
 
-SparseShortCircuitScalar(D, args...) = SparseShortCircuitScalar{D}(args...)
-SparseShortCircuitScalar{D}(args...) where {D} = SparseShortCircuitScalar{D, typeof(D)}(args...)
-SparseShortCircuitScalar{D, Tv}() where {D, Tv} = SparseShortCircuitScalar{D, Tv}(D, false)
-SparseShortCircuitScalar{D, Tv}(val) where {D, Tv} = SparseShortCircuitScalar{D, Tv}(val, true)
+SparseShortCircuitScalar(Vf, args...) = SparseShortCircuitScalar{Vf}(args...)
+SparseShortCircuitScalar{Vf}(args...) where {Vf} = SparseShortCircuitScalar{Vf, typeof(Vf)}(args...)
+SparseShortCircuitScalar{Vf, Tv}() where {Vf, Tv} = SparseShortCircuitScalar{Vf, Tv}(Vf, false)
+SparseShortCircuitScalar{Vf, Tv}(val) where {Vf, Tv} = SparseShortCircuitScalar{Vf, Tv}(val, true)
 
 @inline Base.ndims(::Type{<:SparseShortCircuitScalar}) = 0
 @inline Base.ndims(::SparseShortCircuitScalar) = 0
 @inline Base.size(::SparseShortCircuitScalar) = ()
 @inline Base.axes(::SparseShortCircuitScalar) = ()
-@inline Base.eltype(::SparseShortCircuitScalar{D, Tv}) where {D, Tv} = Tv
-@inline Base.eltype(::Type{SparseShortCircuitScalar{D, Tv}}) where {D, Tv} = Tv
-@inline default(::Type{<:SparseShortCircuitScalar{D}}) where {D} = D
-@inline default(::SparseShortCircuitScalar{D}) where {D} = D
-Base.similar(tns::SparseShortCircuitScalar{D, Tv}) where {D, Tv} = SparseShortCircuitScalar{D, Tv}()
+@inline Base.eltype(::SparseShortCircuitScalar{Vf, Tv}) where {Vf, Tv} = Tv
+@inline Base.eltype(::Type{SparseShortCircuitScalar{Vf, Tv}}) where {Vf, Tv} = Tv
+@inline fill_value(::Type{<:SparseShortCircuitScalar{Vf}}) where {Vf} = Vf
+@inline fill_value(::SparseShortCircuitScalar{Vf}) where {Vf} = Vf
+Base.similar(tns::SparseShortCircuitScalar{Vf, Tv}) where {Vf, Tv} = SparseShortCircuitScalar{Vf, Tv}()
 
 (tns::SparseShortCircuitScalar)() = tns.val
 @inline Base.getindex(tns::SparseShortCircuitScalar) = tns.val
@@ -271,14 +271,14 @@ Base.similar(tns::SparseShortCircuitScalar{D, Tv}) where {D, Tv} = SparseShortCi
 struct VirtualSparseShortCircuitScalar
     ex
     Tv
-    D
+    Vf
     name
     val
     dirty
 end
 
-lower(ctx::AbstractCompiler, tns::VirtualSparseShortCircuitScalar, ::DefaultStyle) = :($SparseShortCircuitScalar{$(tns.D), $(tns.Tv)}($(tns.val), $(tns.dirty)))
-function virtualize(ctx, ex, ::Type{SparseShortCircuitScalar{D, Tv}}, tag) where {D, Tv}
+lower(ctx::AbstractCompiler, tns::VirtualSparseShortCircuitScalar, ::DefaultStyle) = :($SparseShortCircuitScalar{$(tns.Vf), $(tns.Tv)}($(tns.val), $(tns.dirty)))
+function virtualize(ctx, ex, ::Type{SparseShortCircuitScalar{Vf, Tv}}, tag) where {Vf, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
     dirty = Symbol(tag, :_dirty) #TODO hmm this is risky
@@ -287,12 +287,12 @@ function virtualize(ctx, ex, ::Type{SparseShortCircuitScalar{D, Tv}}, tag) where
         $val = $sym.val
         $dirty = $sym.dirty
     end)
-    VirtualSparseShortCircuitScalar(sym, Tv, D, tag, val, dirty)
+    VirtualSparseShortCircuitScalar(sym, Tv, Vf, tag, val, dirty)
 end
 
 virtual_size(ctx, ::VirtualSparseShortCircuitScalar) = ()
 
-virtual_default(ctx, tns::VirtualSparseShortCircuitScalar) = tns.D
+virtual_fill_value(ctx, tns::VirtualSparseShortCircuitScalar) = tns.Vf
 virtual_eltype(tns::VirtualSparseShortCircuitScalar, ctx) = tns.Tv
 
 virtual_moveto(ctx, lvl::VirtualSparseShortCircuitScalar, arch) = lvl
@@ -320,7 +320,7 @@ instantiate(ctx, tns::VirtualSparseShortCircuitScalar, mode::Updater, subprotos)
 function instantiate(ctx, tns::VirtualSparseShortCircuitScalar, mode::Reader, subprotos)
     Switch([
         value(tns.dirty, Bool) => tns,
-        true => Simplify(Fill(tns.D)),
+        true => Simplify(FillLeaf(tns.Vf)),
     ])
 end
 
@@ -335,5 +335,5 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualSparseShortCircui
 end
 
 function short_circuit_cases(ctx, tns::VirtualSparseShortCircuitScalar, op)
-    [:(Finch.isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Simplify(Fill(Null()))]
+    [:(Finch.isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Simplify(FillLeaf(Null()))]
 end

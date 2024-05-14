@@ -2,9 +2,9 @@
     SparsePointLevel{[Ti=Int], [Ptr, Idx]}(lvl, [dim])
 
 A subfiber of a SparsePoint level does not need to represent slices `A[:, ..., :, i]`
-which are entirely [`default`](@ref). Instead, only potentially non-default
+which are entirely [`fill_value`](@ref). Instead, only potentially non-fill
 slices are stored as subfibers in `lvl`. A main difference compared to SparseList 
-level is that SparsePoint level only stores a 'single' non-default slice. It emits
+level is that SparsePoint level only stores a 'single' non-fill slice. It emits
 an error if the program tries to write multiple (>=2) coordinates into SparsePoint.
 
 `Ti` is the type of the last tensor index. The types `Ptr` and `Idx` are the 
@@ -72,8 +72,8 @@ end
 pattern!(lvl::SparsePointLevel{Ti}) where {Ti} = 
     SparsePointLevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.idx)
 
-redefault!(lvl::SparsePointLevel{Ti}, init) where {Ti} = 
-    SparsePointLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx)
+set_fill_value!(lvl::SparsePointLevel{Ti}, init) where {Ti} = 
+    SparsePointLevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx)
 
 Base.resize!(lvl::SparsePointLevel{Ti}, dims...) where {Ti} = 
     SparsePointLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.idx)
@@ -99,7 +99,7 @@ function Base.show(io::IO, lvl::SparsePointLevel{Ti, Ptr, Idx, Lvl}) where {Ti, 
 end
 
 labelled_show(io::IO, fbr::SubFiber{<:SparsePointLevel}) =
-    print(io, "SparsePoint (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+    print(io, "SparsePoint (", fill_value(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
 function labelled_children(fbr::SubFiber{<:SparsePointLevel})
     lvl = fbr.lvl
@@ -115,7 +115,7 @@ end
 @inline level_size(lvl::SparsePointLevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::SparsePointLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
 @inline level_eltype(::Type{<:SparsePointLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparsePointLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = level_default(Lvl)
+@inline level_fill_value(::Type{<:SparsePointLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = level_fill_value(Lvl)
 data_rep_level(::Type{<:SparsePointLevel{Ti, Ptr, Idx, Lvl}}) where {Ti, Ptr, Idx, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparsePointLevel})() = fbr
@@ -126,7 +126,7 @@ function (fbr::SubFiber{<:SparsePointLevel{Ti}})(idxs...) where {Ti}
     r = searchsorted(@view(lvl.idx[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end])
     q = lvl.ptr[p] + first(r) - 1
     fbr_2 = SubFiber(lvl.lvl, q)
-    length(r) == 0 ? default(fbr_2) : fbr_2(idxs[1:end-1]...)
+    length(r) == 0 ? fill_value(fbr_2) : fbr_2(idxs[1:end-1]...)
 end
 
 mutable struct VirtualSparsePointLevel <: AbstractVirtualLevel
@@ -193,12 +193,12 @@ function virtual_level_resize!(ctx, lvl::VirtualSparsePointLevel, dims...)
 end
 
 virtual_level_eltype(lvl::VirtualSparsePointLevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualSparsePointLevel) = virtual_level_default(lvl.lvl)
+virtual_level_fill_value(lvl::VirtualSparsePointLevel) = virtual_level_fill_value(lvl.lvl)
 
 postype(lvl::VirtualSparsePointLevel) = postype(lvl.lvl)
 
 function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparsePointLevel, pos, init)
-    #TODO check that init == default
+    #TODO check that init == fill_value
     Ti = lvl.Ti
     Tp = postype(lvl)
     push!(ctx.code.preamble, quote
@@ -301,12 +301,12 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparsePointLevel}, mode::R
                     start = (ctx, ext) -> literal(lvl.Ti(1)),
                     stop = (ctx, ext) -> value(my_i),
                     body = (ctx, ext) -> truncate(ctx, Spike(
-                            body = Fill(virtual_level_default(lvl)),
+                            body = FillLeaf(virtual_level_fill_value(lvl)),
                             tail = instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Ti)), mode, subprotos)), similar_extent(ext, getstart(ext), value(my_i)), ext)
                 ),
                 Phase(
                     stop = (ctx, ext) -> lvl.shape,
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl)))
                 )
             ])
 

@@ -5,7 +5,7 @@
     exts = Expr(:block, (:($idx = _) for idx in reverse(idxs))...)
     return quote
         @finch mode=:fast begin
-            dst .= $(default(dst))
+            dst .= $(fill_value(dst))
             $(Expr(:for, exts, quote
                 dst[$(idxs...)] = src[$(idxs...)]
             end))
@@ -59,32 +59,32 @@ function Base.permutedims(src::AbstractTensor, perm)
 end
 
 """
-    dropdefaults(src)
+    dropfills(src)
 
-Drop the default values from `src` and return a new tensor with the same shape and
+Drop the fill values from `src` and return a new tensor with the same shape and
 format.
 """
-dropdefaults(src) = dropdefaults!(similar(src), src)
+dropfills(src) = dropfills!(similar(src), src)
 
 """
-    dropdefaults!(dst, src)
+    dropfills!(dst, src)
 
-Copy only the non- default values from `src` into `dst`. The shape and format of
+Copy only the non- fill values from `src` into `dst`. The shape and format of
 `dst` must match `src`
 """
-dropdefaults!(dst::AbstractTensor, src) = dropdefaults_helper!(dst, src)
-dropdefaults!(dst::SwizzleArray{dims}, src::SwizzleArray{dims}) where {dims} = swizzle(dropdefaults_helper!(dst.body, src.body), dims...)
+dropfills!(dst::AbstractTensor, src) = dropfills_helper!(dst, src)
+dropfills!(dst::SwizzleArray{dims}, src::SwizzleArray{dims}) where {dims} = swizzle(dropfills_helper!(dst.body, src.body), dims...)
 
-@staged function dropdefaults_helper!(dst, src)
+@staged function dropfills_helper!(dst, src)
     ndims(dst) > ndims(src) && throw(DimensionMismatch("more dimensions in destination than source"))
     ndims(dst) < ndims(src) && throw(DimensionMismatch("less dimensions in destination than source"))
     idxs = [Symbol(:i_, n) for n = 1:ndims(dst)]
     exts = Expr(:block, (:($idx = _) for idx in reverse(idxs))...)
     T = eltype(dst)
-    d = default(dst)
+    d = fill_value(dst)
     return quote
         @finch begin
-            dst .= $(default(dst))
+            dst .= $(fill_value(dst))
             $(Expr(:for, exts, quote
                 let tmp = src[$(idxs...)]
                     if !isequal(tmp, $d)

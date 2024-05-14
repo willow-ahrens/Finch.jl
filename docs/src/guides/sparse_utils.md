@@ -17,7 +17,7 @@ ffindnz
 
 ## Fill Values
 
-Finch tensors support an arbitrary "background" value for sparse arrays. While most arrays use `0` as the background value, this is not always the case. For example, a sparse array of `Int` might use `typemin(Int)` as the background value. The `default` function returns the background value of a tensor. If you ever want to change the background value of an existing array, you can use the `redefault!` function. The `countstored` function returns the number of stored elements in a tensor, and calling `pattern!` on a tensor returns tensor which is true whereever the original tensor stores a value. Note that countstored doesn't always return the number of non-zero elements in a tensor, as it counts the number of stored elements, and stored elements may include the background value. You can call `dropdefaults!` to remove explicitly stored background values from a tensor.
+Finch tensors support an arbitrary "background" value for sparse arrays. While most arrays use `0` as the background value, this is not always the case. For example, a sparse array of `Int` might use `typemin(Int)` as the background value. The `default` function returns the background value of a tensor. If you ever want to change the background value of an existing array, you can use the `set_fill_value!` function. The `countstored` function returns the number of stored elements in a tensor, and calling `pattern!` on a tensor returns tensor which is true whereever the original tensor stores a value. Note that countstored doesn't always return the number of non-zero elements in a tensor, as it counts the number of stored elements, and stored elements may include the background value. You can call `dropfills!` to remove explicitly stored background values from a tensor.
 
 ```jldoctest example1; setup = :(using Finch)
 julia> A = fsparse([1, 1, 2, 3], [2, 4, 5, 6], [1.0, 2.0, 3.0])
@@ -53,10 +53,10 @@ Dense [:,1:6]
    ├─ [2]: -1.0
    └─ [3]: -1.0
 
-julia> default(A)
+julia> fill_value(A)
 0.0
 
-julia> B = redefault!(A, -Inf)
+julia> B = set_fill_value!(A, -Inf)
 SparseCOO{2} (-Inf) [:,1:6]
 ├─ [1, 2]: 1.0
 ├─ [1, 4]: 2.0
@@ -83,11 +83,11 @@ SparseCOO{2} (false) [:,1:6]
 ```
 
 ```@docs
-redefault!
+set_fill_value!
 pattern!
 countstored
-dropdefaults
-dropdefaults!
+dropfills
+dropfills!
 ```
 
 ### How to tell whether an entry is "fill"
@@ -102,7 +102,7 @@ are stored explicitly or not. If users wish to make this distinction, they shoul
 instead store a tensor of tuples of the form `(value, is_fill)`. For example,
 
 ```jldoctest example3; setup = :(using Finch)
-julia> A = fsparse([1, 1, 2, 3], [2, 4, 5, 6], [(1.0, false), (0.0, true), (3.0, false)]; default=(0.0, true))
+julia> A = fsparse([1, 1, 2, 3], [2, 4, 5, 6], [(1.0, false), (0.0, true), (3.0, false)]; fill_value=(0.0, true))
 SparseCOO{2} ((0.0, true)) [:,1:6]
 ├─ [1, 2]: (1.0, false)
 ├─ [1, 4]: (0.0, true)

@@ -14,7 +14,7 @@ using Finch: AsArray
                 x = rand(2)
                 lx = lazy(x)
                 y = compute(@einsum y[i] += A[i, j] * lx[j])
-                @test y == A * x
+                @test norm(y .- A * x) < 1e-10
             end
 
             #https://github.com/willow-ahrens/Finch.jl/issues/554

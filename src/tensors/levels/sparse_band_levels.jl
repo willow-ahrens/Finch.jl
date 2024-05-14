@@ -53,8 +53,8 @@ function countstored_level(lvl::SparseBandLevel, pos)
     countstored_level(lvl.lvl, lvl.ofs[lvl.ptr[pos + 1]]-1)
 end
 
-redefault!(lvl::SparseBandLevel{Ti}, init) where {Ti} = 
-    SparseBandLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
+set_fill_value!(lvl::SparseBandLevel{Ti}, init) where {Ti} = 
+    SparseBandLevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
 
 Base.resize!(lvl::SparseBandLevel{Ti}, dims...) where {Ti} = 
     SparseBandLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.idx, lvl.ofs)
@@ -82,7 +82,7 @@ function Base.show(io::IO, lvl::SparseBandLevel{Ti, Ptr, Idx, Ofs, Lvl}) where {
 end
 
 labelled_show(io::IO, fbr::SubFiber{<:SparseBandLevel}) =
-    print(io, "SparseBand (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+    print(io, "SparseBand (", fill_value(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
 function labelled_children(fbr::SubFiber{<:SparseBandLevel})
     lvl = fbr.lvl
@@ -104,7 +104,7 @@ end
 @inline level_size(lvl::SparseBandLevel) = (lvl.shape, level_size(lvl.lvl)...)
 @inline level_axes(lvl::SparseBandLevel) = (Base.OneTo(lvl.shape), level_axes(lvl.lvl)...)
 @inline level_eltype(::Type{<:SparseBandLevel{Ti, Ptr, Idx, Ofs, Lvl}}) where {Ti, Ptr, Idx, Ofs, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseBandLevel{Ti, Ptr, Idx, Ofs, Lvl}}) where {Ti, Ptr, Idx, Ofs, Lvl} = level_default(Lvl)
+@inline level_fill_value(::Type{<:SparseBandLevel{Ti, Ptr, Idx, Ofs, Lvl}}) where {Ti, Ptr, Idx, Ofs, Lvl} = level_fill_value(Lvl)
 data_rep_level(::Type{<:SparseBandLevel{Ti, Ptr, Idx, Ofs, Lvl}}) where {Ti, Ptr, Idx, Ofs, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseBandLevel})() = fbr
@@ -113,9 +113,9 @@ function (fbr::SubFiber{<:SparseBandLevel})(idxs...)
     lvl = fbr.lvl
     p = fbr.pos
     r = lvl.ptr[p] + searchsortedfirst(@view(lvl.idx[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end]) - 1
-    r < lvl.ptr[p + 1] || return default(fbr)
+    r < lvl.ptr[p + 1] || return fill_value(fbr)
     q = lvl.ofs[r + 1] - 1 - lvl.idx[r] + idxs[end]
-    q >= lvl.ofs[r] || return default(fbr)
+    q >= lvl.ofs[r] || return fill_value(fbr)
     fbr_2 = SubFiber(lvl.lvl, q)
     return fbr_2(idxs[1:end-1]...)
 end
@@ -196,7 +196,7 @@ function virtual_level_resize!(ctx, lvl::VirtualSparseBandLevel, dims...)
 end
 
 virtual_level_eltype(lvl::VirtualSparseBandLevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualSparseBandLevel) = virtual_level_default(lvl.lvl)
+virtual_level_fill_value(lvl::VirtualSparseBandLevel) = virtual_level_fill_value(lvl.lvl)
 
 function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualSparseBandLevel, arch)
     ptr_2 = freshen(ctx.code, lvl.ptr)
@@ -301,7 +301,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseBandLevel}, mode::Re
             body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> call(-, value(my_i_start), 1),
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl))),
                 ),
                 Phase(
                     stop = (ctx, ext) -> value(my_i1),
@@ -313,7 +313,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseBandLevel}, mode::Re
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl))),
                 ),
             ])
         )

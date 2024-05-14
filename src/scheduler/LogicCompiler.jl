@@ -110,13 +110,13 @@ function (ctx::LogicLowerer)(ex)
         quote
             $(lhs.name) = $(compile_logic_constant(tns))
             @finch mode = $(QuoteNode(ctx.mode)) begin
-                $(lhs.name) .= $(default(logic_constant_type(tns)))
+                $(lhs.name) .= $(fill_value(logic_constant_type(tns)))
                 $body
                 return $(lhs.name)
             end
         end
     elseif @capture ex query(~lhs::isalias, reformat(~tns, mapjoin(~args...)))
-        z = default(logic_constant_type(tns))
+        z = fill_value(logic_constant_type(tns))
         ctx(query(lhs, reformat(tns, aggregate(initwrite(z), immediate(z), mapjoin(args...)))))
     elseif @capture ex query(~lhs, reformat(~tns, aggregate(~op, ~init, ~arg, ~idxs_1...)))
         idxs_2 = map(idx -> idx.name, getfields(arg))
@@ -137,7 +137,7 @@ function (ctx::LogicLowerer)(ex)
         quote
             $(lhs.name) = $(compile_logic_constant(tns))
             @finch mode = $(QuoteNode(ctx.mode)) begin
-                $(lhs.name) .= $(default(logic_constant_type(tns)))
+                $(lhs.name) .= $(fill_value(logic_constant_type(tns)))
                 $body
                 return $(lhs.name)
             end

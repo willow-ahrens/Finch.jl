@@ -70,7 +70,7 @@ function virtual_resize!(ctx::AbstractCompiler, arr::VirtualPermissiveArray, dim
     virtual_resize!(ctx, arr.body, ifelse.(arr.dims, virtual_size(ctx, arr.body), dim))
 end
 
-virtual_default(ctx::AbstractCompiler, arr::VirtualPermissiveArray) = virtual_default(ctx, arr.body)
+virtual_fill_value(ctx::AbstractCompiler, arr::VirtualPermissiveArray) = virtual_fill_value(ctx, arr.body)
 
 function instantiate(ctx, arr::VirtualPermissiveArray, mode, protos)
     VirtualPermissiveArray(instantiate(ctx, arr.body, mode, protos), arr.dims)
@@ -132,7 +132,7 @@ phase_range(ctx, node::VirtualPermissiveArray, ext) = phase_range(ctx, node.body
 get_spike_body(ctx, node::VirtualPermissiveArray, ext, ext_2) = VirtualPermissiveArray(get_spike_body(ctx, node.body, ext, ext_2), node.dims)
 get_spike_tail(ctx, node::VirtualPermissiveArray, ext, ext_2) = VirtualPermissiveArray(get_spike_tail(ctx, node.body, ext, ext_2), node.dims)
 
-visit_fill(node, tns::VirtualPermissiveArray) = visit_fill(node, tns.body)
+visit_fill_leaf_leaf(node, tns::VirtualPermissiveArray) = visit_fill_leaf_leaf(node, tns.body)
 visit_simplify(node::VirtualPermissiveArray) = VirtualPermissiveArray(visit_simplify(node.body), node.dims)
 
 (ctx::SwitchVisitor)(node::VirtualPermissiveArray) = map(ctx(node.body)) do (guard, body)
@@ -158,7 +158,7 @@ getroot(tns::VirtualPermissiveArray) = getroot(tns.body)
 function unfurl(ctx, tns::VirtualPermissiveArray, ext, mode, protos...)
     tns_2 = unfurl(ctx, tns.body, ext, mode, protos...)
     dims = virtual_size(ctx, tns.body)
-    garb = (mode === reader) ? Fill(literal(missing)) : Fill(Null())
+    garb = (mode === reader) ? FillLeaf(literal(missing)) : FillLeaf(Null())
     if tns.dims[end] && dims[end] != dimless
         VirtualPermissiveArray(
             Unfurled(

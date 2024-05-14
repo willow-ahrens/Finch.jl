@@ -2,7 +2,7 @@
     SparseHashLevel{[N], [TI=Tuple{Int...}], [Ptr, Tbl, Srt]}(lvl, [dims])
 
 A subfiber of a sparse level does not need to represent slices which are
-entirely [`default`](@ref). Instead, only potentially non-default slices are
+entirely [`fill_value`](@ref). Instead, only potentially non-fill slices are
 stored as subfibers in `lvl`. The sparse hash level corresponds to `N` indices
 in the subfiber, so fibers in the sublevel are the slices `A[:, ..., :, i_1,
 ..., i_n]`.  A hash table is used to record which slices are stored. Optionally,
@@ -82,8 +82,8 @@ function countstored_level(lvl::SparseHashLevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
 
-redefault!(lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}, init) where {N, TI, Ptr, Tbl, Srt, Lvl} =
-    SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
+set_fill_value!(lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}, init) where {N, TI, Ptr, Tbl, Srt, Lvl} =
+    SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
 
 Base.resize!(lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}, dims...) where {N, TI, Ptr, Tbl, Srt, Lvl} =
     SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}(resize!(lvl.lvl,  dims[1:end-N]...), (dims[end-N + 1:end]...,), lvl.ptr, lvl.tbl, lvl.srt)
@@ -119,7 +119,7 @@ function Base.show(io::IO, lvl::SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}) wher
 end
 
 labelled_show(io::IO, fbr::SubFiber{<:SparseHashLevel{N}}) where {N} =
-    print(io, "SparseHash{", N, "} (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+    print(io, "SparseHash{", N, "} (", fill_value(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
 function labelled_children(fbr::SubFiber{<:SparseHashLevel{N}}) where {N}
     lvl = fbr.lvl
@@ -134,7 +134,7 @@ end
 @inline level_size(lvl::SparseHashLevel) = (lvl.shape..., level_size(lvl.lvl)...)
 @inline level_axes(lvl::SparseHashLevel) = (map(Base.OneTo, lvl.shape)..., level_axes(lvl.lvl)...)
 @inline level_eltype(::Type{<:SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}) where {N, TI, Ptr, Tbl, Srt, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}) where {N, TI, Ptr, Tbl, Srt, Lvl} = level_default(Lvl)
+@inline level_fill_value(::Type{<:SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}) where {N, TI, Ptr, Tbl, Srt, Lvl} = level_fill_value(Lvl)
 data_rep_level(::Type{<:SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}) where {N, TI, Ptr, Tbl, Srt, Lvl} = (SparseData^N)(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseHashLevel})() = fbr
@@ -146,7 +146,7 @@ function (fbr::SubFiber{<:SparseHashLevel{N, TI}})(idxs...) where {N, TI}
     p = (fbr.pos, (idx...,))
 
     if !haskey(lvl.tbl, p)
-        return default(fbr)
+        return fill_value(fbr)
     else
         q = lvl.tbl[p]
         return SubFiber(lvl.lvl, q)(idxs[1:end-N]...)
@@ -244,7 +244,7 @@ function virtual_level_resize!(ctx::AbstractCompiler, lvl::VirtualSparseHashLeve
 end
 
 virtual_level_eltype(lvl::VirtualSparseHashLevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualSparseHashLevel) = virtual_level_default(lvl.lvl)
+virtual_level_fill_value(lvl::VirtualSparseHashLevel) = virtual_level_fill_value(lvl.lvl)
 
 postype(lvl::VirtualSparseHashLevel) = postype(lvl.lvl)
 
@@ -361,7 +361,7 @@ function instantiate(ctx, trv::SparseHashWalkTraversal, mode::Reader, subprotos,
                                 preamble = :($my_i = $(lvl.srt)[$my_q][1][2][$R]),
                                 stop =  (ctx, ext) -> value(my_i),
                                 chunk = Spike(
-                                    body = Fill(virtual_level_default(lvl)),
+                                    body = FillLeaf(virtual_level_fill_value(lvl)),
                                     tail = instantiate(ctx, VirtualSubFiber(lvl.lvl, value(:($(lvl.ex).srt[$my_q][2]))), mode, subprotos),
                                 ),
                                 next = (ctx, ext) -> :($my_q += $(Tp(1)))
@@ -382,7 +382,7 @@ function instantiate(ctx, trv::SparseHashWalkTraversal, mode::Reader, subprotos,
                                 end,
                                 stop = (ctx, ext) -> value(my_i),
                                 chunk = Spike(
-                                    body = Fill(virtual_level_default(lvl)),
+                                    body = FillLeaf(virtual_level_fill_value(lvl)),
                                     tail = instantiate(ctx, SparseHashWalkTraversal(lvl, R - 1, value(my_q, Tp), value(my_q_step, Tp)), mode, subprotos),
                                 ),
                                 next = (ctx, ext) -> :($my_q = $my_q_step)
@@ -390,7 +390,7 @@ function instantiate(ctx, trv::SparseHashWalkTraversal, mode::Reader, subprotos,
                         end
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl)))
                 )
             ])
         )
@@ -435,7 +435,7 @@ function instantiate(ctx, trv::SparseHashFollowTraversal, mode::Reader, subproto
                         end,
                         body = (ctx) -> Switch([
                             value(:($qos != 0)) => instantiate(ctx, VirtualSubFiber(lvl.lvl, value(qos, Tp)), mode, subprotos),
-                            literal(true) => Fill(virtual_level_default(lvl))
+                            literal(true) => FillLeaf(virtual_level_fill_value(lvl))
                         ])
                     )
                 )

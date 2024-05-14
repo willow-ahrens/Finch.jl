@@ -118,7 +118,7 @@ end
 
 SUITE["graphs"]["bellmanford"] = BenchmarkGroup()
 for mtx in ["Newman/netscience", "SNAP/roadNet-CA"]
-    A = redefault!(Tensor(SparseMatrixCSC(matrixdepot(mtx))), Inf)
+    A = set_fill_value!(Tensor(SparseMatrixCSC(matrixdepot(mtx))), Inf)
     SUITE["graphs"]["bellmanford"][mtx] = @benchmarkable bellmanford($A)
 end
 

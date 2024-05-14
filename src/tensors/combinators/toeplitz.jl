@@ -138,7 +138,7 @@ phase_range(ctx, node::VirtualToeplitzArray, ext) = phase_range(ctx, node.body, 
 get_spike_body(ctx, node::VirtualToeplitzArray, ext, ext_2) = VirtualToeplitzArray(get_spike_body(ctx, node.body, ext, ext_2), node.dim)
 get_spike_tail(ctx, node::VirtualToeplitzArray, ext, ext_2) = VirtualToeplitzArray(get_spike_tail(ctx, node.body, ext, ext_2), node.dim)
 
-visit_fill(node, tns::VirtualToeplitzArray) = visit_fill(node, tns.body)
+visit_fill_leaf_leaf(node, tns::VirtualToeplitzArray) = visit_fill_leaf_leaf(node, tns.body)
 visit_simplify(node::VirtualToeplitzArray) = VirtualToeplitzArray(visit_simplify(node.body), node.dim)
 
 (ctx::SwitchVisitor)(node::VirtualToeplitzArray) = map(ctx(node.body)) do (guard, body)
