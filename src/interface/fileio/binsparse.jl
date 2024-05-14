@@ -130,7 +130,7 @@ bspread_tensor_lookup = OrderedDict(
     ),
 
     "DMATC" => OrderedDict(
-        "swizzle" => [1, 0],
+        "transpose" => [1, 0],
         "level" => OrderedDict(
             "level_kind" => "dense",
             "rank" => 1,
@@ -169,7 +169,7 @@ bspread_tensor_lookup = OrderedDict(
     ),
 
     "CSC" => OrderedDict(
-        "swizzle" => [1, 0],
+        "transpose" => [1, 0],
         "level" => OrderedDict(
             "level_kind" => "dense",
             "rank" => 1,
@@ -198,7 +198,7 @@ bspread_tensor_lookup = OrderedDict(
     ),
 
     "DCSC" => OrderedDict(
-        "swizzle" => [1, 0],
+        "transpose" => [1, 0],
         "level" => OrderedDict(
             "level_kind" => "sparse",
             "rank" => 1,
@@ -233,7 +233,7 @@ bspread_tensor_lookup = OrderedDict(
     ),
 
     "COOC" => OrderedDict(
-        "swizzle" => [1, 0],
+        "transpose" => [1, 0],
         "level" => OrderedDict(
             "level_kind" => "sparse",
             "rank" => 2,
@@ -284,7 +284,7 @@ function bspwrite_tensor(io, arr::SwizzleArray{dims, <:Tensor}, attrs = OrderedD
         "attrs" => attrs,
     )
     if !issorted(reverse(collect(dims)))
-        desc["tensor"]["swizzle"] = reverse(collect(dims)) .- 1
+        desc["tensor"]["transpose"] = reverse(collect(dims)) .- 1
     end
     bspwrite_level(io, desc, desc["tensor"]["level"], arr.body.lvl)
     if haskey(bspwrite_format_lookup, desc["tensor"])
@@ -314,16 +314,16 @@ function bspread(f)
     desc = bspread_header(f)["binsparse"]
     @assert desc["version"] == "$BINSPARSE_VERSION"
     fmt = OrderedDict{Any, Any}(get(() -> desc["tensor"], bspread_tensor_lookup, desc["format"]))
-    if !haskey(fmt, "swizzle")
-        fmt["swizzle"] = collect(0:length(desc["shape"]) - 1)
+    if !haskey(fmt, "transpose")
+        fmt["transpose"] = collect(0:length(desc["shape"]) - 1)
     end
-    if !issorted(reverse(fmt["swizzle"]))
-        sigma = sortperm(reverse(fmt["swizzle"] .+ 1))
+    if !issorted(reverse(fmt["transpose"]))
+        sigma = sortperm(reverse(fmt["transpose"] .+ 1))
         desc["shape"] = desc["shape"][sigma]
     end
     fbr = Tensor(bspread_level(f, desc, fmt["level"]))
-    if !issorted(reverse(fmt["swizzle"]))
-        fbr = swizzle(fbr, reverse(fmt["swizzle"] .+ 1)...)
+    if !issorted(reverse(fmt["transpose"]))
+        fbr = swizzle(fbr, reverse(fmt["transpose"] .+ 1)...)
     end
     if haskey(desc, "structure")
         throw(ArgumentError("binsparse structure field currently unsupported"))
