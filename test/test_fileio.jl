@@ -30,11 +30,11 @@ using Pkg
                 0 + 0im 1 + 0im 0 + 0im ]
             ])
                 @testset "$(typeof(A))" begin
-                    for (iD, D) in [
+                    for (iD, Vf) in [
                         0 => zero(eltype(A)),
                         1 => one(eltype(A)),
                     ]
-                        elem = Element{D, eltype(A), Int}()
+                        elem = Element{Vf, eltype(A), Int}()
                         for (name, fmt) in [
                             "A_dense" => swizzle(Tensor(Dense{Int}(Dense{Int}(elem))), 2, 1),
                             "A_denseC" => Tensor(Dense{Int}(Dense{Int}(elem))),
@@ -43,7 +43,7 @@ using Pkg
                             "A_COO" => swizzle(Tensor(SparseCOO{2, Tuple{Int, Int}}(elem)), 2, 1),
                             "A_COOC" => Tensor(SparseCOO{2, Tuple{Int, Int}}(elem)),
                         ]
-                            @testset "binsparse $name($D)" begin
+                            @testset "binsparse $name($Vf)" begin
                                 fmt = copyto!(fmt, A)
                                 fname = joinpath(f, "foo.bsp.h5")
                                 bspwrite(fname, fmt)
@@ -86,11 +86,11 @@ using Pkg
                     0 + 0im 1 + 0im 0 + 0im ]
                 ])
                     @testset "$(typeof(A))" begin
-                        for (iD, D) in [
+                        for (iD, Vf) in [
                             0 => zero(eltype(A)),
                             1 => one(eltype(A)),
                         ]
-                            elem = Element{D, eltype(A), Int}()
+                            elem = Element{Vf, eltype(A), Int}()
                             for (name, fmt) in [
                                 "A_dense" => swizzle(Tensor(Dense{Int}(Dense{Int}(elem))), 2, 1),
                                 "A_denseC" => Tensor(Dense{Int}(Dense{Int}(elem))),
@@ -99,7 +99,7 @@ using Pkg
                                 "A_COO" => swizzle(Tensor(SparseCOO{2, Tuple{Int, Int}}(elem)), 2, 1),
                                 "A_COOC" => Tensor(SparseCOO{2, Tuple{Int, Int}}(elem)),
                             ]
-                                @testset "binsparse $name($D)" begin
+                                @testset "binsparse $name($Vf)" begin
                                     fmt = copyto!(fmt, A)
                                     fname = joinpath(f, "A$(iA)_D$(iD)_$name.bspnpy")
                                     bspwrite(fname, fmt)

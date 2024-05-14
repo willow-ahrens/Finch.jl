@@ -1,11 +1,11 @@
 abstract type AbstractAlgebra end
 struct DefaultAlgebra<:AbstractAlgebra end
 
-struct Chooser{D} end
+struct Chooser{Vf} end
 
-(f::Chooser{D})(x) where {D} = x
-function (f::Chooser{D})(x, y, tail...) where {D}
-    if isequal(x, D)
+(f::Chooser{Vf})(x) where {Vf} = x
+function (f::Chooser{Vf})(x, y, tail...) where {Vf}
+    if isequal(x, Vf)
         return f(y, tail...)
     else
         return x
@@ -32,9 +32,9 @@ julia> x[]
 """
 choose(d) = Chooser{d}()
 
-struct FilterOp{D} end
+struct FilterOp{Vf} end
 
-(f::FilterOp{D})(cond, arg) where {D} = ifelse(cond, arg, D)
+(f::FilterOp{Vf})(cond, arg) where {Vf} = ifelse(cond, arg, Vf)
 
 """
     filterop(z)(cond, arg)
@@ -199,8 +199,8 @@ function isidentity_by_fn(alg::AbstractAlgebra, ::typeof(maxby), x::FinchNode)
     end
     return false
 end
-isidentity(::AbstractAlgebra, ::Chooser{D}, x) where {D} = isequal(x, D)
-isidentity(::AbstractAlgebra, ::InitWriter{D}, x) where {D} = isequal(x, D)
+isidentity(::AbstractAlgebra, ::Chooser{Vf}, x) where {Vf} = isequal(x, Vf)
+isidentity(::AbstractAlgebra, ::InitWriter{Vf}, x) where {Vf} = isequal(x, Vf)
 
 isannihilator(alg) = (f, x) -> isannihilator(alg, f, x)
 isannihilator(alg, f::FinchNode, x::FinchNode) = isliteral(f) && isannihilator_by_fn(alg, f.val, x)
@@ -235,8 +235,8 @@ function isannihilator_by_fn(alg::AbstractAlgebra, ::typeof(maxby), x::FinchNode
     end
     return false
 end
-isannihilator(::AbstractAlgebra, ::Chooser{D}, x) where {D} = !isequal(x, D)
-#isannihilator(::AbstractAlgebra, ::InitWriter{D}, x) where {D} = !isequal(x, D)
+isannihilator(::AbstractAlgebra, ::Chooser{Vf}, x) where {Vf} = !isequal(x, Vf)
+#isannihilator(::AbstractAlgebra, ::InitWriter{Vf}, x) where {Vf} = !isequal(x, Vf)
 
 isinverse(alg) = (f, g) -> isinverse(alg, f, g)
 isinverse(alg, f::FinchNode, g::FinchNode) = isliteral(f) && isliteral(g) && isinverse(alg, f.val, g.val)

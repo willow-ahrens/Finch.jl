@@ -31,8 +31,8 @@ function SparseArrays.SparseMatrixCSC(arr::Union{Tensor, SwizzleArray})
     return SparseMatrixCSC(Tensor(Dense(SparseList(Element(0.0))), arr))
 end
 
-function SparseArrays.SparseMatrixCSC(arr::Tensor{<:Dense{Ti, <:SparseList{Ti, Ptr, Idx, <:Element{D, Tv}}}}) where {D, Ti, Ptr, Idx, Tv}
-    D === zero(Tv) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero fill values, was given $D as fill_value"))
+function SparseArrays.SparseMatrixCSC(arr::Tensor{<:Dense{Ti, <:SparseList{Ti, Ptr, Idx, <:Element{Vf, Tv}}}}) where {Vf, Ti, Ptr, Idx, Tv}
+    Vf === zero(Tv) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero fill values, was given $Vf as fill_value"))
     return SparseMatrixCSC{Tv, Ti}(size(arr)..., arr.lvl.lvl.ptr, arr.lvl.lvl.idx, arr.lvl.lvl.lvl.val)
 end
 
@@ -47,7 +47,7 @@ function SparseArrays.sparse(fbr::Union{Tensor, SwizzleArray})
     elseif ndims(fbr) == 2
         return SparseMatrixCSC(fbr)
     else
-        throw(ArgumentError("SparseArrays, a Julia stdlib, only supports 1-D and 2-D arrays, was given a $(ndims(fbr))-D array"))
+        throw(ArgumentError("SparseArrays, a Julia stdlib, only supports 1-D and 2-D arrays, was given a $(ndims(fbr))-Vf array"))
     end
 end
 
@@ -158,8 +158,8 @@ function SparseArrays.SparseVector(arr::Union{Tensor, SwizzleArray})
     return SparseVector(Tensor(SparseList(Element(0.0)), arr))
 end
 
-function SparseArrays.SparseVector(arr::Tensor{<:SparseList{Ti, Ptr, Idx, <:Element{D, Tv}}}) where {Ti, Ptr, Idx, Tv, D}
-    D === zero(Tv) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero fill values, was given $D as fill_value"))
+function SparseArrays.SparseVector(arr::Tensor{<:SparseList{Ti, Ptr, Idx, <:Element{Vf, Tv}}}) where {Ti, Ptr, Idx, Tv, Vf}
+    Vf === zero(Tv) || throw(ArgumentError("SparseArrays, a Julia stdlib, only supports zero fill values, was given $Vf as fill_value"))
     return SparseVector{Tv, Ti}(size(arr)..., arr.lvl.idx, arr.lvl.lvl.val)
 end
 @kwdef mutable struct VirtualSparseVector

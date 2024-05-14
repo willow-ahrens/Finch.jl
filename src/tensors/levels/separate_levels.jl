@@ -206,7 +206,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSeparateLevel}, mode::Read
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     isnulltest = freshen(ctx.code, tag, :_nulltest)
-    D = level_fill_value(lvl.Lvl)
+    Vf = level_fill_value(lvl.Lvl)
     sym = freshen(ctx.code, :pointer_to_lvl)
     val = freshen(ctx.code, lvl.ex, :_val)
     return body = Thunk(

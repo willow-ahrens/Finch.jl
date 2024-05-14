@@ -54,12 +54,12 @@ or() = false
 or(x) = x
 or(x, y, tail...) = x || or(y, tail...)
 
-struct InitWriter{D} end
+struct InitWriter{Vf} end
 
-(f::InitWriter{D})(x) where {D} = x
-function (f::InitWriter{D})(x, y) where {D}
+(f::InitWriter{Vf})(x) where {Vf} = x
+function (f::InitWriter{Vf})(x, y) where {Vf}
     @debug begin
-        @assert isequal(x, D)
+        @assert isequal(x, Vf)
     end
     y
 end
