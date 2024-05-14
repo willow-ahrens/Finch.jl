@@ -13,6 +13,8 @@ fill_value(arr::SwizzleArray) = fill_value(typeof(arr))
 fill_value(::Type{SwizzleArray{dims, Body}}) where {dims, Body} = fill_value(Body)
 Base.similar(arr::SwizzleArray{dims}) where {dims} = SwizzleArray{dims}(similar(arr.body))
 
+countstored(arr::SwizzleArray) = countstored(arr.body)
+
 Base.size(arr::SwizzleArray{dims}) where {dims} = map(n->size(arr.body)[n], dims)
 
 Base.show(io::IO, ex::SwizzleArray) = Base.show(io, MIME"text/plain"(), ex)
