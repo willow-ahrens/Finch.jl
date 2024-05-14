@@ -8,6 +8,20 @@ using Finch: AsArray
         Finch.with_scheduler(scheduler) do
             @info "Testing $scheduler"
 
+            #https://github.com/willow-ahrens/Finch.jl/issues/474
+            let
+                arr = [1 2 1 2; 2 1 2 1]
+                arr2 = arr .+ 2
+                
+                tns = Tensor(Dense(Dense(Element(0))), arr)
+                tns2 = Tensor(Dense(Dense(Element(0))), arr2)
+                
+                
+                broadcast(/, tns, tns2)  # passes
+                broadcast(Finch.warn_fld, tns, tns2)  # fails with RewriteTools.RuleRewriteError
+                broadcast(Finch.warn_rem, tns, tns2) 
+            end
+
             #https://github.com/willow-ahrens/Finch.jl/issues/520
             let
                 A = rand(2, 2)
