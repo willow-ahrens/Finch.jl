@@ -306,14 +306,14 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Re
                         preamble = :($my_i = $(lvl.idx)[$my_q]),
                         stop = (ctx, ext) -> value(my_i),
                         chunk = Spike(
-                            body = Fill(virtual_level_default(lvl)),
+                            body = FillLeaf(virtual_level_default(lvl)),
                             tail = Simplify(instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Ti)), mode, subprotos))
                         ),
                         next = (ctx, ext) -> :($my_q += $(Tp(1))) 
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl)))
                 )
             ])
         )
@@ -358,14 +358,14 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Re
                         preamble = :($my_i2 = $(lvl.idx)[$my_q]),
                         stop = (ctx, ext) -> value(my_i2),
                         chunk =  Spike(
-                            body = Fill(virtual_level_default(lvl)),
+                            body = FillLeaf(virtual_level_default(lvl)),
                             tail = instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Ti)), mode, subprotos),
                         ),
                         next = (ctx, ext) -> :($my_q += $(Tp(1))),
                     )  
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl)))
                 )
             ])
         )

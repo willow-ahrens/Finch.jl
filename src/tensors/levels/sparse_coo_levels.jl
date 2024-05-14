@@ -334,7 +334,7 @@ function instantiate(ctx, trv::SparseCOOWalkTraversal, mode::Reader, subprotos, 
                                 preamble = :($my_i = $(lvl.tbl[R])[$my_q]),
                                 stop =  (ctx, ext) -> value(my_i),
                                 chunk = Spike(
-                                    body = Fill(virtual_level_default(lvl)),
+                                    body = FillLeaf(virtual_level_default(lvl)),
                                     tail = instantiate(ctx, VirtualSubFiber(lvl.lvl, my_q), mode, subprotos),
                                 ),
                                 next = (ctx, ext) -> :($my_q += $(Tp(1)))
@@ -355,7 +355,7 @@ function instantiate(ctx, trv::SparseCOOWalkTraversal, mode::Reader, subprotos, 
                                 end,
                                 stop = (ctx, ext) -> value(my_i),
                                 chunk = Spike(
-                                    body = Fill(virtual_level_default(lvl)),
+                                    body = FillLeaf(virtual_level_default(lvl)),
                                     tail = instantiate(ctx, SparseCOOWalkTraversal(lvl, R - 1, value(my_q, Tp), value(my_q_step, Tp)), mode, subprotos),
                                 ),
                                 next = (ctx, ext) -> :($my_q = $my_q_step)
@@ -363,7 +363,7 @@ function instantiate(ctx, trv::SparseCOOWalkTraversal, mode::Reader, subprotos, 
                         end
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl)))
                 )
             ])
         )

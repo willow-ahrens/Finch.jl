@@ -342,7 +342,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode:
                         preamble = :($my_i = last($(lvl.srt)[$my_r])),
                         stop = (ctx, ext) -> value(my_i),
                         chunk = Spike(
-                            body = Fill(virtual_level_default(lvl)),
+                            body = FillLeaf(virtual_level_default(lvl)),
                             tail = Thunk(
                                 preamble = :($my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i),
                                 body = (ctx) -> instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), mode, subprotos),
@@ -352,7 +352,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode:
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl)))
                 )
             ])
         )
@@ -396,7 +396,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode:
                         preamble = :($my_i = last($(lvl.srt)[$my_r])),
                         stop = (ctx, ext) -> value(my_i),
                         chunk =  Spike(
-                            body = Fill(virtual_level_default(lvl)),
+                            body = FillLeaf(virtual_level_default(lvl)),
                             tail = Thunk(
                                 preamble = :($my_q = ($(ctx(pos)) - $(Tp(1))) * $(ctx(lvl.shape)) + $my_i),
                                 body = (ctx) -> instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, lvl.Ti)), mode, subprotos),
@@ -406,7 +406,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode:
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl)))
                 )
             ])
         )
@@ -429,7 +429,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode:
                 end,
                 body = (ctx) -> Switch([
                     value(:($(lvl.tbl)[$my_q])) => instantiate(ctx, VirtualSubFiber(lvl.lvl, pos), mode, subprotos),
-                    literal(true) => Fill(virtual_level_default(lvl))
+                    literal(true) => FillLeaf(virtual_level_default(lvl))
                 ])
             )
         )

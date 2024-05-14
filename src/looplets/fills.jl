@@ -1,16 +1,16 @@
-struct Fill
+struct FillLeaf
     body::FinchNode
-    Fill(x) = new(finch_leaf(x))
+    FillLeaf(x) = new(finch_leaf(x))
 end
 
-FinchNotation.finch_leaf(x::Fill) = virtual(x)
-virtual_default(ctx, f::Fill) = f.body
+FinchNotation.finch_leaf(x::FillLeaf) = virtual(x)
+virtual_default(ctx, f::FillLeaf) = f.body
 
 struct FillStyle end
 
-(ctx::Stylize{<:AbstractCompiler})(::Fill) = FillStyle()
+(ctx::Stylize{<:AbstractCompiler})(::FillLeaf) = FillStyle()
 
-instantiate(ctx, tns::Fill, mode, protos) = tns
+instantiate(ctx, tns::FillLeaf, mode, protos) = tns
 
 combine_style(a::DefaultStyle, b::FillStyle) = FillStyle()
 combine_style(a::LookupStyle, b::FillStyle) = FillStyle()
@@ -25,8 +25,8 @@ combine_style(a::FillStyle, b::StepperStyle) = FillStyle()
 combine_style(a::FillStyle, b::JumperStyle) = FillStyle()
 
 function lower(ctx::AbstractCompiler, root::FinchNode, ::FillStyle)
-    ctx(Postwalk(@rule access(~a::isvirtual, ~m, ~i...) => visit_fill(access(a, m, i...), a.val))(root))
+    ctx(Postwalk(@rule access(~a::isvirtual, ~m, ~i...) => visit_fill_leaf_leaf(access(a, m, i...), a.val))(root))
 end
 
-visit_fill(node, tns) = nothing
-visit_fill(node, tns::Fill) = Simplify(tns.body)
+visit_fill_leaf_leaf(node, tns) = nothing
+visit_fill_leaf_leaf(node, tns::FillLeaf) = Simplify(tns.body)

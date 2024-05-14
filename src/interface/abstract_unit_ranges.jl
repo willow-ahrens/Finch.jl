@@ -27,7 +27,7 @@ function instantiate(ctx, arr::VirtualAbstractUnitRange, mode::Reader, subprotos
         arr = arr,
         body = Furlable(
             body = (ctx, ext) -> Lookup(
-                body = (ctx, i) -> Fill(value(:($(arr.ex)[$(ctx(i))])))
+                body = (ctx, i) -> FillLeaf(value(:($(arr.ex)[$(ctx(i))])))
             )
         )
     )

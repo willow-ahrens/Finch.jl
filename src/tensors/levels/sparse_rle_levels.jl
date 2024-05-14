@@ -433,7 +433,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseRLELevel}, mode::Rea
                             body = (ctx) -> Sequence([
                                 Phase(
                                     stop = (ctx, ext) -> call(-, value(my_i_start), getunit(ext)),
-                                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
+                                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl))),
                                 ),
                                 Phase(
                                     body = (ctx,ext) -> Run(
@@ -448,7 +448,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseRLELevel}, mode::Rea
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl)))
                 )
             ])
         )

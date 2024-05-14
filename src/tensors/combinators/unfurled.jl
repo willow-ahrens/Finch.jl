@@ -90,7 +90,7 @@ get_spike_body(ctx, node::Unfurled, ext, ext_2) = Unfurled(node.arr, node.ndims,
 
 get_spike_tail(ctx, node::Unfurled, ext, ext_2) = Unfurled(node.arr, node.ndims, get_spike_tail(ctx, node.body, ext, ext_2))
 
-visit_fill(node, tns::Unfurled) = visit_fill(node, tns.body)
+visit_fill_leaf_leaf(node, tns::Unfurled) = visit_fill_leaf_leaf(node, tns.body)
 
 visit_simplify(node::Unfurled) = Unfurled(node.arr, node.ndims, visit_simplify(node.body))
 

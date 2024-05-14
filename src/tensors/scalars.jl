@@ -73,7 +73,7 @@ end
 
 function short_circuit_cases(ctx, tns::VirtualScalar, op)
     if isannihilator(ctx, virtual_default(ctx, tns), op)
-        [:(tns.val == 0) => Simplify(Fill(Null()))]
+        [:(tns.val == 0) => Simplify(FillLeaf(Null()))]
     else
         []
     end
@@ -154,7 +154,7 @@ instantiate(ctx, tns::VirtualSparseScalar, mode::Updater, subprotos) = tns
 function instantiate(ctx, tns::VirtualSparseScalar, mode::Reader, subprotos)
     Switch(
         tns.dirty => tns,
-        true => Simplify(Fill(tns.D)),
+        true => Simplify(FillLeaf(tns.D)),
     )
 end
 
@@ -242,7 +242,7 @@ end
 virtual_moveto(ctx, lvl::VirtualShortCircuitScalar, arch) = lvl
 
 function short_circuit_cases(ctx, tns::VirtualShortCircuitScalar, op)
-    [:(Finch.isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Simplify(Fill(Null()))]
+    [:(Finch.isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Simplify(FillLeaf(Null()))]
 end
 
 mutable struct SparseShortCircuitScalar{D, Tv} <: AbstractTensor
@@ -320,7 +320,7 @@ instantiate(ctx, tns::VirtualSparseShortCircuitScalar, mode::Updater, subprotos)
 function instantiate(ctx, tns::VirtualSparseShortCircuitScalar, mode::Reader, subprotos)
     Switch([
         value(tns.dirty, Bool) => tns,
-        true => Simplify(Fill(tns.D)),
+        true => Simplify(FillLeaf(tns.D)),
     ])
 end
 
@@ -335,5 +335,5 @@ function lower_access(ctx::AbstractCompiler, node, tns::VirtualSparseShortCircui
 end
 
 function short_circuit_cases(ctx, tns::VirtualSparseShortCircuitScalar, op)
-    [:(Finch.isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Simplify(Fill(Null()))]
+    [:(Finch.isannihilator($(ctx.algebra), $(ctx(op)), $(tns.val))) => Simplify(FillLeaf(Null()))]
 end

@@ -110,7 +110,7 @@ thaw_level!(ctx, lvl::VirtualPatternLevel, pos) = lvl
 assemble_level!(ctx, lvl::VirtualPatternLevel, pos_start, pos_stop) = quote end
 reassemble_level!(ctx, lvl::VirtualPatternLevel, pos_start, pos_stop) = quote end
 
-instantiate(ctx, ::VirtualSubFiber{VirtualPatternLevel}, mode::Reader, protos) = Fill(true)
+instantiate(ctx, ::VirtualSubFiber{VirtualPatternLevel}, mode::Reader, protos) = FillLeaf(true)
 
 function instantiate(ctx, fbr::VirtualSubFiber{VirtualPatternLevel}, mode::Updater, protos)
     val = freshen(ctx.code, :null)

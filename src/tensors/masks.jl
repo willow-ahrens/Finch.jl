@@ -28,13 +28,13 @@ function instantiate(ctx, arr::VirtualDiagMask, mode::Reader, subprotos, ::typeo
                     body = (ctx, ext) -> Sequence([
                         Phase(
                             stop = (ctx, ext) -> value(:($(ctx(i)) - 1)),
-                            body = (ctx, ext) -> Run(body=Fill(false))
+                            body = (ctx, ext) -> Run(body=FillLeaf(false))
                         ),
                         Phase(
                             stop = (ctx, ext) -> i,
-                            body = (ctx, ext) -> Run(body=Fill(true)),
+                            body = (ctx, ext) -> Run(body=FillLeaf(true)),
                         ),
-                        Phase(body = (ctx, ext) -> Run(body=Fill(false)))
+                        Phase(body = (ctx, ext) -> Run(body=FillLeaf(false)))
                     ])
                 )
             )
@@ -72,10 +72,10 @@ function instantiate(ctx, arr::VirtualUpTriMask, mode::Reader, subprotos, ::type
                     body = (ctx, ext) -> Sequence([
                         Phase(
                             stop = (ctx, ext) -> value(:($(ctx(i)))),
-                            body = (ctx, ext) -> Run(body=Fill(true))
+                            body = (ctx, ext) -> Run(body=FillLeaf(true))
                         ),
                         Phase(
-                            body = (ctx, ext) -> Run(body=Fill(false)),
+                            body = (ctx, ext) -> Run(body=FillLeaf(false)),
                         )
                     ])
                 )
@@ -114,10 +114,10 @@ function instantiate(ctx, arr::VirtualLoTriMask, mode::Reader, subprotos, ::type
                     body = (ctx, ext) -> Sequence([
                         Phase(
                             stop = (ctx, ext) -> value(:($(ctx(i)) - 1)),
-                            body = (ctx, ext) -> Run(body=Fill(false))
+                            body = (ctx, ext) -> Run(body=FillLeaf(false))
                         ),
                         Phase(
-                            body = (ctx, ext) -> Run(body=Fill(true)),
+                            body = (ctx, ext) -> Run(body=FillLeaf(true)),
                         )
                     ])
                 )
@@ -158,14 +158,14 @@ function instantiate(ctx, arr::VirtualBandMask, mode, subprotos, ::typeof(defaul
                             body = (ctx, ext) -> Sequence([
                                 Phase(
                                     stop = (ctx, ext) -> value(:($(ctx(j)) - 1)),
-                                    body = (ctx, ext) -> Run(body=Fill(false))
+                                    body = (ctx, ext) -> Run(body=FillLeaf(false))
                                 ),
                                 Phase(
                                     stop = (ctx, ext) -> k,
-                                    body = (ctx, ext) -> Run(body=Fill(true))
+                                    body = (ctx, ext) -> Run(body=FillLeaf(true))
                                 ),
                                 Phase(
-                                    body = (ctx, ext) -> Run(body=Fill(false)),
+                                    body = (ctx, ext) -> Run(body=FillLeaf(false)),
                                 )
                             ])
                         )
@@ -206,13 +206,13 @@ function instantiate(ctx, arr::VirtualSplitMask, mode::Reader, subprotos, ::type
                         Sequence([
                             Phase(
                                 stop = (ctx, ext) -> call(+, call(-, getstart(ext_2), 1), call(fld, call(*, measure(ext_2), call(-, i, 1)), arr.P)),
-                                body = (ctx, ext) -> Run(body=Fill(false))
+                                body = (ctx, ext) -> Run(body=FillLeaf(false))
                             ),
                             Phase(
                                 stop = (ctx, ext) -> call(+, call(-, getstart(ext_2), 1), call(fld, call(*, measure(ext_2), i), arr.P)),
-                                body = (ctx, ext) -> Run(body=Fill(true)),
+                                body = (ctx, ext) -> Run(body=FillLeaf(true)),
                             ),
-                            Phase(body = (ctx, ext) -> Run(body=Fill(false)))
+                            Phase(body = (ctx, ext) -> Run(body=FillLeaf(false)))
                         ])
                     end
                 )
@@ -272,13 +272,13 @@ function instantiate(ctx, arr::VirtualChunkMask, mode::Reader, subprotos, ::type
                             body = (ctx, ext) -> Sequence([
                                 Phase(
                                     stop = (ctx, ext) -> call(*, arr.b, call(-, i, 1)),
-                                    body = (ctx, ext) -> Run(body=Fill(false))
+                                    body = (ctx, ext) -> Run(body=FillLeaf(false))
                                 ),
                                 Phase(
                                     stop = (ctx, ext) -> call(*, arr.b, i),
-                                    body = (ctx, ext) -> Run(body=Fill(true)),
+                                    body = (ctx, ext) -> Run(body=FillLeaf(true)),
                                 ),
-                                Phase(body = (ctx, ext) -> Run(body=Fill(false)))
+                                Phase(body = (ctx, ext) -> Run(body=FillLeaf(false)))
                             ])
                         )
                     )
@@ -289,10 +289,10 @@ function instantiate(ctx, arr::VirtualChunkMask, mode::Reader, subprotos, ::type
                             body = (ctx, ext) -> Sequence([
                                 Phase(
                                     stop = (ctx, ext) -> call(*, call(fld, measure(arr.dim), arr.b), arr.b),
-                                    body = (ctx, ext) -> Run(body=Fill(false))
+                                    body = (ctx, ext) -> Run(body=FillLeaf(false))
                                 ),
                                 Phase(
-                                    body = (ctx, ext) -> Run(body=Fill(true)),
+                                    body = (ctx, ext) -> Run(body=FillLeaf(true)),
                                 )
                             ])
                         )

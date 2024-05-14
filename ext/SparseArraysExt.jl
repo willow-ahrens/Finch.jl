@@ -2,7 +2,7 @@ module SparseArraysExt
 
 using Finch
 using Finch: AbstractCompiler, DefaultStyle, Extent
-using Finch: Unfurled, Furlable, Stepper, Jumper, Run, Fill, Lookup, Simplify, Sequence, Phase, Thunk, Spike 
+using Finch: Unfurled, Furlable, Stepper, Jumper, Run, FillLeaf, Lookup, Simplify, Sequence, Phase, Thunk, Spike 
 using Finch: virtual_size, virtual_default, getstart, getstop, freshen, SwizzleArray
 using Finch: FinchProtocolError
 using Finch.FinchNotation
@@ -115,12 +115,12 @@ function Finch.instantiate(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC, m
                                     preamble = :($my_i = $(arr.ex).rowval[$my_q]),
                                     stop = (ctx, ext) -> value(my_i),
                                     chunk = Spike(
-                                        body = Fill(zero(arr.Tv)),
+                                        body = FillLeaf(zero(arr.Tv)),
                                         tail = Thunk(
                                             preamble = quote
                                                 $my_val = $(arr.ex).nzval[$my_q]
                                             end,
-                                            body = (ctx) -> Fill(value(my_val, arr.Tv))
+                                            body = (ctx) -> FillLeaf(value(my_val, arr.Tv))
                                         )
                                     ),
                                     next = (ctx, ext) -> quote
@@ -129,7 +129,7 @@ function Finch.instantiate(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC, m
                                 )
                             ),
                             Phase(
-                                body = (ctx, ext) -> Run(Fill(zero(arr.Tv)))
+                                body = (ctx, ext) -> Run(FillLeaf(zero(arr.Tv)))
                             )
                         ])
                     )
@@ -224,12 +224,12 @@ function Finch.instantiate(ctx::AbstractCompiler, arr::VirtualSparseVector, mode
                             preamble = :($my_i = $(arr.ex).nzind[$my_q]),
                             stop = (ctx, ext) -> value(my_i),
                             chunk = Spike(
-                                body = Fill(zero(arr.Tv)),
+                                body = FillLeaf(zero(arr.Tv)),
                                 tail = Thunk(
                                     preamble = quote
                                         $my_val = $(arr.ex).nzval[$my_q]
                                     end,
-                                    body = (ctx) -> Fill(value(my_val, arr.Tv))
+                                    body = (ctx) -> FillLeaf(value(my_val, arr.Tv))
                                 )
                             ),
                             next = (ctx, ext) -> quote
@@ -238,7 +238,7 @@ function Finch.instantiate(ctx::AbstractCompiler, arr::VirtualSparseVector, mode
                         )
                     ),
                     Phase(
-                        body = (ctx, ext) -> Run(Fill(zero(arr.Tv)))
+                        body = (ctx, ext) -> Run(FillLeaf(zero(arr.Tv)))
                     )
                 ])
             )

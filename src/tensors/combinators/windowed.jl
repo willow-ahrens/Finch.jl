@@ -128,7 +128,7 @@ phase_range(ctx, node::VirtualWindowedArray, ext) = phase_range(ctx, node.body, 
 get_spike_body(ctx, node::VirtualWindowedArray, ext, ext_2) = VirtualWindowedArray(get_spike_body(ctx, node.body, ext, ext_2), node.dims)
 get_spike_tail(ctx, node::VirtualWindowedArray, ext, ext_2) = VirtualWindowedArray(get_spike_tail(ctx, node.body, ext, ext_2), node.dims)
 
-visit_fill(node, tns::VirtualWindowedArray) = visit_fill(node, tns.body)
+visit_fill_leaf_leaf(node, tns::VirtualWindowedArray) = visit_fill_leaf_leaf(node, tns.body)
 visit_simplify(node::VirtualWindowedArray) = VirtualWindowedArray(visit_simplify(node.body), node.dims)
 
 (ctx::SwitchVisitor)(node::VirtualWindowedArray) = map(ctx(node.body)) do (guard, body)

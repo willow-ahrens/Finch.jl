@@ -126,7 +126,7 @@ phase_range(ctx, node::VirtualScaleArray, ext) = scaledim(phase_range(ctx, node.
 get_spike_body(ctx, node::VirtualScaleArray, ext, ext_2) = VirtualScaleArray(get_spike_body(ctx, node.body, scaledim(ext, node.scale[end]), scaledim(ext_2, node.scale[end])), node.scale)
 get_spike_tail(ctx, node::VirtualScaleArray, ext, ext_2) = VirtualScaleArray(get_spike_tail(ctx, node.body, scaledim(ext, node.scale[end]), scaledim(ext_2, node.scale[end])), node.scale)
 
-visit_fill(node, tns::VirtualScaleArray) = visit_fill(node, tns.body)
+visit_fill_leaf_leaf(node, tns::VirtualScaleArray) = visit_fill_leaf_leaf(node, tns.body)
 visit_simplify(node::VirtualScaleArray) = VirtualScaleArray(visit_simplify(node.body), node.scale)
 
 (ctx::SwitchVisitor)(node::VirtualScaleArray) = map(ctx(node.body)) do (guard, body)

@@ -301,12 +301,12 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparsePointLevel}, mode::R
                     start = (ctx, ext) -> literal(lvl.Ti(1)),
                     stop = (ctx, ext) -> value(my_i),
                     body = (ctx, ext) -> truncate(ctx, Spike(
-                            body = Fill(virtual_level_default(lvl)),
+                            body = FillLeaf(virtual_level_default(lvl)),
                             tail = instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Ti)), mode, subprotos)), similar_extent(ext, getstart(ext), value(my_i)), ext)
                 ),
                 Phase(
                     stop = (ctx, ext) -> lvl.shape,
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl)))
                 )
             ])
 

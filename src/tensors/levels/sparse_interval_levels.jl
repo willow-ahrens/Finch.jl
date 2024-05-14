@@ -292,7 +292,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, mode
                 Phase(
                     start = (ctx, ext) -> literal(lvl.Ti(1)),
                     stop = (ctx, ext) -> call(-, value(my_i_start, lvl.Ti), getunit(ext)),
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl))),
                 ),
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop, lvl.Ti),
@@ -300,7 +300,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, mode
                 ),
                 Phase(
                     stop = (ctx, ext) -> lvl.shape,
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl)))
                 )
             ])
         )

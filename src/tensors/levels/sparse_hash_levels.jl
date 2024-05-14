@@ -361,7 +361,7 @@ function instantiate(ctx, trv::SparseHashWalkTraversal, mode::Reader, subprotos,
                                 preamble = :($my_i = $(lvl.srt)[$my_q][1][2][$R]),
                                 stop =  (ctx, ext) -> value(my_i),
                                 chunk = Spike(
-                                    body = Fill(virtual_level_default(lvl)),
+                                    body = FillLeaf(virtual_level_default(lvl)),
                                     tail = instantiate(ctx, VirtualSubFiber(lvl.lvl, value(:($(lvl.ex).srt[$my_q][2]))), mode, subprotos),
                                 ),
                                 next = (ctx, ext) -> :($my_q += $(Tp(1)))
@@ -382,7 +382,7 @@ function instantiate(ctx, trv::SparseHashWalkTraversal, mode::Reader, subprotos,
                                 end,
                                 stop = (ctx, ext) -> value(my_i),
                                 chunk = Spike(
-                                    body = Fill(virtual_level_default(lvl)),
+                                    body = FillLeaf(virtual_level_default(lvl)),
                                     tail = instantiate(ctx, SparseHashWalkTraversal(lvl, R - 1, value(my_q, Tp), value(my_q_step, Tp)), mode, subprotos),
                                 ),
                                 next = (ctx, ext) -> :($my_q = $my_q_step)
@@ -390,7 +390,7 @@ function instantiate(ctx, trv::SparseHashWalkTraversal, mode::Reader, subprotos,
                         end
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl)))
                 )
             ])
         )
@@ -435,7 +435,7 @@ function instantiate(ctx, trv::SparseHashFollowTraversal, mode::Reader, subproto
                         end,
                         body = (ctx) -> Switch([
                             value(:($qos != 0)) => instantiate(ctx, VirtualSubFiber(lvl.lvl, value(qos, Tp)), mode, subprotos),
-                            literal(true) => Fill(virtual_level_default(lvl))
+                            literal(true) => FillLeaf(virtual_level_default(lvl))
                         ])
                     )
                 )

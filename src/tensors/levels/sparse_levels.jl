@@ -390,14 +390,14 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseLevel}, mode::Reader
                         preamble = :(($my_i, $my_q) = subtable_get($(lvl.tbl), $subtbl, $state)),
                         stop = (ctx, ext) -> value(my_i),
                         chunk = Spike(
-                            body = Fill(virtual_level_default(lvl)),
+                            body = FillLeaf(virtual_level_default(lvl)),
                             tail = Simplify(instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Ti)), mode, subprotos))
                         ),
                         next = (ctx, ext) -> :($state = subtable_next($(lvl.tbl), $subtbl, $state)) 
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_default(lvl)))
                 )
             ])
         )

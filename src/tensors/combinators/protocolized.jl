@@ -126,7 +126,7 @@ phase_range(ctx, node::VirtualProtocolizedArray, ext) = phase_range(ctx, node.bo
 get_spike_body(ctx, node::VirtualProtocolizedArray, ext, ext_2) = VirtualProtocolizedArray(get_spike_body(ctx, node.body, ext, ext_2), node.protos)
 get_spike_tail(ctx, node::VirtualProtocolizedArray, ext, ext_2) = VirtualProtocolizedArray(get_spike_tail(ctx, node.body, ext, ext_2), node.protos)
 
-visit_fill(node, tns::VirtualProtocolizedArray) = visit_fill(node, tns.body)
+visit_fill_leaf_leaf(node, tns::VirtualProtocolizedArray) = visit_fill_leaf_leaf(node, tns.body)
 visit_simplify(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(visit_simplify(node.body), node.protos)
 
 (ctx::SwitchVisitor)(node::VirtualProtocolizedArray) = map(ctx(node.body)) do (guard, body)
