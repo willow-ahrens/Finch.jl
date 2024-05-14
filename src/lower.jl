@@ -294,7 +294,7 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
     end
 
     return quote
-        Threads.@threads for $i = 1:$(ctx(device.n))
+        Polyester.@batch for $i = 1:$(ctx(device.n))
             $(contain(ctx, bindings=bindings_2) do ctx_2
                 subtask = VirtualCPUThread(value(i, Int), device, ctx_2.code.task)
                 contain(ctx_2, task=subtask) do ctx_3
