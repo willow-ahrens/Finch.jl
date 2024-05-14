@@ -173,6 +173,11 @@ include("interface/lazy.jl")
 include("interface/eager.jl")
 include("interface/einsum.jl")
 
+@deprecate default fill_value
+@deprecate redefault! set_fill_value!
+@deprecate dropdefaults dropfills
+@deprecate dropdefaults! dropfills!
+
 @static if !isdefined(Base, :get_extension)
     function __init__()
         @require SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf" include("../ext/SparseArraysExt.jl")
