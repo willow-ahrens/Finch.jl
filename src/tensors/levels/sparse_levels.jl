@@ -114,7 +114,7 @@ end
     SparseLevel{[Ti=Int], [Tp=Int], [Tbl=TreeTable]}(lvl, [dim])
 
 A subfiber of a sparse level does not need to represent slices `A[:, ..., :, i]`
-which are entirely [`default`](@ref). Instead, only potentially non-default
+which are entirely [`fill_value`](@ref). Instead, only potentially non-fill
 slices are stored as subfibers in `lvl`.  A datastructure specified by Tbl is used to record which
 slices are stored. Optionally, `dim` is the size of the last dimension.
 
@@ -184,8 +184,8 @@ end
 pattern!(lvl::SparseLevel{Ti}) where {Ti} = 
     SparseLevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.tbl)
 
-redefault!(lvl::SparseLevel{Ti}, init) where {Ti} = 
-    SparseLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.tbl)
+set_fill_value!(lvl::SparseLevel{Ti}, init) where {Ti} = 
+    SparseLevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.tbl)
 
 function Base.show(io::IO, lvl::SparseLevel{Ti, Tbl, Lvl}) where {Ti, Tbl, Lvl}
     if get(io, :compact, false)
@@ -206,7 +206,7 @@ function Base.show(io::IO, lvl::SparseLevel{Ti, Tbl, Lvl}) where {Ti, Tbl, Lvl}
 end
 
 labelled_show(io::IO, fbr::SubFiber{<:SparseLevel}) =
-    print(io, "Sparse (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+    print(io, "Sparse (", fill_value(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
 function labelled_children(fbr::SubFiber{<:SparseLevel})
     lvl = fbr.lvl
@@ -230,7 +230,7 @@ end
 @inline level_size(lvl::SparseLevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::SparseLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
 @inline level_eltype(::Type{<:SparseLevel{Ti, Tbl, Lvl}}) where {Ti, Tbl, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseLevel{Ti, Tbl, Lvl}}) where {Ti, Tbl, Lvl} = level_default(Lvl)
+@inline level_fill_value(::Type{<:SparseLevel{Ti, Tbl, Lvl}}) where {Ti, Tbl, Lvl} = level_fill_value(Lvl)
 data_rep_level(::Type{<:SparseLevel{Ti, Tbl, Lvl}}) where {Ti, Tbl, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseLevel})() = fbr
@@ -241,7 +241,7 @@ function (fbr::SubFiber{<:SparseLevel{Ti}})(idxs...) where {Ti}
     crds = table_coords(lvl.tbl, p)
     r = searchsorted(crds, idxs[end])
     q = lvl.tbl.ptr[p] + first(r) - 1
-    length(r) == 0 ? default(fbr) : SubFiber(lvl.lvl, lvl.tbl.val[q])(idxs[1:end-1]...)
+    length(r) == 0 ? fill_value(fbr) : SubFiber(lvl.lvl, lvl.tbl.val[q])(idxs[1:end-1]...)
 end
 
 mutable struct VirtualSparseLevel <: AbstractVirtualLevel
@@ -301,12 +301,12 @@ function virtual_level_resize!(ctx, lvl::VirtualSparseLevel, dims...)
 end
 
 virtual_level_eltype(lvl::VirtualSparseLevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualSparseLevel) = virtual_level_default(lvl.lvl)
+virtual_level_fill_value(lvl::VirtualSparseLevel) = virtual_level_fill_value(lvl.lvl)
 
 postype(lvl::VirtualSparseLevel) = postype(lvl.lvl)
 
 function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos, init)
-    #TODO check that init == default
+    #TODO check that init == fill_value
     Ti = lvl.Ti
     Tp = postype(lvl)
     qos = freshen(ctx.code, :qos)
@@ -390,14 +390,14 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseLevel}, mode::Reader
                         preamble = :(($my_i, $my_q) = subtable_get($(lvl.tbl), $subtbl, $state)),
                         stop = (ctx, ext) -> value(my_i),
                         chunk = Spike(
-                            body = Fill(virtual_level_default(lvl)),
+                            body = FillLeaf(virtual_level_fill_value(lvl)),
                             tail = Simplify(instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Ti)), mode, subprotos))
                         ),
                         next = (ctx, ext) -> :($state = subtable_next($(lvl.tbl), $subtbl, $state)) 
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl)))
                 )
             ])
         )

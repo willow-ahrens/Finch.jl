@@ -7,7 +7,7 @@ let
 
     #Since we don't specialize for the size, all sizes will be square
 
-    #We will use Bool, Int, and Float64, and default values will be 0 and 1
+    #We will use Bool, Int, and Float64, and fill values will be 0 and 1
 
     formats = []
     Ts = [Bool, Int, Float64]
@@ -68,7 +68,7 @@ let
         B = deepcopy(format)
 
         if ndims(format) > 0
-            dropdefaults(A)
+            dropfills(A)
         end
         copyto!(A, B)
         A == B

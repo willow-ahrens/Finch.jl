@@ -50,12 +50,12 @@ all subfibers in a level of type `Lvl`.
 function level_eltype end
 
 """
-    level_default(::Type{Lvl})
+    level_fill_value(::Type{Lvl})
 
-The result of `level_default(Lvl)` defines [`default`](@ref) for all subfibers in a
+The result of `level_fill_value(Lvl)` defines [`fill_value`](@ref) for all subfibers in a
 level of type `Lvl`.
 """
-function level_default end
+function level_fill_value end
 
 """
     declare_level!(ctx, lvl, pos, init)
@@ -95,7 +95,7 @@ function assemble_level! end
     reassemble_level!(lvl, ctx, pos_start, pos_end) 
 
 Set the previously assempled positions from `pos_start` to `pos_end` to
-`level_default(lvl)`.  Not avaliable on all level types as this presumes updating.
+`level_fill_value(lvl)`.  Not avaliable on all level types as this presumes updating.
 """
 function reassemble_level! end
 

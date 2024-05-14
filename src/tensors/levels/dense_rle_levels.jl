@@ -68,8 +68,8 @@ function countstored_level(lvl::DenseRLELevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
 
-redefault!(lvl::DenseRLELevel{Ti}, init) where {Ti} = 
-    DenseRLELevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.right, redefault!(lvl.buf, init); merge = getmerge(lvl))
+set_fill_value!(lvl::DenseRLELevel{Ti}, init) where {Ti} = 
+    DenseRLELevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.right, set_fill_value!(lvl.buf, init); merge = getmerge(lvl))
 
 Base.resize!(lvl::DenseRLELevel{Ti}, dims...) where {Ti} = 
     DenseRLELevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.right, resize!(lvl.buf, dims[1:end-1]...); merge = getmerge(lvl))
@@ -99,7 +99,7 @@ function Base.show(io::IO, lvl::DenseRLELevel{Ti, Ptr, Right, merge, Lvl}) where
 end
 
 labelled_show(io::IO, fbr::SubFiber{<:DenseRLELevel}) =
-    print(io, "DenseRLE (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+    print(io, "DenseRLE (", fill_value(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
 function labelled_children(fbr::SubFiber{<:DenseRLELevel})
     lvl = fbr.lvl
@@ -115,7 +115,7 @@ end
 @inline level_size(lvl::DenseRLELevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::DenseRLELevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
 @inline level_eltype(::Type{<:DenseRLELevel{Ti, Ptr, Right, merge, Lvl}}) where {Ti, Ptr, Right, merge, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:DenseRLELevel{Ti, Ptr, Right, merge, Lvl}}) where {Ti, Ptr, Right, merge, Lvl}= level_default(Lvl)
+@inline level_fill_value(::Type{<:DenseRLELevel{Ti, Ptr, Right, merge, Lvl}}) where {Ti, Ptr, Right, merge, Lvl}= level_fill_value(Lvl)
 data_rep_level(::Type{<:DenseRLELevel{Ti, Ptr, Right, merge, Lvl}}) where {Ti, Ptr, Right, merge, Lvl} = DenseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:DenseRLELevel})() = fbr
@@ -232,7 +232,7 @@ function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualDenseRLELevel, 
 end
 
 virtual_level_eltype(lvl::VirtualDenseRLELevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualDenseRLELevel) = virtual_level_default(lvl.lvl)
+virtual_level_fill_value(lvl::VirtualDenseRLELevel) = virtual_level_fill_value(lvl.lvl)
 
 function declare_level!(ctx::AbstractCompiler, lvl::VirtualDenseRLELevel, pos, init)
     Tp = postype(lvl)
@@ -307,7 +307,7 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualDenseRLELevel, pos_sto
     end)
     if lvl.merge
         lvl.buf = freeze_level!(ctx, lvl.buf, value(qos_stop))
-        lvl.lvl = declare_level!(ctx, lvl.lvl, literal(1), literal(virtual_level_default(lvl.buf)))
+        lvl.lvl = declare_level!(ctx, lvl.lvl, literal(1), literal(virtual_level_fill_value(lvl.buf)))
         p = freshen(ctx.code, :p)
         q = freshen(ctx.code, :q)
         q_head = freshen(ctx.code, :q_head)
@@ -353,7 +353,7 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualDenseRLELevel, pos_sto
                         ctx_2.bindings[dst] = virtual(VirtualSubFiber(lvl.lvl, value(q_2, Tp)))
                         exts = virtual_level_size(ctx_2, lvl.buf)
                         inds = [index(freshen(ctx_2.code, :i, n)) for n = 1:length(exts)]
-                        prgm = assign(access(dst, updater, inds...), initwrite(virtual_level_default(lvl.lvl)), access(src, reader, inds...))
+                        prgm = assign(access(dst, updater, inds...), initwrite(virtual_level_fill_value(lvl.lvl)), access(src, reader, inds...))
                         for (ind, ext) in zip(inds, exts)
                             prgm = loop(ind, ext, prgm)
                         end
@@ -369,7 +369,7 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualDenseRLELevel, pos_sto
             $qos_stop = $q_2 - 1
         end)
         lvl.lvl = freeze_level!(ctx, lvl.lvl, value(qos_stop))
-        lvl.buf = declare_level!(ctx, lvl.buf, literal(1), literal(virtual_level_default(lvl.buf)))
+        lvl.buf = declare_level!(ctx, lvl.buf, literal(1), literal(virtual_level_fill_value(lvl.buf)))
         lvl.buf = freeze_level!(ctx, lvl.buf, literal(0))
         return lvl
     else

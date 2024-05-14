@@ -7,7 +7,7 @@ abstract type AbstractVirtualTensor end
 Declare the read-only virtual tensor `tns` in the context `ctx` with a starting value of `init` and return it.
 Afterwards the tensor is update-only.
 """
-declare!(ctx, tns, init) = @assert virtual_default(ctx, tns) == init
+declare!(ctx, tns, init) = @assert virtual_fill_value(ctx, tns) == init
 
 """
     instantiate(ctx, tns, mode, protos)
@@ -47,19 +47,19 @@ the tensor is update-only.
 thaw!(ctx, tns) = throw(FinchProtocolError("cannot modify $(typeof(tns)) in place (forgot to declare with .= ?)"))
 
 """
-    default(arr)
+    fill_value(arr)
 
 Return the initializer for `arr`. For SparseArrays, this is 0. Often, the
-`default` value becomes the `fill` or `background` value of a tensor.
+"fill" value becomes the "background" value of a tensor.
 """
-function default end
+function fill_value end
 
 """
-    virtual default(arr)
+    virtual fill_value(arr)
 
 Return the initializer for virtual array `arr`.
 """
-function virtual_default end
+function virtual_fill_value end
 
 """
     virtual_eltype(arr)

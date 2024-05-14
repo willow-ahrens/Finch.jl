@@ -145,7 +145,7 @@ using SparseArrays
         struct MyAlgebra115 <: Finch.AbstractAlgebra end
         t = Tensor(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
-        A = dropdefaults(copyto!(Tensor(SparseList(SparseList(Element(0.0)))), B))
+        A = dropfills(copyto!(Tensor(SparseList(SparseList(Element(0.0)))), B))
         @finch algebra=MyAlgebra115() (t .= 0; for j=_, i=_; t[i, j] = f(A[i,j], A[i,j], A[i,j]) end)
         @test t == B .* 3
     end
@@ -155,14 +155,14 @@ using SparseArrays
     let
         t = Tensor(SparseList(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
-        A = dropdefaults(copyto!(Tensor(SparseList(SparseList(Element(0.0)))), B))
+        A = dropfills(copyto!(Tensor(SparseList(SparseList(Element(0.0)))), B))
         @test_logs (:warn, "Performance Warning: non-concordant traversal of t[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)") match_mode=:any @test_throws Finch.FinchProtocolError @finch (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
     end
 
     let
         t = Tensor(Dense(SparseList(Element(0.0))))
         B = SparseMatrixCSC([0 0 0 0; -1 -1 -1 -1; -2 -2 -2 -2; -3 -3 -3 -3])
-        A = dropdefaults(copyto!(Tensor(Dense(SparseList(Element(0.0)))), B))
+        A = dropfills(copyto!(Tensor(Dense(SparseList(Element(0.0)))), B))
         @test_logs (:warn, "Performance Warning: non-concordant traversal of t[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)") match_mode=:any @test_throws Finch.FinchProtocolError @finch (t .= 0; for i=_, j=_; t[i, j] = A[i, j] end)
     end
 
@@ -281,10 +281,10 @@ using SparseArrays
 
         println(io, "A :", A)
         println(io, "C :", C)
-        println(io, "redefault!(B, Inf) :", redefault!(B, Inf))
-        println(io, redefault!(B, Inf))
+        println(io, "set_fill_value!(B, Inf) :", set_fill_value!(B, Inf))
+        println(io, set_fill_value!(B, Inf))
         println(io, C)
-        @test Structure(C) == Structure(redefault!(B, Inf))
+        @test Structure(C) == Structure(set_fill_value!(B, Inf))
         @test check_output("issues/issue118.txt", String(take!(io)))
     end
 
@@ -299,7 +299,7 @@ using SparseArrays
         @test_throws DimensionMismatch @finch (A .= 0; for j=_, i=_; A[i] = B[i, j] end)
         @test_throws DimensionMismatch @finch (A .= 0; for j=_, i=_; A[i, j] = B[i, j] + C[i, j] end)
         @test_throws DimensionMismatch copyto!(Tensor(SparseList(Element(0.0))), A)
-        @test_throws DimensionMismatch dropdefaults!(Tensor(SparseList(Element(0.0))), A)
+        @test_throws DimensionMismatch dropfills!(Tensor(SparseList(Element(0.0))), A)
 
         A = fsprand(10, 11, 0.5)
         B = fsprand(10, 10, 0.5)

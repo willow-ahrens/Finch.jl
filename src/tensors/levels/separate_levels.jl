@@ -23,7 +23,7 @@ struct SeparateLevel{Lvl, Val} <: AbstractLevel
 end
 const Separate = SeparateLevel
 
-#similar_level(lvl, level_default(typeof(lvl)), level_eltype(typeof(lvl)), level_size(lvl)...)
+#similar_level(lvl, level_fill_value(typeof(lvl)), level_eltype(typeof(lvl)), level_size(lvl)...)
 SeparateLevel(lvl::Lvl) where {Lvl} = SeparateLevel(lvl, Lvl[])
 Base.summary(::Separate{Lvl, Val}) where {Lvl, Val} = "Separate($(Lvl))"
 
@@ -39,7 +39,7 @@ function moveto(lvl::SeparateLevel, device)
 end
 
 pattern!(lvl::SeparateLevel) = SeparateLevel(pattern!(lvl.lvl), map(pattern!, lvl.val))
-redefault!(lvl::SeparateLevel, init) = SeparateLevel(redefault!(lvl.lvl, init), map(lvl_2->redefault!(lvl_2, init), lvl.val))
+set_fill_value!(lvl::SeparateLevel, init) = SeparateLevel(set_fill_value!(lvl.lvl, init), map(lvl_2->set_fill_value!(lvl_2, init), lvl.val))
 Base.resize!(lvl::SeparateLevel, dims...) = SeparateLevel(resize!(lvl.lvl, dims...), map(lvl_2->resize!(lvl_2, dims...), lvl.val))
 
 
@@ -69,7 +69,7 @@ end
 @inline level_size(lvl::SeparateLevel{Lvl, Val}) where {Lvl, Val} = level_size(lvl.lvl)
 @inline level_axes(lvl::SeparateLevel{Lvl, Val}) where {Lvl, Val} = level_axes(lvl.lvl)
 @inline level_eltype(::Type{SeparateLevel{Lvl, Val}}) where {Lvl, Val} = level_eltype(Lvl)
-@inline level_default(::Type{<:SeparateLevel{Lvl, Val}}) where {Lvl, Val} = level_default(Lvl)
+@inline level_fill_value(::Type{<:SeparateLevel{Lvl, Val}}) where {Lvl, Val} = level_fill_value(Lvl)
 
 function (fbr::SubFiber{<:SeparateLevel})(idxs...)
     q = fbr.pos
@@ -114,7 +114,7 @@ function virtualize(ctx, ex, ::Type{SeparateLevel{Lvl, Val}}, tag=:lvl) where {L
               $val = $ex.val
     end)
     lvl_2 = virtualize(ctx, :($ex.lvl), Lvl, sym)
-    VirtualSeparateLevel(lvl_2, sym, val, typeof(level_default(Lvl)), Lvl, Val)
+    VirtualSeparateLevel(lvl_2, sym, val, typeof(level_fill_value(Lvl)), Lvl, Val)
 end
 
 Base.summary(lvl::VirtualSeparateLevel) = "Separate($(lvl.Lvl))"
@@ -122,7 +122,7 @@ Base.summary(lvl::VirtualSeparateLevel) = "Separate($(lvl.Lvl))"
 virtual_level_resize!(ctx, lvl::VirtualSeparateLevel, dims...) = (lvl.lvl = virtual_level_resize!(ctx, lvl.lvl, dims...); lvl)
 virtual_level_size(ctx, lvl::VirtualSeparateLevel) = virtual_level_size(ctx, lvl.lvl)
 virtual_level_eltype(lvl::VirtualSeparateLevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualSeparateLevel) = virtual_level_default(lvl.lvl)
+virtual_level_fill_value(lvl::VirtualSeparateLevel) = virtual_level_fill_value(lvl.lvl)
 
 function virtual_moveto_level(ctx, lvl::VirtualSeparateLevel, arch)
     
@@ -154,13 +154,13 @@ function assemble_level!(ctx, lvl::VirtualSeparateLevel, pos_start, pos_stop)
         for $pos in $(ctx(pos_start)):$(ctx(pos_stop))
             $sym = similar_level(
                 $(lvl.ex).lvl,
-                level_default(typeof($(lvl.ex).lvl)),
+                level_fill_value(typeof($(lvl.ex).lvl)),
                 level_eltype(typeof($(lvl.ex).lvl)),
                 $(map(ctx, map(getstop, virtual_level_size(ctx, lvl)))...)
             )
             $(contain(ctx) do ctx_2
                 lvl_2 = virtualize(ctx_2.code, sym, lvl.Lvl, sym)
-                lvl_2 = declare_level!(ctx_2, lvl_2, literal(0), literal(virtual_level_default(lvl_2)))
+                lvl_2 = declare_level!(ctx_2, lvl_2, literal(0), literal(virtual_level_fill_value(lvl_2)))
                 lvl_2 = virtual_level_resize!(ctx_2, lvl_2, virtual_level_size(ctx_2, lvl.lvl)...)
                 push!(ctx_2.code.preamble, assemble_level!(ctx_2, lvl_2, literal(1), literal(1)))
                 contain(ctx_2) do ctx_3
@@ -206,7 +206,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSeparateLevel}, mode::Read
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     isnulltest = freshen(ctx.code, tag, :_nulltest)
-    D = level_default(lvl.Lvl)
+    Vf = level_fill_value(lvl.Lvl)
     sym = freshen(ctx.code, :pointer_to_lvl)
     val = freshen(ctx.code, lvl.ex, :_val)
     return body = Thunk(

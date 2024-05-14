@@ -62,8 +62,8 @@ function countstored_level(lvl::SparseVBLLevel, pos)
     countstored_level(lvl.lvl, lvl.ofs[lvl.ptr[pos + 1]]-1)
 end
 
-redefault!(lvl::SparseVBLLevel{Ti}, init) where {Ti} = 
-    SparseVBLLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
+set_fill_value!(lvl::SparseVBLLevel{Ti}, init) where {Ti} = 
+    SparseVBLLevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
 
 Base.resize!(lvl::SparseVBLLevel{Ti}, dims...) where {Ti} = 
     SparseVBLLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.idx, lvl.ofs)
@@ -91,7 +91,7 @@ function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}) where {T
 end
 
 labelled_show(io::IO, fbr::SubFiber{<:SparseVBLLevel}) =
-    print(io, "SparseVBL (", default(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+    print(io, "SparseVBL (", fill_value(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
 function labelled_children(fbr::SubFiber{<:SparseVBLLevel})
     lvl = fbr.lvl
@@ -113,7 +113,7 @@ end
 @inline level_size(lvl::SparseVBLLevel) = (lvl.shape, level_size(lvl.lvl)...)
 @inline level_axes(lvl::SparseVBLLevel) = (Base.OneTo(lvl.shape), level_axes(lvl.lvl)...)
 @inline level_eltype(::Type{<:SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}}) where {Ti, Ptr, Idx, Ofs, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}}) where {Ti, Ptr, Idx, Ofs, Lvl} = level_default(Lvl)
+@inline level_fill_value(::Type{<:SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}}) where {Ti, Ptr, Idx, Ofs, Lvl} = level_fill_value(Lvl)
 data_rep_level(::Type{<:SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}}) where {Ti, Ptr, Idx, Ofs, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseVBLLevel})() = fbr
@@ -122,9 +122,9 @@ function (fbr::SubFiber{<:SparseVBLLevel})(idxs...)
     lvl = fbr.lvl
     p = fbr.pos
     r = lvl.ptr[p] + searchsortedfirst(@view(lvl.idx[lvl.ptr[p]:lvl.ptr[p + 1] - 1]), idxs[end]) - 1
-    r < lvl.ptr[p + 1] || return default(fbr)
+    r < lvl.ptr[p + 1] || return fill_value(fbr)
     q = lvl.ofs[r + 1] - 1 - lvl.idx[r] + idxs[end]
-    q >= lvl.ofs[r] || return default(fbr)
+    q >= lvl.ofs[r] || return fill_value(fbr)
     fbr_2 = SubFiber(lvl.lvl, q)
     return fbr_2(idxs[1:end-1]...)
 end
@@ -204,7 +204,7 @@ function virtual_level_resize!(ctx, lvl::VirtualSparseVBLLevel, dims...)
 end
 
 virtual_level_eltype(lvl::VirtualSparseVBLLevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualSparseVBLLevel) = virtual_level_default(lvl.lvl)
+virtual_level_fill_value(lvl::VirtualSparseVBLLevel) = virtual_level_fill_value(lvl.lvl)
 
 function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualSparseVBLLevel, arch)
     ptr_2 = freshen(ctx.code, lvl.ptr)
@@ -322,7 +322,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseVBLLevel}, mode::Rea
                             body = (ctx) -> Sequence([
                                 Phase(
                                     stop = (ctx, ext) -> value(my_i_start),
-                                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
+                                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl))),
                                 ),
                                 Phase(
                                     body = (ctx, ext) -> Lookup(
@@ -340,7 +340,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseVBLLevel}, mode::Rea
                     )
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl)))
                 )
             ])
         )
@@ -394,7 +394,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseVBLLevel}, mode::Rea
                         chunk = Sequence([
                                     Phase(
                                         stop = (ctx, ext) -> value(my_i_start),
-                                        body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl))),
+                                        body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl))),
                                     ),
                                     Phase(
                                         body = (ctx, ext) -> Lookup(
@@ -409,7 +409,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseVBLLevel}, mode::Rea
                     ), 
                 ),
                 Phase(
-                    body = (ctx, ext) -> Run(Fill(virtual_level_default(lvl)))
+                    body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl)))
                 )
             ])
         )

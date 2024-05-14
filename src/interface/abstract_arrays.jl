@@ -63,7 +63,7 @@ end
 
 FinchNotation.finch_leaf(x::VirtualAbstractArray) = virtual(x)
 
-virtual_default(ctx, ::VirtualAbstractArray) = 0
+virtual_fill_value(ctx, ::VirtualAbstractArray) = 0
 virtual_eltype(ctx, tns::VirtualAbstractArray) = tns.eltype
 
 function virtual_moveto(ctx, vec::VirtualAbstractArray, device)
@@ -77,8 +77,8 @@ function virtual_moveto(ctx, vec::VirtualAbstractArray, device)
     end)
 end
 
-default(a::AbstractArray) = default(typeof(a))
-default(T::Type{<:AbstractArray}) = zero(eltype(T))
+fill_value(a::AbstractArray) = fill_value(typeof(a))
+fill_value(T::Type{<:AbstractArray}) = zero(eltype(T))
 
 """
     Array(arr::Union{Tensor, SwizzleArray})

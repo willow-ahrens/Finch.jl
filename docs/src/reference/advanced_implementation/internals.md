@@ -315,7 +315,7 @@ Finch program: i
 Tensor levels are implemented using the following methods:
 
 ```@docs
-default
+fill_value
 declare_level!
 assemble_level!
 reassemble_level!
@@ -324,7 +324,7 @@ level_ndims
 level_size
 level_axes
 level_eltype
-level_default
+level_fill_value
 ```
 
 ## Virtual Tensor Methods

@@ -49,8 +49,8 @@ end
 pattern!(lvl::DenseLevel{Ti, Lvl}) where {Ti, Lvl} = 
     DenseLevel{Ti}(pattern!(lvl.lvl), lvl.shape)
 
-redefault!(lvl::DenseLevel{Ti}, init) where {Ti} = 
-    DenseLevel{Ti}(redefault!(lvl.lvl, init), lvl.shape)
+set_fill_value!(lvl::DenseLevel{Ti}, init) where {Ti} = 
+    DenseLevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape)
 
 Base.resize!(lvl::DenseLevel{Ti}, dims...) where {Ti} = 
     DenseLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end])
@@ -59,7 +59,7 @@ Base.resize!(lvl::DenseLevel{Ti}, dims...) where {Ti} =
 @inline level_size(lvl::DenseLevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::DenseLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
 @inline level_eltype(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = level_eltype(Lvl)
-@inline level_default(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = level_default(Lvl)
+@inline level_fill_value(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = level_fill_value(Lvl)
 data_rep_level(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = DenseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:DenseLevel})() = fbr
@@ -148,7 +148,7 @@ function virtual_level_resize!(ctx, lvl::VirtualDenseLevel, dims...)
 end
 
 virtual_level_eltype(lvl::VirtualDenseLevel) = virtual_level_eltype(lvl.lvl)
-virtual_level_default(lvl::VirtualDenseLevel) = virtual_level_default(lvl.lvl)
+virtual_level_fill_value(lvl::VirtualDenseLevel) = virtual_level_fill_value(lvl.lvl)
 
 postype(lvl::VirtualDenseLevel) = postype(lvl.lvl)
 

@@ -95,19 +95,19 @@
         for lvl in levels_1D
             lvl = merge((filter = (x) -> true, pattern = true, repr = true), lvl)
             if lvl.filter(key)
-                leaf = () -> Element{default(arr), eltype(arr)}()
+                leaf = () -> Element{fill_value(arr), eltype(arr)}()
                 ref = Tensor(SparseList(leaf()))
                 res = Tensor(SparseList(leaf()))
-                ref = dropdefaults!(ref, arr)
+                ref = dropfills!(ref, arr)
                 tmp = Tensor(lvl.Lvl(leaf()))
                 @testset "convert $(key) $(lvl.key)(Element())" begin
-                    fname = "representation/convert_to_$(lvl.key){Element{$(default(arr))}}.jl"
+                    fname = "representation/convert_to_$(lvl.key){Element{$(fill_value(arr))}}.jl"
                     get!(ios, fname) do
                         io = IOBuffer()
                         show(io, @finch_code (tmp .= 0; for i=_; tmp[i] = ref[i] end))
                         io
                     end
-                    fname = "representation/convert_from_$(lvl.key){Element{$(default(arr))}}.jl"
+                    fname = "representation/convert_from_$(lvl.key){Element{$(fill_value(arr))}}.jl"
                     get!(ios, fname) do
                         io = IOBuffer()
                         show(io, @finch_code (res .= 0; for i=_; res[i] = tmp[i] end))
@@ -120,7 +120,7 @@
                         @test Structure(ref) == Structure(res)
                     end
 
-                    tmp = dropdefaults!(tmp, arr)
+                    tmp = dropfills!(tmp, arr)
                     fname = "representation/$(lvl.key)_representation.txt"
                     io = get!(ios, fname) do
                         io = IOBuffer()
@@ -166,10 +166,10 @@
         for lvl in levels_2D
             lvl = merge((filter = (x) -> true, pattern = true, repr = true), lvl)
             if lvl.filter(key)
-                leaf = () -> Element{default(arr), eltype(arr)}()
+                leaf = () -> Element{fill_value(arr), eltype(arr)}()
                 ref = Tensor(SparseList(SparseList(leaf())))
                 res = Tensor(SparseList(SparseList(leaf())))
-                ref = dropdefaults!(ref, arr)
+                ref = dropfills!(ref, arr)
                 tmp = Tensor(lvl.Lvl(leaf()))
                 @testset "convert $(key) $(lvl.key)(Element())" begin
                     @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)

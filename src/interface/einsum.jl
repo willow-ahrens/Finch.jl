@@ -18,10 +18,10 @@ struct EinsumArgument{T, Style}
     style::Style
     data::LogicNode
     extrude::Dict{Symbol, Bool}
-    default::T
+    fill_value::T
 end
 
-EinsumArgument{T}(style::Style, data, extrude, default) where {T, Style} = EinsumArgument{T, Style}(style, data, extrude, default)
+EinsumArgument{T}(style::Style, data, extrude, fill_value) where {T, Style} = EinsumArgument{T, Style}(style, data, extrude, fill_value)
 
 Base.eltype(::EinsumArgument{T}) where {T} = T
 
@@ -29,14 +29,14 @@ einsum_access(tns::EinsumTensor, idxs...) = EinsumArgument{eltype(tns.arg)}(
     tns.style,
     relabel(tns.arg.data, map(field, idxs)...),
     Dict(idx => idx_extrude for (idx, idx_extrude) in zip(idxs, tns.arg.extrude)),
-    tns.arg.default
+    tns.arg.fill_value
 )
 
 einsum_op(op, args::EinsumArgument...) = EinsumArgument{combine_eltypes(op, args)}(
     reduce(result_style, [arg.style for arg in args]; init=EinsumEagerStyle()),
     mapjoin(op, (arg.data for arg in args)...),
     mergewith(&, (arg.extrude for arg in args)...),
-    op((arg.default for arg in args)...)
+    op((arg.fill_value for arg in args)...)
 )
 
 einsum_immediate(val) = EinsumArgument{typeof(val)}(EinsumEagerStyle(), immediate(val), Dict(), val)
@@ -47,7 +47,7 @@ struct EinsumProgram{Style, Arg <: LazyTensor}
 end
 
 function einsum(::typeof(overwrite), arg::EinsumArgument{T}, idxs...; init = nothing) where {T}
-    einsum(initwrite(arg.default), arg, idxs...; init=arg.default)
+    einsum(initwrite(arg.fill_value), arg, idxs...; init=arg.fill_value)
 end
 
 function einsum(op, arg::EinsumArgument{T}, idxs...; init = initial_value(op, T)) where {T}

@@ -49,7 +49,7 @@ function (ctx::LogicMachine)(ex)
         res = tag_instance(variable_instance(:res), tns.val)
         lhs = access_instance(res, literal_instance(updater), map(idx -> index_instance(idx.name), lhs_idxs)...)
         (rhs, rhs_idxs) = lower_pointwise_logic(ctx, reorder(relabel(arg, idxs_1...), idxs_2...))
-        body = assign_instance(lhs, literal_instance(initwrite(default(tns.val))), rhs)
+        body = assign_instance(lhs, literal_instance(initwrite(fill_value(tns.val))), rhs)
         for idx in loop_idxs
             if idx in rhs_idxs
                 body = loop_instance(index_instance(idx.name), dimless, body)
@@ -57,14 +57,14 @@ function (ctx::LogicMachine)(ex)
                 body = loop_instance(index_instance(idx.name), call_instance(literal_instance(extent), literal_instance(1), literal_instance(1)), body)
             end
         end
-        body = block_instance(declare_instance(res, literal_instance(default(tns.val))), body, yieldbind_instance(res))
+        body = block_instance(declare_instance(res, literal_instance(fill_value(tns.val))), body, yieldbind_instance(res))
         if ctx.verbose
             print("Running: ")
             display(body)
         end
         execute(body, mode = ctx.mode).res
     elseif @capture ex reformat(~tns, mapjoin(~args...))
-        z = default(tns.val)
+        z = fill_value(tns.val)
         ctx(reformat(tns, aggregate(initwrite(z), immediate(z), mapjoin(args...))))
     elseif @capture ex reformat(~tns, aggregate(~op, ~init, ~arg, ~idxs_1...))
         loop_idxs = getfields(arg)
@@ -80,7 +80,7 @@ function (ctx::LogicMachine)(ex)
                 body = loop_instance(index_instance(idx.name), call_instance(literal_instance(extent), literal_instance(1), literal_instance(1)), body)
             end
         end
-        body = block_instance(declare_instance(res, literal_instance(default(tns.val))), body, yieldbind_instance(res))
+        body = block_instance(declare_instance(res, literal_instance(fill_value(tns.val))), body, yieldbind_instance(res))
         if ctx.verbose
             print("Running: ")
             display(body)

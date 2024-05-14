@@ -333,22 +333,22 @@ end
 
 bspread_level(f, desc, fmt) = bspread_level(f, desc, fmt, Val(Symbol(fmt["level_kind"])))
 
-function bspwrite_level(f, desc, fmt, lvl::ElementLevel{D}) where {D}
+function bspwrite_level(f, desc, fmt, lvl::ElementLevel{Vf}) where {Vf}
     fmt["level_kind"] = "element"
     bspwrite_data(f, desc, "values", lvl.val)
-    bspwrite_data(f, desc, "fill_value", [D])
+    bspwrite_data(f, desc, "fill_value", [Vf])
 end
 function bspread_level(f, desc, fmt, ::Val{:element})
     val = convert(Vector, bspread_data(f, desc, "values"))
     if haskey(f, "fill_value")
-        D = bspread_data(f, desc, "fill_value")[1]
+        Vf = bspread_data(f, desc, "fill_value")[1]
     else
-        D = zero(eltype(val))
+        Vf = zero(eltype(val))
     end
-    ElementLevel(D, val)
+    ElementLevel(Vf, val)
 end
 
-function bspwrite_level(f, desc, fmt, lvl::DenseLevel{D}) where {D}
+function bspwrite_level(f, desc, fmt, lvl::DenseLevel{Vf}) where {Vf}
     fmt["level_kind"] = "dense"
     fmt["rank"] = 1
     fmt["level"] = OrderedDict()

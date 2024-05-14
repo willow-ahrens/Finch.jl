@@ -47,7 +47,7 @@ include(joinpath(@__DIR__, "../docs/examples/triangle_counting.jl"))
         input = sprand(size, size, sparsity)
         
         graphs_input = SimpleWeightedDiGraph(transpose(input))
-        finch_input = redefault!(Tensor(Dense(SparseList(Element(0.0))), input), Inf)
+        finch_input = set_fill_value!(Tensor(Dense(SparseList(Element(0.0))), input), Inf)
         
         expected = Graphs.bellman_ford_shortest_paths(graphs_input, source)
         output = bellmanford(finch_input, source)

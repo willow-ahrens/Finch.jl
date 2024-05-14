@@ -1,5 +1,5 @@
 function spgemm_inner(A, B)
-    z = default(A) * default(B) + false
+    z = fill_value(A) * fill_value(B) + false
     C = Tensor(Dense(SparseList(Element(z))))
     w = Tensor(SparseDict(SparseDict(Element(z))))
     AT = Tensor(Dense(SparseList(Element(z))))
@@ -10,7 +10,7 @@ function spgemm_inner(A, B)
 end
 
 function spgemm_outer(A, B)
-    z = default(A) * default(B) + false
+    z = fill_value(A) * fill_value(B) + false
     C = Tensor(Dense(SparseList(Element(z))))
     w = Tensor(SparseDict(SparseDict(Element(z))))
     BT = Tensor(Dense(SparseList(Element(z))))
@@ -22,7 +22,7 @@ function spgemm_outer(A, B)
 end
 
 function spgemm_gustavson(A, B)
-    z = default(A) * default(B) + false
+    z = fill_value(A) * fill_value(B) + false
     C = Tensor(Dense(SparseList(Element(z))))
     w = Tensor(SparseByteMap(Element(z)))
     @finch begin

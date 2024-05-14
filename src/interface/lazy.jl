@@ -7,15 +7,15 @@ const AbstractArrayOrBroadcasted = Union{AbstractArray,Broadcasted}
 mutable struct LazyTensor{T, N}
     data
     extrude::NTuple{N, Bool}
-    default::T
+    fill_value::T
 end
-LazyTensor{T}(data, extrude::NTuple{N, Bool}, default) where {T, N} = LazyTensor{T, N}(data, extrude, default)
+LazyTensor{T}(data, extrude::NTuple{N, Bool}, fill_value) where {T, N} = LazyTensor{T, N}(data, extrude, fill_value)
 
 Base.ndims(::Type{LazyTensor{T, N}}) where {T, N} = N
 Base.ndims(tns::LazyTensor) = ndims(typeof(tns))
 Base.eltype(::Type{<:LazyTensor{T}}) where {T} = T
 Base.eltype(tns::LazyTensor) = eltype(typeof(tns))
-default(tns::LazyTensor) = tns.default
+fill_value(tns::LazyTensor) = tns.fill_value
 
 Base.size(::LazyTensor) =
     throw(ErrorException("Base.size is not supported for LazyTensor. Call `compute()` first."))
@@ -39,7 +39,7 @@ function expanddims(arr::LazyTensor{T}, dims) where {T}
     data_2 = reorder(relabel(arr.data, idxs_1...), idxs_2...)
     extrude_2 = [false for _ in 1:ndims(arr) + length(dims)]
     extrude_2[antidims] .= arr.extrude
-    return LazyTensor{T, ndims(arr) + length(dims)}(data_2, tuple(extrude_2...), default(arr))
+    return LazyTensor{T, ndims(arr) + length(dims)}(data_2, tuple(extrude_2...), fill_value(arr))
 end
 
 function identify(data)
@@ -55,7 +55,7 @@ function LazyTensor{T}(arr::Base.AbstractArrayOrBroadcasted) where {T}
     idxs = [field(gensym(:i)) for _ in 1:ndims(arr)]
     extrude = ntuple(n -> size(arr, n) == 1, ndims(arr))
     tns = subquery(name, table(immediate(arr), idxs...))
-    LazyTensor{eltype(arr), ndims(arr)}(tns, extrude, default(arr))
+    LazyTensor{eltype(arr), ndims(arr)}(tns, extrude, fill_value(arr))
 end
 LazyTensor(arr::AbstractTensor) = LazyTensor{eltype(arr)}(arr)
 LazyTensor(swizzle_arr::SwizzleArray{dims, <:Tensor}) where {dims} = permutedims(LazyTensor(swizzle_arr.body), dims)
@@ -64,7 +64,7 @@ function LazyTensor{T}(arr::AbstractTensor) where {T}
     idxs = [field(gensym(:i)) for _ in 1:ndims(arr)]
     extrude = ntuple(n -> size(arr)[n] == 1, ndims(arr))
     tns = subquery(name, table(immediate(arr), idxs...))
-    LazyTensor{eltype(arr), ndims(arr)}(tns, extrude, default(arr))
+    LazyTensor{eltype(arr), ndims(arr)}(tns, extrude, fill_value(arr))
 end
 LazyTensor{T}(swizzle_arr::SwizzleArray{dims, <:Tensor}) where {T, dims} = permutedims(LazyTensor{T}(swizzle_arr.body), dims)
 LazyTensor(data::LazyTensor) = data
@@ -96,14 +96,14 @@ function Base.map(f, src::LazyTensor, args...)
         end
     end
     T = combine_eltypes(f, (src, args...))
-    new_default = f(map(default, largs)...)
+    new_default = f(map(fill_value, largs)...)
     data = mapjoin(immediate(f), ldatas...)
     return LazyTensor{T}(identify(data), src.extrude, new_default)
 end
 
 function Base.map!(dst, f, src::LazyTensor, args...)
     res = map(f, src, args...)
-    return LazyTensor(identify(reformat(dst, res.data)), res.extrude, res.default)
+    return LazyTensor(identify(reformat(dst, res.data)), res.extrude, res.fill_value)
 end
 
 function initial_value(op, T)
@@ -203,7 +203,7 @@ function broadcast_to_default(bc::Broadcast.Broadcasted)
 end
 
 function broadcast_to_default(tns::LazyTensor)
-    tns.default
+    tns.fill_value
 end
 
 Base.Broadcast.instantiate(bc::Broadcasted{LazyStyle{N}}) where {N} = bc
@@ -224,7 +224,7 @@ function Base.copyto!(::LazyTensor, ::Any)
 end
 
 function Base.copyto!(dst::AbstractArray, src::LazyTensor{T, N}) where {T, N}
-    return LazyTensor{T, N}(reformat(immediate(dst), src.data), src.extrude, src.default)
+    return LazyTensor{T, N}(reformat(immediate(dst), src.data), src.extrude, src.fill_value)
 end
 
 Base.permutedims(arg::LazyTensor{T, 2}) where {T} = permutedims(arg, [2, 1])
@@ -233,7 +233,7 @@ function Base.permutedims(arg::LazyTensor{T, N}, perm) where {T, N}
     isperm(perm) || throw(ArgumentError("permutedims given invalid permutation"))
     perm = collect(perm)
     idxs = [field(gensym(:i)) for _ in 1:N]
-    return LazyTensor{T, N}(reorder(relabel(arg.data, idxs...), idxs[perm]...), arg.extrude[perm], arg.default)
+    return LazyTensor{T, N}(reorder(relabel(arg.data, idxs...), idxs[perm]...), arg.extrude[perm], arg.fill_value)
 end
 Base.permutedims(arr::SwizzleArray, perm) = swizzle(arr, perm...)
 

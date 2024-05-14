@@ -41,7 +41,7 @@ export Atomic, AtomicLevel
 export Pattern, PatternLevel
 export Scalar, SparseScalar, ShortCircuitScalar, SparseShortCircuitScalar
 export walk, gallop, follow, extrude, laminate
-export Tensor, pattern!, dropdefaults, dropdefaults!, redefault!
+export Tensor, pattern!, dropfills, dropfills!, set_fill_value!
 export diagmask, lotrimask, uptrimask, bandmask, chunkmask
 export scale, products, offset, permissive, protocolize, swizzle, toeplitz, window
 export PlusOneVector
@@ -50,7 +50,7 @@ export lazy, compute, tensordot, @einsum
 
 export choose, minby, maxby, overwrite, initwrite, filterop, d
 
-export default, AsArray, expanddims
+export fill_value, AsArray, expanddims
 
 export parallelAnalysis, ParallelAnalysisResults
 export parallel, realextent, extent, dimless
@@ -172,6 +172,11 @@ include("interface/fileio/fileio.jl")
 include("interface/lazy.jl")
 include("interface/eager.jl")
 include("interface/einsum.jl")
+
+@deprecate default fill_value
+@deprecate redefault! set_fill_value!
+@deprecate dropdefaults dropfills
+@deprecate dropdefaults! dropfills!
 
 @static if !isdefined(Base, :get_extension)
     function __init__()

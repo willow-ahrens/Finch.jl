@@ -62,7 +62,7 @@ unwrap(ctx, arr::VirtualProductArray, var) = call(products, unwrap(ctx, arr.body
 
 lower(ctx::AbstractCompiler, tns::VirtualProductArray, ::DefaultStyle) = :(ProductArray($(ctx(tns.body)), $(tns.dim)))
 
-#virtual_size(ctx::AbstractCompiler, arr::Fill) = (dimless,) # this is needed for multidimensional convolution..
+#virtual_size(ctx::AbstractCompiler, arr::FillLeaf) = (dimless,) # this is needed for multidimensional convolution..
 #virtual_size(ctx::AbstractCompiler, arr::Simplify) = (dimless,)
 #virtual_size(ctx::AbstractCompiler, arr::Furlable) = (dimless,)
 
@@ -137,7 +137,7 @@ phase_range(ctx, node::VirtualProductArray, ext) = phase_range(ctx, node.body, e
 get_spike_body(ctx, node::VirtualProductArray, ext, ext_2) = VirtualProductArray(get_spike_body(ctx, node.body, ext, ext_2), node.dim)
 get_spike_tail(ctx, node::VirtualProductArray, ext, ext_2) = VirtualProductArray(get_spike_tail(ctx, node.body, ext, ext_2), node.dim)
 
-visit_fill(node, tns::VirtualProductArray) = visit_fill(node, tns.body)
+visit_fill_leaf_leaf(node, tns::VirtualProductArray) = visit_fill_leaf_leaf(node, tns.body)
 visit_simplify(node::VirtualProductArray) = VirtualProductArray(visit_simplify(node.body), node.dim)
 
 (ctx::SwitchVisitor)(node::VirtualProductArray) = map(ctx(node.body)) do (guard, body)

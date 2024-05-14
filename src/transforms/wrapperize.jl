@@ -173,7 +173,7 @@ function get_wrapper_rules(ctx, depth, alg)
             access(A_3, m, i1..., k, i2...)
         end),
         (@rule assign(access(~a, updater, ~i...), initwrite, ~rhs) => begin
-            assign(access(a, updater, i...), call(initwrite, call(default, a)), rhs)
+            assign(access(a, updater, i...), call(initwrite, call(fill_value, a)), rhs)
         end),
         (@rule call(swizzle, call(swizzle, ~A, ~sigma_1...), ~sigma_2...) =>
             call(swizzle, A, sigma_1[getval.(sigma_2)]...)),

@@ -29,7 +29,7 @@ FinchNotation.finch_leaf(x::Unfurled) = virtual(x)
 
 virtual_size(ctx, tns::Unfurled) = virtual_size(ctx, tns.arr)[1 : end - tns.ndims]
 virtual_resize!(ctx, tns::Unfurled, dims...) = virtual_resize!(ctx, tns.arr, dims...) # TODO SHOULD NOT HAPPEN BREAKS LIFECYCLES
-virtual_default(ctx, tns::Unfurled) = virtual_default(ctx, tns.arr)
+virtual_fill_value(ctx, tns::Unfurled) = virtual_fill_value(ctx, tns.arr)
 
 instantiate(ctx, tns::Unfurled, mode, protos) = tns
 
@@ -90,7 +90,7 @@ get_spike_body(ctx, node::Unfurled, ext, ext_2) = Unfurled(node.arr, node.ndims,
 
 get_spike_tail(ctx, node::Unfurled, ext, ext_2) = Unfurled(node.arr, node.ndims, get_spike_tail(ctx, node.body, ext, ext_2))
 
-visit_fill(node, tns::Unfurled) = visit_fill(node, tns.body)
+visit_fill_leaf_leaf(node, tns::Unfurled) = visit_fill_leaf_leaf(node, tns.body)
 
 visit_simplify(node::Unfurled) = Unfurled(node.arr, node.ndims, visit_simplify(node.body))
 
