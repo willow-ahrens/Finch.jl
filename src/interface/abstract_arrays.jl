@@ -116,4 +116,4 @@ Base.setindex!(arr::AsArray{T, N}, v, i::Vararg{Any, N}) where {T, N} = arr.fbr[
 
 is_injective(ctx, tns::VirtualAbstractArray) = [true for _ in tns.ndims]
 is_atomic(ctx, tns::VirtualAbstractArray) = [false, [false for _ in tns.ndims]...]
-# is_atomic(ctx, tns::VirtualAbstractArray) = true
+is_concurrent(ctx, tns::VirtualAbstractArray) = [true for _ in tns.ndims]

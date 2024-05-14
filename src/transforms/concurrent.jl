@@ -102,7 +102,7 @@ function ensure_concurrent(root, ctx)
             #Since all operations/acceses are the same, a more fine grained analysis takes place:
             #Every access must be injective or they must all be atomic.
             if (@capture(acc, access(~tns, ~mode, ~i...)))
-                injectivities:: Vector{Bool} = is_injective(ctx, tns)
+                injectivities = is_injective(ctx, tns)
                 concurrencies = is_concurrent(ctx, acc.tns)
                 parallel_modes = findall(j -> j in indices_in_region, i)
                 if length(parallel_modes) == 0

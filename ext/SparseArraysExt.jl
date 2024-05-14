@@ -148,6 +148,10 @@ Finch.FinchNotation.finch_leaf(x::VirtualSparseMatrixCSC) = virtual(x)
 Finch.virtual_fill_value(ctx, arr::VirtualSparseMatrixCSC) = zero(arr.Tv)
 Finch.virtual_eltype(ctx, tns::VirtualSparseMatrixCSC) = tns.Tv
 
+Finch.is_injective(ctx, tns::VirtualSparseMatrixCSC) = [true, false]
+Finch.is_atomic(ctx, tns::VirtualSparseMatrixCSC) = [false, [false, false]]
+Finch.is_concurrent(ctx, tns::VirtualSparseMatrixCSC) = [true, false]
+
 """
     SparseVector(arr::Union{Tensor, SwizzleArray})
 
@@ -254,6 +258,10 @@ Finch.FinchNotation.finch_leaf(x::VirtualSparseVector) = virtual(x)
 
 Finch.virtual_fill_value(ctx, arr::VirtualSparseVector) = zero(arr.Tv)
 Finch.virtual_eltype(ctx, tns::VirtualSparseVector) = tns.Tv
+Finch.is_injective(ctx, tns::VirtualSparseVector) = [false]
+Finch.is_atomic(ctx, tns::VirtualSparseVector) = [false, [false]]
+Finch.is_concurrent(ctx, tns::VirtualSparseVector) = [false]
+
 
 SparseArrays.nnz(fbr::Tensor) = countstored(fbr)
 
