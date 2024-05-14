@@ -95,6 +95,53 @@ julia> x[]
 """
 maxby(a, b) = a[1] < b[1] ? b : a
 
+"""
+    rem_nothrow(x, y)
+
+Return the remainder of `x` divided by `y`, and issue a warning if `y` is zero.
+If `y` is zero, return zero.
+"""
+function rem_nothrow(x, y)
+    if iszero(y)
+        @warn "Division by zero in rem"
+        zero(y)
+    else
+        rem(x, y)
+    end
+end
+
+"""
+    fld_nothrow(x, y)
+
+Return the floor of `x` divided by `y`, and issue a warning if `y` is zero.
+If `y` is zero, return zero.
+"""
+function fld_nothrow(x, y)
+    if iszero(y)
+        @warn "Division by zero in fld"
+        zero(y)
+    else
+        fld(x, y)
+    end
+end
+
+"""
+    cld_nothrow(x, y)
+
+Return the ceiling of `x` divided by `y`, and issue a warning if `y` is zero.
+If `y` is zero, return zero.
+"""
+function cld_nothrow(x, y)
+    if iszero(y)
+        @warn "Division by zero in fld"
+        zero(y)
+    else
+        cld(x, y)
+    end
+end
+
+
+
 isassociative(alg) = (f) -> isassociative(alg, f)
 isassociative(alg, f::FinchNode) = f.kind === literal && isassociative(alg, f.val)
 """
