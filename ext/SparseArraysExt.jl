@@ -74,9 +74,18 @@ function Finch.virtualize(ctx, ex, ::Type{<:SparseMatrixCSC{Tv, Ti}}, tag=:tns) 
 end
 
 function Finch.declare!(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC, init)
-    throw(FinchProtocolError("Finch does not support writes to SparseMatrixCSC"))
+    arr.ex.nzval = Float64[]
+    arr.ex.rowval = Int[]
+    arr.ex.colptr = fill(0, arr.ex.n + 1)
+    return arr
 end
 
+function Finch.update!(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC, row::Int, col::Int, value::Float64)
+    push!(arr.ex.rowval, row)
+    push!(arr.ex.nzval, value)
+    arr.ex.colptr[col + 1] += 1
+    return arr
+end
 function Finch.instantiate(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk), typeof(follow)}, ::Union{typeof(defaultread), typeof(walk)})
     tag = arr.ex
     Ti = arr.Ti
