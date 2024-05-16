@@ -386,7 +386,7 @@ function bspwrite_level(f, desc, fmt, lvl::SparseCOOLevel{R}) where {R}
         bspwrite_data(f, desc, "pointers_to_$(N - n)", indices_one_to_zero(lvl.ptr))
     end
     for r = 1:R
-        bspwrite_data(f, desc, "indices_$(N - n + r - 1)", indices_one_to_zero(lvl.tbl[r]))
+        bspwrite_data(f, desc, "indices_$(N - n + R - r)", indices_one_to_zero(lvl.tbl[r]))
     end
     fmt["level"] = OrderedDict()
     bspwrite_level(f, desc, fmt["level"], lvl.lvl)
@@ -397,7 +397,7 @@ function bspread_level(f, desc, fmt, ::Val{:sparse})
     n = level_ndims(typeof(lvl)) + R
     N = length(desc["shape"])
     tbl = (map(1:R) do r
-        indices_zero_to_one(bspread_data(f, desc, "indices_$(N - n + r - 1)"))
+        indices_zero_to_one(bspread_data(f, desc, "indices_$(N - n + R - r)"))
     end...,)
     if N - n > 0
         ptr = bspread_data(f, desc, "pointers_to_$(N - n)")
