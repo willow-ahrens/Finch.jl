@@ -418,7 +418,7 @@ function toposort(perms::Vector{Vector{T}}) where T
         graph = Dict{T,Set{T}}(item => setdiff(dep, ordered) for (item, dep) in graph if item ∉ ordered)
     end
     if isempty(graph)
-        return rst
+        return reverse(rst)
     else
         # a cyclic dependency exists amongst $(keys(graph))
         return nothing
@@ -434,7 +434,7 @@ function heuristic_loop_order(node)
     end
     sort!(perms, by=length)
     res = something(toposort(perms), getfields(node))
-    if mapreduce(max, length, perms, init = 0) < length(unique(reduce(vcat, perms)))
+    if mapreduce(length, max, perms, init = 0) < length(unique(reduce(vcat, perms)))
         counts = Dict()
         for perm in perms
             for idx in perm
@@ -468,7 +468,7 @@ COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, arg::(REORDER | MAPREDUCE)))
 function set_loop_order(node, perms = Dict(), reps = Dict())
     if @capture node plan(~stmts...)
         stmts = map(stmts) do stmt
-            set_loop_order(stmt, fields)
+            set_loop_order(stmt, perms, reps)
         end
         plan(stmts...)
     elseif @capture node query(~lhs, reformat(~tns, ~rhs::isalias))
@@ -492,11 +492,12 @@ function set_loop_order(node, perms = Dict(), reps = Dict())
         rhs_2 = aggregate(op, init, reorder(arg, idxs_2...), idxs...)
         reps[lhs] = SuitableRep(reps)(rhs_2)
         perms[lhs] = reorder(relabel(lhs, getfields(rhs_2)), getfields(node.rhs))
-        query(lhs, rhs)
+        query(lhs, rhs_2)
     elseif @capture node query(~lhs, reorder(relabel(~tns::isalias, ~idxs_1...), ~idxs_2...))
         tns = get(perms, tns, tns)
         reps[lhs] = SuitableRep(reps)(node.rhs)
-        perm[lhs] = lhs
+        perms[lhs] = lhs
+        node
     elseif @capture node query(~lhs, ~rhs)
         #assuming rhs is a bunch of mapjoins
         arg = push_fields(Rewrite(Postwalk(tns -> get(perms, tns, tns)))(arg))
@@ -505,6 +506,8 @@ function set_loop_order(node, perms = Dict(), reps = Dict())
         reps[lhs] = SuitableRep(reps)(rhs_2)
         perms[lhs] = reorder(relabel(lhs, idxs), getfields(rhs))
         query(lhs, rhs_2)
+    elseif @capture node produces(~args...)
+        push_fields(Rewrite(Postwalk(tns -> get(perms, tns, tns)))(node))
     else
         throw(ArgumentError("Unrecognized program in set_loop_order"))
     end
@@ -536,6 +539,9 @@ function optimize(prgm)
 
     #These steps assign a global loop order to each statement.
     prgm = propagate_fields(prgm)
+
+    display(prgm)
+    display(set_loop_order(prgm))
 
     prgm = push_fields(prgm)
     prgm = lift_fields(prgm)
