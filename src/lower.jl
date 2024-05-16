@@ -294,19 +294,32 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
     end
 
     return quote
-        Polyester.@batch for $i = 1:$(ctx(device.n))
-            $(contain(ctx, bindings=bindings_2) do ctx_2
-                subtask = VirtualCPUThread(value(i, Int), device, ctx_2.code.task)
-                contain(ctx_2, task=subtask) do ctx_3
-                    bindings_2 = copy(ctx_3.bindings)
-                    for tns in intersect(used_in_scope, decl_in_scope)
-                        virtual_moveto(ctx_3, resolve(ctx_3, tns), subtask)
+        Threads.@threads for $i = 1:$(ctx(device.n))
+            Finch.@barrier begin
+                $(contain(ctx, bindings=bindings_2) do ctx_2
+                    subtask = VirtualCPUThread(value(i, Int), device, ctx_2.code.task)
+                    contain(ctx_2, task=subtask) do ctx_3
+                        bindings_2 = copy(ctx_3.bindings)
+                        for tns in intersect(used_in_scope, decl_in_scope)
+                            virtual_moveto(ctx_3, resolve(ctx_3, tns), subtask)
+                        end
+                        contain(ctx_3, bindings=bindings_2) do ctx_4
+                            ctx_4(instantiate!(ctx_4, root_2))
+                        end
                     end
-                    contain(ctx_3, bindings=bindings_2) do ctx_4
-                        ctx_4(instantiate!(ctx_4, root_2))
-                    end
-                end
-            end)
+                end)
+            end
         end
     end
 end
+
+macro barrier(ex)
+    esc(quote
+        f = ($FastClosures.@closure () -> begin
+            $ex
+        end)
+        f()
+    end)
+end
+
+

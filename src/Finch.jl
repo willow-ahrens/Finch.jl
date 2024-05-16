@@ -20,6 +20,7 @@ using TOML
 using UUIDs
 using Preferences
 using Polyester
+using FastClosures
 
 export @finch, @finch_program, @finch_code, @finch_kernel, value
 
