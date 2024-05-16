@@ -157,10 +157,10 @@ function propagate_transpose_queries_impl(node, productions, bindings)
         if lhs in productions
             query(lhs, rhs)
         else
-            if @capture rhs reorder(relabel(~rhs::isalias, ~idxs_1...), ~idxs_2...)
+            if @capture rhs reorder(relabel(~tns::isalias, ~idxs_1...), ~idxs_2...)
                 bindings[lhs] = rhs
                 plan()
-            elseif @capture rhs relabel(~rhs::isalias, ~idxs_1...)
+            elseif @capture rhs relabel(~tns::isalias, ~idxs_1...)
                 bindings[lhs] = rhs
                 plan()
             elseif isalias(rhs)
@@ -389,6 +389,125 @@ function normalize_names(ex)
         freshen(spc, sym)
     end
     Rewrite(Postwalk(@rule ~a::isalias => alias(normname(a.name))))(ex)
+end
+
+function toposort(perms::Vector{Vector{T}}) where T
+    graph = Dict{T, Set{T}}()
+    for perm in perms
+        i = nothing
+        for j in perm
+            if i != nothing
+                push!(get!(graph, i, Set{T}()), j)
+            end
+            i = j
+        end
+    end
+    #https://rosettacode.org/wiki/Topological_sort#Julia
+    for (k, v) in graph
+        delete!(v, k)
+    end
+    extraitems = setdiff(reduce(union, values(graph)), keys(graph))
+    for item in extraitems
+        graph[item] = Set{T}()
+    end
+    rst = Vector{T}()
+    while true
+        ordered = Set(item for (item, dep) in graph if isempty(dep))
+        if isempty(ordered) break end
+        append!(rst, ordered)
+        graph = Dict{T,Set{T}}(item => setdiff(dep, ordered) for (item, dep) in graph if item ∉ ordered)
+    end
+    if isempty(graph)
+        return rst
+    else
+        # a cyclic dependency exists amongst $(keys(graph))
+        return nothing
+    end
+end
+
+function heuristic_loop_order(node)
+    perms = Vector{LogicNode}[]
+    for node in PostOrderDFS(node)
+        if @capture node relabel(~arg, ~idxs...)
+            push!(perms, idxs)
+        end
+    end
+    sort!(perms, by=length)
+    res = something(toposort(perms), getfields(node))
+    if mapreduce(max, length, perms, init = 0) < length(unique(reduce(vcat, perms)))
+        counts = Dict()
+        for perm in perms
+            for idx in perm
+                counts[idx] = get(counts, idx, 0) + 1
+            end
+        end
+        sort!(res, by=idx -> counts[idx] == 1, alg=Base.MergeSort)
+    end
+    return res
+end
+
+"""
+set_loop_order(root)
+
+Heuristically chooses a total order for all loops in the program by inserting
+`reorder` statments inside reformat, query, and aggregate nodes.
+
+Accepts programs of the form:
+```
+      REORDER := reorder(relabel(ALIAS, FIELD...), FIELD...)
+       ACCESS := reorder(relabel(ALIAS, idxs_1::FIELD...), idxs_2::FIELD...) where issubsequence(idxs_1, idxs_2)
+    POINTWISE := ACCESS | mapjoin(IMMEDIATE, POINTWISE...) | reorder(IMMEDIATE, FIELD...) | IMMEDIATE
+    MAPREDUCE := POINTWISE | aggregate(IMMEDIATE, IMMEDIATE, POINTWISE, FIELD...)
+       TABLE  := table(IMMEDIATE, FIELD...)
+COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, arg::(REORDER | MAPREDUCE)))
+  INPUT_QUERY := query(ALIAS, TABLE)
+         STEP := COMPUTE_QUERY | INPUT_QUERY
+         ROOT := PLAN(STEP..., produces(ALIAS...))
+```
+"""
+function set_loop_order(node, perms = Dict(), reps = Dict())
+    if @capture node plan(~stmts...)
+        stmts = map(stmts) do stmt
+            set_loop_order(stmt, fields)
+        end
+        plan(stmts...)
+    elseif @capture node query(~lhs, reformat(~tns, ~rhs::isalias))
+        rhs_2 = perms[rhs]
+        perms[lhs] = lhs
+        reps[lhs] = SuitableRep(reps)(rhs_2)
+        query(lhs, reformat(tns, rhs_2))
+    elseif @capture node query(~lhs, reformat(~tns, ~rhs))
+        arg = alias(gensym(:A))
+        set_loop_order(plan(
+            query(A, rhs),
+            query(lhs, reformat(tns, A))
+        ), perms, reps)
+    elseif @capture node query(~lhs, table(~tns, ~idxs...))
+        reps[lhs] = SuitableRep(reps)(node.rhs)
+        perms[lhs] = lhs
+        node
+    elseif @capture node query(~lhs, aggregate(~op, ~init, ~arg, ~idxs...))
+        arg = push_fields(Rewrite(Postwalk(tns -> get(perms, tns, tns)))(arg))
+        idxs_2 = heuristic_loop_order(arg)
+        rhs_2 = aggregate(op, init, reorder(arg, idxs_2...), idxs...)
+        reps[lhs] = SuitableRep(reps)(rhs_2)
+        perms[lhs] = reorder(relabel(lhs, getfields(rhs_2)), getfields(node.rhs))
+        query(lhs, rhs)
+    elseif @capture node query(~lhs, reorder(relabel(~tns::isalias, ~idxs_1...), ~idxs_2...))
+        tns = get(perms, tns, tns)
+        reps[lhs] = SuitableRep(reps)(node.rhs)
+        perm[lhs] = lhs
+    elseif @capture node query(~lhs, ~rhs)
+        #assuming rhs is a bunch of mapjoins
+        arg = push_fields(Rewrite(Postwalk(tns -> get(perms, tns, tns)))(arg))
+        idxs = heuristic_pointwise_loop_order(rhs)
+        rhs_2 = reorder(rhs, idxs...)
+        reps[lhs] = SuitableRep(reps)(rhs_2)
+        perms[lhs] = reorder(relabel(lhs, idxs), getfields(rhs))
+        query(lhs, rhs_2)
+    else
+        throw(ArgumentError("Unrecognized program in set_loop_order"))
+    end
 end
 
 function optimize(prgm)
