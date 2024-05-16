@@ -143,7 +143,17 @@ function (ctx::LogicLowerer)(ex)
             end
         end
     elseif @capture ex produces(~args...)
-        return :(return ($(map(arg -> arg.name, args)...),))
+        return :(return ($(map(args) do arg
+            if @capture(arg, reorder(relabel(~tns::isalias, ~idxs_1...), ~idxs_2...)) && Set(idxs_1) == Set(idxs_2)
+                :(swizzle($(tns.name), $([findfirst(isequal(idx), idxs_2) for idx in idxs_1]...)))
+            elseif @capture(arg, reorder(~tns::isalias, ~idxs...))
+                arg.name
+            elseif isalias(arg)
+                arg.name
+            else
+                error("Unrecognized logic: $(arg)")
+            end
+        end...),))
     elseif @capture ex plan(~bodies...)
         Expr(:block, map(ctx, bodies)...)
     else

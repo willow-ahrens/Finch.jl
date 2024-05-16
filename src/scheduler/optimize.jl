@@ -1,5 +1,6 @@
 flatten_plans = Rewrite(Postwalk(Fixpoint(Chain([
-    (@rule plan(~a1..., plan(~b...), ~a2...) => plan(a1..., b..., a2...)),
+    (@rule plan(~s1..., plan(~s2...), ~s3...) => plan(s1, s2, s3)),
+    (@rule plan(~s1..., produces(~p...), ~s2...) => plan(s1, produces(p))),
 ]))))
 
 isolate_aggregates = Rewrite(Postwalk(
@@ -138,40 +139,36 @@ Accepts programs of the form:
   INPUT_QUERY := query(ALIAS, TABLE)
 COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, MAPREDUCE)) | query(ALIAS, MAPREDUCE))
          PLAN := plan(STEP...)
-         STEP := COMPUTE_QUERY | INPUT_QUERY | PLAN | produces(ALIAS...)
+         STEP := COMPUTE_QUERY | INPUT_QUERY | PLAN | produces((ALIAS | ACCESS)...)
          ROOT := STEP
 ```
 """
 function propagate_transpose_queries(root::LogicNode)
-    return propagate_transpose_queries_impl(root, getproductions(root), Dict{LogicNode, LogicNode}())
+    return propagate_transpose_queries_impl(root, Dict{LogicNode, LogicNode}())
 end
 
-function propagate_transpose_queries_impl(node, productions, bindings)
+function propagate_transpose_queries_impl(node, bindings)
     if @capture node plan(~stmts...)
         stmts = map(stmts) do stmt
-            propagate_transpose_queries_impl(stmt, productions, bindings)
+            propagate_transpose_queries_impl(stmt, bindings)
         end
         plan(stmts...)
     elseif @capture node query(~lhs, ~rhs)
         rhs = push_fields(Rewrite(Postwalk((node) -> get(bindings, node, node)))(rhs))
-        if lhs in productions
-            query(lhs, rhs)
+        if @capture rhs reorder(relabel(~tns::isalias, ~idxs_1...), ~idxs_2...)
+            bindings[lhs] = rhs
+            plan()
+        elseif @capture rhs relabel(~tns::isalias, ~idxs_1...)
+            bindings[lhs] = rhs
+            plan()
+        elseif isalias(rhs)
+            bindings[lhs] = rhs
+            plan()
         else
-            if @capture rhs reorder(relabel(~tns::isalias, ~idxs_1...), ~idxs_2...)
-                bindings[lhs] = rhs
-                plan()
-            elseif @capture rhs relabel(~tns::isalias, ~idxs_1...)
-                bindings[lhs] = rhs
-                plan()
-            elseif isalias(rhs)
-                bindings[lhs] = rhs
-                plan()
-            else
-                query(lhs, rhs)
-            end
+            query(lhs, rhs)
         end
     elseif @capture node produces(~args...)
-        node
+        push_fields(Rewrite(Postwalk((node) -> get(bindings, node, node)))(node))
     else
         throw(ArgumentError("Unrecognized program in propagate_transpose_queries"))
     end
@@ -253,7 +250,7 @@ Accepts a program of the following form:
                  IMMEDIATE
 COMPUTE_QUERY := query(ALIAS, COMPUTE)
   INPUT_QUERY := query(ALIAS, TABLE)
-         STEP := COMPUTE_QUERY | INPUT_QUERY | produces(ALIAS...)
+         STEP := COMPUTE_QUERY | INPUT_QUERY | produces((ALIAS | ACCESS)...)
          ROOT := PLAN(STEP...)
 ```   
 
@@ -269,6 +266,10 @@ function concordize(root)
     needed_swizzles = Dict()
     spc = Namespace()
     map(node->freshen(spc, node.name), unique(filter(Or(isfield, isalias), collect(PostOrderDFS(root)))))
+    #Exempt productions from swizzling
+    root = flatten_plans(root)
+    @assert @capture root plan(~s..., produces(~p...))
+    root = plan(s)
     #Collect the needed swizzles
     root = Rewrite(Postwalk(
         @rule reorder(relabel(~a::isalias, ~idxs_1...), ~idxs_2...) => begin
@@ -292,7 +293,7 @@ function concordize(root)
             end
         end),
     ])))(root)
-    root = flatten_plans(root)
+    root = flatten_plans(plan(root, produces(p)))
 end
 
 drop_noisy_reorders = Rewrite(Postwalk(
@@ -406,7 +407,7 @@ function toposort(perms::Vector{Vector{T}}) where T
     for (k, v) in graph
         delete!(v, k)
     end
-    extraitems = setdiff(reduce(union, values(graph)), keys(graph))
+    extraitems = setdiff(reduce(union, values(graph), init=Set()), keys(graph))
     for item in extraitems
         graph[item] = Set{T}()
     end
@@ -425,14 +426,16 @@ function toposort(perms::Vector{Vector{T}}) where T
     end
 end
 
-function heuristic_loop_order(node)
+function heuristic_loop_order(node, reps)
     perms = Vector{LogicNode}[]
     for node in PostOrderDFS(node)
-        if @capture node relabel(~arg, ~idxs...)
-            push!(perms, idxs)
+        if @capture node reorder(relabel(~arg, ~idxs...), ~idxs_2...)
+            push!(perms, intersect(idxs, idxs_2))
         end
     end
-    sort!(perms, by=length)
+    for idx in getfields(node)
+        push!(perms, [idx])
+    end
     res = something(toposort(perms), getfields(node))
     if mapreduce(length, max, perms, init = 0) < length(unique(reduce(vcat, perms)))
         counts = Dict()
@@ -488,9 +491,12 @@ function set_loop_order(node, perms = Dict(), reps = Dict())
         node
     elseif @capture node query(~lhs, aggregate(~op, ~init, ~arg, ~idxs...))
         arg = push_fields(Rewrite(Postwalk(tns -> get(perms, tns, tns)))(arg))
-        idxs_2 = heuristic_loop_order(arg)
+        idxs_2 = heuristic_loop_order(arg, reps)
         rhs_2 = aggregate(op, init, reorder(arg, idxs_2...), idxs...)
         reps[lhs] = SuitableRep(reps)(rhs_2)
+        println(node.rhs)
+        println(rhs_2)
+        println()
         perms[lhs] = reorder(relabel(lhs, getfields(rhs_2)), getfields(node.rhs))
         query(lhs, rhs_2)
     elseif @capture node query(~lhs, reorder(relabel(~tns::isalias, ~idxs_1...), ~idxs_2...))
@@ -500,14 +506,14 @@ function set_loop_order(node, perms = Dict(), reps = Dict())
         node
     elseif @capture node query(~lhs, ~rhs)
         #assuming rhs is a bunch of mapjoins
-        arg = push_fields(Rewrite(Postwalk(tns -> get(perms, tns, tns)))(arg))
-        idxs = heuristic_pointwise_loop_order(rhs)
+        rhs = push_fields(Rewrite(Postwalk(tns -> get(perms, tns, tns)))(rhs))
+        idxs = heuristic_loop_order(rhs, reps)
         rhs_2 = reorder(rhs, idxs...)
         reps[lhs] = SuitableRep(reps)(rhs_2)
         perms[lhs] = reorder(relabel(lhs, idxs), getfields(rhs))
         query(lhs, rhs_2)
     elseif @capture node produces(~args...)
-        push_fields(Rewrite(Postwalk(tns -> get(perms, tns, tns)))(node))
+        Rewrite(Postwalk(tns -> get(perms, tns, tns)))(node)
     else
         throw(ArgumentError("Unrecognized program in set_loop_order"))
     end
@@ -539,12 +545,15 @@ function optimize(prgm)
 
     #These steps assign a global loop order to each statement.
     prgm = propagate_fields(prgm)
-
-    display(prgm)
-    display(set_loop_order(prgm))
-
     prgm = push_fields(prgm)
     prgm = lift_fields(prgm)
+    prgm = push_fields(prgm)
+
+    prgm = propagate_transpose_queries(prgm)
+    display(prgm)
+    prgm = set_loop_order(prgm)
+    display(prgm)
+
     prgm = push_fields(prgm)
 
     #After we have a global loop order, we concordize the program
