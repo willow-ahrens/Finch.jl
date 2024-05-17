@@ -143,14 +143,10 @@ COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, MAPREDUCE)) | query(ALIAS, MAP
          ROOT := STEP
 ```
 """
-function propagate_transpose_queries(root::LogicNode)
-    return propagate_transpose_queries_impl(root, Dict{LogicNode, LogicNode}())
-end
-
-function propagate_transpose_queries_impl(node, bindings)
+function propagate_transpose_queries(node, bindings = Dict{LogicNode, LogicNode}())
     if @capture node plan(~stmts...)
         stmts = map(stmts) do stmt
-            propagate_transpose_queries_impl(stmt, bindings)
+            propagate_transpose_queries(stmt, bindings)
         end
         plan(stmts...)
     elseif @capture node query(~lhs, ~rhs)
@@ -172,6 +168,29 @@ function propagate_transpose_queries_impl(node, bindings)
     else
         throw(ArgumentError("Unrecognized program in propagate_transpose_queries"))
     end
+end
+
+"""
+materialize_squeeze_expand_productions(root)
+
+Makes separate kernels for squeeze and expand operations in produces statements,
+since swizzle does not support this.
+"""
+function materialize_squeeze_expand_productions(root)
+    Rewrite(Postwalk(@rule produces(~args...) => begin
+        preamble = []
+        args_2 = map(args) do arg
+            if (@capture arg reorder(relabel(~tns::isalias, ~idxs_1...), ~idxs_2...)) && Set(idxs_1) != Set(idxs_2)
+                tns_2 = alias(gensym(:A))
+                idxs_3 = withsubsequence(intersect(idxs_1, idxs_2), idxs_2)
+                push!(preamble, query(tns_2, reorder(relabel(tns, idxs_1), idxs_3)))
+                reorder(relabel(tns_2, idxs_3), idxs_2)
+            else
+                arg
+            end
+        end
+        plan(preamble, produces(args_2))
+    end))(root)
 end
 
 function propagate_copy_queries(root)
@@ -487,9 +506,6 @@ function set_loop_order(node, perms = Dict(), reps = Dict())
         idxs_2 = heuristic_loop_order(arg, reps)
         rhs_2 = aggregate(op, init, reorder(arg, idxs_2...), idxs...)
         reps[lhs] = SuitableRep(reps)(rhs_2)
-        println(node.rhs)
-        println(rhs_2)
-        println()
         perms[lhs] = reorder(relabel(lhs, getfields(rhs_2)), getfields(node.rhs))
         query(lhs, rhs_2)
     elseif @capture node query(~lhs, reorder(relabel(~tns::isalias, ~idxs_1...), ~idxs_2...))
@@ -549,9 +565,13 @@ function optimize(prgm)
     #After we have a global loop order, we concordize the program
     prgm = concordize(prgm)
 
+    prgm = materialize_squeeze_expand_productions(prgm)
+    prgm = propagate_copy_queries(prgm)
+
     #Add reformat statements where there aren't any
     prgm = propagate_into_reformats(prgm)
     prgm = propagate_copy_queries(prgm)
+
 
     #Normalize names for caching
     prgm = normalize_names(prgm)

@@ -145,9 +145,9 @@ function (ctx::LogicLowerer)(ex)
     elseif @capture ex produces(~args...)
         return :(return ($(map(args) do arg
             if @capture(arg, reorder(relabel(~tns::isalias, ~idxs_1...), ~idxs_2...)) && Set(idxs_1) == Set(idxs_2)
-                :(swizzle($(tns.name), $([findfirst(isequal(idx), idxs_2) for idx in idxs_1]...)))
+                :(swizzle($(tns.name), $([findfirst(isequal(idx), idxs_1) for idx in idxs_2]...)))
             elseif @capture(arg, reorder(~tns::isalias, ~idxs...))
-                arg.name
+                tns.name
             elseif isalias(arg)
                 arg.name
             else

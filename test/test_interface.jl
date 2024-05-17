@@ -4,7 +4,7 @@ using Finch: AsArray
 
     @info "Testing Finch Interface"
 
-    for scheduler in [Finch.default_scheduler(), Finch.DefaultLogicOptimizer(Finch.LogicInterpreter())]
+    for scheduler in [Finch.default_scheduler(verbose=true), Finch.DefaultLogicOptimizer(Finch.LogicInterpreter())]
         Finch.with_scheduler(scheduler) do
             @info "Testing $scheduler"
 
