@@ -439,7 +439,6 @@ function heuristic_loop_order(node, reps)
         end
         sort!(res, by=idx -> counts[idx] == 1, alg=Base.MergeSort)
     end
-    @info "Heuristic loop order" res getfields(node)
     return res
 end
 
@@ -544,10 +543,7 @@ function optimize(prgm)
     prgm = push_fields(prgm)
 
     prgm = propagate_transpose_queries(prgm)
-    display(prgm)
     prgm = set_loop_order(prgm)
-    display(prgm)
-
     prgm = push_fields(prgm)
 
     #After we have a global loop order, we concordize the program
