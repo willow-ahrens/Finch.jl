@@ -392,60 +392,54 @@ function normalize_names(ex)
     Rewrite(Postwalk(@rule ~a::isalias => alias(normname(a.name))))(ex)
 end
 
-function toposort(perms::Vector{Vector{T}}) where T
-    graph = Dict{T, Set{T}}()
-    for perm in perms
-        i = nothing
-        for j in perm
-            if i != nothing
-                push!(get!(graph, i, Set{T}()), j)
+function toposort(chains::Vector{Vector{T}}) where T
+    chains = filter(!isempty, deepcopy(chains))
+    parents = Dict{T, Int}(map(chain -> first(chain) => 0, chains))
+    for chain in chains, u in chain[2:end]
+        parents[u] += 1
+    end
+    roots = filter(u -> parents[u] == 0, keys(parents))
+    perm = []
+    while !isempty(parents)
+        isempty(roots) && return nothing
+        push!(perm, pop!(roots))
+        for chain in chains
+            if !isempty(chain) && first(chain) == last(perm)
+                popfirst!(chain)
+                if !isempty(chain)
+                    parents[first(chain)] -= 1
+                    if parents[first(chain)] == 0
+                        push!(roots, first(chain))
+                    end
+                end
             end
-            i = j
         end
+        pop!(parents, last(perm))
     end
-    #https://rosettacode.org/wiki/Topological_sort#Julia
-    for (k, v) in graph
-        delete!(v, k)
-    end
-    extraitems = setdiff(reduce(union, values(graph), init=Set()), keys(graph))
-    for item in extraitems
-        graph[item] = Set{T}()
-    end
-    rst = Vector{T}()
-    while true
-        ordered = Set(item for (item, dep) in graph if isempty(dep))
-        if isempty(ordered) break end
-        append!(rst, ordered)
-        graph = Dict{T,Set{T}}(item => setdiff(dep, ordered) for (item, dep) in graph if item ∉ ordered)
-    end
-    if isempty(graph)
-        return reverse(rst)
-    else
-        # a cyclic dependency exists amongst $(keys(graph))
-        return nothing
-    end
+    return perm
 end
 
 function heuristic_loop_order(node, reps)
-    perms = Vector{LogicNode}[]
+    chains = Vector{LogicNode}[]
     for node in PostOrderDFS(node)
         if @capture node reorder(relabel(~arg, ~idxs...), ~idxs_2...)
-            push!(perms, intersect(idxs, idxs_2))
+            push!(chains, intersect(idxs, idxs_2))
         end
     end
     for idx in getfields(node)
-        push!(perms, [idx])
+        push!(chains, [idx])
     end
-    res = something(toposort(perms), getfields(node))
-    if mapreduce(length, max, perms, init = 0) < length(unique(reduce(vcat, perms)))
+    res = something(toposort(chains), getfields(node))
+    if mapreduce(length, max, chains, init = 0) < length(unique(reduce(vcat, chains)))
         counts = Dict()
-        for perm in perms
-            for idx in perm
+        for chain in chains
+            for idx in chain
                 counts[idx] = get(counts, idx, 0) + 1
             end
         end
         sort!(res, by=idx -> counts[idx] == 1, alg=Base.MergeSort)
     end
+    @info "Heuristic loop order" res getfields(node)
     return res
 end
 
