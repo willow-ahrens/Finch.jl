@@ -27,31 +27,7 @@ SparseCOO{2} (0.0) [:,1:6]
 └─ [2, 5]: 3.0
 
 julia> min.(A, -1)
-Dense [:,1:6]
-├─ [:, 1]: Dense [1:3]
-│  ├─ [1]: -1.0
-│  ├─ [2]: -1.0
-│  └─ [3]: -1.0
-├─ [:, 2]: Dense [1:3]
-│  ├─ [1]: -1.0
-│  ├─ [2]: -1.0
-│  └─ [3]: -1.0
-├─ [:, 3]: Dense [1:3]
-│  ├─ [1]: -1.0
-│  ├─ [2]: -1.0
-│  └─ [3]: -1.0
-├─ [:, 4]: Dense [1:3]
-│  ├─ [1]: -1.0
-│  ├─ [2]: -1.0
-│  └─ [3]: -1.0
-├─ [:, 5]: Dense [1:3]
-│  ├─ [1]: -1.0
-│  ├─ [2]: -1.0
-│  └─ [3]: -1.0
-└─ [:, 6]: Dense [1:3]
-   ├─ [1]: -1.0
-   ├─ [2]: -1.0
-   └─ [3]: -1.0
+SwizzleArray(Tensor(Dense{Int64}(Dense{Int64}(Element{-1.0, Float64, Int64}([-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]), 3), 6)), (1, 2))
 
 julia> fill_value(A)
 0.0
@@ -63,13 +39,7 @@ SparseCOO{2} (-Inf) [:,1:6]
 └─ [2, 5]: 3.0
 
 julia> min.(B, -1)
-Sparse (-Inf) [:,1:6]
-├─ [:, 2]: Sparse (-Inf) [1:3]
-│  └─ [1]: -1.0
-├─ [:, 4]: Sparse (-Inf) [1:3]
-│  └─ [1]: -1.0
-└─ [:, 5]: Sparse (-Inf) [1:3]
-   └─ [2]: -1.0
+SwizzleArray(Tensor(Sparse{Int64}(Sparse{Int64}(Element{-Inf, Float64, Int64}([-1.0, -1.0, -1.0]), 3, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}([1, 2, 3, 4], [1, 1, 2], [1, 2, 3], Dict((3, 2) => 3, (1, 1) => 1, (2, 1) => 2))), 6, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}([1, 4], [2, 4, 5], [1, 2, 3], Dict((1, 2) => 1, (1, 4) => 2, (1, 5) => 3)))), (1, 2))
 
 julia> countstored(A)
 3
