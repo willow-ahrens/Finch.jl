@@ -17,18 +17,21 @@ countstored(arr::SwizzleArray) = countstored(arr.body)
 
 Base.size(arr::SwizzleArray{dims}) where {dims} = map(n->size(arr.body)[n], dims)
 
-Base.show(io::IO, ex::SwizzleArray) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::SwizzleArray{dims}) where {dims}
+function Base.show(io::IO, ex::SwizzleArray{dims}) where {dims}
 	print(io, "SwizzleArray($(ex.body), $(dims))")
+end
+
+labelled_show(io::IO, ::SwizzleArray{dims}) where {dims} =
+    print(io, "SwizzleArray ($(join(ex.dims, ", ")))")
+
+function labelled_children(ex::SwizzleArray)
+    [LabelledTree(ex.body)]
 end
 
 struct VirtualSwizzleArray <: AbstractVirtualCombinator
     body
     dims
 end
-
-#is_injective(ctx, lvl::VirtualSwizzleArray) = is_injective(ctx, lvl.body)
-#is_atomic(ctx, lvl::VirtualSwizzleArray) = is_atomic(ctx, lvl.body)
 
 Base.show(io::IO, ex::VirtualSwizzleArray) = Base.show(io, MIME"text/plain"(), ex)
 function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualSwizzleArray)

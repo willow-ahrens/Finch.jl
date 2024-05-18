@@ -3,12 +3,15 @@ struct ScaleArray{Scale<:Tuple, Body} <: AbstractCombinator
     scale::Scale
 end
 
-Base.show(io::IO, ex::ScaleArray) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::ScaleArray)
+Base.show(io::IO, ex::ScaleArray) =
 	print(io, "ScaleArray($(ex.body), $(ex.scale))")
-end
 
-Base.getindex(arr::ScaleArray, i...) = arr.body[(i .* arr.scale)...]
+labelled_show(io::IO, ex::ScaleArray) =
+    print(io, "ScaleArray [$(join(map(s -> ":*$s", ex.scale), ", "))]")
+
+function labelled_children(ex::ScaleArray)
+    [LabelledTree(ex.body)]
+end
 
 struct VirtualScaleArray <: AbstractVirtualCombinator
     body

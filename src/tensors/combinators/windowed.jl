@@ -3,12 +3,16 @@ struct WindowedArray{Dims<:Tuple, Body} <: AbstractCombinator
     dims::Dims
 end
 
-Base.show(io::IO, ex::WindowedArray) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::WindowedArray)
+function Base.show(io::IO, ex::WindowedArray)
 	print(io, "WindowedArray($(ex.body), $(ex.dims))")
 end
 
-Base.getindex(arr::WindowedArray, i...) = arr.body[i...]
+labelled_show(io::IO, ::WindowedArray) =
+    print(io, "WindowedArray [$(join(ex.dims, ", "))]")
+
+function labelled_children(ex::WindowedArray)
+    [LabelledTree(ex.body)]
+end
 
 struct VirtualWindowedArray <: AbstractVirtualCombinator
     body

@@ -121,78 +121,6 @@ virtual_fill_value(ctx, tns::AbstractVirtualFiber) = virtual_level_fill_value(tn
 postype(fbr::AbstractVirtualFiber) = postype(fbr.lvl)
 allocator(fbr::AbstractVirtualFiber) = allocator(fbr.lvl)
 
-struct LabelledTree
-    key 
-    node
-end
-
-LabelledTree(node) = LabelledTree(nothing, node)
-
-function Base.show(io::IO, node::LabelledTree)
-    if node.key !== nothing
-        show(io, something(node.key))
-        print(io, ": ")
-    end
-    labelled_show(io, node.node)
-end
-labelled_show(io, node) = show(io, node)
-
-AbstractTrees.children(node::LabelledTree) = labelled_children(node.node)
-labelled_children(node) = ()
-
-struct TruncatedTree
-    node
-    nmax
-    factor
-end
-
-TruncatedTree(node; nmax = 4.0, factor=1.5) = TruncatedTree(node, nmax, factor)
-
-function Base.show(io::IO, node::TruncatedTree)
-    show(io, node.node)
-end
-
-
-struct EllipsisNode end
-Base.show(io::IO, key::EllipsisNode) = print(io, "⋮")
-
-function AbstractTrees.children(node::TruncatedTree)
-    clds = collect(children(node.node))
-    if length(clds) > node.nmax
-        clds = vcat(clds[1:ceil(Int, node.nmax/2), end], [EllipsisNode()], clds[end - floor(Int, node.nmax/2) + 1:end])
-    end
-    clds = map(cld -> TruncatedTree(cld, nmax=node.nmax/node.factor, factor=node.factor), clds)
-end
-
-struct CartesianLabel
-    idxs
-end
-
-cartesian_label(args...) = CartesianLabel(Any[args...])
-
-function Base.show(io::IO, key::CartesianLabel)
-    print(io, "[")
-    join(io, key.idxs, ", ")
-    print(io, "]")
-end
-
-struct RangeLabel
-    start
-    stop
-end
-
-range_label(start = nothing, stop = nothing) = RangeLabel(start, stop)
-
-function Base.show(io::IO, key::RangeLabel)
-    if key.start !== nothing
-        print(io, something(key.start))
-    end
-    print(io, ":")
-    if key.stop !== nothing
-        print(io, something(key.stop))
-    end
-end
-
 function declare!(ctx::AbstractCompiler, fbr::VirtualFiber, init)
     lvl = declare_level!(ctx, fbr.lvl, literal(1), init)
     push!(ctx.code.preamble, assemble_level!(ctx, lvl, literal(1), literal(1))) #TODO this feels unnecessary?
@@ -288,14 +216,14 @@ function Base.show(io::IO, fbr::Tensor)
     print(io, "Tensor(", fbr.lvl, ")")
 end
 
-function Base.show(io::IO, mime::MIME"text/plain", fbr::Tensor)
-    if get(io, :compact, false)
-        print(io, "Tensor($(summary(fbr.lvl)))")
-    else
-        print_tree(io, TruncatedTree(LabelledTree(SubFiber(fbr.lvl, 1))))
-    end
-end
-print_tree
+labelled_show(io::IO, fbr::Tensor) =
+    print(io, join(size(fbr), "×"), "-Tensor")
+
+labelled_children(fbr::Tensor) =
+    [LabelledTree(SubFiber(fbr.lvl, 1))]
+
+Base.summary(io::IO, fbr::Tensor) =
+    print(io, "Tensor($(summary(fbr.lvl)))")
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::VirtualFiber)
     if get(io, :compact, false)
@@ -309,13 +237,7 @@ function Base.show(io::IO, fbr::SubFiber)
     print(io, "SubFiber(", fbr.lvl, ", ", fbr.pos, ")")
 end
 
-function Base.show(io::IO, mime::MIME"text/plain", fbr::SubFiber)
-    if get(io, :compact, false)
-        print(io, "SubFiber($(summary(fbr.lvl)), $(fbr.pos))")
-    else
-        print_tree(io, TruncatedTree(LabelledTree(fbr)))
-    end
-end
+Base.summary(io::IO, fbr::SubFiber) = println(io, "SubFiber($(summary(fbr.lvl)), $(fbr.pos))")
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::VirtualSubFiber)
     if get(io, :compact, false)

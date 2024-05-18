@@ -3,9 +3,15 @@ struct OffsetArray{Delta<:Tuple, Body} <: AbstractCombinator
     delta::Delta
 end
 
-Base.show(io::IO, ex::OffsetArray) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::OffsetArray)
-	print(io, "OffsetArray($(ex.body), $(ex.delta))")
+function Base.show(io::IO, ex::OffsetArray)
+	print(io, "OffsetArray($(ex.body), $(ex.delta)")
+end
+
+labelled_show(io::IO, ::OffsetArray) =
+    print(io, "OffsetArray [$(join(map(d -> ":+$d", ex.delta), ", "))]")
+
+function labelled_children(ex::OffsetArray)
+    [LabelledTree(ex.body)]
 end
 
 struct VirtualOffsetArray <: AbstractVirtualCombinator

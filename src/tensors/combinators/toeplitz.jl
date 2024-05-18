@@ -5,12 +5,19 @@ end
 ToeplitzArray(body, dim) = ToeplitzArray{dim}(body)
 ToeplitzArray{dim}(body::Body) where {dim, Body} = ToeplitzArray{dim, Body}(body)
 
-Base.show(io::IO, ex::ToeplitzArray) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::ToeplitzArray{dim}) where {dim}
+function Base.show(io::IO, ex::ToeplitzArray{dim}) where {dim}
 	print(io, "ToeplitzArray{$dim}($(ex.body))")
 end
 
-#Base.getindex(arr::ToeplitzArray, i...) = ...
+function labelled_show(io::IO, tns::ToeplitzArray{dim}) where {dim}
+    dims = [":" for _ in ndims(tns)]
+    dims[dim] = ": + :"
+    print(io, "ToeplitzArray [$(join(dims, ", "))]")
+end
+
+function labelled_children(ex::ToeplitzArray)
+    [LabelledTree(ex.body)]
+end
 
 struct VirtualToeplitzArray <: AbstractVirtualCombinator
     body
