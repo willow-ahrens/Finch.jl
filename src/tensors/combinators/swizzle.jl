@@ -22,7 +22,7 @@ function Base.show(io::IO, ex::SwizzleArray{dims}) where {dims}
 end
 
 labelled_show(io::IO, ::SwizzleArray{dims}) where {dims} =
-    print(io, "SwizzleArray ($(join(ex.dims, ", ")))")
+    print(io, "SwizzleArray ($(join(dims, ", ")))")
 
 function labelled_children(ex::SwizzleArray)
     [LabelledTree(ex.body)]
