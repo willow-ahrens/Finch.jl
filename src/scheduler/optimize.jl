@@ -189,6 +189,8 @@ function materialize_squeeze_expand_productions(root)
                 else
                     reorder(relabel(tns_2, idxs_3), idxs_2)
                 end
+            elseif @capture(arg, reorder(relabel(~tns, ~i...), ~i...))
+                tns
             else
                 arg
             end

@@ -10,27 +10,83 @@ For example:
 
 ```jldoctest example1; setup = :(using Finch)
 julia> A = fsparse([1, 1, 2, 3], [2, 4, 5, 6], [1.0, 2.0, 3.0])
-SparseCOO{2} (0.0) [:,1:6]
-├─ [1, 2]: 1.0
-├─ [1, 4]: 2.0
-└─ [2, 5]: 3.0
+3×6-Tensor
+└─ SparseCOO{2} (0.0) [:,1:6]
+   ├─ [1, 2]: 1.0
+   ├─ [1, 4]: 2.0
+   └─ [2, 5]: 3.0
 
 julia> A + 0
-SwizzleArray(Tensor(Dense{Int64}(Dense{Int64}(Element{0.0, Float64, Int64}([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0]), 3), 6)), (1, 2))
+SwizzleArray (1, 2)
+└─ 3×6-Tensor
+   └─ Dense [:,1:6]
+      ├─ [:, 1]: Dense [1:3]
+      │  ├─ [1]: 0.0
+      │  ├─ [2]: 0.0
+      │  └─ [3]: 0.0
+      ├─ [:, 2]: Dense [1:3]
+      │  ├─ [1]: 1.0
+      │  ├─ [2]: 0.0
+      │  └─ [3]: 0.0
+      ├─ ⋮
+      ├─ [:, 5]: Dense [1:3]
+      │  ├─ [1]: 0.0
+      │  ├─ [2]: 3.0
+      │  └─ [3]: 0.0
+      └─ [:, 6]: Dense [1:3]
+         ├─ [1]: 0.0
+         ├─ [2]: 0.0
+         └─ [3]: 0.0
 
 julia> A + 1
-SwizzleArray(Tensor(Dense{Int64}(Dense{Int64}(Element{1.0, Float64, Int64}([1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 3.0, 1.0, 1.0, 1.0, 4.0, 1.0, 1.0, 1.0, 1.0]), 3), 6)), (1, 2))
+SwizzleArray (1, 2)
+└─ 3×6-Tensor
+   └─ Dense [:,1:6]
+      ├─ [:, 1]: Dense [1:3]
+      │  ├─ [1]: 1.0
+      │  ├─ [2]: 1.0
+      │  └─ [3]: 1.0
+      ├─ [:, 2]: Dense [1:3]
+      │  ├─ [1]: 2.0
+      │  ├─ [2]: 1.0
+      │  └─ [3]: 1.0
+      ├─ ⋮
+      ├─ [:, 5]: Dense [1:3]
+      │  ├─ [1]: 1.0
+      │  ├─ [2]: 4.0
+      │  └─ [3]: 1.0
+      └─ [:, 6]: Dense [1:3]
+         ├─ [1]: 1.0
+         ├─ [2]: 1.0
+         └─ [3]: 1.0
 
 julia> B = A .* 2
-SwizzleArray(Tensor(Sparse{Int64}(Sparse{Int64}(Element{0.0, Float64, Int64}([2.0, 4.0, 6.0]), 3, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}([1, 2, 3, 4], [1, 1, 2], [1, 2, 3], Dict((3, 2) => 3, (1, 1) => 1, (2, 1) => 2))), 6, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}([1, 4], [2, 4, 5], [1, 2, 3], Dict((1, 2) => 1, (1, 4) => 2, (1, 5) => 3)))), (1, 2))
+SwizzleArray (1, 2)
+└─ 3×6-Tensor
+   └─ Sparse (0.0) [:,1:6]
+      ├─ [:, 2]: Sparse (0.0) [1:3]
+      │  └─ [1]: 2.0
+      ├─ [:, 4]: Sparse (0.0) [1:3]
+      │  └─ [1]: 4.0
+      └─ [:, 5]: Sparse (0.0) [1:3]
+         └─ [2]: 6.0
 
 julia> B[1:2, 1:2]
-Sparse (0.0) [:,1:2]
-└─ [:, 2]: Sparse (0.0) [1:2]
-   └─ [1]: 2.0
+2×2-Tensor
+└─ Sparse (0.0) [:,1:2]
+   └─ [:, 2]: Sparse (0.0) [1:2]
+      └─ [1]: 2.0
 
 julia> map(x -> x^2, B)
-SwizzleArray(Tensor(Sparse{Int64}(Sparse{Int64}(Element{0.0, Float64, Int64}([4.0, 16.0, 36.0]), 3, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}([1, 2, 3, 4], [1, 1, 2], [1, 2, 3], Dict((3, 2) => 3, (1, 1) => 1, (2, 1) => 2))), 6, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}([1, 4], [2, 4, 5], [1, 2, 3], Dict((1, 2) => 1, (1, 4) => 2, (1, 5) => 3)))), (1, 2))
+SwizzleArray (1, 2)
+└─ 3×6-Tensor
+   └─ Sparse (0.0) [:,1:6]
+      ├─ [:, 2]: Sparse (0.0) [1:3]
+      │  └─ [1]: 4.0
+      ├─ [:, 4]: Sparse (0.0) [1:3]
+      │  └─ [1]: 16.0
+      └─ [:, 5]: Sparse (0.0) [1:3]
+         └─ [2]: 36.0
 ```
 
 # Array Fusion
@@ -50,7 +106,15 @@ julia> D = lazy(B);
 julia> E = (C .+ D)/2;
 
 julia> compute(E)
-SwizzleArray(Tensor(Sparse{Int64}(Sparse{Int64}(Element{0.0, Float64, Int64}([1.5, 3.0, 4.5]), 3, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}([1, 2, 3, 4], [1, 1, 2], [1, 2, 3], Dict((3, 2) => 3, (1, 1) => 1, (2, 1) => 2))), 6, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}([1, 4], [2, 4, 5], [1, 2, 3], Dict((1, 2) => 1, (1, 4) => 2, (1, 5) => 3)))), (1, 2))
+SwizzleArray (1, 2)
+└─ 3×6-Tensor
+   └─ Sparse (0.0) [:,1:6]
+      ├─ [:, 2]: Sparse (0.0) [1:3]
+      │  └─ [1]: 1.5
+      ├─ [:, 4]: Sparse (0.0) [1:3]
+      │  └─ [1]: 3.0
+      └─ [:, 5]: Sparse (0.0) [1:3]
+         └─ [2]: 4.5
 
 ```
 

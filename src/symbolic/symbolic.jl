@@ -20,9 +20,10 @@ neither are `z`, then return `a`. Useful for getting the first nonfill value in
 a sparse array.
 ```jldoctest setup=:(using Finch)
 julia> a = Tensor(SparseList(Element(0.0)), [0, 1.1, 0, 4.4, 0])
-SparseList (0.0) [1:5]
-├─ [2]: 1.1
-└─ [4]: 4.4
+5-Tensor
+└─ SparseList (0.0) [1:5]
+   ├─ [2]: 1.1
+   └─ [4]: 4.4
 
 julia> x = Scalar(0.0); @finch for i=_; x[] <<choose(1.1)>>= a[i] end;
 
@@ -45,9 +46,10 @@ is handy for filtering out values based on a mask or a predicate.
 
 ```jldoctest setup=:(using Finch)
 julia> a = Tensor(SparseList(Element(0.0)), [0, 1.1, 0, 4.4, 0])
-SparseList (0.0) [1:5]
-├─ [2]: 1.1
-└─ [4]: 4.4
+5-Tensor
+└─ SparseList (0.0) [1:5]
+   ├─ [2]: 1.1
+   └─ [4]: 4.4
 
 julia> x = Tensor(SparseList(Element(0.0)));
 
@@ -57,8 +59,9 @@ julia> @finch (x .= 0; for i=_; x[i] = filterop(0)(c[i], a[i]) end)
 (x = Tensor(SparseList{Int64}(Element{0.0, Float64, Int64}([4.4]), 5, [1, 2], [4])),)
 
 julia> x
-SparseList (0.0) [1:5]
-└─ [4]: 4.4
+5-Tensor
+└─ SparseList (0.0) [1:5]
+   └─ [4]: 4.4
 ```
 """
 filterop(d) = FilterOp{d}()

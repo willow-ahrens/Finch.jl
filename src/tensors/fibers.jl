@@ -172,20 +172,22 @@ modified.
 
 ```jldoctest
 julia> A = Tensor(SparseList(Element(0.0), 10), [2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0, 0.0, 6.0, 0.0])
-SparseList (0.0) [1:10]
-├─ [1]: 2.0
-├─ [3]: 3.0
-├─ [5]: 4.0
-├─ [7]: 5.0
-└─ [9]: 6.0
+10-Tensor
+└─ SparseList (0.0) [1:10]
+   ├─ [1]: 2.0
+   ├─ [3]: 3.0
+   ├─ ⋮
+   ├─ [7]: 5.0
+   └─ [9]: 6.0
 
 julia> set_fill_value!(A, Inf)
-SparseList (Inf) [1:10]
-├─ [1]: 2.0
-├─ [3]: 3.0
-├─ [5]: 4.0
-├─ [7]: 5.0
-└─ [9]: 6.0
+10-Tensor
+└─ SparseList (Inf) [1:10]
+   ├─ [1]: 2.0
+   ├─ [3]: 3.0
+   ├─ ⋮
+   ├─ [7]: 5.0
+   └─ [9]: 6.0
 ```
 """
 set_fill_value!(fbr::Tensor, init) = Tensor(set_fill_value!(fbr.lvl, init))

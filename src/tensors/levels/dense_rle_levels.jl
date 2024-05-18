@@ -14,17 +14,18 @@ duplicate consecutive runs.
 
 ```jldoctest
 julia> Tensor(Dense(DenseRLELevel(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
-Dense [:,1:3]
-├─ [:, 1]: DenseRLE (0.0) [1:3]
-│  ├─ [1:1]: 10.0
-│  ├─ [2:2]: 30.0
-│  └─ [3:3]: 0.0
-├─ [:, 2]: DenseRLE (0.0) [1:3]
-│  └─ [1:3]: 0.0
-└─ [:, 3]: DenseRLE (0.0) [1:3]
-   ├─ [1:1]: 20.0
-   ├─ [2:2]: 0.0
-   └─ [3:3]: 40.0
+3×3-Tensor
+└─ Dense [:,1:3]
+   ├─ [:, 1]: DenseRLE (0.0) [1:3]
+   │  ├─ [1:1]: 10.0
+   │  ├─ [2:2]: 30.0
+   │  └─ [3:3]: 0.0
+   ├─ [:, 2]: DenseRLE (0.0) [1:3]
+   │  └─ [1:3]: 0.0
+   └─ [:, 3]: DenseRLE (0.0) [1:3]
+      ├─ [1:1]: 20.0
+      ├─ [2:2]: 0.0
+      └─ [3:3]: 40.0
 ```
 """
 struct DenseRLELevel{Ti, Ptr<:AbstractVector, Right<:AbstractVector, merge, Lvl} <: AbstractLevel

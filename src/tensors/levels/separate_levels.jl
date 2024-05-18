@@ -8,13 +8,14 @@ Each sublevel is stored in a vector of type `Val` with `eltype(Val) = Lvl`.
 
 ```jldoctest
 julia> Tensor(Dense(Separate(Element(0.0))), [1, 2, 3])
-Dense [1:3]
-├─ [1]: Pointer ->
-│  └─ 1.0
-├─ [2]: Pointer ->
-│  └─ 2.0
-└─ [3]: Pointer ->
-   └─ 3.0
+3-Tensor
+└─ Dense [1:3]
+   ├─ [1]: Pointer ->
+   │  └─ 1.0
+   ├─ [2]: Pointer ->
+   │  └─ 2.0
+   └─ [3]: Pointer ->
+      └─ 3.0
 ```
 """
 struct SeparateLevel{Lvl, Val} <: AbstractLevel

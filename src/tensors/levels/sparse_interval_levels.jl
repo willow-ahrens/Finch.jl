@@ -11,8 +11,9 @@ are the types of the arrays used to store positions and endpoints.
 
 ```jldoctest
 julia> Tensor(SparseInterval(Element(0)), [0, 10, 0]) 
-SparseInterval (0) [1:3]
-└─ [2:2]: 10
+3-Tensor
+└─ SparseInterval (0) [1:3]
+   └─ [2:2]: 10
 
 julia> Tensor(SparseInterval(Element(0)), [0, 10, 10])
 ERROR: Finch.FinchProtocolError("SparseIntervalLevels can only be updated once")
