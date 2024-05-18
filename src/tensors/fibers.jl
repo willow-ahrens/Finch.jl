@@ -140,6 +140,30 @@ labelled_show(io, node) = show(io, node)
 AbstractTrees.children(node::LabelledTree) = labelled_children(node.node)
 labelled_children(node) = ()
 
+struct TruncatedTree
+    node
+    nmax
+    factor
+end
+
+TruncatedTree(node; nmax = 4.0, factor=1.5) = TruncatedTree(node, nmax, factor)
+
+function Base.show(io::IO, node::TruncatedTree)
+    show(io, node.node)
+end
+
+
+struct EllipsisNode end
+Base.show(io::IO, key::EllipsisNode) = print(io, "⋮")
+
+function AbstractTrees.children(node::TruncatedTree)
+    clds = collect(children(node.node))
+    if length(clds) > node.nmax
+        clds = vcat(clds[1:ceil(Int, node.nmax/2), end], [EllipsisNode()], clds[end - floor(Int, node.nmax/2) + 1:end])
+    end
+    clds = map(cld -> TruncatedTree(cld, nmax=node.nmax/node.factor, factor=node.factor), clds)
+end
+
 struct CartesianLabel
     idxs
 end
@@ -268,9 +292,10 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::Tensor)
     if get(io, :compact, false)
         print(io, "Tensor($(summary(fbr.lvl)))")
     else
-        print_tree(io, LabelledTree(SubFiber(fbr.lvl, 1)))
+        print_tree(io, TruncatedTree(LabelledTree(SubFiber(fbr.lvl, 1))))
     end
 end
+print_tree
 
 function Base.show(io::IO, mime::MIME"text/plain", fbr::VirtualFiber)
     if get(io, :compact, false)
@@ -288,7 +313,7 @@ function Base.show(io::IO, mime::MIME"text/plain", fbr::SubFiber)
     if get(io, :compact, false)
         print(io, "SubFiber($(summary(fbr.lvl)), $(fbr.pos))")
     else
-        print_tree(io, LabelledTree(fbr))
+        print_tree(io, TruncatedTree(LabelledTree(fbr)))
     end
 end
 

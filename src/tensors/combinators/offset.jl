@@ -8,8 +8,6 @@ function Base.show(io::IO, mime::MIME"text/plain", ex::OffsetArray)
 	print(io, "OffsetArray($(ex.body), $(ex.delta))")
 end
 
-Base.getindex(arr::OffsetArray, i...) = arr.body[(i .+ arr.delta)...]
-
 struct VirtualOffsetArray <: AbstractVirtualCombinator
     body
     delta
@@ -20,9 +18,6 @@ is_atomic(ctx, lvl::VirtualOffsetArray) = is_atomic(ctx, lvl.body)
 is_concurrent(ctx, lvl::VirtualOffsetArray) = is_concurrent(ctx, lvl.body)
 
 Base.show(io::IO, ex::VirtualOffsetArray) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualOffsetArray)
-	print(io, "VirtualOffsetArray($(ex.body), $(ex.delta))")
-end
 
 Base.summary(io::IO, ex::VirtualOffsetArray) = print(io, "VOffset($(summary(ex.body)), $(ex.delta))")
 

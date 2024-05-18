@@ -184,7 +184,11 @@ function materialize_squeeze_expand_productions(root)
                 tns_2 = alias(gensym(:A))
                 idxs_3 = withsubsequence(intersect(idxs_1, idxs_2), idxs_2)
                 push!(preamble, query(tns_2, reorder(relabel(tns, idxs_1), idxs_3)))
-                reorder(relabel(tns_2, idxs_3), idxs_2)
+                if idxs_3 == idxs_2
+                    tns_2
+                else
+                    reorder(relabel(tns_2, idxs_3), idxs_2)
+                end
             else
                 arg
             end
