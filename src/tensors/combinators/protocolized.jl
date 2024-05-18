@@ -6,7 +6,7 @@ end
 Base.show(io::IO, ex::ProtocolizedArray) =
 	print(io, "ProtocolizedArray($(ex.body), $(ex.protos))")
 
-labelled_show(io::IO, ::ProtocolizedArray) =
+labelled_show(io::IO, ex::ProtocolizedArray) =
     print(io, "ProtocolizedArray [$(join(map(p -> isnothing(p) ? ":" : "$p(:)", ex.protos), ", "))]")
 
 function labelled_children(ex::ProtocolizedArray)

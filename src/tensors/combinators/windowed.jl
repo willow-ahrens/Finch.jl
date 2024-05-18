@@ -7,7 +7,7 @@ function Base.show(io::IO, ex::WindowedArray)
 	print(io, "WindowedArray($(ex.body), $(ex.dims))")
 end
 
-labelled_show(io::IO, ::WindowedArray) =
+labelled_show(io::IO, ex::WindowedArray) =
     print(io, "WindowedArray [$(join(ex.dims, ", "))]")
 
 function labelled_children(ex::WindowedArray)
