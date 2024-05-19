@@ -9,7 +9,6 @@ end
 
 using Documenter
 using Documenter.Remotes
-using Literate
 using Finch
 
 DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch; using SparseArrays); recursive=true)
