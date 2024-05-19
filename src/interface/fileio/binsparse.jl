@@ -313,7 +313,7 @@ function bspread_header end
 function bspread(f)
     desc = bspread_header(f)["binsparse"]
     @assert desc["version"] == "$BINSPARSE_VERSION"
-    fmt = OrderedDict{Any, Any}(get(() -> desc["tensor"], bspread_tensor_lookup, desc["format"]))
+    fmt = OrderedDict{Any, Any}(get(() -> bspread_tensor_lookup[desc["format"]], desc, "tensor"))
     if !haskey(fmt, "transpose")
         fmt["transpose"] = collect(0:length(desc["shape"]) - 1)
     end
