@@ -35,9 +35,10 @@ julia> B = Tensor(Dense(Element(0)), [11, 12, 13, 14, 15]);
 julia> @finch (C .= 0; for i=_; C[i] = A[i] * B[i] end);
 
 julia> C
-SparseList (0) [1:5]
-├─ [2]: 24
-└─ [5]: 45
+5-Tensor
+└─ SparseList (0) [1:5]
+   ├─ [2]: 24
+   └─ [5]: 45
 
 ```
 
@@ -244,6 +245,7 @@ quote
     s.val = s_val
     result
 end
+
 ```
 
 Users can also create their own virtual nodes to represent their custom types.
@@ -267,13 +269,12 @@ julia> prgm_inst = Finch.@finch_program_instance for i = _
             s[] += A[i]
         end;
 
-
 julia> println(prgm_inst)
 loop_instance(index_instance(i), Finch.FinchNotation.Dimensionless(), assign_instance(access_instance(tag_instance(variable_instance(:s), Scalar{0, Int64}(0)), literal_instance(Finch.FinchNotation.Updater())), tag_instance(variable_instance(:+), literal_instance(+)), access_instance(tag_instance(variable_instance(:A), Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal_instance(Finch.FinchNotation.Reader()), tag_instance(variable_instance(:i), index_instance(i)))))
 
 julia> prgm_inst
 Finch program instance: for i = Dimensionless()
-  tag(s, Scalar{0, Int64}(0))[] <<tag(+, +)>>= tag(A, Tensor(SparseList(Element(0))))[tag(i, i)]
+  tag(s, Scalar{0, Int64})[] <<tag(+, +)>>= tag(A, Tensor(SparseList(Element(0))))[tag(i, i)]
 end
 
 julia> prgm = Finch.@finch_program for i = _

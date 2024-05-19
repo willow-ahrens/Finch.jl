@@ -10,21 +10,48 @@ an error if the program tries to write multiple (>=2) runs into SparseInterval.
 are the types of the arrays used to store positions and endpoints. 
 
 ```jldoctest
-julia> Tensor(SparseInterval(Element(0)), [0, 10, 0]) 
+julia> Tensor(SparseInterval(Element(0)), [0, 10, 0])
 3-Tensor
 └─ SparseInterval (0) [1:3]
    └─ [2:2]: 10
 
 julia> Tensor(SparseInterval(Element(0)), [0, 10, 10])
 ERROR: Finch.FinchProtocolError("SparseIntervalLevels can only be updated once")
+Stacktrace:
+  [1] macro expansion
+    @ ~/Projects/Finch.jl/src/execute.jl:78 [inlined]
+  [2] macro expansion
+    @ ~/Projects/Finch.jl/src/util/staging.jl:59 [inlined]
+  [3] execute_impl(ex::Finch.FinchNotation.BlockInstance{Tuple{Finch.FinchNotation.BlockInstance{Tuple{Finch.FinchNotation.DeclareInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:dst}, Tensor{SparseIntervalLevel{Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{0}}, Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i_1}, Finch.FinchNotation.Dimensionless, Finch.FinchNotation.DefineInstance{Finch.FinchNotation.VariableInstance{:tmp}, Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:src}, Vector{Int64}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Reader()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i_1}, Finch.FinchNotation.IndexInstance{:i_1}}}}, Finch.FinchNotation.SieveInstance{Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:!}, Finch.FinchNotation.LiteralInstance{!}}, Tuple{Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:isequal}, Finch.FinchNotation.LiteralInstance{isequal}}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:tmp}, Finch.FinchNotation.VariableInstance{:tmp}}, Finch.FinchNotation.LiteralInstance{0}}}}}, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:dst}, Tensor{SparseIntervalLevel{Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Updater()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i_1}, Finch.FinchNotation.IndexInstance{:i_1}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.initwrite}, Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:tmp}, Finch.FinchNotation.VariableInstance{:tmp}}}}}}}}, Finch.FinchNotation.YieldBindInstance{Tuple{Finch.FinchNotation.VariableInstance{:dst}}}}}, algebra::Val{Finch.DefaultAlgebra()}, mode::Val{:safe})
+    @ Finch ~/Projects/Finch.jl/src/util/staging.jl:51
+  [4] execute(ex::Finch.FinchNotation.BlockInstance{Tuple{Finch.FinchNotation.BlockInstance{Tuple{Finch.FinchNotation.DeclareInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:dst}, Tensor{SparseIntervalLevel{Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{0}}, Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i_1}, Finch.FinchNotation.Dimensionless, Finch.FinchNotation.DefineInstance{Finch.FinchNotation.VariableInstance{:tmp}, Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:src}, Vector{Int64}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Reader()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i_1}, Finch.FinchNotation.IndexInstance{:i_1}}}}, Finch.FinchNotation.SieveInstance{Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:!}, Finch.FinchNotation.LiteralInstance{!}}, Tuple{Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:isequal}, Finch.FinchNotation.LiteralInstance{isequal}}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:tmp}, Finch.FinchNotation.VariableInstance{:tmp}}, Finch.FinchNotation.LiteralInstance{0}}}}}, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:dst}, Tensor{SparseIntervalLevel{Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Updater()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i_1}, Finch.FinchNotation.IndexInstance{:i_1}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.initwrite}, Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:tmp}, Finch.FinchNotation.VariableInstance{:tmp}}}}}}}}, Finch.FinchNotation.YieldBindInstance{Tuple{Finch.FinchNotation.VariableInstance{:dst}}}}}; algebra::Finch.DefaultAlgebra, mode::Symbol)
+    @ Finch ~/Projects/Finch.jl/src/execute.jl:56
+  [5] execute
+    @ ~/Projects/Finch.jl/src/execute.jl:56 [inlined]
+  [6] macro expansion
+    @ ~/Projects/Finch.jl/src/execute.jl:185 [inlined]
+  [7] macro expansion
+    @ ~/Projects/Finch.jl/src/interface/copy.jl:86 [inlined]
+  [8] macro expansion
+    @ ~/Projects/Finch.jl/src/util/staging.jl:59 [inlined]
+  [9] dropfills_helper!(dst::Tensor{SparseIntervalLevel{Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}, src::Vector{Int64})
+    @ Finch ~/Projects/Finch.jl/src/util/staging.jl:51
+ [10] dropfills!
+    @ ~/Projects/Finch.jl/src/interface/copy.jl:75 [inlined]
+ [11] Tensor(lvl::SparseIntervalLevel{Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}, arr::Vector{Int64})
+    @ Finch ~/Projects/Finch.jl/src/tensors/fibers.jl:44
+ [12] top-level scope
+    @ none:1
 
-julia> begin
-         x = Tensor(SparseInterval(Element(0)), 10);
-         @finch begin for i = extent(3,6); x[~i] = 1 end end
-         x
-       end
-SparseInterval (0) [1:10]
-└─ [3:6]: 1
+julia> x = Tensor(SparseInterval(Element(0)), 10);
+
+julia> @finch begin for i = extent(3,6); x[~i] = 1 end end;
+
+julia> x
+10-Tensor
+└─ SparseInterval (0) [1:10]
+   └─ [3:6]: 1
+
 ```
 """
 struct SparseIntervalLevel{Ti, Ptr<:AbstractVector, Left<:AbstractVector, Right<:AbstractVector, Lvl} <: AbstractLevel
