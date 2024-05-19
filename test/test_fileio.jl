@@ -53,6 +53,13 @@ using Pkg
                     end
                 end
             end
+
+            B = fsprand(100, 100, 100, 0.1)
+            @testset "binsparse COO3" begin
+                fname = joinpath(f, "foo.bsp.h5")
+                bspwrite(fname, B)
+                @test Structure(B) == Structure(bspread(B))
+            end
         end
     end
 
