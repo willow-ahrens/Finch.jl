@@ -4,8 +4,6 @@ struct PlusOneVector{T, A <: AbstractVector{T}} <: AbstractVector{T}
     data::A
 end
 
-PlusOneVector(data::AbstractVector{T}) where {T} = PlusOneVector{T, typeof(data)}(data)
-
 @propagate_inbounds function Base.getindex(vec::PlusOneVector{T},
                                            index::Int) where {T}
     return vec.data[index] + 0x01
