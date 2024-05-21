@@ -1,7 +1,7 @@
 using Base: @propagate_inbounds
 
-struct PlusOneVector{T} <: AbstractVector{T}
-    data::AbstractVector{T}
+struct PlusOneVector{T, A <: AbstractVector{T}} <: AbstractVector{T}
+    data::A
 end
 
 @propagate_inbounds function Base.getindex(vec::PlusOneVector{T},
