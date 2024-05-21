@@ -30,26 +30,31 @@ julia> v = Vector([1, 0, 2, 3])
  0
  2
  3
+
 julia> obov = PlusOneVector(v)
-4-element PlusOneVector{Int64}:
+4-element PlusOneVector{Int64, Vector{Int64}}:
  2
  1
  3
  4
+
 julia> obov[1] += 8
 10
+
 julia> obov
-4-element PlusOneVector{Int64}:
+4-element PlusOneVector{Int64, Vector{Int64}}:
  10
   1
   3
   4
+
 julia> obov.data
 4-element Vector{Int64}:
  9
  0
  2
  3
+
 ```
 
 ### `CIndex`
