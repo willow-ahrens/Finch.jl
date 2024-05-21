@@ -18,21 +18,23 @@ The type `Ptr` is the type for the pointer array.
 
 ```jldoctest
 julia> Tensor(Dense(SparseCOO{1}(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
-Dense [:,1:3]
-├─ [:, 1]: SparseCOO{1} (0.0) [1:3]
-│  ├─ [1]: 10.0
-│  └─ [2]: 30.0
-├─ [:, 2]: SparseCOO{1} (0.0) [1:3]
-└─ [:, 3]: SparseCOO{1} (0.0) [1:3]
-   ├─ [1]: 20.0
-   └─ [3]: 40.0
+3×3-Tensor
+└─ Dense [:,1:3]
+   ├─ [:, 1]: SparseCOO{1} (0.0) [1:3]
+   │  ├─ [1]: 10.0
+   │  └─ [2]: 30.0
+   ├─ [:, 2]: SparseCOO{1} (0.0) [1:3]
+   └─ [:, 3]: SparseCOO{1} (0.0) [1:3]
+      ├─ [1]: 20.0
+      └─ [3]: 40.0
 
 julia> Tensor(SparseCOO{2}(Element(0.0)), [10 0 20; 30 0 0; 0 0 40])
-SparseCOO{2} (0.0) [:,1:3]
-├─ [1, 1]: 10.0
-├─ [2, 1]: 30.0
-├─ [1, 3]: 20.0
-└─ [3, 3]: 40.0
+3×3-Tensor
+└─ SparseCOO{2} (0.0) [:,1:3]
+   ├─ [1, 1]: 10.0
+   ├─ [2, 1]: 30.0
+   ├─ [1, 3]: 20.0
+   └─ [3, 3]: 40.0
 ```
 """
 struct SparseCOOLevel{N, TI<:Tuple, Ptr, Tbl, Lvl} <: AbstractLevel

@@ -12,10 +12,11 @@ For example, to construct an empty sparse matrix:
 
 ```jldoctest example1; setup=:(using Finch)
 julia> A_fbr = Tensor(Dense(SparseList(Element(0.0))), 4, 3)
-Dense [:,1:3]
-├─ [:, 1]: SparseList (0.0) [1:4]
-├─ [:, 2]: SparseList (0.0) [1:4]
-└─ [:, 3]: SparseList (0.0) [1:4]
+4×3-Tensor
+└─ Dense [:,1:3]
+   ├─ [:, 1]: SparseList (0.0) [1:4]
+   ├─ [:, 2]: SparseList (0.0) [1:4]
+   └─ [:, 3]: SparseList (0.0) [1:4]
 ```
 
 To initialize a sparse matrix with some values:
@@ -29,15 +30,16 @@ julia> A = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
  3.3  0.0  0.0
 
 julia> A_fbr = Tensor(Dense(SparseList(Element(0.0))), A)
-Dense [:,1:3]
-├─ [:, 1]: SparseList (0.0) [1:4]
-│  ├─ [2]: 1.1
-│  ├─ [3]: 2.2
-│  └─ [4]: 3.3
-├─ [:, 2]: SparseList (0.0) [1:4]
-└─ [:, 3]: SparseList (0.0) [1:4]
-   ├─ [1]: 4.4
-   └─ [3]: 5.5
+4×3-Tensor
+└─ Dense [:,1:3]
+   ├─ [:, 1]: SparseList (0.0) [1:4]
+   │  ├─ [2]: 1.1
+   │  ├─ [3]: 2.2
+   │  └─ [4]: 3.3
+   ├─ [:, 2]: SparseList (0.0) [1:4]
+   └─ [:, 3]: SparseList (0.0) [1:4]
+      ├─ [1]: 4.4
+      └─ [3]: 5.5
 ```
 
 

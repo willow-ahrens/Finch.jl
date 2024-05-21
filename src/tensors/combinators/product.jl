@@ -5,12 +5,19 @@ end
 ProductArray(body, dim) = ProductArray{dim}(body)
 ProductArray{dim}(body::Body) where {dim, Body} = ProductArray{dim, Body}(body)
 
-Base.show(io::IO, ex::ProductArray) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::ProductArray{dim}) where {dim}
+function Base.show(io::IO, ex::ProductArray{dim}) where {dim}
 	print(io, "ProductArray{$dim}($(ex.body))")
 end
 
-#Base.getindex(arr::ProductArray, i...) = ...
+function labelled_show(io::IO, tns::ProductArray{dim}) where {dim}
+    dims = [":" for _ in ndims(tns)]
+    dims[dim] = ": * :"
+    print(io, "ProductArray [$(join(dims, ", "))]")
+end
+
+function labelled_children(ex::ProductArray)
+    [LabelledTree(ex.body)]
+end
 
 struct VirtualProductArray <: AbstractVirtualCombinator
     body

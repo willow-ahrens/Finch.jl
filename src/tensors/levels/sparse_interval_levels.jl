@@ -10,20 +10,20 @@ an error if the program tries to write multiple (>=2) runs into SparseInterval.
 are the types of the arrays used to store positions and endpoints. 
 
 ```jldoctest
-julia> Tensor(SparseInterval(Element(0)), [0, 10, 0]) 
-SparseInterval (0) [1:3]
-└─ [2:2]: 10
+julia> Tensor(SparseInterval(Element(0)), [0, 10, 0])
+3-Tensor
+└─ SparseInterval (0) [1:3]
+   └─ [2:2]: 10
 
-julia> Tensor(SparseInterval(Element(0)), [0, 10, 10])
-ERROR: Finch.FinchProtocolError("SparseIntervalLevels can only be updated once")
+julia> x = Tensor(SparseInterval(Element(0)), 10);
 
-julia> begin
-         x = Tensor(SparseInterval(Element(0)), 10);
-         @finch begin for i = extent(3,6); x[~i] = 1 end end
-         x
-       end
-SparseInterval (0) [1:10]
-└─ [3:6]: 1
+julia> @finch begin for i = extent(3,6); x[~i] = 1 end end;
+
+julia> x
+10-Tensor
+└─ SparseInterval (0) [1:10]
+   └─ [3:6]: 1
+
 ```
 """
 struct SparseIntervalLevel{Ti, Ptr<:AbstractVector, Left<:AbstractVector, Right<:AbstractVector, Lvl} <: AbstractLevel

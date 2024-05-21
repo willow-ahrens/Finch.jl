@@ -5,12 +5,16 @@ end
 PermissiveArray(body, dims) = PermissiveArray{dims}(body)
 PermissiveArray{dims}(body::Body) where {dims, Body} = PermissiveArray{dims, Body}(body)
 
-Base.show(io::IO, ex::PermissiveArray) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::PermissiveArray{dims}) where {dims}
+function Base.show(io::IO, ex::PermissiveArray{dims}) where {dims}
 	print(io, "PermissiveArray($(ex.body), $dims)")
 end
 
-#Base.getindex(arr::PermissiveArray, i...) = ...
+labelled_show(io::IO, ::PermissiveArray{dims}) where {dims} =
+    print(io, "PermissiveArray [$(join(map(d -> d ? "~:" : ":", dims), ", "))]")
+
+function labelled_children(ex::PermissiveArray)
+    [LabelledTree(ex.body)]
+end
 
 struct VirtualPermissiveArray <: AbstractVirtualCombinator
     body

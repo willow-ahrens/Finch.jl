@@ -3,12 +3,15 @@ struct ProtocolizedArray{Protos<:Tuple, Body} <: AbstractCombinator
     protos::Protos
 end
 
-Base.show(io::IO, ex::ProtocolizedArray) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::ProtocolizedArray)
+Base.show(io::IO, ex::ProtocolizedArray) =
 	print(io, "ProtocolizedArray($(ex.body), $(ex.protos))")
-end
 
-Base.getindex(arr::ProtocolizedArray, i...) = arr.body[i...]
+labelled_show(io::IO, ex::ProtocolizedArray) =
+    print(io, "ProtocolizedArray [$(join(map(p -> isnothing(p) ? ":" : "$p(:)", ex.protos), ", "))]")
+
+function labelled_children(ex::ProtocolizedArray)
+    [LabelledTree(ex.body)]
+end
 
 struct VirtualProtocolizedArray <: AbstractVirtualCombinator
     body

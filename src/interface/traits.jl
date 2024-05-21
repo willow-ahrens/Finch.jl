@@ -14,6 +14,7 @@ Finch.finch_leaf(x::SparseData) = virtual(x)
 Base.ndims(fbr::SparseData) = 1 + ndims(fbr.lvl)
 fill_value(fbr::SparseData) = fill_value(fbr.lvl)
 Base.eltype(fbr::SparseData) = eltype(fbr.lvl)
+is_concordant_rep(fbr::SparseData) = true
 
 """
     RepeatData(lvl)
@@ -29,6 +30,7 @@ Finch.finch_leaf(x::RepeatData) = virtual(x)
 Base.ndims(fbr::RepeatData) = 1 + ndims(fbr.lvl)
 fill_value(fbr::RepeatData) = fill_value(fbr.lvl)
 Base.eltype(fbr::RepeatData) = eltype(fbr.lvl)
+is_concordant_rep(fbr::RepeatData) = true 
 
 """
     DenseData(lvl)
@@ -40,9 +42,9 @@ struct DenseData
 end
 Finch.finch_leaf(x::DenseData) = virtual(x)
 fill_value(fbr::DenseData) = fill_value(fbr.lvl)
-
 Base.ndims(fbr::DenseData) = 1 + ndims(fbr.lvl)
 Base.eltype(fbr::DenseData) = eltype(fbr.lvl)
+is_concordant_rep(fbr::DenseData) = is_concordant_rep(fbr.lvl)
 
 """
     ExtrudeData(lvl)
@@ -56,6 +58,7 @@ Finch.finch_leaf(x::ExtrudeData) = virtual(x)
 fill_value(fbr::ExtrudeData) = fill_value(fbr.lvl)
 Base.ndims(fbr::ExtrudeData) = 1 + ndims(fbr.lvl)
 Base.eltype(fbr::ExtrudeData) = eltype(fbr.lvl)
+is_concordant_rep(fbr::ExtrudeData) = is_concordant_rep(fbr.lvl)
 
 """
     HollowData(lvl)
@@ -67,9 +70,9 @@ struct HollowData
 end
 Finch.finch_leaf(x::HollowData) = virtual(x)
 fill_value(fbr::HollowData) = fill_value(fbr.lvl)
-
 Base.ndims(fbr::HollowData) = ndims(fbr.lvl)
 Base.eltype(fbr::HollowData) = eltype(fbr.lvl)
+is_concordant_rep(fbr::HollowData) = true
 
 """
     ElementData(fill_value, eltype)
@@ -82,9 +85,9 @@ struct ElementData
 end
 Finch.finch_leaf(x::ElementData) = virtual(x)
 fill_value(fbr::ElementData) = fbr.fill_value
-
 Base.ndims(fbr::ElementData) = 0
 Base.eltype(fbr::ElementData) = fbr.eltype
+is_concordant_rep(fbr::ElementData) = false
 
 """
     data_rep(tns)

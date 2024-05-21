@@ -10,10 +10,11 @@ access Val.
 
 ```jldoctest
 julia> Tensor(Dense(Element(0.0)), [1, 2, 3])
-Dense [1:3]
-├─ [1]: 1.0
-├─ [2]: 2.0
-└─ [3]: 3.0
+3-Tensor
+└─ Dense [1:3]
+   ├─ [1]: 1.0
+   ├─ [2]: 2.0
+   └─ [3]: 3.0
 ```
 """
 struct ElementLevel{Vf, Tv, Tp, Val} <: AbstractLevel

@@ -9,21 +9,23 @@ positions in the level.
 
 ```jldoctest
 julia> Tensor(Dense(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
-Dense [:,1:3]
-├─ [:, 1]: SparseByteMap (0.0) [1:3]
-│  ├─ [1]: 10.0
-│  └─ [2]: 30.0
-├─ [:, 2]: SparseByteMap (0.0) [1:3]
-└─ [:, 3]: SparseByteMap (0.0) [1:3]
-   ├─ [1]: 0.0
-   └─ [3]: 0.0
+3×3-Tensor
+└─ Dense [:,1:3]
+   ├─ [:, 1]: SparseByteMap (0.0) [1:3]
+   │  ├─ [1]: 10.0
+   │  └─ [2]: 30.0
+   ├─ [:, 2]: SparseByteMap (0.0) [1:3]
+   └─ [:, 3]: SparseByteMap (0.0) [1:3]
+      ├─ [1]: 0.0
+      └─ [3]: 0.0
 
 julia> Tensor(SparseByteMap(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
-SparseByteMap (0.0) [:,1:3]
-├─ [:, 1]: SparseByteMap (0.0) [1:3]
-│  ├─ [1]: 10.0
-│  └─ [2]: 30.0
-└─ [:, 3]: SparseByteMap (0.0) [1:3]
+3×3-Tensor
+└─ SparseByteMap (0.0) [:,1:3]
+   ├─ [:, 1]: SparseByteMap (0.0) [1:3]
+   │  ├─ [1]: 10.0
+   │  └─ [2]: 30.0
+   └─ [:, 3]: SparseByteMap (0.0) [1:3]
 ```
 """
 struct SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl} <: AbstractLevel

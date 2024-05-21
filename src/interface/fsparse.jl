@@ -232,10 +232,12 @@ See also: (`spzeros`)(https://docs.julialang.org/en/v1/stdlib/SparseArrays/#Spar
 # Examples
 ```jldoctest
 julia> fspzeros(Bool, 3, 3)
-SparseCOO{2} (false) [:,1:3]
+3×3-Tensor
+└─ SparseCOO{2} (false) [:,1:3]
 
 julia> fspzeros(Float64, 2, 2, 2)
-SparseCOO{3} (0.0) [:,:,1:2]
+2×2×2-Tensor
+└─ SparseCOO{3} (0.0) [:,:,1:2]
 ```
 """
 fspzeros(M...) = fspzeros(Float64, M...)

@@ -7,23 +7,26 @@ julia> A = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
  1.1  0.0  0.0
  2.2  0.0  5.5
  3.3  0.0  0.0
+
 julia> A_fbr = Tensor(Dense(Dense(Element(0.0))), A)
-Dense [:,1:3]
-├─ [:, 1]: Dense [1:4]
-│  ├─ [1]: 0.0
-│  ├─ [2]: 1.1
-│  ├─ [3]: 2.2
-│  └─ [4]: 3.3
-├─ [:, 2]: Dense [1:4]
-│  ├─ [1]: 0.0
-│  ├─ [2]: 0.0
-│  ├─ [3]: 0.0
-│  └─ [4]: 0.0
-└─ [:, 3]: Dense [1:4]
-   ├─ [1]: 4.4
-   ├─ [2]: 0.0
-   ├─ [3]: 5.5
-   └─ [4]: 0.0
+4×3-Tensor
+└─ Dense [:,1:3]
+   ├─ [:, 1]: Dense [1:4]
+   │  ├─ [1]: 0.0
+   │  ├─ [2]: 1.1
+   │  ├─ [3]: 2.2
+   │  └─ [4]: 3.3
+   ├─ [:, 2]: Dense [1:4]
+   │  ├─ [1]: 0.0
+   │  ├─ [2]: 0.0
+   │  ├─ [3]: 0.0
+   │  └─ [4]: 0.0
+   └─ [:, 3]: Dense [1:4]
+      ├─ [1]: 4.4
+      ├─ [2]: 0.0
+      ├─ [3]: 5.5
+      └─ [4]: 0.0
+
 ```
 
 We refer to a node in the tree as a subfiber. All of the nodes at the same level
@@ -46,11 +49,12 @@ Dense [1:4]
 └─ [4]: 0.0
 
 julia> A_fbr[:, 3]
-Dense [1:4]
-├─ [1]: 4.4
-├─ [2]: 0.0
-├─ [3]: 5.5
-└─ [4]: 0.0
+4-Tensor
+└─ Dense [1:4]
+   ├─ [1]: 4.4
+   ├─ [2]: 0.0
+   ├─ [3]: 5.5
+   └─ [4]: 0.0
 
 julia> A_fbr(3)
 Dense [1:4]
@@ -84,15 +88,16 @@ nonzeros") instead of `d` (for "`Dense`"):
 
 ```jldoctest example1
 julia> A_fbr = Tensor(Dense(SparseList(Element(0.0))), A)
-Dense [:,1:3]
-├─ [:, 1]: SparseList (0.0) [1:4]
-│  ├─ [2]: 1.1
-│  ├─ [3]: 2.2
-│  └─ [4]: 3.3
-├─ [:, 2]: SparseList (0.0) [1:4]
-└─ [:, 3]: SparseList (0.0) [1:4]
-   ├─ [1]: 4.4
-   └─ [3]: 5.5
+4×3-Tensor
+└─ Dense [:,1:3]
+   ├─ [:, 1]: SparseList (0.0) [1:4]
+   │  ├─ [2]: 1.1
+   │  ├─ [3]: 2.2
+   │  └─ [4]: 3.3
+   ├─ [:, 2]: SparseList (0.0) [1:4]
+   └─ [:, 3]: SparseList (0.0) [1:4]
+      ├─ [1]: 4.4
+      └─ [3]: 5.5
 ```
 
 ![CSC Format Index Tree](../../assets/levels-A-d-sl-e.png)
@@ -109,14 +114,15 @@ hypersparsity), it is better to compress the root level as well:
 
 ```jldoctest example1
 julia> A_fbr = Tensor(SparseList(SparseList(Element(0.0))), A)
-SparseList (0.0) [:,1:3]
-├─ [:, 1]: SparseList (0.0) [1:4]
-│  ├─ [2]: 1.1
-│  ├─ [3]: 2.2
-│  └─ [4]: 3.3
-└─ [:, 3]: SparseList (0.0) [1:4]
-   ├─ [1]: 4.4
-   └─ [3]: 5.5
+4×3-Tensor
+└─ SparseList (0.0) [:,1:3]
+   ├─ [:, 1]: SparseList (0.0) [1:4]
+   │  ├─ [2]: 1.1
+   │  ├─ [3]: 2.2
+   │  └─ [4]: 3.3
+   └─ [:, 3]: SparseList (0.0) [1:4]
+      ├─ [1]: 4.4
+      └─ [3]: 5.5
 ```
 
 ![DCSC Format Index Tree](../../assets/levels-A-sl-sl-e.png)
@@ -136,12 +142,13 @@ declare the number of indices handled by the level:
 
 ```jldoctest example1
 julia> A_fbr = Tensor(SparseCOO{2}(Element(0.0)), A)
-SparseCOO{2} (0.0) [:,1:3]
-├─ [2, 1]: 1.1
-├─ [3, 1]: 2.2
-├─ [4, 1]: 3.3
-├─ [1, 3]: 4.4
-└─ [3, 3]: 5.5
+4×3-Tensor
+└─ SparseCOO{2} (0.0) [:,1:3]
+   ├─ [2, 1]: 1.1
+   ├─ [3, 1]: 2.2
+   ├─ ⋮
+   ├─ [1, 3]: 4.4
+   └─ [3, 3]: 5.5
 ```
 
 ![COO Format Index Tree](../../assets/levels-A-sc2-e.png)

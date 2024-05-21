@@ -112,3 +112,82 @@ function may modify underlying data arrays, but cannot change the virtual itself
 function is used to move data to the device before a kernel is launched.
 """
 function virtual_moveto end
+
+struct LabelledTree
+    key 
+    node
+end
+
+LabelledTree(node) = LabelledTree(nothing, node)
+
+function Base.show(io::IO, node::LabelledTree)
+    if node.key !== nothing
+        show(io, something(node.key))
+        print(io, ": ")
+    end
+    labelled_show(io, node.node)
+end
+labelled_show(io, node) = show(io, node)
+
+AbstractTrees.children(node::LabelledTree) = labelled_children(node.node)
+labelled_children(node) = ()
+
+struct TruncatedTree
+    node
+    nmax
+end
+
+TruncatedTree(node; nmax = 2) = TruncatedTree(node, nmax)
+
+function Base.show(io::IO, node::TruncatedTree)
+    show(io, node.node)
+end
+
+
+struct EllipsisNode end
+Base.show(io::IO, key::EllipsisNode) = print(io, "⋮")
+
+function AbstractTrees.children(node::TruncatedTree)
+    clds = collect(children(node.node))
+    if length(clds) > 2*node.nmax
+        clds = vcat(clds[1:node.nmax, end], [EllipsisNode()], clds[end - node.nmax + 1:end])
+    end
+    clds = map(cld -> TruncatedTree(cld, nmax=node.nmax), clds)
+end
+
+struct CartesianLabel
+    idxs
+end
+
+cartesian_label(args...) = CartesianLabel(Any[args...])
+
+function Base.show(io::IO, key::CartesianLabel)
+    print(io, "[")
+    join(io, key.idxs, ", ")
+    print(io, "]")
+end
+
+struct RangeLabel
+    start
+    stop
+end
+
+range_label(start = nothing, stop = nothing) = RangeLabel(start, stop)
+
+function Base.show(io::IO, key::RangeLabel)
+    if key.start !== nothing
+        print(io, something(key.start))
+    end
+    print(io, ":")
+    if key.stop !== nothing
+        print(io, something(key.stop))
+    end
+end
+
+function Base.show(io::IO, mime::MIME"text/plain", tns::AbstractTensor)
+    if get(io, :compact, false)
+        summary(io, tns)
+    else
+        print_tree(io, TruncatedTree(LabelledTree(tns)))
+    end
+end
