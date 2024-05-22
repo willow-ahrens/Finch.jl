@@ -27,7 +27,7 @@ Base.@propagate_inbounds function scansearch(v, x, lo::T1, hi::T2) where {T1<:In
         d *= T1(2)
         p += d
     end
-    lo = p - d - u
+    lo = p - d
     hi = min(p, hi) + u
 
     while lo < hi - u
