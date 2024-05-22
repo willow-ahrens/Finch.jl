@@ -21,11 +21,11 @@ via exponential steps rightward 2) binary searching within those bounds.
 """
 Base.@propagate_inbounds function scansearch(v, x, lo::T1, hi::T2) where {T1<:Integer, T2<:Integer} # TODO types for `lo` and `hi` #406
     u = T1(1)
-    d = u
+    d = T1(1)
     p = lo
     while p < hi && v[p] < x
-        d = (d << 0x01)
-        p = p | d
+        d *= 2
+        p +=  d
     end
     lo = p - d
     hi = min(p, hi) + u
@@ -40,3 +40,22 @@ Base.@propagate_inbounds function scansearch(v, x, lo::T1, hi::T2) where {T1<:In
     end
     return hi
 end
+#=
+Base.@propagate_inbounds function scansearch(v, x, lo::T1, hi::T2) where {T1<:Integer, T2<:Integer} # TODO types for `lo` and `hi` #406
+    u = T1(1)
+    stop = min(hi, lo + T1(32))
+    while lo + u < stop && v[lo] < x
+        lo += u
+    end
+    lo = lo - u
+    hi = hi + u
+    while lo < hi - u
+        m = lo + ((hi - lo) >>> 0x01)
+        if v[m] < x
+            lo = m
+        else
+            hi = m
+        end
+    end
+    return hi
+end =#
