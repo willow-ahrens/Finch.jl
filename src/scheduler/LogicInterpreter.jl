@@ -87,7 +87,17 @@ function (ctx::LogicMachine)(ex)
         end
         execute(body, mode = ctx.mode).res
     elseif @capture ex produces(~args...)
-        return map(arg -> ctx.scope[arg], args)
+        return map(args) do arg
+            if @capture(arg, reorder(relabel(~tns::isalias, ~idxs_1...), ~idxs_2...)) && Set(idxs_1) == Set(idxs_2)
+                return swizzle(ctx.scope[tns], [findfirst(isequal(idx), idxs_1) for idx in idxs_2]...)
+            elseif @capture(arg, reorder(~tns::isalias, ~idxs...))
+                ctx.scope[tns]
+            elseif isalias(arg)
+                ctx.scope[arg]
+            else
+                error("Unrecognized logic: $(arg)")
+            end
+        end
     elseif @capture ex plan(~head)
         ctx(head)
     elseif @capture ex plan(~head, ~tail...)

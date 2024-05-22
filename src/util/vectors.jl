@@ -1,7 +1,7 @@
 using Base: @propagate_inbounds
 
-struct PlusOneVector{T} <: AbstractVector{T}
-    data::AbstractVector{T}
+struct PlusOneVector{T, A <: AbstractVector{T}} <: AbstractVector{T}
+    data::A
 end
 
 @propagate_inbounds function Base.getindex(vec::PlusOneVector{T},
@@ -36,11 +36,11 @@ function moveto(vec::PlusOneVector{T}, device) where {T}
     return PlusOneVector{T}(data)
 end
 
-struct MinusEpsVector{T, S} <: AbstractVector{T}
-    data::AbstractVector{S}
+struct MinusEpsVector{T, S, A <: AbstractVector{S}} <: AbstractVector{T}
+    data::A
 end
 
-MinusEpsVector(data::AbstractVector{T}) where {T} = MinusEpsVector{Limit{T}, T}(data)
+MinusEpsVector(data::AbstractVector{T}) where {T} = MinusEpsVector{Limit{T}, T, typeof(data)}(data)
 
 @propagate_inbounds function Base.getindex(vec::MinusEpsVector{T},
                                            index::Int) where {T}
@@ -80,11 +80,11 @@ function moveto(vec::MinusEpsVector{T}, device) where {T}
     return MinusEpsVector{T}(data)
 end
 
-struct PlusEpsVector{T, S} <: AbstractVector{T}
-    data::AbstractVector{S}
+struct PlusEpsVector{T, S, A <:AbstractVector{S}} <: AbstractVector{T}
+    data::A
 end
 
-PlusEpsVector(data::AbstractVector{T}) where {T} = PlusEpsVector{Limit{T}, T}(data)
+PlusEpsVector(data::AbstractVector{T}) where {T} = PlusEpsVector{Limit{T}, T, typeof(data)}(data)
 
 @propagate_inbounds function Base.getindex(vec::PlusEpsVector{T},
                                            index::Int) where {T}

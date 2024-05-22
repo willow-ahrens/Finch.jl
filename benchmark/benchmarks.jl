@@ -158,6 +158,23 @@ for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     SUITE["indices"]["SpMV_32"][mtx] = @benchmarkable spmv32($A, $x) 
 end
 
+function spmv_p1(A, x)
+    y = Tensor(Dense(Element(0.0)))
+    @finch (y .= 0; for i=_, j=_; y[i] += A[j, i] * x[j] end)
+    return y
+end
+
+SUITE["indices"]["SpMV_p1"] = BenchmarkGroup()
+for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
+    A = SparseMatrixCSC(matrixdepot(mtx))
+    (m, n) = size(A)
+    ptr = A.colptr .- 1
+    idx = A.rowval .- 1
+    A = Tensor(Dense(SparseList(Element(0.0, A.nzval), m, Finch.PlusOneVector(ptr), Finch.PlusOneVector(idx)), n))
+    x = Tensor(Dense(Element(0.0)), rand(n))
+    SUITE["indices"]["SpMV_p1"][mtx] = @benchmarkable spmv_p1($A, $x) 
+end
+
 function spmv64(A, x)
     y = Tensor(Dense{Int64}(Element{0.0, Float64, Int64}()))
     @finch (y .= 0; for i=_, j=_; y[i] += A[j, i] * x[j] end)

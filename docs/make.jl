@@ -3,13 +3,11 @@ if abspath(PROGRAM_FILE) == @__FILE__
     using Pkg
     Pkg.activate(@__DIR__)
     Pkg.develop(PackageSpec(path = joinpath(@__DIR__, "..")))
-    Pkg.resolve()
     Pkg.instantiate()
 end
 
 using Documenter
 using Documenter.Remotes
-using Literate
 using Finch
 
 DocMeta.setdocmeta!(Finch, :DocTestSetup, :(using Finch; using SparseArrays); recursive=true)

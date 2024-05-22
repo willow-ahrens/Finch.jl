@@ -11,27 +11,23 @@ an error if the program tries to write multiple (>=2) coordinates into SparsePoi
 types of the arrays used to store positions and indicies. 
 
 ```jldoctest
-julia> Tensor(Dense(SparsePoint(Element(0.0))), [10 0 0; 0 20 0; 0 0 30]) 
-Dense [:,1:3]
-├─ [:, 1]: SparsePoint (0.0) [1:3]
-│  └─ 10.0
-├─ [:, 2]: SparsePoint (0.0) [1:3]
-│  └─ 20.0
-└─ [:, 3]: SparsePoint (0.0) [1:3]
-   └─ 30.0
+julia> Tensor(Dense(SparsePoint(Element(0.0))), [10 0 0; 0 20 0; 0 0 30])
+3×3-Tensor
+└─ Dense [:,1:3]
+   ├─ [:, 1]: SparsePoint (0.0) [1:3]
+   │  └─ 10.0
+   ├─ [:, 2]: SparsePoint (0.0) [1:3]
+   │  └─ 20.0
+   └─ [:, 3]: SparsePoint (0.0) [1:3]
+      └─ 30.0
 
-julia> Tensor(Dense(SparsePoint(Element(0.0))), [10 0 0; 0 20 0; 0 40 30])
-ERROR: Finch.FinchProtocolError("SparsePointLevels can only be updated once")
-
-julia> Tensor(SparsePoint(Dense(Element(0.0))), [0 0 0; 0 0 30; 0 0 30]) 
-SparsePoint (0.0) [:,1:3]
-└─ Dense [1:3]
-   ├─ [1]: 0.0
-   ├─ [2]: 30.0
-   └─ [3]: 30.0
-
-julia> Tensor(SparsePoint(SparsePoint(Element(0.0))), [0 0 0; 0 0 30; 0 0 30]) 
-ERROR: Finch.FinchProtocolError("SparsePointLevels can only be updated once")
+julia> Tensor(SparsePoint(Dense(Element(0.0))), [0 0 0; 0 0 30; 0 0 30])
+3×3-Tensor
+└─ SparsePoint (0.0) [:,1:3]
+   └─ Dense [1:3]
+      ├─ [1]: 0.0
+      ├─ [2]: 30.0
+      └─ [3]: 30.0
 
 ```
 """

@@ -30,16 +30,16 @@ julia> C = Tensor(SparseList(Element(0)));
 
 julia> A = Tensor(SparseList(Element(0)), [0, 2, 0, 0, 3]);
 
-
 julia> B = Tensor(Dense(Element(0)), [11, 12, 13, 14, 15]);
 
 julia> @finch (C .= 0; for i=_; C[i] = A[i] * B[i] end);
 
-
 julia> C
-SparseList (0) [1:5]
-├─ [2]: 24
-└─ [5]: 45
+5-Tensor
+└─ SparseList (0) [1:5]
+   ├─ [2]: 24
+   └─ [5]: 45
+
 ```
 
 The
@@ -96,9 +96,10 @@ julia> typeof(prgm)
 Finch.FinchNotation.BlockInstance{Tuple{Finch.FinchNotation.DeclareInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:C}, Tensor{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{0}}, Finch.FinchNotation.LoopInstance{Finch.FinchNotation.IndexInstance{:i}, Finch.FinchNotation.Dimensionless, Finch.FinchNotation.AssignInstance{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:C}, Tensor{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Updater()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.initwrite}, Finch.FinchNotation.CallInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:*}, Finch.FinchNotation.LiteralInstance{*}}, Tuple{Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:A}, Tensor{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Reader()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}, Finch.FinchNotation.AccessInstance{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:B}, Tensor{DenseLevel{Int64, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}, Finch.FinchNotation.LiteralInstance{Finch.FinchNotation.Reader()}, Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:i}, Finch.FinchNotation.IndexInstance{:i}}}}}}}}, Finch.FinchNotation.YieldBindInstance{Tuple{Finch.FinchNotation.TagInstance{Finch.FinchNotation.VariableInstance{:C}, Tensor{SparseListLevel{Int64, Vector{Int64}, Vector{Int64}, ElementLevel{0, Int64, Int64, Vector{Int64}}}}}}}}}
 
 julia> C = Finch.execute(prgm).C
-SparseList (0) [1:5]
-├─ [2]: 24
-└─ [5]: 45
+5-Tensor
+└─ SparseList (0) [1:5]
+   ├─ [2]: 24
+   └─ [5]: 45
 ```
 
 This functionality is sufficient for building finch kernels programatically. For
@@ -123,9 +124,10 @@ julia> function pointwise_sum(As...)
 pointwise_sum (generic function with 1 method)
 
 julia> pointwise_sum([1, 2], [3, 4])
-Dense [1:2]
-├─ [1]: 4
-└─ [2]: 6
+2-Tensor
+└─ Dense [1:2]
+   ├─ [1]: 4
+   └─ [2]: 6
 
 ```
 
@@ -165,7 +167,7 @@ julia> inst = Finch.@finch_program_instance begin
            end
        end
 Finch program instance: for i = Dimensionless()
-  tag(s, Scalar{0, Int64}(0))[] <<tag(+, +)>>= tag(A, Tensor(SparseList(Element(0))))[tag(i, i)]
+  tag(s, Scalar{0, Int64})[] <<tag(+, +)>>= tag(A, Tensor(SparseList(Element(0))))[tag(i, i)]
 end
 
 julia> typeof(inst)
@@ -243,6 +245,7 @@ quote
     s.val = s_val
     result
 end
+
 ```
 
 Users can also create their own virtual nodes to represent their custom types.
@@ -266,13 +269,12 @@ julia> prgm_inst = Finch.@finch_program_instance for i = _
             s[] += A[i]
         end;
 
-
 julia> println(prgm_inst)
 loop_instance(index_instance(i), Finch.FinchNotation.Dimensionless(), assign_instance(access_instance(tag_instance(variable_instance(:s), Scalar{0, Int64}(0)), literal_instance(Finch.FinchNotation.Updater())), tag_instance(variable_instance(:+), literal_instance(+)), access_instance(tag_instance(variable_instance(:A), Tensor(SparseList{Int64}(Element{0, Int64, Int64}([2, 3]), 5, [1, 3], [2, 5]))), literal_instance(Finch.FinchNotation.Reader()), tag_instance(variable_instance(:i), index_instance(i)))))
 
 julia> prgm_inst
 Finch program instance: for i = Dimensionless()
-  tag(s, Scalar{0, Int64}(0))[] <<tag(+, +)>>= tag(A, Tensor(SparseList(Element(0))))[tag(i, i)]
+  tag(s, Scalar{0, Int64})[] <<tag(+, +)>>= tag(A, Tensor(SparseList(Element(0))))[tag(i, i)]
 end
 
 julia> prgm = Finch.@finch_program for i = _

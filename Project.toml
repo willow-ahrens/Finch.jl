@@ -1,7 +1,7 @@
 authors = ["Willow Ahrens"]
 name = "Finch"
 uuid = "9177782c-1635-4eb9-9bfb-d9dfa25e6bce"
-version = "0.6.28"
+version = "0.6.30"
 
 [compat]
 AbstractTrees = "0.3.4, 0.4"
@@ -47,7 +47,6 @@ Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 NPZ = "15e1cf62-19b3-5cfa-8e77-841668bca605"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
@@ -57,7 +56,7 @@ TensorMarket = "8b7d4fe7-0b45-4d0d-9dd8-5cc9b23b4b77"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "ArgParse", "LinearAlgebra", "Random", "SparseArrays", "Graphs", "SimpleWeightedGraphs", "HDF5", "NPZ", "Pkg", "TensorMarket", "Documenter", "Literate"]
+test = ["Test", "ArgParse", "LinearAlgebra", "Random", "SparseArrays", "Graphs", "SimpleWeightedGraphs", "HDF5", "NPZ", "Pkg", "TensorMarket", "Documenter"]
 
 [weakdeps]
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"

@@ -1,17 +1,22 @@
 julia> X = Tensor(SparseList(Element(0.0)), [1.0, 0.0, 0.0, 3.0, 0.0, 2.0, 0.0])
-SparseList (0.0) [1:7]
-├─ [1]: 1.0
-├─ [4]: 3.0
-└─ [6]: 2.0
+7-Tensor
+└─ SparseList (0.0) [1:7]
+   ├─ [1]: 1.0
+   ├─ [4]: 3.0
+   └─ [6]: 2.0
 
 julia> x_min = Scalar(Inf)
 Scalar{Inf, Float64}(Inf)
+
 julia> x_max = Scalar(-Inf)
 Scalar{-Inf, Float64}(-Inf)
+
 julia> x_sum = Scalar(0.0)
 Scalar{0.0, Float64}(0.0)
+
 julia> x_var = Scalar(0.0)
 Scalar{0.0, Float64}(0.0)
+
 julia> @finch_code begin
         for i = _
             let x = X[i]

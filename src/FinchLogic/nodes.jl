@@ -450,7 +450,13 @@ end
 function getproductions(node::LogicNode)
     for node in PostOrderDFS(node)
         if node.kind == produces
-            return node.args
+            res = []
+            for arg in PostOrderDFS(node)
+                if isalias(arg)
+                    push!(res, arg)
+                end
+            end
+            return res
         end
     end
     return []

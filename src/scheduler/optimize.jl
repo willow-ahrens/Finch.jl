@@ -1,5 +1,6 @@
 flatten_plans = Rewrite(Postwalk(Fixpoint(Chain([
-    (@rule plan(~a1..., plan(~b...), ~a2...) => plan(a1..., b..., a2...)),
+    (@rule plan(~s1..., plan(~s2...), ~s3...) => plan(s1, s2, s3)),
+    (@rule plan(~s1..., produces(~p...), ~s2...) => plan(s1, produces(p))),
 ]))))
 
 isolate_aggregates = Rewrite(Postwalk(
@@ -138,43 +139,64 @@ Accepts programs of the form:
   INPUT_QUERY := query(ALIAS, TABLE)
 COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, MAPREDUCE)) | query(ALIAS, MAPREDUCE))
          PLAN := plan(STEP...)
-         STEP := COMPUTE_QUERY | INPUT_QUERY | PLAN | produces(ALIAS...)
+         STEP := COMPUTE_QUERY | INPUT_QUERY | PLAN | produces((ALIAS | ACCESS)...)
          ROOT := STEP
 ```
 """
-function propagate_transpose_queries(root::LogicNode)
-    return propagate_transpose_queries_impl(root, getproductions(root), Dict{LogicNode, LogicNode}())
-end
-
-function propagate_transpose_queries_impl(node, productions, bindings)
+function propagate_transpose_queries(node, bindings = Dict{LogicNode, LogicNode}())
     if @capture node plan(~stmts...)
         stmts = map(stmts) do stmt
-            propagate_transpose_queries_impl(stmt, productions, bindings)
+            propagate_transpose_queries(stmt, bindings)
         end
         plan(stmts...)
     elseif @capture node query(~lhs, ~rhs)
         rhs = push_fields(Rewrite(Postwalk((node) -> get(bindings, node, node)))(rhs))
-        if lhs in productions
-            query(lhs, rhs)
+        if @capture rhs reorder(relabel(~tns::isalias, ~idxs_1...), ~idxs_2...)
+            bindings[lhs] = rhs
+            plan()
+        elseif @capture rhs relabel(~tns::isalias, ~idxs_1...)
+            bindings[lhs] = rhs
+            plan()
+        elseif isalias(rhs)
+            bindings[lhs] = rhs
+            plan()
         else
-            if @capture rhs reorder(relabel(~rhs::isalias, ~idxs_1...), ~idxs_2...)
-                bindings[lhs] = rhs
-                plan()
-            elseif @capture rhs relabel(~rhs::isalias, ~idxs_1...)
-                bindings[lhs] = rhs
-                plan()
-            elseif isalias(rhs)
-                bindings[lhs] = rhs
-                plan()
-            else
-                query(lhs, rhs)
-            end
+            query(lhs, rhs)
         end
     elseif @capture node produces(~args...)
-        node
+        push_fields(Rewrite(Postwalk((node) -> get(bindings, node, node)))(node))
     else
         throw(ArgumentError("Unrecognized program in propagate_transpose_queries"))
     end
+end
+
+"""
+materialize_squeeze_expand_productions(root)
+
+Makes separate kernels for squeeze and expand operations in produces statements,
+since swizzle does not support this.
+"""
+function materialize_squeeze_expand_productions(root)
+    Rewrite(Postwalk(@rule produces(~args...) => begin
+        preamble = []
+        args_2 = map(args) do arg
+            if (@capture arg reorder(relabel(~tns::isalias, ~idxs_1...), ~idxs_2...)) && Set(idxs_1) != Set(idxs_2)
+                tns_2 = alias(gensym(:A))
+                idxs_3 = withsubsequence(intersect(idxs_1, idxs_2), idxs_2)
+                push!(preamble, query(tns_2, reorder(relabel(tns, idxs_1), idxs_3)))
+                if idxs_3 == idxs_2
+                    tns_2
+                else
+                    reorder(relabel(tns_2, idxs_3), idxs_2)
+                end
+            elseif @capture(arg, reorder(relabel(~tns, ~i...), ~i...))
+                tns
+            else
+                arg
+            end
+        end
+        plan(preamble, produces(args_2))
+    end))(root)
 end
 
 function propagate_copy_queries(root)
@@ -253,7 +275,7 @@ Accepts a program of the following form:
                  IMMEDIATE
 COMPUTE_QUERY := query(ALIAS, COMPUTE)
   INPUT_QUERY := query(ALIAS, TABLE)
-         STEP := COMPUTE_QUERY | INPUT_QUERY | produces(ALIAS...)
+         STEP := COMPUTE_QUERY | INPUT_QUERY | produces((ALIAS | ACCESS)...)
          ROOT := PLAN(STEP...)
 ```   
 
@@ -269,6 +291,10 @@ function concordize(root)
     needed_swizzles = Dict()
     spc = Namespace()
     map(node->freshen(spc, node.name), unique(filter(Or(isfield, isalias), collect(PostOrderDFS(root)))))
+    #Exempt productions from swizzling
+    root = flatten_plans(root)
+    @assert @capture root plan(~s..., produces(~p...))
+    root = plan(s)
     #Collect the needed swizzles
     root = Rewrite(Postwalk(
         @rule reorder(relabel(~a::isalias, ~idxs_1...), ~idxs_2...) => begin
@@ -292,7 +318,7 @@ function concordize(root)
             end
         end),
     ])))(root)
-    root = flatten_plans(root)
+    root = flatten_plans(plan(root, produces(p)))
 end
 
 drop_noisy_reorders = Rewrite(Postwalk(
@@ -391,6 +417,123 @@ function normalize_names(ex)
     Rewrite(Postwalk(@rule ~a::isalias => alias(normname(a.name))))(ex)
 end
 
+function toposort(chains::Vector{Vector{T}}) where T
+    chains = filter(!isempty, deepcopy(chains))
+    parents = Dict{T, Int}(map(chain -> first(chain) => 0, chains))
+    for chain in chains, u in chain[2:end]
+        parents[u] += 1
+    end
+    roots = filter(u -> parents[u] == 0, keys(parents))
+    perm = []
+    while !isempty(parents)
+        isempty(roots) && return nothing
+        push!(perm, pop!(roots))
+        for chain in chains
+            if !isempty(chain) && first(chain) == last(perm)
+                popfirst!(chain)
+                if !isempty(chain)
+                    parents[first(chain)] -= 1
+                    if parents[first(chain)] == 0
+                        push!(roots, first(chain))
+                    end
+                end
+            end
+        end
+        pop!(parents, last(perm))
+    end
+    return perm
+end
+
+function heuristic_loop_order(node, reps)
+    chains = Vector{LogicNode}[]
+    for node in PostOrderDFS(node)
+        if @capture node reorder(relabel(~arg, ~idxs...), ~idxs_2...)
+            push!(chains, intersect(idxs, idxs_2))
+        end
+    end
+    for idx in getfields(node)
+        push!(chains, [idx])
+    end
+    res = something(toposort(chains), getfields(node))
+    if mapreduce(length, max, chains, init = 0) < length(unique(reduce(vcat, chains)))
+        counts = Dict()
+        for chain in chains
+            for idx in chain
+                counts[idx] = get(counts, idx, 0) + 1
+            end
+        end
+        sort!(res, by=idx -> counts[idx] == 1, alg=Base.MergeSort)
+    end
+    return res
+end
+
+"""
+set_loop_order(root)
+
+Heuristically chooses a total order for all loops in the program by inserting
+`reorder` statments inside reformat, query, and aggregate nodes.
+
+Accepts programs of the form:
+```
+      REORDER := reorder(relabel(ALIAS, FIELD...), FIELD...)
+       ACCESS := reorder(relabel(ALIAS, idxs_1::FIELD...), idxs_2::FIELD...) where issubsequence(idxs_1, idxs_2)
+    POINTWISE := ACCESS | mapjoin(IMMEDIATE, POINTWISE...) | reorder(IMMEDIATE, FIELD...) | IMMEDIATE
+    MAPREDUCE := POINTWISE | aggregate(IMMEDIATE, IMMEDIATE, POINTWISE, FIELD...)
+       TABLE  := table(IMMEDIATE, FIELD...)
+COMPUTE_QUERY := query(ALIAS, reformat(IMMEDIATE, arg::(REORDER | MAPREDUCE)))
+  INPUT_QUERY := query(ALIAS, TABLE)
+         STEP := COMPUTE_QUERY | INPUT_QUERY
+         ROOT := PLAN(STEP..., produces(ALIAS...))
+```
+"""
+function set_loop_order(node, perms = Dict(), reps = Dict())
+    if @capture node plan(~stmts...)
+        stmts = map(stmts) do stmt
+            set_loop_order(stmt, perms, reps)
+        end
+        plan(stmts...)
+    elseif @capture node query(~lhs, reformat(~tns, ~rhs::isalias))
+        rhs_2 = perms[rhs]
+        perms[lhs] = lhs
+        reps[lhs] = SuitableRep(reps)(rhs_2)
+        query(lhs, reformat(tns, rhs_2))
+    elseif @capture node query(~lhs, reformat(~tns, ~rhs))
+        arg = alias(gensym(:A))
+        set_loop_order(plan(
+            query(A, rhs),
+            query(lhs, reformat(tns, A))
+        ), perms, reps)
+    elseif @capture node query(~lhs, table(~tns, ~idxs...))
+        reps[lhs] = SuitableRep(reps)(node.rhs)
+        perms[lhs] = lhs
+        node
+    elseif @capture node query(~lhs, aggregate(~op, ~init, ~arg, ~idxs...))
+        arg = push_fields(Rewrite(Postwalk(tns -> get(perms, tns, tns)))(arg))
+        idxs_2 = heuristic_loop_order(arg, reps)
+        rhs_2 = aggregate(op, init, reorder(arg, idxs_2...), idxs...)
+        reps[lhs] = SuitableRep(reps)(rhs_2)
+        perms[lhs] = reorder(relabel(lhs, getfields(rhs_2)), getfields(node.rhs))
+        query(lhs, rhs_2)
+    elseif @capture node query(~lhs, reorder(relabel(~tns::isalias, ~idxs_1...), ~idxs_2...))
+        tns = get(perms, tns, tns)
+        reps[lhs] = SuitableRep(reps)(node.rhs)
+        perms[lhs] = lhs
+        node
+    elseif @capture node query(~lhs, ~rhs)
+        #assuming rhs is a bunch of mapjoins
+        rhs = push_fields(Rewrite(Postwalk(tns -> get(perms, tns, tns)))(rhs))
+        idxs = heuristic_loop_order(rhs, reps)
+        rhs_2 = reorder(rhs, idxs...)
+        reps[lhs] = SuitableRep(reps)(rhs_2)
+        perms[lhs] = reorder(relabel(lhs, idxs), getfields(rhs))
+        query(lhs, rhs_2)
+    elseif @capture node produces(~args...)
+        Rewrite(Postwalk(tns -> get(perms, tns, tns)))(node)
+    else
+        throw(ArgumentError("Unrecognized program in set_loop_order"))
+    end
+end
+
 function optimize(prgm)
     #deduplicate and lift inline subqueries to regular queries
     prgm = lift_subqueries(prgm)
@@ -417,17 +560,24 @@ function optimize(prgm)
 
     #These steps assign a global loop order to each statement.
     prgm = propagate_fields(prgm)
-
     prgm = push_fields(prgm)
     prgm = lift_fields(prgm)
+    prgm = push_fields(prgm)
+
+    prgm = propagate_transpose_queries(prgm)
+    prgm = set_loop_order(prgm)
     prgm = push_fields(prgm)
 
     #After we have a global loop order, we concordize the program
     prgm = concordize(prgm)
 
+    prgm = materialize_squeeze_expand_productions(prgm)
+    prgm = propagate_copy_queries(prgm)
+
     #Add reformat statements where there aren't any
     prgm = propagate_into_reformats(prgm)
     prgm = propagate_copy_queries(prgm)
+
 
     #Normalize names for caching
     prgm = normalize_names(prgm)

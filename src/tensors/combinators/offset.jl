@@ -3,12 +3,16 @@ struct OffsetArray{Delta<:Tuple, Body} <: AbstractCombinator
     delta::Delta
 end
 
-Base.show(io::IO, ex::OffsetArray) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::OffsetArray)
-	print(io, "OffsetArray($(ex.body), $(ex.delta))")
+function Base.show(io::IO, ex::OffsetArray)
+	print(io, "OffsetArray($(ex.body), $(ex.delta)")
 end
 
-Base.getindex(arr::OffsetArray, i...) = arr.body[(i .+ arr.delta)...]
+labelled_show(io::IO, ::OffsetArray) =
+    print(io, "OffsetArray [$(join(map(d -> ":+$d", ex.delta), ", "))]")
+
+function labelled_children(ex::OffsetArray)
+    [LabelledTree(ex.body)]
+end
 
 struct VirtualOffsetArray <: AbstractVirtualCombinator
     body
@@ -20,9 +24,6 @@ is_atomic(ctx, lvl::VirtualOffsetArray) = is_atomic(ctx, lvl.body)
 is_concurrent(ctx, lvl::VirtualOffsetArray) = is_concurrent(ctx, lvl.body)
 
 Base.show(io::IO, ex::VirtualOffsetArray) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualOffsetArray)
-	print(io, "VirtualOffsetArray($(ex.body), $(ex.delta))")
-end
 
 Base.summary(io::IO, ex::VirtualOffsetArray) = print(io, "VOffset($(summary(ex.body)), $(ex.delta))")
 
