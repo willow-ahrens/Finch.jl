@@ -40,8 +40,8 @@ Base.@propagate_inbounds function scansearch(v, x, lo::T1, hi::T2) where {T1<:In
     end
     return hi
 end
-#=
-Base.@propagate_inbounds function scansearch(v, x, lo::T1, hi::T2) where {T1<:Integer, T2<:Integer} # TODO types for `lo` and `hi` #406
+
+Base.@propagate_inbounds function bin_scansearch(v, x, lo::T1, hi::T2) where {T1<:Integer, T2<:Integer} # TODO types for `lo` and `hi` #406
     u = T1(1)
     stop = min(hi, lo + T1(32))
     while lo + u < stop && v[lo] < x
@@ -58,4 +58,4 @@ Base.@propagate_inbounds function scansearch(v, x, lo::T1, hi::T2) where {T1<:In
         end
     end
     return hi
-end =#
+end
