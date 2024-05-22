@@ -19,13 +19,13 @@ return the first value of `v` greater than or equal to `x`, within the range
 exponential search strategy which involves two steps: 1) searching for binary search bounds
 via exponential steps rightward 2) binary searching within those bounds.
 """
-Base.@propagate_inbounds function scansearch(v, x, lo::T1, hi::T2) where {T1<:Integer, T2<:Integer} # TODO types for `lo` and `hi` #406
+Base.@propagate_inbounds function exp_scansearch(v, x, lo::T1, hi::T2) where {T1<:Integer, T2<:Integer} # TODO types for `lo` and `hi` #406
     u = T1(1)
     d = u
     p = lo
     while p < hi && v[p] < x
-        d *= T1(2)
-        p += d
+        d = (d << 0x01)
+        p = p | d
     end
     lo = p - d
     hi = min(p, hi) + u
