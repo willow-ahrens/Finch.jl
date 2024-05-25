@@ -56,11 +56,11 @@ end
 
 Base.:+(
     x::AbstractTensor,
-    y::Union{AbstractTensor, Base.AbstractArrayOrBroadcasted, Number},
+    y::Union{Base.AbstractArrayOrBroadcasted, Number},
     z::Union{AbstractTensor, Base.AbstractArrayOrBroadcasted, Number}...
 ) = map(+, x, y, z...)
 Base.:+(
-    x::Union{AbstractTensor, Base.AbstractArrayOrBroadcasted, Number},
+    x::Union{Base.AbstractArrayOrBroadcasted, Number},
     y::AbstractTensor,
     z::Union{AbstractTensor, Base.AbstractArrayOrBroadcasted, Number}...
 ) = map(+, y, x, z...)
@@ -82,8 +82,8 @@ Base.:*(
 
 Base.:-(x::AbstractTensor) = map(-, x)
 
-Base.:-(x::AbstractTensor, y::Union{AbstractTensor, Base.AbstractArrayOrBroadcasted, Number}) = map(-, x, y)
-Base.:-(x::Union{AbstractTensor, Base.AbstractArrayOrBroadcasted, Number}, y::Tensor) = map(-, x, y)
+Base.:-(x::AbstractTensor, y::Union{Base.AbstractArrayOrBroadcasted, Number}) = map(-, x, y)
+Base.:-(x::Union{Base.AbstractArrayOrBroadcasted, Number}, y::Tensor) = map(-, x, y)
 Base.:-(x::AbstractTensor, y::AbstractTensor) = map(-, x, y)
 
 Base.:/(x::AbstractTensor, y::Number) = map(/, x, y)
