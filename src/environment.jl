@@ -4,6 +4,12 @@ struct Namespace
     counts
 end
 Namespace() = Namespace(Dict())
+
+"""
+    freshen(ctx, tags...)
+
+Return a fresh variable in the current context named after `Symbol(tags...)`
+"""
 function freshen(spc::Namespace, tags...)
     name = Symbol(tags...)
     m = match(r"^(.*)_(\d*)$", string(name))
@@ -29,6 +35,31 @@ end
     epilogue::Vector{Any} = []
     task = VirtualSerial()
 end
+
+"""
+    push_preamble!(ctx, thunk)
+
+Push the thunk onto the preamble in the currently executing context. The
+preamble will be evaluated before the code returned by the given function in the
+context.
+"""
+push_preamble!(ctx::JuliaContext, thunk) = push!(ctx.preamble, thunk)
+
+"""
+    push_epilogue!(ctx, thunk)
+
+Push the thunk onto the epilogue in the currently executing context. The
+epilogue will be evaluated after the code returned by the given function in the
+context.
+"""
+push_epilogue!(ctx::JuliaContext, thunk) = push!(ctx.epilogue, thunk)
+
+"""
+    get_task(ctx)
+
+Get the task which will execute code in this context
+"""
+get_task(ctx) = ctx.task
 
 """
     virtualize(ctx, ex, T, [tag])

@@ -99,7 +99,7 @@ lower(ctx::AbstractCompiler, lvl::VirtualElementLevel, ::DefaultStyle) = lvl.ex
 function virtualize(ctx, ex, ::Type{ElementLevel{Vf, Tv, Tp, Val}}, tag=:lvl) where {Vf, Tv, Tp, Val}
     sym = freshen(ctx, tag)
     val = freshen(ctx, tag, :_val)
-    push!(ctx.preamble, quote
+    push_preamble!(ctx, quote
         $sym = $ex
         $val = $ex.val
     end)
@@ -121,7 +121,7 @@ function declare_level!(ctx, lvl::VirtualElementLevel, pos, init)
 end
 
 function freeze_level!(ctx::AbstractCompiler, lvl::VirtualElementLevel, pos)
-    push!(ctx.code.preamble, quote
+    push_preamble!(ctx, quote
         resize!($(lvl.val), $(ctx(pos)))
     end)
     return lvl
@@ -142,26 +142,26 @@ supports_reassembly(::VirtualElementLevel) = true
 function reassemble_level!(ctx, lvl::VirtualElementLevel, pos_start, pos_stop)
     pos_start = cache!(ctx, :pos_start, simplify(ctx, pos_start))
     pos_stop = cache!(ctx, :pos_stop, simplify(ctx, pos_stop))
-    push!(ctx.code.preamble, quote
+    push_preamble!(ctx, quote
         Finch.fill_range!($(lvl.val), $(lvl.Vf), $(ctx(pos_start)), $(ctx(pos_stop)))
     end)
     lvl
 end
 
 function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualElementLevel, arch)
-    val_2 = freshen(ctx.code, :val)
-    push!(ctx.code.preamble, quote
+    val_2 = freshen(ctx, :val)
+    push_preamble!(ctx, quote
         $val_2 = $(lvl.val)
         $(lvl.val) = $moveto($(lvl.val), $(ctx(arch)))
     end)
-    push!(ctx.code.epilogue, quote
+    push_epilogue!(ctx, quote
         $(lvl.val) = $val_2
     end)
 end
 
 function instantiate(ctx, fbr::VirtualSubFiber{VirtualElementLevel}, mode::Reader, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    val = freshen(ctx.code, lvl.ex, :_val)
+    val = freshen(ctx, lvl.ex, :_val)
     return Thunk(
         preamble = quote
             $val = $(lvl.val)[$(ctx(pos))]

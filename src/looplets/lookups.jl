@@ -22,7 +22,7 @@ combine_style(a::LookupStyle, b::LookupStyle) = LookupStyle()
 
 function lower(ctx::AbstractCompiler, root::FinchNode, ::LookupStyle)
     if root.kind === loop
-        idx_sym = freshen(ctx.code, root.idx.name)
+        idx_sym = freshen(ctx, root.idx.name)
         body = contain(ctx) do ctx_2
             ctx_2.bindings[root.idx] = value(idx_sym)
             body_3 = Rewrite(Postwalk(

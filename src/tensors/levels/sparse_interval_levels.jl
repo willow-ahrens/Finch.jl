@@ -158,7 +158,7 @@ function virtualize(ctx, ex, ::Type{SparseIntervalLevel{Ti, Ptr, Left, Right, Lv
     ptr = freshen(ctx, tag, :_ptr)
     left = freshen(ctx, tag, :_left)
     right = freshen(ctx, tag, :_right)
-    push!(ctx.preamble, quote
+    push_preamble!(ctx, quote
         $sym = $ex
         $ptr = $sym.ptr
         $left = $sym.left
@@ -204,12 +204,12 @@ postype(lvl::VirtualSparseIntervalLevel) = postype(lvl.lvl)
 function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseIntervalLevel, pos, init)
     Ti = lvl.Ti
     Tp = postype(lvl) 
-    push!(ctx.code.preamble, quote
+    push_preamble!(ctx, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
     end)
     if issafe(ctx.mode)
-        push!(ctx.code.preamble, quote
+        push_preamble!(ctx, quote
             $(lvl.prev_pos) = $(Tp(0))
         end)
     end
@@ -227,10 +227,10 @@ function assemble_level!(ctx, lvl::VirtualSparseIntervalLevel, pos_start, pos_st
 end
 
 function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseIntervalLevel, pos_stop)
-    p = freshen(ctx.code, :p)
+    p = freshen(ctx, :p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(ctx, pos_stop)))
-    qos_stop = freshen(ctx.code, :qos_stop)
-    push!(ctx.code.preamble, quote
+    qos_stop = freshen(ctx, :qos_stop)
+    push_preamble!(ctx, quote
         resize!($(lvl.ptr), $pos_stop + 1)
         for $p = 1:($pos_stop)
            $(lvl.ptr)[$p + 1] += $(lvl.ptr)[$p]
@@ -244,10 +244,10 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseIntervalLevel, p
 end
 
 function thaw_level!(ctx::AbstractCompiler, lvl::VirtualSparseIntervalLevel, pos_stop)
-    p = freshen(ctx.code, :p)
+    p = freshen(ctx, :p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(ctx, pos_stop)))
-    qos_stop = freshen(ctx.code, :qos_stop)
-    push!(ctx.code.preamble, quote
+    qos_stop = freshen(ctx, :qos_stop)
+    push_preamble!(ctx, quote
         $(lvl.qos_fill) = $(lvl.ptr)[$pos_stop + 1] - 1
         $(lvl.qos_stop) = $(lvl.qos_fill)
         $qos_stop = $(lvl.qos_fill)
@@ -269,11 +269,11 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, mode
     tag = lvl.ex
     Tp = postype(lvl) 
     Ti = lvl.Ti
-    my_i_end = freshen(ctx.code, tag, :_i_end)
-    my_i_stop = freshen(ctx.code, tag, :_i_stop)
-    my_i_start = freshen(ctx.code, tag, :_i_start)
-    my_q = freshen(ctx.code, tag, :_q)
-    my_q_stop = freshen(ctx.code, tag, :_q_stop)
+    my_i_end = freshen(ctx, tag, :_i_end)
+    my_i_stop = freshen(ctx, tag, :_i_stop)
+    my_i_start = freshen(ctx, tag, :_i_start)
+    my_q = freshen(ctx, tag, :_q)
+    my_q_stop = freshen(ctx, tag, :_q_stop)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -308,17 +308,17 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, mode
 end
 
 instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, mode::Updater, protos) = 
-    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), mode, protos)
+    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx, :null)), mode, protos)
 
 function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseIntervalLevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos) 
     tag = lvl.ex
     Tp = postype(lvl) 
     Ti = lvl.Ti
-    qos = freshen(ctx.code, tag, :_qos)
+    qos = freshen(ctx, tag, :_qos)
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
-    dirty = freshen(ctx.code, tag, :dirty)
+    dirty = freshen(ctx, tag, :dirty)
     
     Furlable(
         body = (ctx, ext) -> Thunk(

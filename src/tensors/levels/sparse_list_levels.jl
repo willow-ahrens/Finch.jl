@@ -153,7 +153,7 @@ function virtualize(ctx, ex, ::Type{SparseListLevel{Ti, Ptr, Idx, Lvl}}, tag=:lv
     sym = freshen(ctx, tag)
     ptr = freshen(ctx, tag, :_ptr)
     idx = freshen(ctx, tag, :_idx)
-    push!(ctx.preamble, quote
+    push_preamble!(ctx, quote
         $sym = $ex
         $ptr = $sym.ptr
         $idx = $sym.idx
@@ -198,12 +198,12 @@ function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseListLevel, pos,
     #TODO check that init == fill_value
     Ti = lvl.Ti
     Tp = postype(lvl)
-    push!(ctx.code.preamble, quote
+    push_preamble!(ctx, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
     end)
     if issafe(ctx.mode)
-        push!(ctx.code.preamble, quote
+        push_preamble!(ctx, quote
             $(lvl.prev_pos) = $(Tp(0))
         end)
     end
@@ -221,10 +221,10 @@ function assemble_level!(ctx, lvl::VirtualSparseListLevel, pos_start, pos_stop)
 end
 
 function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseListLevel, pos_stop)
-    p = freshen(ctx.code, :p)
+    p = freshen(ctx, :p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(ctx, pos_stop)))
-    qos_stop = freshen(ctx.code, :qos_stop)
-    push!(ctx.code.preamble, quote
+    qos_stop = freshen(ctx, :qos_stop)
+    push_preamble!(ctx, quote
         resize!($(lvl.ptr), $pos_stop + 1)
         for $p = 1:$pos_stop
             $(lvl.ptr)[$p + 1] += $(lvl.ptr)[$p]
@@ -237,10 +237,10 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseListLevel, pos_s
 end
 
 function thaw_level!(ctx::AbstractCompiler, lvl::VirtualSparseListLevel, pos_stop)
-    p = freshen(ctx.code, :p)
+    p = freshen(ctx, :p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(ctx, pos_stop)))
-    qos_stop = freshen(ctx.code, :qos_stop)
-    push!(ctx.code.preamble, quote
+    qos_stop = freshen(ctx, :qos_stop)
+    push_preamble!(ctx, quote
         $(lvl.qos_fill) = $(lvl.ptr)[$pos_stop + 1] - 1
         $(lvl.qos_stop) = $(lvl.qos_fill)
         $qos_stop = $(lvl.qos_fill)
@@ -258,15 +258,15 @@ function thaw_level!(ctx::AbstractCompiler, lvl::VirtualSparseListLevel, pos_sto
 end
 
 function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualSparseListLevel, arch)
-    ptr_2 = freshen(ctx.code, lvl.ptr)
-    idx_2 = freshen(ctx.code, lvl.idx)
-    push!(ctx.code.preamble, quote
+    ptr_2 = freshen(ctx, lvl.ptr)
+    idx_2 = freshen(ctx, lvl.idx)
+    push_preamble!(ctx, quote
         $ptr_2 = $(lvl.ptr)
         $idx_2 = $(lvl.idx)
         $(lvl.ptr) = $moveto($(lvl.ptr), $(ctx(arch)))
         $(lvl.idx) = $moveto($(lvl.idx), $(ctx(arch)))
     end)
-    push!(ctx.code.epilogue, quote
+    push_epilogue!(ctx, quote
         $(lvl.ptr) = $ptr_2
         $(lvl.idx) = $idx_2
     end)
@@ -278,10 +278,10 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Re
     tag = lvl.ex
     Tp = postype(lvl)
     Ti = lvl.Ti
-    my_i = freshen(ctx.code, tag, :_i)
-    my_q = freshen(ctx.code, tag, :_q)
-    my_q_stop = freshen(ctx.code, tag, :_q_stop)
-    my_i1 = freshen(ctx.code, tag, :_i1)
+    my_i = freshen(ctx, tag, :_i)
+    my_q = freshen(ctx, tag, :_q)
+    my_q_stop = freshen(ctx, tag, :_q_stop)
+    my_i1 = freshen(ctx, tag, :_i1)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -327,13 +327,13 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Re
     tag = lvl.ex
     Tp = postype(lvl)
     Ti = lvl.Ti
-    my_i = freshen(ctx.code, tag, :_i)
-    my_q = freshen(ctx.code, tag, :_q)
-    my_q_stop = freshen(ctx.code, tag, :_q_stop)
-    my_i1 = freshen(ctx.code, tag, :_i1)
-    my_i2 = freshen(ctx.code, tag, :_i2)
-    my_i3 = freshen(ctx.code, tag, :_i3)
-    my_i4 = freshen(ctx.code, tag, :_i4)
+    my_i = freshen(ctx, tag, :_i)
+    my_q = freshen(ctx, tag, :_q)
+    my_q_stop = freshen(ctx, tag, :_q_stop)
+    my_i1 = freshen(ctx, tag, :_i1)
+    my_i2 = freshen(ctx, tag, :_i2)
+    my_i3 = freshen(ctx, tag, :_i3)
+    my_i4 = freshen(ctx, tag, :_i4)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -375,16 +375,16 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Re
 end
 
 instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Updater, protos) = begin
-    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), mode, protos)
+    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx, :null)), mode, protos)
 end
 function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseListLevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
-    qos = freshen(ctx.code, tag, :_qos)
+    qos = freshen(ctx, tag, :_qos)
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
-    dirty = freshen(ctx.code, tag, :dirty)
+    dirty = freshen(ctx, tag, :dirty)
 
     Furlable(
         body = (ctx, ext) -> Thunk(

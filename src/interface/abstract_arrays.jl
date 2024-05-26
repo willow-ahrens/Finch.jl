@@ -16,7 +16,7 @@ end
 function virtualize(ctx, ex, ::Type{<:AbstractArray{T, N}}, tag=:tns) where {T, N}
     sym = freshen(ctx, tag)
     dims = map(i -> Symbol(sym, :_mode, i, :_stop), 1:N)
-    push!(ctx.preamble, quote
+    push_preamble!(ctx, quote
         $sym = $ex
         ($(dims...),) = size($ex)
     end)
@@ -24,7 +24,7 @@ function virtualize(ctx, ex, ::Type{<:AbstractArray{T, N}}, tag=:tns) where {T, 
 end
 
 function declare!(ctx::AbstractCompiler, arr::VirtualAbstractArray, init)
-    push!(ctx.code.preamble, quote
+    push_preamble!(ctx, quote
         fill!($(arr.ex), $(ctx(init)))
     end)
     arr
@@ -34,7 +34,7 @@ freeze!(ctx::AbstractCompiler, arr::VirtualAbstractArray) = arr
 thaw!(ctx::AbstractCompiler, arr::VirtualAbstractArray) = arr
 
 function instantiate(ctx::AbstractCompiler, arr::VirtualAbstractArray, mode, subprotos, protos...)
-    val = freshen(ctx.code, :val)
+    val = freshen(ctx, :val)
     function nest(idx...)
         if length(idx) == arr.ndims
             if mode === reader
@@ -67,12 +67,12 @@ virtual_fill_value(ctx, ::VirtualAbstractArray) = 0
 virtual_eltype(ctx, tns::VirtualAbstractArray) = tns.eltype
 
 function virtual_moveto(ctx, vec::VirtualAbstractArray, device)
-    ex = freshen(ctx.code, vec.ex)
-    push!(ctx.code.preamble, quote
+    ex = freshen(ctx, vec.ex)
+    push_preamble!(ctx, quote
         $ex = $(vec.ex)
         $(vec.ex) = $moveto($(vec.ex), $(ctx(device)))
     end)
-    push!(ctx.code.epilogue, quote
+    push_epilogue!(ctx, quote
         $(vec.ex) = $ex
     end)
 end

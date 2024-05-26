@@ -270,7 +270,7 @@ function virtualize(ctx, ex, ::Type{SparseLevel{Ti, Tbl, Lvl}}, tag=:lvl) where 
     sym = freshen(ctx, tag)
     tbl = freshen(ctx, tag, :_tbl)
     qos_stop = freshen(ctx, tag, :_qos_stop)
-    push!(ctx.preamble, quote
+    push_preamble!(ctx, quote
         $sym = $ex
         $tbl = $sym.tbl
         $qos_stop = table_length($tbl)
@@ -311,8 +311,8 @@ function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos, ini
     #TODO check that init == fill_value
     Ti = lvl.Ti
     Tp = postype(lvl)
-    qos = freshen(ctx.code, :qos)
-    push!(ctx.code.preamble, quote
+    qos = freshen(ctx, :qos)
+    push_preamble!(ctx, quote
         $qos = Finch.declare_table!($(lvl.tbl), $(ctx(pos)))
         $(lvl.qos_stop) = 0
     end)
@@ -329,10 +329,10 @@ function assemble_level!(ctx, lvl::VirtualSparseLevel, pos_start, pos_stop)
 end
 
 function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos_stop)
-    p = freshen(ctx.code, :p)
+    p = freshen(ctx, :p)
     pos_stop = cache!(ctx, :pos_stop, simplify(ctx, pos_stop))
-    qos_stop = freshen(ctx.code, :qos_stop)
-    push!(ctx.code.preamble, quote
+    qos_stop = freshen(ctx, :qos_stop)
+    push_preamble!(ctx, quote
         $qos_stop = Finch.freeze_table!($(lvl.tbl), $(ctx(pos_stop)))
     end)
     lvl.lvl = freeze_level!(ctx, lvl.lvl, value(qos_stop))
@@ -340,9 +340,9 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos_stop)
 end
 
 function thaw_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos_stop)
-    p = freshen(ctx.code, :p)
+    p = freshen(ctx, :p)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(ctx, pos_stop)))
-    push!(ctx.code.preamble, quote
+    push_preamble!(ctx, quote
         $(lvl.qos_stop) = Finch.thaw_table!($(lvl.tbl), $(ctx(pos_stop)))
     end)
     lvl.lvl = thaw_level!(ctx, lvl.lvl, value(lvl.qos_stop))
@@ -350,13 +350,13 @@ function thaw_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos_stop)
 end
 
 function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualSparseLevel, arch)
-    ptr_2 = freshen(ctx.code, lvl.ptr)
-    idx_2 = freshen(ctx.code, lvl.idx)
-    push!(ctx.code.preamble, quote
+    ptr_2 = freshen(ctx, lvl.ptr)
+    idx_2 = freshen(ctx, lvl.idx)
+    push_preamble!(ctx, quote
         $tbl_2 = $(lvl.tbl)
         $(lvl.tbl) = $moveto($(lvl.tbl), $(ctx(arch)))
     end)
-    push!(ctx.code.epilogue, quote
+    push_epilogue!(ctx, quote
         $(lvl.tbl) = $tbl_2
     end)
     virtual_moveto_level(ctx, lvl.lvl, arch)
@@ -367,12 +367,12 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseLevel}, mode::Reader
     tag = lvl.ex
     Tp = postype(lvl)
     Ti = lvl.Ti
-    my_i = freshen(ctx.code, tag, :_i)
-    my_q = freshen(ctx.code, tag, :_q)
-    my_q_stop = freshen(ctx.code, tag, :_q_stop)
-    my_i1 = freshen(ctx.code, tag, :_i1)
-    subtbl = freshen(ctx.code, tag, :_subtbl)
-    state = freshen(ctx.code, tag, :_state)
+    my_i = freshen(ctx, tag, :_i)
+    my_q = freshen(ctx, tag, :_q)
+    my_q_stop = freshen(ctx, tag, :_q_stop)
+    my_i1 = freshen(ctx, tag, :_i1)
+    subtbl = freshen(ctx, tag, :_subtbl)
+    state = freshen(ctx, tag, :_state)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
@@ -407,16 +407,16 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseLevel}, mode::Reader
 end
 
 instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseLevel}, mode::Updater, protos) = begin
-    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx.code, :null)), mode, protos)
+    instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx, :null)), mode, protos)
 end
 function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseLevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
-    qos = freshen(ctx.code, tag, :_qos)
+    qos = freshen(ctx, tag, :_qos)
     qos_stop = lvl.qos_stop
-    dirty = freshen(ctx.code, tag, :_dirty)
-    subtbl = freshen(ctx.code, tag, :_subtbl)
+    dirty = freshen(ctx, tag, :_dirty)
+    subtbl = freshen(ctx, tag, :_subtbl)
 
     Furlable(
         body = (ctx, ext) -> Thunk(

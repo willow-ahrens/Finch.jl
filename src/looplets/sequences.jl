@@ -29,8 +29,8 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::SequenceStyle)
         phases = SequenceVisitor(ctx, root.idx, root.ext)(root.body)
         
         i = getname(root.idx)
-        i0 = freshen(ctx.code, i, :_start)
-        step = freshen(ctx.code, i, :_step)
+        i0 = freshen(ctx, i, :_start)
+        step = freshen(ctx, i, :_step)
         
         thunk = quote
             $i = $(ctx(getstart(root.ext)))

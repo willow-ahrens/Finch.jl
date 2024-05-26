@@ -33,7 +33,7 @@ struct ConcordizeVisitor
     scope
 end
 
-freshen(ctx::ConcordizeVisitor, tags...) = freshen(ctx.ctx.code, tags...)
+freshen(ctx::ConcordizeVisitor, tags...) = freshen(ctx.ctx, tags...)
 
 function (ctx::ConcordizeVisitor)(node::FinchNode)
     function isbound(x::FinchNode)
@@ -132,7 +132,7 @@ function concordize(ctx::AbstractCompiler, root)
             if @capture node access(~tns, ~mode, ~i...)
                 for n in 1:length(i)
                     if 1 <= depth(i[n]) < maximum(depth.(i[n+1:end]), init=0)
-                        push!(ctx.code.preamble, quote
+                        push_preamble!(ctx, quote
                             @warn("Performance Warning: non-concordant traversal of $($(sprint(Finch.FinchNotation.display_expression, MIME"text/plain"(), node))) (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)")
                         end)
                     end

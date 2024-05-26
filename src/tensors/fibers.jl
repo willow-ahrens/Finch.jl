@@ -123,7 +123,7 @@ allocator(fbr::AbstractVirtualFiber) = allocator(fbr.lvl)
 
 function declare!(ctx::AbstractCompiler, fbr::VirtualFiber, init)
     lvl = declare_level!(ctx, fbr.lvl, literal(1), init)
-    push!(ctx.code.preamble, assemble_level!(ctx, lvl, literal(1), literal(1))) #TODO this feels unnecessary?
+    push_preamble!(ctx, assemble_level!(ctx, lvl, literal(1), literal(1))) #TODO this feels unnecessary?
     fbr = VirtualFiber(lvl)
 end
 
@@ -269,7 +269,7 @@ countstored(arr::Array) = length(arr)
         lvl = virtualize(ctx.code, :lvl, lvl)
         def = literal(virtual_level_fill_value(lvl))
         lvl = declare_level!(ctx, lvl, literal(0), def)
-        push!(ctx.code.preamble, assemble_level!(ctx, lvl, literal(1), literal(1)))
+        push_preamble!(ctx, assemble_level!(ctx, lvl, literal(1), literal(1)))
         lvl = freeze_level!(ctx, lvl, literal(1))
         ctx(lvl)
     end

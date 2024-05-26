@@ -12,6 +12,14 @@
     bounds_rules = get_bounds_rules(algebra, shash)
 end
 
+push_preamble!(ctx::LowerJulia, thunk) = push_preamble!(ctx.code, thunk)
+
+push_epilogue!(ctx::LowerJulia, thunk) = push_epilogue!(ctx.code, thunk)
+
+get_task(ctx::LowerJulia) = get_task(ctx.code)
+
+freshen(ctx::LowerJulia, tags...) = freshen(ctx.code, tags...)
+
 function contain(f, ctx::LowerJulia; bindings = ctx.bindings, kwargs...)
     contain(ctx.code; kwargs...) do code_2
         f(LowerJulia(code_2, ctx.needs_return, ctx.result, ctx.algebra, bindings, ctx.mode, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules))
@@ -43,9 +51,9 @@ end
 function cache!(ctx::AbstractCompiler, var, val)
     val = finch_leaf(val)
     isconstant(val) && return val
-    var = freshen(ctx.code,var)
+    var = freshen(ctx,var)
     val = simplify(ctx, val)
-    push!(ctx.code.preamble, quote
+    push_preamble!(ctx, quote
         $var = $(contain(ctx_2 -> ctx_2(val), ctx))
     end)
     return cached(value(var, Any), literal(val))
@@ -198,8 +206,8 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::DefaultStyle)
         @assert root.ext.kind === virtual
         lower_loop(ctx, root, root.ext.val)
     elseif root.kind === sieve
-        cond = freshen(ctx.code,:cond)
-        push!(ctx.code.preamble, :($cond = $(ctx(root.cond))))
+        cond = freshen(ctx,:cond)
+        push_preamble!(ctx, :($cond = $(ctx(root.cond))))
     
         return quote
             if $cond
@@ -265,8 +273,8 @@ lower_loop(ctx, root, ext::ParallelDimension) =
 function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualCPU)
     root = ensure_concurrent(root, ctx)
     
-    tid = index(freshen(ctx.code, :tid))
-    i = freshen(ctx.code, :i)
+    tid = index(freshen(ctx, :tid))
+    i = freshen(ctx, :i)
 
     decl_in_scope = unique(filter(!isnothing, map(node-> begin
         if @capture(node, declare(~tns, ~init))

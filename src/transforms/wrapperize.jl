@@ -220,7 +220,7 @@ function wrapperize(ctx::AbstractCompiler, root)
             for (node, count) in counts
                 if depth(idx) == depth(node)
                     if @capture(node, access(~tn, reader, ~idxs...)) && count > 1
-                        var = variable(Symbol(freshen(ctx.code, tn.val), "_", join([idx.val for idx in idxs])))
+                        var = variable(Symbol(freshen(ctx, tn.val), "_", join([idx.val for idx in idxs])))
                         body = Postwalk(@rule node => var)(body)
                         body = define(var, access(tn, reader, idxs...), body)
                         applied = true

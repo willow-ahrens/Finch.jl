@@ -42,7 +42,7 @@ CPU() = CPU(Threads.nthreads())
 end
 function virtualize(ctx, ex, ::Type{CPU})
     sym = freshen(ctx, :cpu)
-    push!(ctx.preamble, quote
+    push_preamble!(ctx, quote
         $sym = $ex
     end)
     VirtualCPU(sym, virtualize(ctx, :($sym.n), Int))

@@ -120,7 +120,7 @@ end
 function virtualize(ctx, ex, ::Type{DenseLevel{Ti, Lvl}}, tag=:lvl) where {Ti, Lvl}
     sym = freshen(ctx, tag)
     shape = value(:($sym.shape), Ti)
-    push!(ctx.preamble, quote
+    push_preamble!(ctx, quote
         $sym = $ex
     end)
     lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
@@ -201,7 +201,7 @@ function instantiate(ctx, trv::DenseTraversal, mode, subprotos, ::Union{typeof(d
     tag = lvl.ex
     Ti = lvl.Ti
 
-    q = freshen(ctx.code, tag, :_q)
+    q = freshen(ctx, tag, :_q)
 
     Furlable(
         body = (ctx, ext) -> Lookup(
