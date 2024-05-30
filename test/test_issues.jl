@@ -816,4 +816,36 @@ using SparseArrays
             end
         end)
     end
+
+
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/580
+    let
+        n = 100
+        data =  fsprand(Int, n, n, .01) .% 100
+        A_sbm = Tensor(Dense(SparseByteMap(Element(0))), data)
+        A_d = Tensor(Dense(Dense(Element(0))), data)
+        C1 = Scalar(0)
+        C2 = Scalar(0)
+        @finch begin
+            C1 .= 0
+            for i=_
+                for j=_
+                    for k=_
+                        C1[] += A_sbm[follow(j),i] * A_sbm[k,j]
+                    end
+                end
+            end
+
+            C2 .= 0
+            for i=_
+                for j=_
+                    for k=_
+                        C2[] += A_d[j,i] * A_d[k,j]
+                    end
+                end
+            end
+        end
+        @test C1 == C2
+    end
 end
