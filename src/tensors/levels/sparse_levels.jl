@@ -96,14 +96,14 @@ function table_register(tbl::DictTable, pos)
     pos
 end
 
-function table_commit(tbl::DictTable, pos)
+function table_commit!(tbl::DictTable, pos)
 end
 
 function subtable_register(tbl::DictTable, pos, idx)
     return get(tbl.tbl, (pos, idx), length(tbl.tbl) + 1)
 end
 
-function subtable_commit(tbl::DictTable, pos, qos, idx)
+function subtable_commit!(tbl::DictTable, pos, qos, idx)
     if qos > length(tbl.tbl)
         tbl.tbl[(pos, idx)] = qos
         tbl.ptr[pos + 1] += 1
@@ -436,14 +436,14 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseLevel}, mode::
                     body = (ctx) -> instantiate(ctx, VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), mode, subprotos),
                     epilogue = quote
                         if $dirty
-                            Finch.subtable_commit($(lvl.tbl), $subtbl, $qos, $(ctx(idx)))
+                            Finch.subtable_commit!($(lvl.tbl), $subtbl, $qos, $(ctx(idx)))
                             $(fbr.dirty) = true
                         end
                     end
                 )
             ),
             epilogue = quote
-                Finch.table_commit($(lvl.tbl), $(ctx(pos)))
+                Finch.table_commit!($(lvl.tbl), $(ctx(pos)))
             end
         )
     )
