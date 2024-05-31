@@ -113,9 +113,30 @@
                         show(io, @finch_code (res .= 0; for i=_; res[i] = tmp[i] end))
                         io
                     end
+                    eval(@finch_kernel function roundtrip(res, tmp, ref)
+                        tmp .= 0
+                        for i = _
+                            tmp[i] = ref[i]
+                        end
+                        res .= 0
+                        for i = _
+                            res[i] = tmp[i]
+                        end
+                        return res
+                    end)
+                    res = roundtrip(res, tmp, ref).res
+                    @test size(res) == size(ref)
+                    @test ndims(res) == ndims(ref)
+                    @test eltype(res) == eltype(ref)
+                    @test res == ref
+                    @test isequal(res, ref)
                     @finch (tmp .= 0; for i=_; tmp[i] = ref[i] end)
                     @finch (res .= 0; for i=_; res[i] = tmp[i] end)
-                    @test ref == res
+                    @test size(res) == size(ref)
+                    @test ndims(res) == ndims(ref)
+                    @test eltype(res) == eltype(ref)
+                    @test res == ref
+                    @test isequal(res, ref)
                     if lvl.pattern
                         @test Structure(ref) == Structure(res)
                     end
@@ -149,9 +170,10 @@
             false false false false
             true  false false false 
             false true  false false ]),
-        ("4x4_bool_mix",
+        ("5x4_bool_mix",
             [false true  false true ;
             false false false false
+            true  true  true  true
             true  true  true  true
             false true  false true ]),
         ("5x5_zeros", fill(0.0, 5, 5)),
@@ -172,9 +194,30 @@
                 ref = dropfills!(ref, arr)
                 tmp = Tensor(lvl.Lvl(leaf()))
                 @testset "convert $(key) $(lvl.key)(Element())" begin
+                    eval(@finch_kernel function roundtrip(res, tmp, ref)
+                        tmp .= 0
+                        for j=_, i=_
+                            tmp[i, j] = ref[i, j]
+                        end
+                        res .= 0
+                        for j=_, i=_
+                            res[i, j] = tmp[i, j]
+                        end
+                        return res
+                    end)
+                    res = roundtrip(res, tmp, ref).res
+                    @test size(res) == size(ref)
+                    @test ndims(res) == ndims(ref)
+                    @test eltype(res) == eltype(ref)
+                    @test res == ref
+                    @test isequal(res, ref)
                     @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
                     @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end)
+                    @test size(res) == size(ref)
+                    @test ndims(res) == ndims(ref)
+                    @test eltype(res) == eltype(ref)
                     @test res == ref
+                    @test isequal(res, ref)
                     if lvl.pattern
                         @test Structure(ref) == Structure(res)
                     end
@@ -227,6 +270,11 @@
                 end
             end
         end
-        @test fmt == arr_1 .+ arr_2
+        ref = arr_1 .+ arr_2
+        @test size(res) == size(ref)
+        @test ndims(res) == ndims(ref)
+        @test eltype(res) == eltype(ref)
+        @test res == ref
+        @test isequal(res, ref)
     end
 end

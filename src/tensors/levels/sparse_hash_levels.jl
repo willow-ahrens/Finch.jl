@@ -133,8 +133,8 @@ function labelled_children(fbr::SubFiber{<:SparseHashLevel{N}}) where {N}
 end
 
 @inline level_ndims(::Type{<:SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}) where {N, TI, Ptr, Tbl, Srt, Lvl} = N + level_ndims(Lvl)
-@inline level_size(lvl::SparseHashLevel) = (lvl.shape..., level_size(lvl.lvl)...)
-@inline level_axes(lvl::SparseHashLevel) = (map(Base.OneTo, lvl.shape)..., level_axes(lvl.lvl)...)
+@inline level_size(lvl::SparseHashLevel) = (level_size(lvl.lvl)..., lvl.shape...)
+@inline level_axes(lvl::SparseHashLevel) = (level_axes(lvl.lvl)..., map(Base.OneTo, lvl.shape)...)
 @inline level_eltype(::Type{<:SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}) where {N, TI, Ptr, Tbl, Srt, Lvl} = level_eltype(Lvl)
 @inline level_fill_value(::Type{<:SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}) where {N, TI, Ptr, Tbl, Srt, Lvl} = level_fill_value(Lvl)
 data_rep_level(::Type{<:SparseHashLevel{N, TI, Ptr, Tbl, Srt, Lvl}}) where {N, TI, Ptr, Tbl, Srt, Lvl} = (SparseData^N)(data_rep_level(Lvl))

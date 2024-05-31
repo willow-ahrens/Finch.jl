@@ -324,7 +324,7 @@ function assemble_level!(ctx, lvl::VirtualSparseLevel, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
     quote
-        assemble_table!($(lvl.tbl), $(ctx(pos_start)), $(ctx(pos_stop)))
+        Finch.assemble_table!($(lvl.tbl), $(ctx(pos_start)), $(ctx(pos_stop)))
     end
 end
 
@@ -377,8 +377,8 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseLevel}, mode::Reader
     Furlable(
         body = (ctx, ext) -> Thunk(
             preamble = quote
-                $subtbl = table_query($(lvl.tbl), $(ctx(pos)))
-                ($my_i, $my_i1, $state) = subtable_init($(lvl.tbl), $subtbl)
+                $subtbl = Finch.table_query($(lvl.tbl), $(ctx(pos)))
+                ($my_i, $my_i1, $state) = Finch.subtable_init($(lvl.tbl), $subtbl)
             end,
             body = (ctx) -> Sequence([
                 Phase(
@@ -386,16 +386,16 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseLevel}, mode::Reader
                     body = (ctx, ext) -> Stepper(
                         seek = (ctx, ext) -> quote
                             if $my_i < $(ctx(getstart(ext)))
-                                ($my_i, $state) = subtable_seek($(lvl.tbl), $subtbl, $state, $my_i, $(ctx(getstart(ext))))
+                                ($my_i, $state) = Finch.subtable_seek($(lvl.tbl), $subtbl, $state, $my_i, $(ctx(getstart(ext))))
                             end
                         end,
-                        preamble = :(($my_i, $my_q) = subtable_get($(lvl.tbl), $subtbl, $state)),
+                        preamble = :(($my_i, $my_q) = Finch.subtable_get($(lvl.tbl), $subtbl, $state)),
                         stop = (ctx, ext) -> value(my_i),
                         chunk = Spike(
                             body = FillLeaf(virtual_level_fill_value(lvl)),
                             tail = Simplify(instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Ti)), mode, subprotos))
                         ),
-                        next = (ctx, ext) -> :($state = subtable_next($(lvl.tbl), $subtbl, $state)) 
+                        next = (ctx, ext) -> :($state = Finch.subtable_next($(lvl.tbl), $subtbl, $state)) 
                     )
                 ),
                 Phase(
@@ -421,12 +421,12 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseLevel}, mode::
     Furlable(
         body = (ctx, ext) -> Thunk(
             preamble = quote
-                $subtbl = table_register($(lvl.tbl), $(ctx(pos)))
+                $subtbl = Finch.table_register($(lvl.tbl), $(ctx(pos)))
             end,
             body = (ctx) -> Lookup(
                 body = (ctx, idx) -> Thunk(
                     preamble = quote
-                        $qos = subtable_register($(lvl.tbl), $subtbl, $(ctx(idx)))
+                        $qos = Finch.subtable_register($(lvl.tbl), $subtbl, $(ctx(idx)))
                         if $qos > $qos_stop
                             $qos_stop = max($qos_stop << 1, 1)
                             $(contain(ctx_2->assemble_level!(ctx_2, lvl.lvl, value(qos, Tp), value(qos_stop, Tp)), ctx))
@@ -436,14 +436,14 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseLevel}, mode::
                     body = (ctx) -> instantiate(ctx, VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), mode, subprotos),
                     epilogue = quote
                         if $dirty
-                            subtable_commit($(lvl.tbl), $subtbl, $qos, $(ctx(idx)))
+                            Finch.subtable_commit($(lvl.tbl), $subtbl, $qos, $(ctx(idx)))
                             $(fbr.dirty) = true
                         end
                     end
                 )
             ),
             epilogue = quote
-                table_commit($(lvl.tbl), $(ctx(pos)))
+                Finch.table_commit($(lvl.tbl), $(ctx(pos)))
             end
         )
     )

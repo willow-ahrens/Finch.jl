@@ -141,7 +141,7 @@ function assemble_level!(ctx, lvl::VirtualAtomicLevel, pos_start, pos_stop)
     push_preamble!(ctx, quote 
               Finch.resize_if_smaller!($(lvl.locks), $(ctx(pos_stop))) 
               @inbounds for $idx = $(ctx(pos_start)):$(ctx(pos_stop))
-                $(lvl.locks)[$idx] = make_lock(eltype($(lvl.AVal)))
+                $(lvl.locks)[$idx] = Finch.make_lock(eltype($(lvl.AVal)))
               end
           end)
     assemble_level!(ctx, lvl.lvl, pos_start, pos_stop)
@@ -212,11 +212,11 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualAtomicLevel}, mode::Update
         
         body =  (ctx) -> begin
         preamble = quote  
-            $atomicData =  get_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
-            $lockVal = aquire_lock!($dev, $atomicData)
+            $atomicData =  Finch.get_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
+            $lockVal = Finch.aquire_lock!($dev, $atomicData)
         end
         epilogue = quote 
-            release_lock!($dev, $atomicData) end 
+            Finch.release_lock!($dev, $atomicData) end 
         push_preamble!(ctx, preamble)
         push_epilogue!(ctx, epilogue)
             lvl_2 = lvl.lvl
@@ -236,11 +236,11 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, mode::
 
         body =  (ctx) -> begin
         preamble = quote  
-            $atomicData =  get_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
-            $lockVal = aquire_lock!($dev, $atomicData)
+            $atomicData =  Finch.get_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
+            $lockVal = Finch.aquire_lock!($dev, $atomicData)
         end
         epilogue = quote 
-            release_lock!($dev, $atomicData) end 
+            Finch.release_lock!($dev, $atomicData) end 
             push_preamble!(ctx, preamble)
             push_epilogue!(ctx, epilogue)
             lvl_2 = lvl.lvl

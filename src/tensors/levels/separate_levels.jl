@@ -153,10 +153,10 @@ function assemble_level!(ctx, lvl::VirtualSeparateLevel, pos_start, pos_stop)
     push_preamble!(ctx, quote
         Finch.resize_if_smaller!($(lvl.val), $(ctx(pos_stop)))
         for $pos in $(ctx(pos_start)):$(ctx(pos_stop))
-            $sym = similar_level(
+            $sym = Finch.similar_level(
                 $(lvl.ex).lvl,
-                level_fill_value(typeof($(lvl.ex).lvl)),
-                level_eltype(typeof($(lvl.ex).lvl)),
+                Finch.level_fill_value(typeof($(lvl.ex).lvl)),
+                Finch.level_eltype(typeof($(lvl.ex).lvl)),
                 $(map(ctx, map(getstop, virtual_level_size(ctx, lvl)))...)
             )
             $(contain(ctx) do ctx_2
