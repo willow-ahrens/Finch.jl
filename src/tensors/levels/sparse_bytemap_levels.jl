@@ -5,7 +5,7 @@ Like the [`SparseListLevel`](@ref), but a dense bitmap is used to encode
 which slices are stored. This allows the ByteMap level to support random access.
 
 `Ti` is the type of the last tensor index, and `Tp` is the type used for
-positions in the level. 
+positions in the level.
 
 ```jldoctest
 julia> Tensor(Dense(SparseByteMap(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
@@ -39,9 +39,9 @@ const SparseByteMap = SparseByteMapLevel
 SparseByteMapLevel(lvl::Lvl) where {Lvl} = SparseByteMapLevel{Int}(lvl)
 SparseByteMapLevel(lvl, shape, args...) = SparseByteMapLevel{typeof(shape)}(lvl, shape, args...)
 SparseByteMapLevel{Ti}(lvl) where {Ti} = SparseByteMapLevel{Ti}(lvl, zero(Ti))
-SparseByteMapLevel{Ti}(lvl, shape) where {Ti} = 
+SparseByteMapLevel{Ti}(lvl, shape) where {Ti} =
     SparseByteMapLevel{Ti}(lvl, shape, postype(lvl)[1], Bool[], Tuple{postype(lvl), Ti}[])
-SparseByteMapLevel{Ti}(lvl::Lvl, shape, ptr::Ptr, tbl::Tbl, srt::Srt) where {Ti, Lvl, Ptr, Tbl, Srt} = 
+SparseByteMapLevel{Ti}(lvl::Lvl, shape, ptr::Ptr, tbl::Tbl, srt::Srt) where {Ti, Lvl, Ptr, Tbl, Srt} =
     SparseByteMapLevel{Ti, Ptr, Tbl, Srt, Lvl}(lvl, shape, ptr, tbl, srt)
 
 Base.summary(lvl::SparseByteMapLevel) = "SparseByteMap($(summary(lvl.lvl)))"
@@ -61,13 +61,13 @@ function moveto(lvl::SparseByteMapLevel{Ti}, device) where {Ti}
 end
 
 
-pattern!(lvl::SparseByteMapLevel{Ti}) where {Ti} = 
+pattern!(lvl::SparseByteMapLevel{Ti}) where {Ti} =
     SparseByteMapLevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
 
-set_fill_value!(lvl::SparseByteMapLevel{Ti}, init) where {Ti} = 
+set_fill_value!(lvl::SparseByteMapLevel{Ti}, init) where {Ti} =
     SparseByteMapLevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl, lvl.srt)
 
-Base.resize!(lvl::SparseByteMapLevel{Ti}, dims...) where {Ti} = 
+Base.resize!(lvl::SparseByteMapLevel{Ti}, dims...) where {Ti} =
     SparseByteMapLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.tbl, lvl.srt)
 
 function countstored_level(lvl::SparseByteMapLevel, pos)
@@ -140,7 +140,7 @@ mutable struct VirtualSparseByteMapLevel <: AbstractVirtualLevel
     qos_fill
     qos_stop
 end
-  
+
 is_level_injective(ctx, lvl::VirtualSparseByteMapLevel) = [is_level_injective(ctx, lvl.lvl)..., false]
 function is_level_atomic(ctx, lvl::VirtualSparseByteMapLevel)
     (below, atomic) = is_level_atomic(ctx, lvl.lvl)
@@ -430,7 +430,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode:
                     $my_q = ($(ctx(q)) - $(Ti(1))) * $(ctx(lvl.shape)) + $(ctx(i))
                 end,
                 body = (ctx) -> Switch([
-                    value(:($(lvl.tbl)[$my_q])) => instantiate(ctx, VirtualSubFiber(lvl.lvl, pos), mode, subprotos),
+                    value(:($(lvl.tbl)[$my_q])) => instantiate(ctx, VirtualSubFiber(lvl.lvl, value(:($my_q))), mode, subprotos),
                     literal(true) => FillLeaf(virtual_level_fill_value(lvl))
                 ])
             )
@@ -438,7 +438,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode:
     )
 end
 
-instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode::Updater, protos) = 
+instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode::Updater, protos) =
     instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx, :null)), mode, protos)
 function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseByteMapLevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude), typeof(laminate)})
     (lvl, pos) = (fbr.lvl, fbr.pos)
