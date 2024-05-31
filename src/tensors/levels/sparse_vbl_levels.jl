@@ -110,8 +110,8 @@ function labelled_children(fbr::SubFiber{<:SparseVBLLevel})
 end
 
 @inline level_ndims(::Type{<:SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}}) where {Ti, Ptr, Idx, Ofs, Lvl} = 1 + level_ndims(Lvl)
-@inline level_size(lvl::SparseVBLLevel) = (lvl.shape, level_size(lvl.lvl)...)
-@inline level_axes(lvl::SparseVBLLevel) = (Base.OneTo(lvl.shape), level_axes(lvl.lvl)...)
+@inline level_size(lvl::SparseVBLLevel) = (level_size(lvl.lvl)..., lvl.shape)
+@inline level_axes(lvl::SparseVBLLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
 @inline level_eltype(::Type{<:SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}}) where {Ti, Ptr, Idx, Ofs, Lvl} = level_eltype(Lvl)
 @inline level_fill_value(::Type{<:SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}}) where {Ti, Ptr, Idx, Ofs, Lvl} = level_fill_value(Lvl)
 data_rep_level(::Type{<:SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}}) where {Ti, Ptr, Idx, Ofs, Lvl} = SparseData(data_rep_level(Lvl))

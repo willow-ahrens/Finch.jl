@@ -227,6 +227,7 @@ function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseByteMapLevel, p
     q = freshen(ctx, lvl.ex, :_q)
     i = freshen(ctx, lvl.ex, :_i)
     push_preamble!(ctx, quote
+        empty!($(ctx(lvl.tbl)))
         for $r = 1:$(lvl.qos_fill)
             $p = first($(lvl.srt)[$r])
             $(lvl.ptr)[$p] = $(Tp(0))
@@ -430,7 +431,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseByteMapLevel}, mode:
                     $my_q = ($(ctx(q)) - $(Ti(1))) * $(ctx(lvl.shape)) + $(ctx(i))
                 end,
                 body = (ctx) -> Switch([
-                    value(:($(lvl.tbl)[$my_q])) => instantiate(ctx, VirtualSubFiber(lvl.lvl, value(:($my_q))), mode, subprotos),
+                    value(:($(lvl.tbl)[$my_q])) => instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q)), mode, subprotos),
                     literal(true) => FillLeaf(virtual_level_fill_value(lvl))
                 ])
             )

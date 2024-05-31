@@ -126,6 +126,7 @@
                     end)
                     res = roundtrip(res, tmp, ref).res
                     @test size(res) == size(ref)
+                    @test axes(res) == axes(ref)
                     @test ndims(res) == ndims(ref)
                     @test eltype(res) == eltype(ref)
                     @test res == ref
@@ -133,6 +134,7 @@
                     @finch (tmp .= 0; for i=_; tmp[i] = ref[i] end)
                     @finch (res .= 0; for i=_; res[i] = tmp[i] end)
                     @test size(res) == size(ref)
+                    @test axes(res) == axes(ref)
                     @test ndims(res) == ndims(ref)
                     @test eltype(res) == eltype(ref)
                     @test res == ref
@@ -207,15 +209,17 @@
                     end)
                     res = roundtrip(res, tmp, ref).res
                     @test size(res) == size(ref)
+                    @test axes(res) == axes(ref)
                     @test ndims(res) == ndims(ref)
                     @test eltype(res) == eltype(ref)
                     @test res == ref
                     @test isequal(res, ref)
                     @finch (tmp .= 0; for j=_, i=_; tmp[i, j] = ref[i, j] end)
                     @finch (res .= 0; for j=_, i=_; res[i, j] = tmp[i, j] end)
-                    @test size(res) == size(ref)
-                    @test ndims(res) == ndims(ref)
-                    @test eltype(res) == eltype(ref)
+                    @test size(tmp) == size(ref)
+                    @test axes(res) == axes(ref)
+                    @test ndims(tmp) == ndims(ref)
+                    @test eltype(tmp) == eltype(ref)
                     @test res == ref
                     @test isequal(res, ref)
                     if lvl.pattern
@@ -271,10 +275,11 @@
             end
         end
         ref = arr_1 .+ arr_2
-        @test size(res) == size(ref)
-        @test ndims(res) == ndims(ref)
-        @test eltype(res) == eltype(ref)
-        @test res == ref
-        @test isequal(res, ref)
+        @test size(fmt) == size(ref)
+        @test axes(fmt) == axes(ref)
+        @test ndims(fmt) == ndims(ref)
+        @test eltype(fmt) == eltype(ref)
+        @test fmt == ref
+        @test isequal(fmt, ref)
     end
 end
