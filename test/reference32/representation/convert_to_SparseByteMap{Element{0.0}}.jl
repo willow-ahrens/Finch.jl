@@ -11,6 +11,7 @@ quote
     ref_lvl_idx = ref_lvl.idx
     ref_lvl_val = ref_lvl.lvl.val
     result = nothing
+    empty!(tmp_lvl_tbl)
     for tmp_lvl_r = 1:tmp_lvl_qos_fill
         tmp_lvl_p = first(tmp_lvl_srt[tmp_lvl_r])
         tmp_lvl_ptr[tmp_lvl_p] = 0
