@@ -9,8 +9,8 @@ countstored: 5
 4x4_one_bool: Bool[0 0 0 1; 0 0 0 0; 1 0 0 0; 0 1 0 0]
 tensor: Tensor(SparseList{Int64}(Separate(Dense{Int64}(Element{false, Bool, Int64}(Bool[]), 4), DenseLevel{Int64, ElementLevel{false, Bool, Int64, Vector{Bool}}}[Dense{Int64}(Element{false, Bool, Int64}(Bool[0, 0, 1, 0]), 4), Dense{Int64}(Element{false, Bool, Int64}(Bool[0, 0, 0, 1]), 4), Dense{Int64}(Element{false, Bool, Int64}(Bool[1, 0, 0, 0]), 4), Dense{Int64}(Element{false, Bool, Int64}(Bool[0, 0, 0, 0]), 4)]), 4, [1, 4], [1, 2, 4]))
 countstored: 3
-4x4_bool_mix: Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-tensor: Tensor(SparseList{Int64}(Separate(Dense{Int64}(Element{false, Bool, Int64}(Bool[]), 4), DenseLevel{Int64, ElementLevel{false, Bool, Int64, Vector{Bool}}}[Dense{Int64}(Element{false, Bool, Int64}(Bool[0, 0, 1, 0]), 4), Dense{Int64}(Element{false, Bool, Int64}(Bool[1, 0, 1, 1]), 4), Dense{Int64}(Element{false, Bool, Int64}(Bool[0, 0, 1, 0]), 4), Dense{Int64}(Element{false, Bool, Int64}(Bool[1, 0, 1, 1]), 4)]), 4, [1, 5], [1, 2, 3, 4]))
+5x4_bool_mix: Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 1 1 1 1; 0 1 0 1]
+tensor: Tensor(SparseList{Int64}(Separate(Dense{Int64}(Element{false, Bool, Int64}(Bool[]), 5), DenseLevel{Int64, ElementLevel{false, Bool, Int64, Vector{Bool}}}[Dense{Int64}(Element{false, Bool, Int64}(Bool[0, 0, 1, 1, 0]), 5), Dense{Int64}(Element{false, Bool, Int64}(Bool[1, 0, 1, 1, 1]), 5), Dense{Int64}(Element{false, Bool, Int64}(Bool[0, 0, 1, 1, 0]), 5), Dense{Int64}(Element{false, Bool, Int64}(Bool[1, 0, 1, 1, 1]), 5)]), 4, [1, 5], [1, 2, 3, 4]))
 countstored: 4
 5x5_zeros: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
 tensor: Tensor(SparseList{Int64}(Separate(Dense{Int64}(Element{0.0, Float64, Int64}(Float64[]), 5), DenseLevel{Int64, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}[]), 5, [1, 1], Int64[]))
