@@ -113,6 +113,17 @@
                         show(io, @finch_code (res .= 0; for i=_; res[i] = tmp[i] end))
                         io
                     end
+                    #println(@finch_kernel function roundtrip(res, tmp, ref)
+                    #    tmp .= 0
+                    #    for i = _
+                    #        tmp[i] = ref[i]
+                    #    end
+                    #    res .= 0
+                    #    for i = _
+                    #        res[i] = tmp[i]
+                    #    end
+                    #    return res
+                    #end)
                     eval(@finch_kernel function roundtrip(res, tmp, ref)
                         tmp .= 0
                         for i = _

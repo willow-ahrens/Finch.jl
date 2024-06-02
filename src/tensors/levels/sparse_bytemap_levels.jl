@@ -227,7 +227,6 @@ function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseByteMapLevel, p
     q = freshen(ctx, lvl.ex, :_q)
     i = freshen(ctx, lvl.ex, :_i)
     push_preamble!(ctx, quote
-        empty!($(ctx(lvl.tbl)))
         for $r = 1:$(lvl.qos_fill)
             $p = first($(lvl.srt)[$r])
             $(lvl.ptr)[$p] = $(Tp(0))
@@ -247,6 +246,7 @@ function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseByteMapLevel, p
     end)
     if !supports_reassembly(lvl.lvl)
         lvl.lvl = declare_level!(ctx, lvl.lvl, call(*, pos, lvl.shape), init)
+        push_preamble!(ctx, contain(ctx_2->assemble_level!(ctx_2, lvl.lvl, literal(Tp(1)), call(*, pos, lvl.shape)), ctx))
     end
     return lvl
 end
