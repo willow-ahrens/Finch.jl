@@ -7,9 +7,7 @@
     mode = :fast
     modes::Dict{Any, Any} = Dict()
     scope = Set()
-    shash = StaticHash()
-    program_rules = get_program_rules(algebra, shash)
-    bounds_rules = get_bounds_rules(algebra, shash)
+    symbolic = SymbolicContext(algebra = algebra)
 end
 
 push_preamble!(ctx::LowerJulia, thunk) = push_preamble!(ctx.code, thunk)
@@ -20,18 +18,16 @@ get_task(ctx::LowerJulia) = get_task(ctx.code)
 
 freshen(ctx::LowerJulia, tags...) = freshen(ctx.code, tags...)
 
+get_algebra(ctx::LowerJulia) = ctx.algebra
+get_static_hash(ctx::LowerJulia) = get_static_hash(ctx.symbolic)
+prove(ctx::LowerJulia, root) = prove(ctx.symbolic, root)
+simplify(ctx::LowerJulia, root) = simplify(ctx.symbolic, root)
+
 function contain(f, ctx::LowerJulia; bindings = ctx.bindings, kwargs...)
     contain(ctx.code; kwargs...) do code_2
-        f(LowerJulia(code_2, ctx.needs_return, ctx.result, ctx.algebra, bindings, ctx.mode, ctx.modes, ctx.scope, ctx.shash, ctx.program_rules, ctx.bounds_rules))
+        f(LowerJulia(code_2, ctx.needs_return, ctx.result, ctx.algebra, bindings, ctx.mode, ctx.modes, ctx.scope, ctx.symbolic))
     end
 end
-
-struct StaticHash
-    counts::Dict{Tuple{Any, DataType}, UInt}
-end
-StaticHash() = StaticHash(Dict{Tuple{Any, DataType}, UInt}())
-
-(h::StaticHash)(x) = get!(h.counts, (x, typeof(x)), UInt(length(h.counts)))
 
 (ctx::AbstractCompiler)(root) = ctx(root, Stylize(ctx, root)(root))
 (ctx::AbstractCompiler)(root, style) = lower(ctx, root, style)

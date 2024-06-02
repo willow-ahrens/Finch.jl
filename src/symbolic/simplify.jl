@@ -26,7 +26,7 @@ function getunbound(ex::FinchNode)
 end
 
 """
-    get_program_rules(alg, shash)
+    get_simplify_rules(alg, shash)
 
 Return the program rule set for Finch. One can dispatch on the `alg` trait to
 specialize the rule set for different algebras. Defaults to a collection of
@@ -35,7 +35,7 @@ like associativity, commutativity, etc. `shash` is an object that can be called
 to return a static hash value. This rule set simplifies, normalizes, and
 propagates constants, and is the basis for how Finch understands sparsity.
 """
-function get_program_rules(alg, shash)
+function get_simplify_rules(alg, shash)
     return [
         (@rule call(~f::isliteral, ~a::(All(isliteral))...) => literal(getval(f)(getval.(a)...))),
 
@@ -210,7 +210,6 @@ struct SimplifyStyle end
 (ctx::Stylize{<:AbstractCompiler})(::Simplify) = SimplifyStyle()
 combine_style(a::SimplifyStyle, b::SimplifyStyle) = a
 
-
 function lower(ctx::AbstractCompiler, root, ::SimplifyStyle)
     root = Rewrite(Prewalk((x) -> if x.kind === virtual visit_simplify(x.val) end))(root)
     root = simplify(ctx, root)
@@ -231,9 +230,14 @@ function visit_simplify(node::FinchNode)
     end
 end
 
-function simplify(ctx, root)
+"""
+   simplify(ctx, node) 
+
+simplify the program `node` using the rules in `ctx`
+"""
+function simplify(ctx::SymbolicContext, node)
     Rewrite(Fixpoint(Chain([
-        Prewalk(Fixpoint(Chain(ctx.program_rules))),
+        Prewalk(Fixpoint(Chain(ctx.simplify_rules))),
         #these rules are non-customizeable:
         Prewalk(Chain([
             (@rule loop(~i, ~a, block()) => block()),
@@ -248,5 +252,5 @@ function simplify(ctx, root)
             end),
             (@rule assign(~a, ~op, cached(~b, ~c)) => assign(a, op, b)),
         ])),
-    ])))(root)
+    ])))(node)
 end

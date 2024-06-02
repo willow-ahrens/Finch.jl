@@ -69,6 +69,7 @@ end
 const FINCH_VERSION = VersionNumber(TOML.parsefile(joinpath(dirname(@__DIR__), "Project.toml"))["version"])
 
 include("util/convenience.jl")
+include("util/special_functions.jl")
 include("util/shims.jl")
 include("util/limits.jl")
 include("util/staging.jl")

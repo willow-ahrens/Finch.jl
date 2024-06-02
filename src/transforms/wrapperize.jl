@@ -1,5 +1,5 @@
 """
-    get_wrapper_rules(shash, alg)
+    get_wrapper_rules(ctx, depth, alg)
 
 Return the wrapperizing rule set for Finch, which converts expressions like `A[i
 + 1]` to array combinator expressions like `OffsetArray(A, (1,))`. The rules have
