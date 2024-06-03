@@ -95,12 +95,11 @@ end
 lower the program `prgm` at global scope in the context `ctx`.
 """
 function lower_global(ctx, prgm)
+    prgm = exit_on_yieldbind(prgm)
     prgm = enforce_scopes(prgm)
     prgm = evaluate_partial(ctx, prgm)
     code = contain(ctx) do ctx_2
         quote
-            $(ctx.needs_return) = true
-            $(ctx.result) = nothing
             $(begin
                 prgm = wrapperize(ctx_2, prgm)
                 prgm = enforce_lifecycles(prgm)
@@ -113,7 +112,7 @@ function lower_global(ctx, prgm)
                     ctx_3(prgm)
                 end
             end)
-            $(ctx.result)
+            $(get_result(ctx))
         end
     end
 end

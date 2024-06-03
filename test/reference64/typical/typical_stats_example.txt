@@ -40,7 +40,6 @@ quote
     x_sum_val = x_sum.val
     x_var = ((ex.bodies[1]).body.body.bodies[4]).lhs.tns.bind
     x_var_val = x_var.val
-    result = nothing
     X_lvl_q = X_lvl_ptr[1]
     X_lvl_q_stop = X_lvl_ptr[1 + 1]
     if X_lvl_q < X_lvl_q_stop
@@ -104,11 +103,9 @@ quote
             x_max_val = max(0.0, x_max_val)
         end
     end
-    result = ()
     x_var.val = x_var_val
     x_sum.val = x_sum_val
     x_max.val = x_max_val
     x_min.val = x_min_val
-    result
 end
 

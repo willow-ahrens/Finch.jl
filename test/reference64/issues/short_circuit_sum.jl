@@ -12,7 +12,6 @@ begin
     c = ((ex.bodies[1]).body.body.bodies[2]).lhs.tns.bind
     c_val = c.val
     y_lvl.shape == x_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(y_lvl.shape) != $(x_lvl.shape))"))
-    result = nothing
     x_lvl_q = x_lvl_ptr[1]
     x_lvl_q_stop = x_lvl_ptr[1 + 1]
     if x_lvl_q < x_lvl_q_stop
@@ -106,8 +105,6 @@ begin
             end
         end
     end
-    result = ()
     c.val = c_val
     s.val = s_val
-    result
 end

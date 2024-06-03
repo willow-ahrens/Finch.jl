@@ -1,13 +1,13 @@
 @kwdef mutable struct LowerJulia <: AbstractCompiler
     code = JuliaContext()
-    needs_return = freshen(code, :needs_return)
-    result = freshen(code, :result)
     algebra = DefaultAlgebra()
     mode = :fast
+    result = freshen(code, :result)
     symbolic = SymbolicContext(algebra = algebra)
     scope = ScopeContext()
 end
 
+get_result(ctx::LowerJulia) = ctx.result
 get_binding(ctx::LowerJulia, var) = get_binding(ctx.scope, var)
 has_binding(ctx::LowerJulia, var) = has_binding(ctx.scope, var)
 set_binding!(ctx::LowerJulia, var, val) = set_binding!(ctx.scope, var, val)
@@ -17,7 +17,7 @@ set_thawed!(ctx::LowerJulia, var, val) = set_thawed!(ctx.scope, var, val)
 get_mode(ctx::LowerJulia, var) = get_mode(ctx.scope, var)
 function open_scope(f::F, ctx::LowerJulia) where {F}
     open_scope(ctx.scope) do scope_2
-        f(LowerJulia(ctx.code, ctx.needs_return, ctx.result, ctx.algebra, ctx.mode, ctx.symbolic, scope_2))
+        f(LowerJulia(ctx.code, ctx.algebra, ctx.mode, ctx.result, ctx.symbolic, scope_2))
     end
 end
 
@@ -33,7 +33,7 @@ simplify(ctx::LowerJulia, root) = simplify(ctx.symbolic, root)
 
 function contain(f, ctx::LowerJulia; kwargs...)
     contain(ctx.code; kwargs...) do code_2
-        f(LowerJulia(code_2, ctx.needs_return, ctx.result, ctx.algebra, ctx.mode, ctx.symbolic, ctx.scope))
+        f(LowerJulia(code_2, ctx.algebra, ctx.mode, ctx.result, ctx.symbolic, ctx.scope))
     end
 end
 
@@ -221,13 +221,10 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::DefaultStyle)
     elseif root.kind === yieldbind
         contain(ctx) do ctx_2
             quote
-                if $(ctx.needs_return)
-                    $(ctx.result) = (; $(map(root.args) do tns
-                        name = getroot(tns).name
-                        Expr(:kw, name, ctx_2(tns))
-                    end...), )
-                    $(ctx.needs_return) = false
-                end
+                $(get_result(ctx)) = (; $(map(root.args) do tns
+                    name = getroot(tns).name
+                    Expr(:kw, name, ctx_2(tns))
+                end...), )
             end
         end
     else

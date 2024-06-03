@@ -11,7 +11,6 @@ begin
     y_lvl.shape == x_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(y_lvl.shape) != $(x_lvl.shape))"))
     y_lvl.shape == x_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(y_lvl.shape) != $(x_lvl.shape))"))
     @warn "Performance Warning: non-concordant traversal of A[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)"
-    result = nothing
     for i_6 = 1:y_lvl.shape
         y_lvl_q = (1 - 1) * y_lvl.shape + i_6
         x_lvl_q_2 = (1 - 1) * x_lvl.shape + i_6
@@ -27,7 +26,5 @@ begin
             y_lvl_val[y_lvl_q_2] = A_lvl_3_val * x_lvl_2_val + y_lvl_val[y_lvl_q_2]
         end
     end
-    result = ()
     resize!(y_lvl_val, y_lvl.shape)
-    result
 end

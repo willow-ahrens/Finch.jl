@@ -68,16 +68,13 @@ quote
     A_mode1_stop = sugar_1[1]
     A_mode2_stop = sugar_1[2]
     @warn "Performance Warning: non-concordant traversal of A[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)"
-    result = nothing
     for i_3 = 1:A_mode1_stop
         for j_3 = 1:A_mode2_stop
             val = A[i_3, j_3]
             s_val = val + s_val
         end
     end
-    result = ()
     s.val = s_val
-    result
 end
 ```
 
