@@ -145,5 +145,6 @@ function concordize(ctx::AbstractCompiler, root)
             access(~tns, ~mode, ~i..., call(identity, j), ~k...)
         end
     end)))(root)
-    ConcordizeVisitor(ctx, collect(keys(ctx.bindings)))(root)
+    tnss = unique([getroot(node.tns) for node in PostOrderDFS(root) if node.kind === access])
+    ConcordizeVisitor(ctx, tnss)(root)
 end

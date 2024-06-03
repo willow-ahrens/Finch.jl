@@ -85,6 +85,7 @@ using .FinchNotation: and, or, InitWriter
 include("abstract_tensor.jl")
 include("dimensions.jl")
 include("architecture.jl")
+include("scopes.jl")
 include("lower.jl")
 
 include("transforms/concordize.jl")

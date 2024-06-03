@@ -233,7 +233,7 @@ function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = :saf
     unreachable = gensym(:unreachable)
     code = contain(ctx) do ctx_2
         foreach(args) do (key, val)
-            ctx_2.bindings[variable(key)] = finch_leaf(virtualize(ctx_2.code, key, maybe_typeof(val), key))
+            set_binding!(ctx_2, variable(key), finch_leaf(virtualize(ctx_2.code, key, maybe_typeof(val), key)))
         end
         execute_code(unreachable, prgm, algebra = algebra, mode = mode, ctx = ctx_2)
     end

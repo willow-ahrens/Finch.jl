@@ -312,9 +312,9 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseRLELevel, pos_st
                         $checkval = true
                         $(contain(ctx) do ctx_2
                             left = variable(freshen(ctx, :left))
-                            ctx_2.bindings[left] = virtual(VirtualSubFiber(lvl.buf, value(q_head, Tp)))
+                            set_binding!(ctx_2, left, virtual(VirtualSubFiber(lvl.buf, value(q_head, Tp))))
                             right = variable(freshen(ctx, :right))
-                            ctx_2.bindings[right] = virtual(VirtualSubFiber(lvl.buf, call(+, value(q, Tp), Tp(1))))
+                            set_binding!(ctx_2, right, virtual(VirtualSubFiber(lvl.buf, call(+, value(q, Tp), Tp(1)))))
                             check = VirtualScalar(:UNREACHABLE, Bool, false, :check, checkval)
                             exts = virtual_level_size(ctx_2, lvl.buf)
                             inds = [index(freshen(ctx_2, :i, n)) for n = 1:length(exts)]
@@ -335,9 +335,9 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseRLELevel, pos_st
                     $(lvl.right)[$q_2] = $(lvl.right)[$q]
                     $(contain(ctx) do ctx_2
                         src = variable(freshen(ctx, :src))
-                        ctx_2.bindings[src] = virtual(VirtualSubFiber(lvl.buf, value(q_head, Tp)))
+                        set_binding!(ctx_2, src, virtual(VirtualSubFiber(lvl.buf, value(q_head, Tp))))
                         dst = variable(freshen(ctx, :dst))
-                        ctx_2.bindings[dst] = virtual(VirtualSubFiber(lvl.lvl, value(q_2, Tp)))
+                        set_binding!(ctx_2, dst, virtual(VirtualSubFiber(lvl.lvl, value(q_2, Tp))))
                         exts = virtual_level_size(ctx_2, lvl.buf)
                         inds = [index(freshen(ctx_2, :i, n)) for n = 1:length(exts)]
                         prgm = assign(access(dst, updater, inds...), initwrite(virtual_level_fill_value(lvl.lvl)), access(src, reader, inds...))

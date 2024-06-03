@@ -13,7 +13,7 @@ function evaluate_partial(ctx, root)
         (@rule tag(~var, ~bind::isliteral) => bind),
         (@rule tag(~var, ~bind::isvalue) => bind),
         (@rule tag(~var, ~bind::isvirtual) => begin
-            get!(ctx.bindings, var, bind)
+            get_binding!(ctx, var, bind)
             var
         end
         )
@@ -21,7 +21,7 @@ function evaluate_partial(ctx, root)
 
     root = Rewrite(Fixpoint(Chain([
         Fixpoint(@rule define(~a::isvariable, ~v::Or(isconstant, isvirtual), ~s) => begin
-            ctx.bindings[a] = v
+            set_binding!(ctx, a, v)
             s
         end),
         Postwalk(Fixpoint(Chain([
@@ -31,8 +31,8 @@ function evaluate_partial(ctx, root)
                    finch_leaf(x)
                end
              end),
-            (@rule ~v::isvariable => if haskey(ctx.bindings, v) 
-                val = ctx.bindings[v]
+            (@rule ~v::isvariable => if has_binding(ctx, v) 
+                val = get_binding(ctx, v)
                 if isvariable(val) || isconstant(val)
                     val
                 end
@@ -56,7 +56,7 @@ end
 virtual_call(ctx, f, a...) = nothing
 
 function virtual_call(ctx, ::typeof(fill_value), a) 
-    if haskey(ctx.bindings, getroot(a))
+    if has_binding(ctx, getroot(a))
         return virtual_fill_value(ctx, a)
     end
 end

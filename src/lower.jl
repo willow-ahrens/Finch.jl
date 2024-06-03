@@ -3,19 +3,27 @@
     needs_return = freshen(code, :needs_return)
     result = freshen(code, :result)
     algebra = DefaultAlgebra()
-    bindings::Dict{FinchNode, FinchNode} = Dict{FinchNode, FinchNode}()
     mode = :fast
-    modes::Dict{Any, Any} = Dict()
-    scope = Set()
     symbolic = SymbolicContext(algebra = algebra)
+    scope = ScopeContext()
+end
+
+get_binding(ctx::LowerJulia, var) = get_binding(ctx.scope, var)
+has_binding(ctx::LowerJulia, var) = has_binding(ctx.scope, var)
+set_binding!(ctx::LowerJulia, var, val) = set_binding!(ctx.scope, var, val)
+set_declared!(ctx::LowerJulia, var, val) = set_declared!(ctx.scope, var, val)
+set_frozen!(ctx::LowerJulia, var, val) = set_frozen!(ctx.scope, var, val)
+set_thawed!(ctx::LowerJulia, var, val) = set_thawed!(ctx.scope, var, val)
+get_mode(ctx::LowerJulia, var) = get_mode(ctx.scope, var)
+function open_scope(f::F, ctx::LowerJulia) where {F}
+    open_scope(ctx.scope) do scope_2
+        f(LowerJulia(ctx.code, ctx.needs_return, ctx.result, ctx.algebra, ctx.mode, ctx.symbolic, scope_2))
+    end
 end
 
 push_preamble!(ctx::LowerJulia, thunk) = push_preamble!(ctx.code, thunk)
-
 push_epilogue!(ctx::LowerJulia, thunk) = push_epilogue!(ctx.code, thunk)
-
 get_task(ctx::LowerJulia) = get_task(ctx.code)
-
 freshen(ctx::LowerJulia, tags...) = freshen(ctx.code, tags...)
 
 get_algebra(ctx::LowerJulia) = ctx.algebra
@@ -23,27 +31,15 @@ get_static_hash(ctx::LowerJulia) = get_static_hash(ctx.symbolic)
 prove(ctx::LowerJulia, root) = prove(ctx.symbolic, root)
 simplify(ctx::LowerJulia, root) = simplify(ctx.symbolic, root)
 
-function contain(f, ctx::LowerJulia; bindings = ctx.bindings, kwargs...)
+function contain(f, ctx::LowerJulia; kwargs...)
     contain(ctx.code; kwargs...) do code_2
-        f(LowerJulia(code_2, ctx.needs_return, ctx.result, ctx.algebra, bindings, ctx.mode, ctx.modes, ctx.scope, ctx.symbolic))
+        f(LowerJulia(code_2, ctx.needs_return, ctx.result, ctx.algebra, ctx.mode, ctx.symbolic, ctx.scope))
     end
 end
 
 (ctx::AbstractCompiler)(root) = ctx(root, Stylize(ctx, root)(root))
 (ctx::AbstractCompiler)(root, style) = lower(ctx, root, style)
 #(ctx::AbstractCompiler)(root, style) = (println(); println(); display(root); display(style); lower(ctx, root, style))
-
-function open_scope(ctx::AbstractCompiler, prgm)
-    ctx_2 = shallowcopy(ctx)
-    ctx_2.scope = Set()
-    res = ctx_2(prgm)
-    for tns in ctx_2.scope
-        pop!(ctx_2.modes, tns, nothing)
-    end
-    ctx.bindings = copy(ctx.bindings)
-    res
-end
-
 function cache!(ctx::AbstractCompiler, var, val)
     val = finch_leaf(val)
     isconstant(val) && return val
@@ -60,9 +56,9 @@ function resolve(ctx::AbstractCompiler, node::FinchNode)
     if node.kind === virtual
         return node.val
     elseif node.kind === variable
-        return resolve(ctx, ctx.bindings[node])
+        return resolve(ctx, get_binding(ctx, node))
     elseif node.kind === index
-        return resolve(ctx, ctx.bindings[node])
+        return resolve(ctx, get_binding(ctx, node))
     else
         error("unimplemented $node")
     end
@@ -109,8 +105,7 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::DefaultStyle)
     if root.kind === value
         return root.val
     elseif root.kind === index
-        @assert haskey(ctx.bindings, root) "index $(root) unbound"
-        return ctx(ctx.bindings[root]) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
+        return ctx(get_binding(ctx, root)) #This unwraps indices that are virtuals. Arguably these virtuals should be precomputed, but whatevs.
     elseif root.kind === literal
         if typeof(root.val) === Symbol ||
           typeof(root.val) === Expr ||
@@ -134,19 +129,14 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::DefaultStyle)
             if head.kind === block
                 ctx(block(head.bodies..., body))
             elseif head.kind === declare
-                @assert head.tns.kind === variable
-                @assert get(ctx.modes, head.tns, reader) === reader
-                ctx.bindings[head.tns] = declare!(ctx, ctx.bindings[head.tns], head.init) #TODO should ctx.bindings be scoped?
-                push!(ctx.scope, head.tns)
-                ctx.modes[head.tns] = updater
+                val_2 = declare!(ctx, get_binding(ctx, head.tns), head.init)
+                set_declared!(ctx, head.tns, val_2)
             elseif head.kind === freeze
-                @assert ctx.modes[head.tns] === updater
-                ctx.bindings[head.tns] = freeze!(ctx, ctx.bindings[head.tns])
-                ctx.modes[head.tns] = reader
+                val_2 = freeze!(ctx, get_binding(ctx, head.tns))
+                set_frozen!(ctx, head.tns, val_2)
             elseif head.kind === thaw
-                @assert get(ctx.modes, head.tns, reader) === reader
-                ctx.bindings[head.tns] = thaw!(ctx, ctx.bindings[head.tns])
-                ctx.modes[head.tns] = updater
+                val_2 = thaw!(ctx, get_binding(ctx, head.tns))
+                set_thawed!(ctx, head.tns, val_2)
             else
                 preamble = contain(ctx) do ctx_2
                     ctx_2(instantiate!(ctx_2, head))
@@ -162,10 +152,11 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::DefaultStyle)
         end
     elseif root.kind === define
         @assert root.lhs.kind === variable
-        ctx.bindings[root.lhs] = cache!(ctx, root.lhs.name, root.rhs)
-        push!(ctx.scope, root.lhs)
+        set_binding!(ctx, root.lhs, cache!(ctx, root.lhs.name, root.rhs))
         contain(ctx) do ctx_2
-            open_scope(ctx_2, root.body)
+            open_scope(ctx_2) do ctx_3
+                ctx_3(root.body)
+            end
         end
     elseif (root.kind === declare || root.kind === freeze || root.kind === thaw)
         #these statements only apply to subsequent statements in a block
@@ -208,7 +199,9 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::DefaultStyle)
         return quote
             if $cond
                 $(contain(ctx) do ctx_2
-                    open_scope(ctx_2, root.body)
+                    open_scope(ctx_2) do ctx_3
+                        ctx_3(root.body)
+                    end
                 end)
             end
         end
@@ -224,7 +217,7 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::DefaultStyle)
         lhs = ctx(root.lhs)
         return :($lhs = $rhs)
     elseif root.kind === variable
-        return ctx(ctx.bindings[root])
+        return ctx(get_binding(ctx, root))
     elseif root.kind === yieldbind
         contain(ctx) do ctx_2
             quote
@@ -292,22 +285,22 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
         )
     )
 
-    bindings_2 = copy(ctx.bindings)
     for tns in setdiff(used_in_scope, decl_in_scope)
         virtual_moveto(ctx, resolve(ctx, tns), device)
     end
 
     return quote
         Threads.@threads for $i = 1:$(ctx(device.n))
-            $(contain(ctx, bindings=bindings_2) do ctx_2
+            $(contain(ctx) do ctx_2
                 subtask = VirtualCPUThread(value(i, Int), device, ctx_2.code.task)
                 contain(ctx_2, task=subtask) do ctx_3
-                    bindings_2 = copy(ctx_3.bindings)
                     for tns in intersect(used_in_scope, decl_in_scope)
                         virtual_moveto(ctx_3, resolve(ctx_3, tns), subtask)
                     end
-                    contain(ctx_3, bindings=bindings_2) do ctx_4
-                        ctx_4(instantiate!(ctx_4, root_2))
+                    contain(ctx_3) do ctx_4
+                        open_scope(ctx_4) do ctx_5
+                            ctx_5(instantiate!(ctx_5, root_2))
+                        end
                     end
                 end
             end)
