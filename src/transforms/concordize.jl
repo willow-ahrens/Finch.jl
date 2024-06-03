@@ -33,7 +33,7 @@ struct ConcordizeVisitor
     scope
 end
 
-freshen(ctx::ConcordizeVisitor, tags...) = freshen(ctx.ctx.code, tags...)
+freshen(ctx::ConcordizeVisitor, tags...) = freshen(ctx.ctx, tags...)
 
 function (ctx::ConcordizeVisitor)(node::FinchNode)
     function isbound(x::FinchNode)
@@ -127,12 +127,12 @@ end
 """
 function concordize(ctx::AbstractCompiler, root)
     depth = depth_calculator(root)
-    if issafe(ctx.mode)
+    if issafe(get_mode_flag(ctx))
         for node in PostOrderDFS(root)
             if @capture node access(~tns, ~mode, ~i...)
                 for n in 1:length(i)
                     if 1 <= depth(i[n]) < maximum(depth.(i[n+1:end]), init=0)
-                        push!(ctx.code.preamble, quote
+                        push_preamble!(ctx, quote
                             @warn("Performance Warning: non-concordant traversal of $($(sprint(Finch.FinchNotation.display_expression, MIME"text/plain"(), node))) (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)")
                         end)
                     end
@@ -145,5 +145,6 @@ function concordize(ctx::AbstractCompiler, root)
             access(~tns, ~mode, ~i..., call(identity, j), ~k...)
         end
     end)))(root)
-    ConcordizeVisitor(ctx, collect(keys(ctx.bindings)))(root)
+    tnss = unique([getroot(node.tns) for node in PostOrderDFS(root) if node.kind === access])
+    ConcordizeVisitor(ctx, tnss)(root)
 end

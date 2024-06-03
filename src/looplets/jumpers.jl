@@ -45,8 +45,8 @@ function jumper_range(ctx, node::FinchNode, ext)
 end
 
 function jumper_range(ctx, node::Jumper, ext)
-    push!(ctx.code.preamble, node.seek !== nothing ? node.seek(ctx, ext) : quote end)
-    push!(ctx.code.preamble, node.preamble !== nothing ? node.preamble : quote end)
+    push_preamble!(ctx, node.seek !== nothing ? node.seek(ctx, ext) : quote end)
+    push_preamble!(ctx, node.preamble !== nothing ? node.preamble : quote end)
     ext_2 = similar_extent(ext, getstart(ext), node.stop(ctx, ext))
     bound_measure_below!(ext_2, get_smallest_measure(ext))
 end
@@ -89,20 +89,20 @@ function lower(ctx::AbstractCompiler, root::FinchNode, style::JumperStyle)
     root.kind === loop || error("unimplemented")
     
     i = getname(root.idx)
-    i0 = freshen(ctx.code, i, :_start)
-    push!(ctx.code.preamble, quote
+    i0 = freshen(ctx, i, :_start)
+    push_preamble!(ctx, quote
         $i = $(ctx(getstart(root.ext)))
     end)
 
     guard = :($i <= $(ctx(getstop(root.ext))))
 
     #foreach(filter(isvirtual, collect(PostOrderDFS(root.body)))) do node
-    #    push!(ctx.code.preamble, jumper_seek(ctx, node.val, root.ext))
+    #    push_preamble!(ctx, jumper_seek(ctx, node.val, root.ext))
     #end
 
     body_2 = contain(ctx) do ctx_2
-        push!(ctx_2.code.preamble, :($i0 = $i))
-        i1 = freshen(ctx_2.code, i)
+        push_preamble!(ctx_2, :($i0 = $i))
+        i1 = freshen(ctx_2, i)
 
         ext_1 = bound_measure_below!(similar_extent(root.ext, value(i0), getstop(root.ext)), get_smallest_measure(root.ext))
         ext_2 = mapreduce((node)->jumper_range(ctx_2, node, ext_1), (a, b) -> virtual_union(ctx_2, a, b), PostOrderDFS(root.body))

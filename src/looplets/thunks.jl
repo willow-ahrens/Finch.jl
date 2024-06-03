@@ -55,7 +55,7 @@ end
 thunk_access(ctx, node, tns) = similarterm(node, operation(node), map(ctx, arguments(node)))
 
 function (ctx::ThunkVisitor)(node::Thunk)
-    push!(ctx.ctx.code.preamble, node.preamble)
-    push!(ctx.ctx.code.epilogue, node.epilogue)
+    push_preamble!(ctx.ctx, node.preamble)
+    push_epilogue!(ctx.ctx, node.epilogue)
     node.body(ctx.ctx)
 end

@@ -34,15 +34,14 @@ quote
     A_lvl_ptr = A_lvl_2.ptr
     A_lvl_idx = A_lvl_2.idx
     A_lvl_2_val = A_lvl_2.lvl.val
-    result = nothing
     qos = Finch.declare_table!(B_lvl_tbl, 1)
     B_lvl_qos_stop = 0
     Finch.declare_table!(B_lvl_tbl_2, qos)
     B_lvl_qos_stop_2 = 0
-    assemble_table!(B_lvl_tbl, 1, 1)
+    Finch.assemble_table!(B_lvl_tbl, 1, 1)
     for j_4 = 1:A_lvl.shape
         A_lvl_q = (1 - 1) * A_lvl.shape + j_4
-        B_lvl_subtbl = table_register(B_lvl_tbl, 1)
+        B_lvl_subtbl = Finch.table_register(B_lvl_tbl, 1)
         A_lvl_2_q = A_lvl_ptr[A_lvl_q]
         A_lvl_2_q_stop = A_lvl_ptr[A_lvl_q + 1]
         if A_lvl_2_q < A_lvl_2_q_stop
@@ -59,49 +58,63 @@ quote
                 A_lvl_2_i = A_lvl_idx[A_lvl_2_q]
                 if A_lvl_2_i < phase_stop
                     A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
-                    B_lvl_qos = subtable_register(B_lvl_tbl, B_lvl_subtbl, A_lvl_2_i)
+                    B_lvl_qos = Finch.subtable_register(B_lvl_tbl, B_lvl_subtbl, A_lvl_2_i)
                     if B_lvl_qos > B_lvl_qos_stop
                         B_lvl_qos_stop = max(B_lvl_qos_stop << 1, 1)
-                        assemble_table!(B_lvl_tbl_2, B_lvl_qos, B_lvl_qos_stop)
+                        Finch.assemble_table!(B_lvl_tbl_2, B_lvl_qos, B_lvl_qos_stop)
                     end
-                    B_lvl_2_subtbl = table_register(B_lvl_tbl_2, B_lvl_qos)
-                    B_lvl_2_qos = subtable_register(B_lvl_tbl_2, B_lvl_2_subtbl, j_4)
+                    B_lvl_dirty = false
+                    B_lvl_2_subtbl = Finch.table_register(B_lvl_tbl_2, B_lvl_qos)
+                    B_lvl_2_qos = Finch.subtable_register(B_lvl_tbl_2, B_lvl_2_subtbl, j_4)
                     if B_lvl_2_qos > B_lvl_qos_stop_2
                         B_lvl_qos_stop_2 = max(B_lvl_qos_stop_2 << 1, 1)
                         Finch.resize_if_smaller!(B_lvl_2_val, B_lvl_qos_stop_2)
                         Finch.fill_range!(B_lvl_2_val, 0.0, B_lvl_2_qos, B_lvl_qos_stop_2)
                     end
                     B_lvl_2_val[B_lvl_2_qos] = A_lvl_3_val
+                    Finch.subtable_commit!(B_lvl_tbl_2, B_lvl_2_subtbl, B_lvl_2_qos, j_4)
+                    B_lvl_dirty = true
+                    Finch.table_commit!(B_lvl_tbl_2, B_lvl_qos)
+                    if B_lvl_dirty
+                        Finch.subtable_commit!(B_lvl_tbl, B_lvl_subtbl, B_lvl_qos, A_lvl_2_i)
+                    end
                     A_lvl_2_q += 1
                 else
                     phase_stop_3 = min(A_lvl_2_i, phase_stop)
                     if A_lvl_2_i == phase_stop_3
                         A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
-                        B_lvl_qos = subtable_register(B_lvl_tbl, B_lvl_subtbl, phase_stop_3)
+                        B_lvl_qos = Finch.subtable_register(B_lvl_tbl, B_lvl_subtbl, phase_stop_3)
                         if B_lvl_qos > B_lvl_qos_stop
                             B_lvl_qos_stop = max(B_lvl_qos_stop << 1, 1)
-                            assemble_table!(B_lvl_tbl_2, B_lvl_qos, B_lvl_qos_stop)
+                            Finch.assemble_table!(B_lvl_tbl_2, B_lvl_qos, B_lvl_qos_stop)
                         end
-                        B_lvl_2_subtbl_2 = table_register(B_lvl_tbl_2, B_lvl_qos)
-                        B_lvl_2_qos_2 = subtable_register(B_lvl_tbl_2, B_lvl_2_subtbl_2, j_4)
+                        B_lvl_dirty = false
+                        B_lvl_2_subtbl_2 = Finch.table_register(B_lvl_tbl_2, B_lvl_qos)
+                        B_lvl_2_qos_2 = Finch.subtable_register(B_lvl_tbl_2, B_lvl_2_subtbl_2, j_4)
                         if B_lvl_2_qos_2 > B_lvl_qos_stop_2
                             B_lvl_qos_stop_2 = max(B_lvl_qos_stop_2 << 1, 1)
                             Finch.resize_if_smaller!(B_lvl_2_val, B_lvl_qos_stop_2)
                             Finch.fill_range!(B_lvl_2_val, 0.0, B_lvl_2_qos_2, B_lvl_qos_stop_2)
                         end
                         B_lvl_2_val[B_lvl_2_qos_2] = A_lvl_3_val
+                        Finch.subtable_commit!(B_lvl_tbl_2, B_lvl_2_subtbl_2, B_lvl_2_qos_2, j_4)
+                        B_lvl_dirty = true
+                        Finch.table_commit!(B_lvl_tbl_2, B_lvl_qos)
+                        if B_lvl_dirty
+                            Finch.subtable_commit!(B_lvl_tbl, B_lvl_subtbl, B_lvl_qos, phase_stop_3)
+                        end
                         A_lvl_2_q += 1
                     end
                     break
                 end
             end
         end
+        Finch.table_commit!(B_lvl_tbl, 1)
     end
     qos_stop = Finch.freeze_table!(B_lvl_tbl, 1)
     qos_stop_2 = Finch.freeze_table!(B_lvl_tbl_2, qos_stop)
     resize!(B_lvl_2_val, qos_stop_2)
-    result = (B = Tensor((SparseLevel){Int64}((SparseLevel){Int64}(B_lvl_3, A_lvl.shape, B_lvl_tbl_2), A_lvl_2.shape, B_lvl_tbl)),)
-    result
+    (B = Tensor((SparseLevel){Int64}((SparseLevel){Int64}(B_lvl_3, A_lvl.shape, B_lvl_tbl_2), A_lvl_2.shape, B_lvl_tbl)),)
 end
 julia> @finch mode = :fast begin
         B .= 0

@@ -17,7 +17,6 @@ begin
     A_mode1_stop == C_mode1_stop || throw(DimensionMismatch("mismatched dimension limits ($(A_mode1_stop) != $(C_mode1_stop))"))
     C_mode2_stop == X_mode2_stop || throw(DimensionMismatch("mismatched dimension limits ($(C_mode2_stop) != $(X_mode2_stop))"))
     C_mode3_stop == A_mode3_stop || throw(DimensionMismatch("mismatched dimension limits ($(C_mode3_stop) != $(A_mode3_stop))"))
-    result = nothing
     for k_4 = 1:C_mode3_stop
         for j_4 = 1:C_mode2_stop
             for i_6 = 1:A_mode1_stop
@@ -34,6 +33,5 @@ begin
             end
         end
     end
-    result = ()
-    result
+    ()
 end

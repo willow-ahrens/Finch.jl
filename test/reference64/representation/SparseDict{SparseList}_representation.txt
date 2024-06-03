@@ -9,9 +9,9 @@ countstored: 25
 4x4_one_bool: Bool[0 0 0 1; 0 0 0 0; 1 0 0 0; 0 1 0 0]
 tensor: Tensor(Sparse{Int64}(SparseList{Int64}(Element{false, Bool, Int64}(Bool[1, 1, 1]), 4, [1, 2, 3, 4], [3, 4, 1]), 4, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}([1, 4], [1, 2, 4], [1, 2, 3], Dict((1, 2) => 2, (1, 1) => 1, (1, 4) => 3))))
 countstored: 3
-4x4_bool_mix: Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-tensor: Tensor(Sparse{Int64}(SparseList{Int64}(Element{false, Bool, Int64}(Bool[1, 1, 1, 1, 1, 1, 1, 1]), 4, [1, 2, 5, 6, 9], [3, 1, 3, 4, 3, 1, 3, 4]), 4, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}([1, 5], [1, 2, 3, 4], [1, 2, 3, 4], Dict((1, 2) => 2, (1, 1) => 1, (1, 3) => 3, (1, 4) => 4))))
-countstored: 8
+5x4_bool_mix: Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 1 1 1 1; 0 1 0 1]
+tensor: Tensor(Sparse{Int64}(SparseList{Int64}(Element{false, Bool, Int64}(Bool[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]), 5, [1, 3, 7, 9, 13], [3, 4, 1, 3, 4, 5, 3, 4, 1, 3, 4, 5]), 4, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}([1, 5], [1, 2, 3, 4], [1, 2, 3, 4], Dict((1, 2) => 2, (1, 1) => 1, (1, 3) => 3, (1, 4) => 4))))
+countstored: 12
 5x5_zeros: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
 tensor: Tensor(Sparse{Int64}(SparseList{Int64}(Element{0.0, Float64, Int64}(Float64[]), 5, [1], Int64[]), 5, Finch.DictTable{Int64, Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}}([1, 1], Int64[], Int64[], Dict{Tuple{Int64, Int64}, Int64}())))
 countstored: 0

@@ -9,7 +9,6 @@ quote
     ref_lvl_ptr = ref_lvl.ptr
     ref_lvl_idx = ref_lvl.idx
     ref_lvl_val = ref_lvl.lvl.val
-    result = nothing
     tmp_lvl_qos_stop = 0
     Finch.resize_if_smaller!(tmp_lvl_ptr, 1 + 1)
     Finch.fill_range!(tmp_lvl_ptr, 0, 1 + 1, 1 + 1)
@@ -36,7 +35,7 @@ quote
                     Finch.resize_if_smaller!(tmp_lvl_idx, tmp_lvl_qos_stop)
                     Finch.resize_if_smaller!(tmp_lvl_val, tmp_lvl_qos_stop)
                     for pos = tmp_lvl_qos:tmp_lvl_qos_stop
-                        pointer_to_lvl = similar_level(tmp_lvl_2.lvl, level_fill_value(typeof(tmp_lvl_2.lvl)), level_eltype(typeof(tmp_lvl_2.lvl)))
+                        pointer_to_lvl = Finch.similar_level(tmp_lvl_2.lvl, Finch.level_fill_value(typeof(tmp_lvl_2.lvl)), Finch.level_eltype(typeof(tmp_lvl_2.lvl)))
                         pointer_to_lvl_val = pointer_to_lvl.val
                         Finch.resize_if_smaller!(pointer_to_lvl_val, 1)
                         Finch.fill_range!(pointer_to_lvl_val, 0.0, 1, 1)
@@ -63,7 +62,7 @@ quote
                         Finch.resize_if_smaller!(tmp_lvl_idx, tmp_lvl_qos_stop)
                         Finch.resize_if_smaller!(tmp_lvl_val, tmp_lvl_qos_stop)
                         for pos_2 = tmp_lvl_qos:tmp_lvl_qos_stop
-                            pointer_to_lvl_5 = similar_level(tmp_lvl_2.lvl, level_fill_value(typeof(tmp_lvl_2.lvl)), level_eltype(typeof(tmp_lvl_2.lvl)))
+                            pointer_to_lvl_5 = Finch.similar_level(tmp_lvl_2.lvl, Finch.level_fill_value(typeof(tmp_lvl_2.lvl)), Finch.level_eltype(typeof(tmp_lvl_2.lvl)))
                             pointer_to_lvl_5_val = pointer_to_lvl_5.val
                             Finch.resize_if_smaller!(pointer_to_lvl_5_val, 1)
                             Finch.fill_range!(pointer_to_lvl_5_val, 0.0, 1, 1)
@@ -93,6 +92,5 @@ quote
     end
     qos_stop = tmp_lvl_ptr[1 + 1] - 1
     resize!(tmp_lvl_idx, qos_stop)
-    result = (tmp = Tensor((SparseListLevel){Int64}((SeparateLevel){ElementLevel{0.0, Float64, Int64, Vector{Float64}}, Vector{ElementLevel{0.0, Float64, Int64, Vector{Float64}}}}(tmp_lvl_3, tmp_lvl_val), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),)
-    result
+    (tmp = Tensor((SparseListLevel){Int64}((SeparateLevel){ElementLevel{0.0, Float64, Int64, Vector{Float64}}, Vector{ElementLevel{0.0, Float64, Int64, Vector{Float64}}}}(tmp_lvl_3, tmp_lvl_val), ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx)),)
 end

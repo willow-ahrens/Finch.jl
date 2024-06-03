@@ -6,7 +6,6 @@ quote
     res_lvl_val = res_lvl.lvl.val
     tmp_lvl_val = ((ex.bodies[1]).bodies[2]).body.rhs.tns.bind.lvl.val
     tmp_lvl_2 = ((ex.bodies[1]).bodies[2]).body.rhs.tns.bind.lvl.lvl
-    result = nothing
     pointer_to_lvl_2 = tmp_lvl_val[1]
     pointer_to_lvl_2_val = pointer_to_lvl_2.lvl.val
     res_lvl_qos_stop = 0

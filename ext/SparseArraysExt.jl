@@ -3,7 +3,7 @@ module SparseArraysExt
 using Finch
 using Finch: AbstractCompiler, DefaultStyle, Extent
 using Finch: Unfurled, Furlable, Stepper, Jumper, Run, FillLeaf, Lookup, Simplify, Sequence, Phase, Thunk, Spike 
-using Finch: virtual_size, virtual_fill_value, getstart, getstop, freshen, SwizzleArray
+using Finch: virtual_size, virtual_fill_value, getstart, getstop, freshen, push_preamble!, push_epilogue!, SwizzleArray
 using Finch: FinchProtocolError
 using Finch.FinchNotation
 
@@ -67,7 +67,7 @@ end
 
 function Finch.virtualize(ctx, ex, ::Type{<:SparseMatrixCSC{Tv, Ti}}, tag=:tns) where {Tv, Ti}
     sym = freshen(ctx, tag)
-    push!(ctx.preamble, quote
+    push_preamble!(ctx, quote
         $sym = $ex
     end)
     VirtualSparseMatrixCSC(sym, Tv, Ti)
@@ -80,11 +80,11 @@ end
 function Finch.instantiate(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk), typeof(follow)}, ::Union{typeof(defaultread), typeof(walk)})
     tag = arr.ex
     Ti = arr.Ti
-    my_i = freshen(ctx.code, tag, :_i)
-    my_q = freshen(ctx.code, tag, :_q)
-    my_q_stop = freshen(ctx.code, tag, :_q_stop)
-    my_i1 = freshen(ctx.code, tag, :_i1)
-    my_val = freshen(ctx.code, tag, :_val)
+    my_i = freshen(ctx, tag, :_i)
+    my_q = freshen(ctx, tag, :_q)
+    my_q_stop = freshen(ctx, tag, :_q_stop)
+    my_i1 = freshen(ctx, tag, :_i1)
+    my_val = freshen(ctx, tag, :_val)
 
     Unfurled(
         arr = arr,
@@ -178,7 +178,7 @@ end
 
 function Finch.virtualize(ctx, ex, ::Type{<:SparseVector{Tv, Ti}}, tag=:tns) where {Tv, Ti}
     sym = freshen(ctx, tag)
-    push!(ctx.preamble, quote
+    push_preamble!(ctx, quote
         $sym = $ex
     end)
     VirtualSparseVector(sym, Tv, Ti)
@@ -191,11 +191,11 @@ end
 function Finch.instantiate(ctx::AbstractCompiler, arr::VirtualSparseVector, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
     tag = arr.ex
     Ti = arr.Ti
-    my_i = freshen(ctx.code, tag, :_i)
-    my_q = freshen(ctx.code, tag, :_q)
-    my_q_stop = freshen(ctx.code, tag, :_q_stop)
-    my_i1 = freshen(ctx.code, tag, :_i1)
-    my_val = freshen(ctx.code, tag, :_val)
+    my_i = freshen(ctx, tag, :_i)
+    my_q = freshen(ctx, tag, :_q)
+    my_q_stop = freshen(ctx, tag, :_q_stop)
+    my_i1 = freshen(ctx, tag, :_i1)
+    my_val = freshen(ctx, tag, :_val)
 
     Unfurled(
         arr = arr,

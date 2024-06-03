@@ -190,7 +190,6 @@ quote
     A_lvl_ptr = A_lvl.ptr
     A_lvl_idx = A_lvl.idx
     A_lvl_val = A_lvl.lvl.val
-    result = nothing
     A_lvl_q = A_lvl_ptr[1]
     A_lvl_q_stop = A_lvl_ptr[1 + 1]
     if A_lvl_q < A_lvl_q_stop
@@ -235,7 +234,6 @@ quote
     s_val = s.val
     B_lvl = (ex.bodies[1]).body.rhs.tns.bind.lvl
     B_lvl_val = B_lvl.lvl.val
-    result = nothing
     for i_3 = 1:B_lvl.shape
         B_lvl_q = (1 - 1) * B_lvl.shape + i_3
         B_lvl_2_val = B_lvl_val[B_lvl_q]

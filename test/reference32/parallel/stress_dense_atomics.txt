@@ -17,7 +17,6 @@ quote
     y_lvl_locks = y_lvl.lvl.locks
     y_lvl_3 = y_lvl_2.lvl
     y_lvl_2_val = y_lvl_2.lvl.val
-    result = nothing
     Finch.resize_if_smaller!(x_lvl_val, x_lvl.shape)
     Finch.fill_range!(x_lvl_val, 0, 1, x_lvl.shape)
     for j_7 = 1:x_lvl.shape
@@ -26,7 +25,7 @@ quote
     end
     Finch.resize_if_smaller!(y_lvl_locks, y_lvl.shape)
     @inbounds for idx = 1:y_lvl.shape
-            y_lvl_locks[idx] = make_lock(eltype(Vector{Base.Threads.SpinLock}))
+            y_lvl_locks[idx] = Finch.make_lock(eltype(Vector{Base.Threads.SpinLock}))
         end
     Finch.resize_if_smaller!(y_lvl_2_val, y_lvl.shape)
     Finch.fill_range!(y_lvl_2_val, 0, 1, y_lvl.shape)
@@ -44,17 +43,16 @@ quote
                     x_lvl_q_2 = (1 - 1) * x_lvl.shape + j_10
                     x_lvl_2_val = x_lvl_val[x_lvl_q_2]
                     y_lvl_q = (1 - 1) * y_lvl.shape + x_lvl_2_val
-                    y_lvl_2atomicArraysAcc = get_lock(CPU(Threads.nthreads()), y_lvl_locks, y_lvl_q, eltype(Vector{Base.Threads.SpinLock}))
-                    aquire_lock!(CPU(Threads.nthreads()), y_lvl_2atomicArraysAcc)
+                    y_lvl_2atomicArraysAcc = Finch.get_lock(CPU(Threads.nthreads()), y_lvl_locks, y_lvl_q, eltype(Vector{Base.Threads.SpinLock}))
+                    Finch.aquire_lock!(CPU(Threads.nthreads()), y_lvl_2atomicArraysAcc)
                     y_lvl_2_val[y_lvl_q] = 1 + y_lvl_2_val[y_lvl_q]
-                    release_lock!(CPU(Threads.nthreads()), y_lvl_2atomicArraysAcc)
+                    Finch.release_lock!(CPU(Threads.nthreads()), y_lvl_2atomicArraysAcc)
                 end
             end
         end
     resize!(locksArray, y_lvl.shape)
     resize!(val_2, y_lvl.shape)
-    result = (x = Tensor((DenseLevel){Int32}(x_lvl_2, x_lvl.shape)), y = Tensor((DenseLevel){Int32}((AtomicLevel){Vector{Base.Threads.SpinLock}, ElementLevel{0, Int32, Int32, Vector{Int32}}}(y_lvl_3, locksArray), y_lvl.shape)))
-    result
+    (x = Tensor((DenseLevel){Int32}(x_lvl_2, x_lvl.shape)), y = Tensor((DenseLevel){Int32}((AtomicLevel){Vector{Base.Threads.SpinLock}, ElementLevel{0, Int32, Int32, Vector{Int32}}}(y_lvl_3, locksArray), y_lvl.shape)))
 end
 julia> @finch begin
         x .= 0

@@ -8,15 +8,14 @@ quote
     ref_lvl_ptr = ref_lvl.ptr
     ref_lvl_idx = ref_lvl.idx
     ref_lvl_val = ref_lvl.lvl.val
-    result = nothing
     Finch.resize_if_smaller!(tmp_lvl_locks, 1)
     @inbounds for idx = 1:1
-            tmp_lvl_locks[idx] = make_lock(eltype(Vector{Base.Threads.SpinLock}))
+            tmp_lvl_locks[idx] = Finch.make_lock(eltype(Vector{Base.Threads.SpinLock}))
         end
     Finch.resize_if_smaller!(tmp_lvl_2_val, ref_lvl.shape)
     Finch.fill_range!(tmp_lvl_2_val, false, 1, ref_lvl.shape)
-    tmp_lvlatomicArraysAcc = get_lock(CPU(1), tmp_lvl_locks, 1, eltype(Vector{Base.Threads.SpinLock}))
-    aquire_lock!(CPU(1), tmp_lvlatomicArraysAcc)
+    tmp_lvlatomicArraysAcc = Finch.get_lock(CPU(1), tmp_lvl_locks, 1, eltype(Vector{Base.Threads.SpinLock}))
+    Finch.aquire_lock!(CPU(1), tmp_lvlatomicArraysAcc)
     ref_lvl_q = ref_lvl_ptr[1]
     ref_lvl_q_stop = ref_lvl_ptr[1 + 1]
     if ref_lvl_q < ref_lvl_q_stop
@@ -48,9 +47,8 @@ quote
             end
         end
     end
-    release_lock!(CPU(1), tmp_lvlatomicArraysAcc)
+    Finch.release_lock!(CPU(1), tmp_lvlatomicArraysAcc)
     resize!(tmp_lvl_locks, 1)
     resize!(tmp_lvl_2_val, ref_lvl.shape)
-    result = (tmp = Tensor((AtomicLevel){Vector{Base.Threads.SpinLock}, DenseLevel{Int64, ElementLevel{false, Bool, Int64, Vector{Bool}}}}((DenseLevel){Int64}(tmp_lvl_3, ref_lvl.shape), tmp_lvl_locks)),)
-    result
+    (tmp = Tensor((AtomicLevel){Vector{Base.Threads.SpinLock}, DenseLevel{Int64, ElementLevel{false, Bool, Int64, Vector{Bool}}}}((DenseLevel){Int64}(tmp_lvl_3, ref_lvl.shape), tmp_lvl_locks)),)
 end

@@ -9,8 +9,8 @@ countstored: 5
 4x4_one_bool: Bool[0 0 0 1; 0 0 0 0; 1 0 0 0; 0 1 0 0]
 tensor: Tensor(Dense{Int32}(DenseRLE{Int32}(Element{false, Bool, Int32}(Bool[0, 1, 0, 0, 1, 0, 1, 0]), 4, [1, 4, 6, 7, 9], [2, 3, 4, 3, 4, 4, 1, 4], Element{false, Bool, Int32}(Bool[]); merge = true), 4))
 countstored: 8
-4x4_bool_mix: Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 0 1 0 1]
-tensor: Tensor(Dense{Int32}(DenseRLE{Int32}(Element{false, Bool, Int32}(Bool[0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]), 4, [1, 4, 7, 10, 13], [2, 3, 4, 1, 2, 4, 2, 3, 4, 1, 2, 4], Element{false, Bool, Int32}(Bool[]); merge = true), 4))
+5x4_bool_mix: Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 1 1 1 1; 0 1 0 1]
+tensor: Tensor(Dense{Int32}(DenseRLE{Int32}(Element{false, Bool, Int32}(Bool[0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]), 5, [1, 4, 7, 10, 13], [2, 4, 5, 1, 2, 5, 2, 4, 5, 1, 2, 5], Element{false, Bool, Int32}(Bool[]); merge = true), 4))
 countstored: 12
 5x5_zeros: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
 tensor: Tensor(Dense{Int32}(DenseRLE{Int32}(Element{0.0, Float64, Int32}([0.0, 0.0, 0.0, 0.0, 0.0]), 5, [1, 2, 3, 4, 5, 6], [5, 5, 5, 5, 5], Element{0.0, Float64, Int32}(Float64[]); merge = true), 5))

@@ -112,7 +112,7 @@ end
 function virtualize(ctx, ex, ::Type{AtomicLevel{AVal, Lvl}}, tag=:lvl) where {AVal, Lvl}
     sym = freshen(ctx, tag)
     atomics = freshen(ctx, tag, :_locks)
-    push!(ctx.preamble, quote
+    push_preamble!(ctx, quote
             $sym = $ex
             $atomics = $ex.locks
         end)
@@ -136,12 +136,12 @@ end
 function assemble_level!(ctx, lvl::VirtualAtomicLevel, pos_start, pos_stop)
     pos_start = cache!(ctx, :pos_start, simplify(ctx, pos_start))
     pos_stop = cache!(ctx, :pos_stop, simplify(ctx, pos_stop))
-    idx = freshen(ctx.code, :idx)
-    lockVal = freshen(ctx.code, :lock)
-    push!(ctx.code.preamble, quote 
+    idx = freshen(ctx, :idx)
+    lockVal = freshen(ctx, :lock)
+    push_preamble!(ctx, quote 
               Finch.resize_if_smaller!($(lvl.locks), $(ctx(pos_stop))) 
               @inbounds for $idx = $(ctx(pos_start)):$(ctx(pos_stop))
-                $(lvl.locks)[$idx] = make_lock(eltype($(lvl.AVal)))
+                $(lvl.locks)[$idx] = Finch.make_lock(eltype($(lvl.AVal)))
               end
           end)
     assemble_level!(ctx, lvl.lvl, pos_start, pos_stop)
@@ -151,9 +151,9 @@ supports_reassembly(lvl::VirtualAtomicLevel) = supports_reassembly(lvl.lvl)
 function reassemble_level!(ctx, lvl::VirtualAtomicLevel, pos_start, pos_stop)
     pos_start = cache!(ctx, :pos_start, simplify(ctx, pos_start))
     pos_stop = cache!(ctx, :pos_stop, simplify(ctx, pos_stop))
-    idx = freshen(ctx.code, :idx)
-    lockVal = freshen(ctx.code, :lock)
-    push!(ctx.code.preamble, quote 
+    idx = freshen(ctx, :idx)
+    lockVal = freshen(ctx, :lock)
+    push_preamble!(ctx, quote 
               Finch.resize_if_smaller!($lvl.locks, $(ctx(pos_stop))) 
               @inbounds for $idx = $(ctx(pos_start)):$(ctx(pos_stop))
                 $lvl.locks[$idx] = Finch.make_lock(eltype($(lvl.AVal)))
@@ -164,8 +164,8 @@ function reassemble_level!(ctx, lvl::VirtualAtomicLevel, pos_start, pos_stop)
 end
 
 function freeze_level!(ctx, lvl::VirtualAtomicLevel, pos)
-    idx = freshen(ctx.code, :idx)
-    push!(ctx.code.preamble, quote
+    idx = freshen(ctx, :idx)
+    push_preamble!(ctx, quote
         resize!($(lvl.locks), $(ctx(pos)))
     end)
     lvl.lvl = freeze_level!(ctx, lvl.lvl, pos)
@@ -179,13 +179,13 @@ end
 
 function virtual_moveto_level(ctx::AbstractCompiler, lvl::VirtualAtomicLevel, arch)
     #Add for seperation level too.
-    atomics = freshen(ctx.code, :locksArray)
+    atomics = freshen(ctx, :locksArray)
 
-    push!(ctx.code.preamble, quote
+    push_preamble!(ctx, quote
         $atomics = $(lvl.locks)
         $(lvl.locks) = $moveto($(lvl.locks), $(ctx(arch)))
     end)
-    push!(ctx.code.epilogue, quote
+    push_epilogue!(ctx, quote
         $(lvl.locks) = $atomics
     end)
     virtual_moveto_level(ctx, lvl.lvl, arch)
@@ -193,8 +193,8 @@ end
 
 function instantiate(ctx, fbr::VirtualSubFiber{VirtualAtomicLevel}, mode::Reader, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    # lvlp = freshen(ctx.code, lvl.ex, :_lvl)
-    # sym = freshen(ctx.code, lvl.ex, :_after_atomic_lvl)
+    # lvlp = freshen(ctx, lvl.ex, :_lvl)
+    # sym = freshen(ctx, lvl.ex, :_after_atomic_lvl)
     return body = Thunk(
         body = (ctx) -> begin
             instantiate(ctx, VirtualSubFiber(lvl.lvl, pos), mode, protos)
@@ -204,21 +204,21 @@ end
 
 function instantiate(ctx, fbr::VirtualSubFiber{VirtualAtomicLevel}, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    sym = freshen(ctx.code, lvl.ex, :after_atomic_lvl)
-    atomicData = freshen(ctx.code, lvl.ex, :atomicArraysAcc)
-    lockVal = freshen(ctx.code, lvl.ex, :lockVal) 
+    sym = freshen(ctx, lvl.ex, :after_atomic_lvl)
+    atomicData = freshen(ctx, lvl.ex, :atomicArraysAcc)
+    lockVal = freshen(ctx, lvl.ex, :lockVal) 
     dev = lower(ctx, virtual_get_device(ctx.code.task), DefaultStyle())
     return Thunk(
         
         body =  (ctx) -> begin
         preamble = quote  
-            $atomicData =  get_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
-            $lockVal = aquire_lock!($dev, $atomicData)
+            $atomicData =  Finch.get_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
+            $lockVal = Finch.aquire_lock!($dev, $atomicData)
         end
         epilogue = quote 
-            release_lock!($dev, $atomicData) end 
-        push!(ctx.code.preamble, preamble)
-        push!(ctx.code.epilogue, epilogue)
+            Finch.release_lock!($dev, $atomicData) end 
+        push_preamble!(ctx, preamble)
+        push_epilogue!(ctx, epilogue)
             lvl_2 = lvl.lvl
             update = instantiate(ctx, VirtualSubFiber(lvl_2, pos), mode, protos)
             return update
@@ -228,21 +228,21 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualAtomicLevel}, mode::Update
 end
 function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, mode::Updater, protos)
     (lvl, pos) = (fbr.lvl, fbr.pos)
-    sym = freshen(ctx.code, lvl.ex, :after_atomic_lvl)
-    atomicData = freshen(ctx.code, lvl.ex, :atomicArrays)
-    lockVal = freshen(ctx.code, lvl.ex, :lockVal)
+    sym = freshen(ctx, lvl.ex, :after_atomic_lvl)
+    atomicData = freshen(ctx, lvl.ex, :atomicArrays)
+    lockVal = freshen(ctx, lvl.ex, :lockVal)
     dev = lower(ctx, virtual_get_device(ctx.code.task), DefaultStyle())
     return Thunk(
 
         body =  (ctx) -> begin
         preamble = quote  
-            $atomicData =  get_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
-            $lockVal = aquire_lock!($dev, $atomicData)
+            $atomicData =  Finch.get_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
+            $lockVal = Finch.aquire_lock!($dev, $atomicData)
         end
         epilogue = quote 
-            release_lock!($dev, $atomicData) end 
-            push!(ctx.code.preamble, preamble)
-            push!(ctx.code.epilogue, epilogue)
+            Finch.release_lock!($dev, $atomicData) end 
+            push_preamble!(ctx, preamble)
+            push_epilogue!(ctx, epilogue)
             lvl_2 = lvl.lvl
             update = instantiate(ctx, VirtualHollowSubFiber(lvl_2, pos, fbr.dirty), mode, protos)
             return update

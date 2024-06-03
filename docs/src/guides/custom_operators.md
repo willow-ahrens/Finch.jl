@@ -118,13 +118,13 @@ We pass the algebra to Finch as an optional first argument:
 
 ### Rewriting
 
-Define custom rewrite rules by overloading the `get_program_rules` function
+Define custom rewrite rules by overloading the `get_simplify_rules` function
 on your algebra.  Unless you want to write the full rule set from scratch, be
 sure to append your new rules to the old rules, which can be obtained by calling
-`get_program_rules` with another algebra. Rules can be specified directly on Finch IR using
+`get_simplify_rules` with another algebra. Rules can be specified directly on Finch IR using
 [RewriteTools.jl](https://github.com/willow-ahrens/RewriteTools.jl).
 
 ```@docs
-get_program_rules
-get_bounds_rules
+get_simplify_rules
+get_prove_rules
 ```

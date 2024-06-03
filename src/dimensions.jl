@@ -109,12 +109,13 @@ combinedim(ctx, a::SuggestedExtent, b::Dimensionless) = a
 
 combinedim(ctx, a::SuggestedExtent, b::SuggestedExtent) = SuggestedExtent(combinedim(ctx, a.ext, b.ext))
 
-function checklim(ctx, a::FinchNode, b::FinchNode)
+function checklim(ctx::AbstractCompiler, a::FinchNode, b::FinchNode)
+    shash = get_static_hash(ctx)
     if isliteral(a) && isliteral(b)
         a == b || throw(DimensionMismatch("mismatched dimension limits ($a != $b)"))
     end
-    if ctx.shash(a) < ctx.shash(b) #TODO instead of this, we should introduce a lazy operator to assert equality
-        push!(ctx.code.preamble, quote
+    if shash(a) < shash(b) #TODO instead of this, we should introduce a lazy operator to assert equality
+        push_preamble!(ctx, quote
             $(ctx(a)) == $(ctx(b)) || throw(DimensionMismatch("mismatched dimension limits ($($(ctx(a))) != $($(ctx(b))))"))
         end)
         a

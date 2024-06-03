@@ -57,7 +57,7 @@ combine_style(a::ThunkStyle, b::PhaseStyle) = a
 function lower(ctx::AbstractCompiler, root::FinchNode, style::PhaseStyle)
     if root.kind === loop
         i = getname(root.idx)
-        i0=freshen(ctx.code, i)
+        i0=freshen(ctx, i)
 
         body = root.body
 

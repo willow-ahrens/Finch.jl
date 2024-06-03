@@ -1,16 +1,16 @@
-@kwdef struct LifecycleVisitor
+@kwdef struct EnforceLifecyclesVisitor
     uses = OrderedDict()
     scoped_uses = Dict()
     global_uses = uses
     modes = Dict()
 end
 
-struct LifecycleError
+struct EnforceLifecyclesError
     msg
 end
 
-function open_scope(ctx::LifecycleVisitor, prgm)
-    ctx_2 = LifecycleVisitor(;kwfields(ctx)..., uses=Dict())
+function open_scope(ctx::EnforceLifecyclesVisitor, prgm)
+    ctx_2 = EnforceLifecyclesVisitor(;kwfields(ctx)..., uses=Dict())
     close_scope(prgm, ctx_2)
 end
 
@@ -24,7 +24,7 @@ function getmodified(node::FinchNode)
     end
 end
 
-function close_scope(prgm, ctx::LifecycleVisitor)
+function close_scope(prgm, ctx::EnforceLifecyclesVisitor)
     prgm = ctx(prgm)
     for tns in getmodified(prgm)
         if ctx.modes[tns] !== reader
@@ -41,11 +41,11 @@ A transformation which adds `freeze` and `thaw` statements automatically to
 tensor roots, depending on whether they appear on the left or right hand side.
 """
 function enforce_lifecycles(prgm)
-    close_scope(prgm, LifecycleVisitor())
+    close_scope(prgm, EnforceLifecyclesVisitor())
 end
 
 #assumes arguments to prgm have been visited already and their uses collected
-function open_stmt(prgm, ctx::LifecycleVisitor)
+function open_stmt(prgm, ctx::EnforceLifecyclesVisitor)
     for (tns, mode) in ctx.uses
         cur_mode = get(ctx.modes, tns, reader)
         if mode === reader && cur_mode === updater
@@ -59,7 +59,7 @@ function open_stmt(prgm, ctx::LifecycleVisitor)
     prgm
 end
 
-function (ctx::LifecycleVisitor)(node::FinchNode)
+function (ctx::EnforceLifecyclesVisitor)(node::FinchNode)
     if node.kind === loop 
         open_stmt(loop(node.idx, ctx(node.ext), open_scope(ctx, node.body)), ctx)
     elseif node.kind === sieve
@@ -74,7 +74,7 @@ function (ctx::LifecycleVisitor)(node::FinchNode)
         ctx.modes[node.tns] = updater
         node
     elseif node.kind === freeze
-        haskey(ctx.modes, node.tns) || throw(LifecycleError("cannot freeze undefined $(node.tns)"))
+        haskey(ctx.modes, node.tns) || throw(EnforceLifecyclesError("cannot freeze undefined $(node.tns)"))
         ctx.modes[node.tns] === reader && return block()
         ctx.modes[node.tns] = reader
         node
@@ -88,14 +88,14 @@ function (ctx::LifecycleVisitor)(node::FinchNode)
         idxs = map(ctx, node.idxs)
         uses = get(ctx.scoped_uses, getroot(node.tns), ctx.global_uses)
         get(uses, getroot(node.tns), node.mode.val) !== node.mode.val &&
-            throw(LifecycleError("cannot mix reads and writes to $(node.tns) outside of defining scope (hint: perhaps add a declaration like `var .= 0` or use an updating operator like `var += 1`)"))
+            throw(EnforceLifecyclesError("cannot mix reads and writes to $(node.tns) outside of defining scope (hint: perhaps add a declaration like `var .= 0` or use an updating operator like `var += 1`)"))
         uses[getroot(node.tns)] = node.mode.val
         access(node.tns, node.mode, idxs...)
     elseif node.kind === yieldbind
         args_2 = map(node.args) do arg
             uses = get(ctx.scoped_uses, getroot(arg), ctx.global_uses)
             get(uses, getroot(arg), reader) !== reader &&
-                throw(LifecycleError("cannot return $(arg) outside of defining scope"))
+                throw(EnforceLifecyclesError("cannot return $(arg) outside of defining scope"))
             uses[getroot(arg)] = reader
             ctx(arg)
         end

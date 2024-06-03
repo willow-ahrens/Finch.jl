@@ -9,7 +9,6 @@ quote
     ref_lvl_ptr = ref_lvl.ptr
     ref_lvl_idx = ref_lvl.idx
     ref_lvl_val = ref_lvl.lvl.val
-    result = nothing
     tmp_lvl_qos_stop = 0
     tmp_lvl_ros_stop = 0
     Finch.resize_if_smaller!(tmp_lvl_ofs, 1)
@@ -91,6 +90,5 @@ quote
     resize!(tmp_lvl_ofs, ros_stop + 1)
     qos_stop = tmp_lvl_ofs[ros_stop + 1] - 1
     resize!(tmp_lvl_val, qos_stop)
-    result = (tmp = Tensor((SparseVBLLevel){Int32}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx, tmp_lvl_ofs)),)
-    result
+    (tmp = Tensor((SparseVBLLevel){Int32}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx, tmp_lvl_ofs)),)
 end

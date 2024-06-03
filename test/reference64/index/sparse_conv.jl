@@ -10,7 +10,6 @@ begin
     A_lvl_val = A_lvl.lvl.val
     F_lvl = (((ex.bodies[1]).bodies[2]).body.body.rhs.args[3]).tns.bind.lvl
     F_lvl_val = F_lvl.lvl.val
-    result = nothing
     C_lvl_qos_stop = 0
     Finch.resize_if_smaller!(C_lvl_ptr, 1 + 1)
     Finch.fill_range!(C_lvl_ptr, 0, 1 + 1, 1 + 1)
@@ -155,6 +154,5 @@ begin
     qos_stop = C_lvl_ptr[1 + 1] - 1
     resize!(C_lvl_idx, qos_stop)
     resize!(C_lvl_val, qos_stop)
-    result = (C = Tensor((SparseListLevel){Int64}(C_lvl_2, A_lvl.shape, C_lvl_ptr, C_lvl_idx)),)
-    result
+    (C = Tensor((SparseListLevel){Int64}(C_lvl_2, A_lvl.shape, C_lvl_ptr, C_lvl_idx)),)
 end

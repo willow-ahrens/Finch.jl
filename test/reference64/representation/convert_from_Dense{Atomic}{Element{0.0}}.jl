@@ -7,7 +7,6 @@ quote
     tmp_lvl = ((ex.bodies[1]).bodies[2]).body.rhs.tns.bind.lvl
     tmp_lvl_2 = tmp_lvl.lvl
     tmp_lvl_2_val = tmp_lvl_2.lvl.val
-    result = nothing
     res_lvl_qos_stop = 0
     Finch.resize_if_smaller!(res_lvl_ptr, 1 + 1)
     Finch.fill_range!(res_lvl_ptr, 0, 1 + 1, 1 + 1)

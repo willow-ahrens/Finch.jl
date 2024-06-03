@@ -28,7 +28,7 @@ function cache_deferred!(ctx, root::LogicNode)
     return Rewrite(Postwalk(node -> if isdeferred(node)
         get!(seen, node.val) do
             var = freshen(ctx, :V)
-            push!(ctx.preamble, :($var = $(node.ex)::$(node.type)))
+            push_preamble!(ctx, :($var = $(node.ex)::$(node.type)))
             deferred(var, node.type)
         end
     end))(root)

@@ -31,7 +31,7 @@ lower(ctx::AbstractCompiler, tns::VirtualScalar, ::DefaultStyle) = tns.ex
 function virtualize(ctx, ex, ::Type{Scalar{Vf, Tv}}, tag) where {Vf, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
-    push!(ctx.preamble, quote
+    push_preamble!(ctx, quote
         $sym = $ex
         $val = $sym.val
     end)
@@ -48,7 +48,7 @@ virtual_eltype(tns::VirtualScalar, ctx) = tns.Tv
 FinchNotation.finch_leaf(x::VirtualScalar) = virtual(x)
 
 function declare!(ctx, tns::VirtualScalar, init)
-    push!(ctx.code.preamble, quote
+    push_preamble!(ctx, quote
         $(tns.val) = $(ctx(init))
     end)
     tns
@@ -59,7 +59,7 @@ function thaw!(ctx, tns::VirtualScalar)
 end
 
 function freeze!(ctx, tns::VirtualScalar)
-    push!(ctx.code.preamble, quote
+    push_preamble!(ctx, quote
         $(tns.ex).val = $(ctx(tns.val))
     end)
     return tns
@@ -116,7 +116,7 @@ function virtualize(ctx, ex, ::Type{SparseScalar{Vf, Tv}}, tag) where {Vf, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
     dirty = Symbol(tag, :_dirty) #TODO hmm this is risky
-    push!(ctx.preamble, quote
+    push_preamble!(ctx, quote
         $sym = $ex
         $val = $sym.val
         $dirty = $sym.dirty
@@ -132,7 +132,7 @@ virtual_eltype(tns::VirtualSparseScalar, ctx) = tns.Tv
 virtual_moveto(ctx, lvl::VirtualSparseScalar, arch) = lvl
 
 function declare!(ctx, tns::VirtualSparseScalar, init)
-    push!(ctx.code.preamble, quote
+    push_preamble!(ctx, quote
         $(tns.val) = $(ctx(init))
         $(tns.dirty) = false
     end)
@@ -144,7 +144,7 @@ function thaw!(ctx, tns::VirtualSparseScalar)
 end
 
 function freeze!(ctx, tns::VirtualSparseScalar)
-    push!(ctx.code.preamble, quote
+    push_preamble!(ctx, quote
         $(tns.ex).val = $(ctx(tns.val))
     end)
     return tns
@@ -162,7 +162,7 @@ FinchNotation.finch_leaf(x::VirtualSparseScalar) = virtual(x)
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualSparseScalar)
     @assert isempty(node.idxs)
-    push!(ctx.code.preamble, quote
+    push_preamble!(ctx, quote
         $(tns.dirty) = true
     end)
     return tns.val
@@ -201,7 +201,7 @@ lower(ctx::AbstractCompiler, tns::VirtualShortCircuitScalar, ::DefaultStyle) = :
 function virtualize(ctx, ex, ::Type{ShortCircuitScalar{Vf, Tv}}, tag) where {Vf, Tv}
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
-    push!(ctx.preamble, quote
+    push_preamble!(ctx, quote
         $sym = $ex
         $val = $sym.val
     end)
@@ -216,7 +216,7 @@ virtual_eltype(tns::VirtualShortCircuitScalar, ctx) = tns.Tv
 FinchNotation.finch_leaf(x::VirtualShortCircuitScalar) = virtual(x)
 
 function declare!(ctx, tns::VirtualShortCircuitScalar, init)
-    push!(ctx.code.preamble, quote
+    push_preamble!(ctx, quote
         $(tns.val) = $(ctx(init))
     end)
     tns
@@ -227,7 +227,7 @@ function thaw!(ctx, tns::VirtualShortCircuitScalar)
 end
 
 function freeze!(ctx, tns::VirtualShortCircuitScalar)
-    push!(ctx.code.preamble, quote
+    push_preamble!(ctx, quote
         $(tns.ex).val = $(ctx(tns.val))
     end)
     return tns
@@ -282,7 +282,7 @@ function virtualize(ctx, ex, ::Type{SparseShortCircuitScalar{Vf, Tv}}, tag) wher
     sym = freshen(ctx, tag)
     val = Symbol(tag, :_val) #TODO hmm this is risky
     dirty = Symbol(tag, :_dirty) #TODO hmm this is risky
-    push!(ctx.preamble, quote
+    push_preamble!(ctx, quote
         $sym = $ex
         $val = $sym.val
         $dirty = $sym.dirty
@@ -298,7 +298,7 @@ virtual_eltype(tns::VirtualSparseShortCircuitScalar, ctx) = tns.Tv
 virtual_moveto(ctx, lvl::VirtualSparseShortCircuitScalar, arch) = lvl
 
 function declare!(ctx, tns::VirtualSparseShortCircuitScalar, init)
-    push!(ctx.code.preamble, quote
+    push_preamble!(ctx, quote
         $(tns.val) = $(ctx(init))
         $(tns.dirty) = false
     end)
@@ -310,7 +310,7 @@ function thaw!(ctx, tns::VirtualSparseShortCircuitScalar)
 end
 
 function freeze!(ctx, tns::VirtualSparseShortCircuitScalar)
-    push!(ctx.code.preamble, quote
+    push_preamble!(ctx, quote
         $(tns.ex).val = $(ctx(tns.val))
     end)
     return tns
@@ -328,7 +328,7 @@ FinchNotation.finch_leaf(x::VirtualSparseShortCircuitScalar) = virtual(x)
 
 function lower_access(ctx::AbstractCompiler, node, tns::VirtualSparseShortCircuitScalar)
     @assert isempty(node.idxs)
-    push!(ctx.code.preamble, quote
+    push_preamble!(ctx, quote
         $(tns.dirty) = true
     end)
     return tns.val

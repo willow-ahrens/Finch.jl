@@ -1,12 +1,12 @@
 """
-    get_bounds_rules(alg, shash)
+    get_prove_rules(alg, shash)
 
 Return the bound rule set for Finch. One can dispatch on the `alg` trait to
 specialize the rule set for different algebras. `shash` is an object that can be
 called to return a static hash value. This rule set is used to analyze loop
 bounds in Finch.
 """
-function get_bounds_rules(alg, shash)
+function get_prove_rules(alg, shash)
     return [
         (@rule call(~f::isliteral, ~a::isliteral, ~b::(All(isliteral))...) => literal(getval(f)(getval(a), getval.(b)...))),
 
@@ -120,7 +120,13 @@ function get_bounds_rules(alg, shash)
     ]
 end
 
-function prove(ctx, root::FinchNode; verbose = false)
+"""
+    prove(ctx, root; verbose = false)
+
+use the rules in `ctx` to attempt to prove that the program `root` is true.
+Return false if the program cannot be shown to be true.
+"""
+function prove(ctx::SymbolicContext, root::FinchNode; verbose = false)
     root = Rewrite(Prewalk(Fixpoint(Chain([
         @rule(cached(~a, ~b::isliteral) => b.val),
     ]))))(root)
@@ -135,9 +141,9 @@ function prove(ctx, root::FinchNode; verbose = false)
         end
     end
     root = Rewrite(Postwalk(rename))(root)
-    res = Rewrite(Fixpoint(Prewalk(Fixpoint(Chain(ctx.bounds_rules)))))(root)
+    res = Rewrite(Fixpoint(Prewalk(Fixpoint(Chain(ctx.prove_rules)))))(root)
     if verbose
-      @info "bounds query" root res 
+      @info "proving..." root res 
     end
     if isliteral(res)
         return res.val

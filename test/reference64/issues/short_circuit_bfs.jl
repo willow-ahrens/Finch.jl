@@ -13,7 +13,6 @@ begin
     y_lvl_idx = y_lvl.idx
     y_lvl_val = y_lvl.lvl.val
     y_lvl.shape == A_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(y_lvl.shape) != $(A_lvl_2.shape))"))
-    result = nothing
     Finch.resize_if_smaller!(P_lvl_val, A_lvl.shape)
     Finch.fill_range!(P_lvl_val, 0, 1, A_lvl.shape)
     for j_4 = 1:A_lvl.shape
@@ -68,6 +67,5 @@ begin
         P_lvl_val[P_lvl_q] = p_val
     end
     resize!(P_lvl_val, A_lvl.shape)
-    result = (P = Tensor((DenseLevel){Int64}(P_lvl_2, A_lvl.shape)),)
-    result
+    (P = Tensor((DenseLevel){Int64}(P_lvl_2, A_lvl.shape)),)
 end
