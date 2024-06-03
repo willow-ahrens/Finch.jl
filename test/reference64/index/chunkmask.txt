@@ -30,52 +30,7 @@ julia> @finch begin
             end
         end
     end
-45-element Vector{Float64}:
- 1.0
- 1.0
- 1.0
- 1.0
- 1.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 1.0
- 1.0
- 1.0
- 1.0
- 1.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 1.0
- 1.0
- 1.0
- 1.0
- 1.0
+NamedTuple()
 julia> AsArray(A)
 15×3 Tensor{DenseLevel{Int64, DenseLevel{Int64, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}}}:
  1.0  0.0  0.0
@@ -124,49 +79,7 @@ julia> @finch begin
             end
         end
     end
-42-element Vector{Float64}:
- 1.0
- 1.0
- 1.0
- 1.0
- 1.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 1.0
- 1.0
- 1.0
- 1.0
- 1.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 0.0
- 1.0
- 1.0
- 1.0
- 1.0
+NamedTuple()
 julia> AsArray(A)
 14×3 Tensor{DenseLevel{Int64, DenseLevel{Int64, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}}}:
  1.0  0.0  0.0

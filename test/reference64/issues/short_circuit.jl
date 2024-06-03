@@ -54,5 +54,7 @@ begin
             i = phase_stop_2 + 1
         end
     end
+    result = ()
     s.val = s_val
+    result
 end

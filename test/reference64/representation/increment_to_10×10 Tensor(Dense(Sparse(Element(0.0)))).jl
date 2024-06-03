@@ -130,6 +130,8 @@ begin
             end
         end
     end
+    result = ()
     qos_stop = Finch.freeze_table!(fmt_lvl_tbl, fmt_lvl.shape)
     resize!(fmt_lvl_2_val, qos_stop)
+    result
 end

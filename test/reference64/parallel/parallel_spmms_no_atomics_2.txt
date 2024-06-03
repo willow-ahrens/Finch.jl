@@ -16,7 +16,6 @@ begin
     B_lvl.shape[1] == A_lvl.shape[2] || throw(DimensionMismatch("mismatched dimension limits ($(B_lvl.shape[1]) != $(A_lvl.shape[2]))"))
     @warn "Performance Warning: non-concordant traversal of Ct[i, j] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)"
     @warn "Performance Warning: non-concordant traversal of A[i, k] (hint: most arrays prefer column major or first index fast, run in fast mode to ignore this warning)"
-    result = nothing
     pos_stop = A_lvl.shape[1] * B_lvl.shape[2]
     Finch.resize_if_smaller!(Ct_lvl_2_val, pos_stop)
     Finch.fill_range!(Ct_lvl_2_val, 0x0000000000000000, 1, pos_stop)
@@ -226,6 +225,5 @@ begin
         A_lvl_val = val_3
     end
     resize!(Ct_lvl_2_val, A_lvl.shape[1] * B_lvl.shape[2])
-    result = (Ct = Tensor((DenseLevel){Int64}((DenseLevel){Int64}(Ct_lvl_3, A_lvl.shape[1]), B_lvl.shape[2])),)
-    result
+    (Ct = Tensor((DenseLevel){Int64}((DenseLevel){Int64}(Ct_lvl_3, A_lvl.shape[1]), B_lvl.shape[2])),)
 end

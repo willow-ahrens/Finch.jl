@@ -34,5 +34,7 @@ begin
             end
         end
     end
+    result = ()
     x.val = x_val
+    result
 end

@@ -140,6 +140,7 @@ begin
             end
         end
     end
+    result = ()
     pos_stop = fmt_lvl.shape
     resize!(fmt_lvl_ptr, pos_stop + 1)
     resize!(fmt_lvl_tbl, pos_stop * fmt_lvl_2.shape)
@@ -156,4 +157,5 @@ begin
     end
     fmt_lvl_ptr[fmt_lvl_2_p_prev + 1] = fmt_lvl_2_qos_fill + 1
     resize!(fmt_lvl_2_val, fmt_lvl_2.shape * pos_stop)
+    result
 end
