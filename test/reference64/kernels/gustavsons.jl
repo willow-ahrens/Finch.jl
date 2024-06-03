@@ -27,7 +27,6 @@ begin
     for j_4 = 1:A_lvl.shape
         A_lvl_q = (1 - 1) * A_lvl.shape + j_4
         B_lvl_q = (1 - 1) * A_lvl.shape + j_4
-        empty!(w_lvl_tbl)
         for w_lvl_r = 1:w_lvl_qos_fill
             w_lvl_p = first(w_lvl_srt[w_lvl_r])
             w_lvl_ptr[w_lvl_p] = 0
