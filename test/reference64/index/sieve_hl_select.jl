@@ -35,5 +35,7 @@ begin
             end
         end
     end
+    result = ()
     B.val = B_val
+    result
 end

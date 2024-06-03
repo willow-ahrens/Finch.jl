@@ -26,5 +26,7 @@ begin
             y_lvl_val[y_lvl_q_2] = A_lvl_3_val * x_lvl_2_val + y_lvl_val[y_lvl_q_2]
         end
     end
+    result = ()
     resize!(y_lvl_val, y_lvl.shape)
+    result
 end

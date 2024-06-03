@@ -105,6 +105,8 @@ begin
             end
         end
     end
+    result = ()
     c.val = c_val
     s.val = s_val
+    result
 end

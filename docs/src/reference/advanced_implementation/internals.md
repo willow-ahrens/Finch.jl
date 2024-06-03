@@ -219,7 +219,9 @@ quote
             end
         end
     end
+    result = ()
     s.val = s_val
+    result
 end
 
 julia> @finch_code begin
@@ -237,7 +239,9 @@ quote
         B_lvl_2_val = B_lvl_val[B_lvl_q]
         s_val = B_lvl_2_val + s_val
     end
+    result = ()
     s.val = s_val
+    result
 end
 
 ```

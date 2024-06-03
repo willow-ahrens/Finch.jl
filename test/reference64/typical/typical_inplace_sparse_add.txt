@@ -58,20 +58,12 @@ quote
             end
         end
     end
+    result = ()
     resize!(B_lvl_val, B_lvl.shape)
+    result
 end
 julia> @finch for i = _
         B[i] += A[i]
     end
-10-element Vector{Float64}:
- 3.1
- 1.1
- 4.1
- 1.1
- 5.1
- 1.1
- 6.1
- 1.1
- 7.1
- 1.1
+NamedTuple()
 

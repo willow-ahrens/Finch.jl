@@ -74,7 +74,9 @@ quote
             s_val = val + s_val
         end
     end
+    result = ()
     s.val = s_val
+    result
 end
 ```
 

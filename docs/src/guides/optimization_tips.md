@@ -24,7 +24,7 @@ s = Scalar(0.0)
 
 # output
 
-16.5
+NamedTuple()
 ```
 
 We can investigate the generated code with `@finch_code`.  This code iterates
@@ -76,7 +76,9 @@ quote
             end
         end
     end
+    result = ()
     s.val = s_val
+    result
 end
 ```
 
@@ -139,7 +141,9 @@ quote
             end
         end
     end
+    result = ()
     s.val = s_val
+    result
 end
 ```
 

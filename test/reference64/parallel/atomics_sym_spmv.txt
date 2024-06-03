@@ -17,7 +17,6 @@ begin
     x_lvl.shape == A_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(x_lvl.shape) != $(A_lvl.shape))"))
     x_lvl.shape == A_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(x_lvl.shape) != $(A_lvl_2.shape))"))
     x_lvl.shape == diag_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(x_lvl.shape) != $(diag_lvl.shape))"))
-    result = nothing
     Finch.resize_if_smaller!(y_lvl_locks, x_lvl.shape)
     @inbounds for idx = 1:x_lvl.shape
             y_lvl_locks[idx] = Finch.make_lock(eltype(Vector{Base.Threads.SpinLock}))
@@ -98,6 +97,5 @@ begin
         end
     resize!(locksArray, x_lvl.shape)
     resize!(val_3, x_lvl.shape)
-    result = (y = Tensor((DenseLevel){Int64}((AtomicLevel){Vector{Base.Threads.SpinLock}, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}(y_lvl_3, locksArray), x_lvl.shape)),)
-    result
+    (y = Tensor((DenseLevel){Int64}((AtomicLevel){Vector{Base.Threads.SpinLock}, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}(y_lvl_3, locksArray), x_lvl.shape)),)
 end

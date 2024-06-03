@@ -58,5 +58,7 @@ begin
             x_val = min(NaN, x_val)
         end
     end
+    result = ()
     x.val = x_val
+    result
 end
