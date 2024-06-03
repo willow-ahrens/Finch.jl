@@ -10,7 +10,6 @@ begin
     arr_2_lvl_val = arr_2_lvl.lvl.val
     arr_2_lvl.shape[1] == fmt_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(arr_2_lvl.shape[1]) != $(fmt_lvl_2.shape))"))
     arr_2_lvl.shape[2] == fmt_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(arr_2_lvl.shape[2]) != $(fmt_lvl.shape))"))
-    result = nothing
     fmt_lvl_qos_stop = Finch.thaw_table!(fmt_lvl_tbl, fmt_lvl.shape)
     arr_2_lvl_q = arr_2_lvl_ptr[1]
     arr_2_lvl_q_stop = arr_2_lvl_ptr[1 + 1]

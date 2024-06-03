@@ -19,7 +19,6 @@ quote
     y_lvl_idx = y_lvl.idx
     y_lvl_val = y_lvl.lvl.val
     y_lvl.shape == x_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(y_lvl.shape) != $(x_lvl.shape))"))
-    result = nothing
     z_lvl_qos_stop = 0
     Finch.resize_if_smaller!(z_lvl_ptr, 1 + 1)
     Finch.fill_range!(z_lvl_ptr, 0, 1 + 1, 1 + 1)
@@ -180,8 +179,7 @@ quote
     qos_stop = z_lvl_ptr[1 + 1] - 1
     resize!(z_lvl_idx, qos_stop)
     resize!(z_lvl_val, qos_stop)
-    result = (z = Tensor((SparseListLevel){Int32}(z_lvl_2, y_lvl.shape, z_lvl_ptr, z_lvl_idx)),)
-    result
+    (z = Tensor((SparseListLevel){Int32}(z_lvl_2, y_lvl.shape, z_lvl_ptr, z_lvl_idx)),)
 end
 julia> @finch begin
         z .= 0

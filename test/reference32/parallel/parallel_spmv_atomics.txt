@@ -20,7 +20,6 @@ quote
     A_lvl_idx = A_lvl_2.idx
     A_lvl_2_val = A_lvl_2.lvl.val
     A_lvl_2.shape == x_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl_2.shape) != $(x_lvl.shape))"))
-    result = nothing
     Finch.resize_if_smaller!(y_lvl_locks, A_lvl.shape)
     @inbounds for idx = 1:A_lvl.shape
             y_lvl_locks[idx] = Finch.make_lock(eltype(Vector{Base.Threads.SpinLock}))
@@ -83,8 +82,7 @@ quote
         end
     resize!(locksArray, A_lvl.shape)
     resize!(val, A_lvl.shape)
-    result = (y = Tensor((DenseLevel){Int32}((AtomicLevel){Vector{Base.Threads.SpinLock}, ElementLevel{0, Int32, Int32, Vector{Int32}}}(y_lvl_3, locksArray), A_lvl.shape)),)
-    result
+    (y = Tensor((DenseLevel){Int32}((AtomicLevel){Vector{Base.Threads.SpinLock}, ElementLevel{0, Int32, Int32, Vector{Int32}}}(y_lvl_3, locksArray), A_lvl.shape)),)
 end
 julia> @finch begin
         y .= 0

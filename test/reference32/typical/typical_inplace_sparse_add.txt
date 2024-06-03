@@ -27,7 +27,6 @@ quote
     A_lvl_idx = A_lvl.idx
     A_lvl_val = A_lvl.lvl.val
     A_lvl.shape == B_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(A_lvl.shape) != $(B_lvl.shape))"))
-    result = nothing
     A_lvl_q = A_lvl_ptr[1]
     A_lvl_q_stop = A_lvl_ptr[1 + 1]
     if A_lvl_q < A_lvl_q_stop

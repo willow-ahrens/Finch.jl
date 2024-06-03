@@ -16,7 +16,6 @@ begin
     A_lvl_2_val = A_lvl_2.lvl.val
     B_lvl.shape == C_lvl.shape || throw(DimensionMismatch("mismatched dimension limits ($(B_lvl.shape) != $(C_lvl.shape))"))
     B_lvl.shape == A_lvl_2.shape || throw(DimensionMismatch("mismatched dimension limits ($(B_lvl.shape) != $(A_lvl_2.shape))"))
-    result = nothing
     D_val = 0
     for i_3 = 1:A_lvl.shape
         A_lvl_q = (1 - 1) * A_lvl.shape + i_3
@@ -225,6 +224,5 @@ begin
         end
     end
     D.val = D_val
-    result = (D = D,)
-    result
+    (D = D,)
 end
