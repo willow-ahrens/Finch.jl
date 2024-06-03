@@ -75,11 +75,11 @@ function set_thawed!(ctx::ScopeContext, var, val)
     ctx.modes[var] = updater
 end
 """
-    get_mode(ctx, var)
+    get_tensor_mode(ctx, var)
 
 Get the mode of a tensor variable in the context.
 """
-get_mode(ctx::ScopeContext, var) = get(ctx.modes, var, reader)
+get_tensor_mode(ctx::ScopeContext, var) = get(ctx.modes, var, reader)
 
 """
     open_scope(f, ctx)

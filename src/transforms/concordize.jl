@@ -127,7 +127,7 @@ end
 """
 function concordize(ctx::AbstractCompiler, root)
     depth = depth_calculator(root)
-    if issafe(ctx.mode)
+    if issafe(get_mode_flag(ctx))
         for node in PostOrderDFS(root)
             if @capture node access(~tns, ~mode, ~i...)
                 for n in 1:length(i)

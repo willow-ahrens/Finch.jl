@@ -229,7 +229,7 @@ function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseBandLevel, pos,
         Finch.resize_if_smaller!($(lvl.ofs), 1)
         $(lvl.ofs)[1] = 1
     end)
-    if issafe(ctx.mode)
+    if issafe(get_mode_flag(ctx))
         push_preamble!(ctx, quote
             $(lvl.prev_pos) = $(Tp(0))
         end)
@@ -349,7 +349,7 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseBandLevel}, mo
                 $qos_set = $qos_fill
                 $my_i_prev = $(Ti(-1))
                 $my_i_set = $(Ti(-1))
-                $(if issafe(ctx.mode)
+                $(if issafe(get_mode_flag(ctx))
                     quote
                         $(lvl.prev_pos) < $(ctx(pos)) || throw(FinchProtocolError("SparseBandLevels cannot be updated multiple times"))
                     end
@@ -359,7 +359,7 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseBandLevel}, mo
                 body = (ctx, idx) -> Thunk(
                     preamble = quote
                         if $my_i_prev > 0
-                            $(if issafe(ctx.mode)
+                            $(if issafe(get_mode_flag(ctx))
                                 quote
                                     if $(ctx(idx)) < $my_i_prev
                                         throw(FinchProtocolError("SparseBandLevels cannot be updated out of order"))
@@ -401,7 +401,7 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseBandLevel}, mo
                     $qos = $qos_set
                     $(lvl.idx)[$(ros)] = $my_i_set
                     $(lvl.ofs)[$(ros) + 1] = $qos + 1
-                    $(if issafe(ctx.mode)
+                    $(if issafe(get_mode_flag(ctx))
                         quote
                             $(lvl.prev_pos) = $(ctx(pos))
                         end

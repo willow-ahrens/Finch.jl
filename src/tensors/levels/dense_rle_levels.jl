@@ -476,7 +476,7 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, mode
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $qos = $qos_fill + 1
-                $(if issafe(ctx.mode)
+                $(if issafe(get_mode_flag(ctx))
                     quote
                         $(lvl.prev_pos) <= $(ctx(pos)) || throw(FinchProtocolError("DenseRLELevels cannot be updated multiple times"))
                     end

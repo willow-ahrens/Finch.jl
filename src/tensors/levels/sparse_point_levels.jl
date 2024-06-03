@@ -201,7 +201,7 @@ function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparsePointLevel, pos
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
     end)
-    if issafe(ctx.mode)
+    if issafe(get_mode_flag(ctx))
         push_preamble!(ctx, quote
             $(lvl.prev_pos) = $(Tp(0))
         end)
@@ -243,7 +243,7 @@ function thaw_level!(ctx::AbstractCompiler, lvl::VirtualSparsePointLevel, pos_st
         $(lvl.qos_fill) = $(lvl.ptr)[$pos_stop + 1] - 1
         $(lvl.qos_stop) = $(lvl.qos_fill)
         $qos_stop = $(lvl.qos_fill)
-        $(if issafe(ctx.mode)
+        $(if issafe(get_mode_flag(ctx))
             quote
                 $(lvl.prev_pos) = Finch.scansearch($(lvl.ptr), $(lvl.qos_stop) + 1, 1, $pos_stop) - 1
             end
@@ -327,7 +327,7 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparsePointLevel}, m
             preamble = quote
                 $qos = $qos_fill + 1
                 $(lvl.ptr)[$(ctx(pos)) + 1] == 0 || throw(FinchProtocolError("SparsePointLevels can only be updated once"))
-                $(if issafe(ctx.mode)
+                $(if issafe(get_mode_flag(ctx))
                     quote
                         $(lvl.prev_pos) < $(ctx(pos)) || throw(FinchProtocolError("SparsePointLevels cannot be updated multiple times"))
                     end
@@ -350,7 +350,7 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparsePointLevel}, m
                             $qos == $qos_fill + 1 || throw(FinchProtocolError("SparsePointLevels can only be updated once"))
                             $(lvl.idx)[$qos] = $(ctx(idx))
                             $qos += $(Tp(1))
-                            $(if issafe(ctx.mode)
+                            $(if issafe(get_mode_flag(ctx))
                                 quote
                                     $(lvl.prev_pos) = $(ctx(pos))
                                 end

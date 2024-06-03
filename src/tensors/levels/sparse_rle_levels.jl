@@ -240,7 +240,7 @@ function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseRLELevel, pos, 
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
     end)
-    if issafe(ctx.mode)
+    if issafe(get_mode_flag(ctx))
         push_preamble!(ctx, quote
             $(lvl.prev_pos) = $(Tp(0))
         end)
@@ -379,7 +379,7 @@ function thaw_level!(ctx::AbstractCompiler, lvl::VirtualSparseRLELevel, pos_stop
         $(lvl.qos_fill) = $(lvl.ptr)[$pos_stop + 1] - 1
         $(lvl.qos_stop) = $(lvl.qos_fill)
         $qos_stop = $(lvl.qos_fill)
-        $(if issafe(ctx.mode)
+        $(if issafe(get_mode_flag(ctx))
             quote
                 $(lvl.prev_pos) = Finch.scansearch($(lvl.ptr), $(lvl.qos_stop) + 1, 1, $pos_stop) - 1
             end
@@ -474,7 +474,7 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseRLELevel}, mod
         body = (ctx, ext) -> Thunk(
             preamble = quote
                 $qos = $qos_fill + 1
-                $(if issafe(ctx.mode)
+                $(if issafe(get_mode_flag(ctx))
                     quote
                         $(lvl.prev_pos) < $(ctx(pos)) || throw(FinchProtocolError("SparseRLELevels cannot be updated multiple times"))
                     end
@@ -499,7 +499,7 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseRLELevel}, mod
                             $(lvl.left)[$qos] = $(ctx(getstart(ext)))
                             $(lvl.right)[$qos] = $(ctx(getstop(ext)))
                             $(qos) += $(Tp(1))
-                            $(if issafe(ctx.mode)
+                            $(if issafe(get_mode_flag(ctx))
                                 quote
                                     $(lvl.prev_pos) = $(ctx(pos))
                                 end

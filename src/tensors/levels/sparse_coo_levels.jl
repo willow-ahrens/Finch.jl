@@ -223,7 +223,7 @@ function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseCOOLevel, pos, 
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
     end)
-    if issafe(ctx.mode)
+    if issafe(get_mode_flag(ctx))
         push_preamble!(ctx, quote
             $(lvl.prev_pos) = $(Tp(0))
         end)
@@ -395,7 +395,7 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseCOOLevel}, mod
     Thunk(
         preamble = quote
             $qos = $qos_fill + 1
-            $(if issafe(ctx.mode)
+            $(if issafe(get_mode_flag(ctx))
                 quote
                     $(lvl.prev_pos) < $(ctx(pos)) || throw(FinchProtocolError("SparseCOOLevels cannot be updated multiple times"))
                     $prev_coord = ()
@@ -405,7 +405,7 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseCOOLevel}, mod
         body = (ctx) -> instantiate(ctx, SparseCOOExtrudeTraversal(lvl, qos, fbr.dirty, [], prev_coord), mode, protos),
         epilogue = quote
             $(lvl.ptr)[$(ctx(pos)) + 1] = $qos - $qos_fill - 1
-            $(if issafe(ctx.mode)
+            $(if issafe(get_mode_flag(ctx))
                 quote
                     if $qos - $qos_fill - 1 > 0
                         $(lvl.prev_pos) = $(ctx(pos))
@@ -448,7 +448,7 @@ function instantiate(ctx, trv::SparseCOOExtrudeTraversal, mode::Updater, subprot
                             coords_2 = map(ctx, (idx, coords...))
                             quote
                                 if $dirty
-                                    $(if issafe(ctx.mode)
+                                    $(if issafe(get_mode_flag(ctx))
                                         quote
                                             $(trv.prev_coord) < ($(reverse(coords_2)...),) || begin
                                                 throw(FinchProtocolError("SparseCOOLevels cannot be updated multiple times"))

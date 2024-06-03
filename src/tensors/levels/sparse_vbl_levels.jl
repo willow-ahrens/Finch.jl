@@ -237,7 +237,7 @@ function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseVBLLevel, pos, 
         Finch.resize_if_smaller!($(lvl.ofs), 1)
         $(lvl.ofs)[1] = 1
     end)
-    if issafe(ctx.mode)
+    if issafe(get_mode_flag(ctx))
         push_preamble!(ctx, quote
             $(lvl.prev_pos) = $(Tp(0))
         end)
@@ -440,7 +440,7 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseVBLLevel}, mod
                 $ros = $ros_fill
                 $qos = $qos_fill + 1
                 $my_i_prev = $(Ti(-1))
-                $(if issafe(ctx.mode)
+                $(if issafe(get_mode_flag(ctx))
                     quote
                         $(lvl.prev_pos) < $(ctx(pos)) || throw(FinchProtocolError("SparseVBLLevels cannot be updated multiple times"))
                     end
@@ -470,7 +470,7 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseVBLLevel}, mod
                             $(lvl.idx)[$ros] = $my_i_prev = $(ctx(idx))
                             $(qos) += $(Tp(1))
                             $(lvl.ofs)[$ros + 1] = $qos
-                            $(if issafe(ctx.mode)
+                            $(if issafe(get_mode_flag(ctx))
                                 quote
                                     $(lvl.prev_pos) = $(ctx(pos))
                                 end

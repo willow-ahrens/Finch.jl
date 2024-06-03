@@ -8,13 +8,14 @@
 end
 
 get_result(ctx::LowerJulia) = ctx.result
+get_mode_flag(ctx::LowerJulia) = ctx.mode
 get_binding(ctx::LowerJulia, var) = get_binding(ctx.scope, var)
 has_binding(ctx::LowerJulia, var) = has_binding(ctx.scope, var)
 set_binding!(ctx::LowerJulia, var, val) = set_binding!(ctx.scope, var, val)
 set_declared!(ctx::LowerJulia, var, val) = set_declared!(ctx.scope, var, val)
 set_frozen!(ctx::LowerJulia, var, val) = set_frozen!(ctx.scope, var, val)
 set_thawed!(ctx::LowerJulia, var, val) = set_thawed!(ctx.scope, var, val)
-get_mode(ctx::LowerJulia, var) = get_mode(ctx.scope, var)
+get_tensor_mode(ctx::LowerJulia, var) = get_tensor_mode(ctx.scope, var)
 function open_scope(f::F, ctx::LowerJulia) where {F}
     open_scope(ctx.scope) do scope_2
         f(LowerJulia(ctx.code, ctx.algebra, ctx.mode, ctx.result, ctx.symbolic, scope_2))
