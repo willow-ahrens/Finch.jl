@@ -31,9 +31,9 @@ quote
     x = (((ex.bodies[1]).bodies[2]).body.body.rhs.args[2]).tns.bind
     sugar_3 = size((((ex.bodies[1]).bodies[2]).body.body.rhs.args[2]).tns.bind)
     x_mode1_stop = sugar_3[1]
-    x_mode1_stop == A.n || throw(DimensionMismatch("mismatched dimension limits ($(x_mode1_stop) != $(A.n))"))
+    x_mode1_stop == (((ex.bodies[1]).bodies[2]).body.body.rhs.args[1]).tns.bind.n || throw(DimensionMismatch("mismatched dimension limits ($(x_mode1_stop) != $((((ex.bodies[1]).bodies[2]).body.body.rhs.args[1]).tns.bind.n))"))
     1 == 1 || throw(DimensionMismatch("mismatched dimension start"))
-    A.m == y_mode1_stop || throw(DimensionMismatch("mismatched dimension stop"))
+    (((ex.bodies[1]).bodies[2]).body.body.rhs.args[1]).tns.bind.m == y_mode1_stop || throw(DimensionMismatch("mismatched dimension stop"))
     fill!(y, 0)
     for j_4 = 1:x_mode1_stop
         val = x[j_4]
@@ -44,7 +44,7 @@ quote
         else
             A_i1 = 0
         end
-        phase_stop = min(A_i1, A.m)
+        phase_stop = min(A_i1, (((ex.bodies[1]).bodies[2]).body.body.rhs.args[1]).tns.bind.m)
         if phase_stop >= 1
             if A.rowval[A_q] < 1
                 A_q = Finch.scansearch(A.rowval, 1, A_q, A_q_stop - 1)
@@ -52,14 +52,14 @@ quote
             while true
                 A_i = A.rowval[A_q]
                 if A_i < phase_stop
-                    A_val = A.nzval[A_q]
-                    y[A_i] = val * A_val + y[A_i]
+                    A_val_2 = A.nzval[A_q]
+                    y[A_i] = val * A_val_2 + y[A_i]
                     A_q += 1
                 else
                     phase_stop_3 = min(A_i, phase_stop)
                     if A_i == phase_stop_3
-                        A_val = A.nzval[A_q]
-                        y[phase_stop_3] = val * A_val + y[phase_stop_3]
+                        A_val_2 = A.nzval[A_q]
+                        y[phase_stop_3] = val * A_val_2 + y[phase_stop_3]
                         A_q += 1
                     end
                     break
