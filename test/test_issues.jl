@@ -3,6 +3,27 @@ using SparseArrays
 @testset "issues" begin
     @info "Testing Github Issues"
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/320
+    let
+        A = sprand(4, 4, 0.9)
+        B = sprand(5, 5, 0.9)
+        check_output("issues/SparseMatrixCSC_copy.jl", @finch_code begin
+            B .= 0
+            for j=_, i=_
+                B[i, j] = A[i, j]
+            end
+        end)
+
+        A = sprand(4, 0.9)
+        B = sprand(5, 0.9)
+        check_output("issues/SparseVector_copy.jl", @finch_code begin
+            B .= 0
+            for i=_
+                B[i] = A[i]
+            end
+        end)
+    end
+
     #https://github.com/willow-ahrens/Finch.jl/issues/290
     let
         A = Tensor(Dense(SparseList(Element(0.0))))
@@ -553,12 +574,6 @@ using SparseArrays
         output_tensor = Tensor(SparseDict(SparseDict(Element(0.0))), 2, 2)
 
         @finch (output_tensor .=0; for j=_,i=_,k=_; output_tensor[i,k] += a_fiber[i,j] * b_fiber[k,j]; end)
-    end
-
-    #https://github.com/willow-ahrens/Finch.jl/issues/319
-    let
-        x = SparseMatrixCSC(spzeros(2,2))
-        @test_throws Finch.FinchProtocolError @finch x .= 0
     end
 
     #https://github.com/willow-ahrens/Finch.jl/issues/321
