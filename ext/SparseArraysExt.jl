@@ -4,6 +4,7 @@ using Finch
 using Finch: AbstractCompiler, DefaultStyle, Extent
 using Finch: Unfurled, Furlable, Stepper, Jumper, Run, FillLeaf, Lookup, Simplify, Sequence, Phase, Thunk, Spike 
 using Finch: virtual_size, virtual_fill_value, getstart, getstop, freshen, push_preamble!, push_epilogue!, SwizzleArray
+using Finch: get_mode_flag, issafe, contain
 using Finch: FinchProtocolError
 using Finch.FinchNotation
 
@@ -55,26 +56,103 @@ end
     ex
     Tv
     Ti
+    shape
+    ptr
+    idx
+    val
+    qos_fill
+    qos_stop
+    prev_pos
 end
 
 function Finch.virtual_size(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC)
-    return [Extent(literal(1),value(:($(arr.ex).m), arr.Ti)), Extent(literal(1), value(:($(arr.ex).n), arr.Ti))]
+    return arr.shape
 end
 
-function lower(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC, ::DefaultStyle)
-    return arr.ex
+function Finch.virtual_resize!(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC, m, n)
+    arr.shape = [m, n]
+end
+
+function Finch.lower(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC, ::DefaultStyle)
+    return quote
+        $SparseMatrixCSC($(ctx(getstop(arr.shape[1]))), $(ctx(getstop(arr.shape[2]))), $(arr.ptr), $(arr.idx), $(arr.val))
+    end
 end
 
 function Finch.virtualize(ctx, ex, ::Type{<:SparseMatrixCSC{Tv, Ti}}, tag=:tns) where {Tv, Ti}
     sym = freshen(ctx, tag)
+    shape = [Extent(literal(1),value(:($ex.m), Ti)), Extent(literal(1), value(:($ex.n), Ti))]
+    ptr = freshen(ctx, tag, :_ptr)
+    idx = freshen(ctx, tag, :_idx)
+    val = freshen(ctx, tag, :_val)
+    push_preamble!(ctx, quote
+        $sym = $ex
+        $ptr = $sym.colptr
+        $idx = $sym.rowval
+        $val = $sym.nzval
+    end)
+    qos_fill = freshen(ctx, sym, :_qos_fill)
+    qos_stop = freshen(ctx, sym, :_qos_stop)
+    prev_pos = freshen(ctx, sym, :_prev_pos)
     push_preamble!(ctx, quote
         $sym = $ex
     end)
-    VirtualSparseMatrixCSC(sym, Tv, Ti)
+    VirtualSparseMatrixCSC(sym, Tv, Ti, shape, ptr, idx, val, qos_fill, qos_stop, prev_pos)
 end
 
 function Finch.declare!(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC, init)
-    throw(FinchProtocolError("Finch does not support writes to SparseMatrixCSC"))
+    #TODO check that init == fill_value
+    Tp = Ti = arr.Ti
+    pos_stop = ctx(getstop(virtual_size(ctx, arr)[2]))
+    push_preamble!(ctx, quote
+        $(arr.qos_fill) = $(Tp(0))
+        $(arr.qos_stop) = $(Tp(0))
+        resize!($(arr.ptr), $pos_stop + 1)
+        fill_range!($(arr.ptr), $(Tp(0)), 1, $pos_stop + 1)
+        $(arr.ptr)[1] = $(Tp(1))
+    end)
+    if issafe(get_mode_flag(ctx))
+        push_preamble!(ctx, quote
+            $(arr.prev_pos) = $(Tp(0))
+        end)
+    end
+    return arr
+end
+
+function Finch.freeze!(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC)
+    p = freshen(ctx, :p)
+    pos_stop = ctx(getstop(virtual_size(ctx, arr)[2]))
+    qos_stop = freshen(ctx, :qos_stop)
+    push_preamble!(ctx, quote
+        resize!($(arr.ptr), $pos_stop + 1)
+        for $p = 1:$pos_stop
+            $(arr.ptr)[$p + 1] += $(arr.ptr)[$p]
+        end
+        $qos_stop = $(arr.ptr)[$pos_stop + 1] - 1
+        resize!($(arr.idx), $qos_stop)
+        resize!($(arr.val), $qos_stop)
+    end)
+    return arr
+end
+
+function Finch.thaw!(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC)
+    p = freshen(ctx, :p)
+    pos_stop = ctx(getstop(virtual_size(ctx, arr)[2]))
+    qos_stop = freshen(ctx, :qos_stop)
+    push_preamble!(ctx, quote
+        $(arr.qos_fill) = $(arr.ptr)[$pos_stop + 1] - 1
+        $(arr.qos_stop) = $(arr.qos_fill)
+        $qos_stop = $(arr.qos_fill)
+        $(if issafe(get_mode_flag(ctx))
+            quote
+                $(arr.prev_pos) = Finch.scansearch($(arr.ptr), $(arr.qos_stop) + 1, 1, $pos_stop) - 1
+            end
+        end)
+        for $p = $pos_stop:-1:1
+            $(arr.ptr)[$p + 1] -= $(arr.ptr)[$p]
+        end
+    end)
+    return arr
 end
 
 function Finch.instantiate(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk), typeof(follow)}, ::Union{typeof(defaultread), typeof(walk)})
@@ -139,8 +217,61 @@ function Finch.instantiate(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC, m
     )
 end
 
-function Finch.instantiate(ctx::AbstractCompiler, arr::VirtualSparseMatrixCSC, mode::Updater, subprotos, protos...)
-    throw(FinchProtocolError("Finch does not support writes to SparseMatrixCSC"))
+function Finch.instantiate(ctx, arr::VirtualSparseMatrixCSC, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)}, ::Union{typeof(defaultupdate), typeof(extrude)})
+    tag = arr.ex
+    Tp = arr.Ti
+    qos = freshen(ctx, tag, :_qos)
+    qos_fill = arr.qos_fill
+    qos_stop = arr.qos_stop
+    dirty = freshen(ctx, tag, :dirty)
+
+    Unfurled(
+        arr = arr,
+        body = Furlable(
+            body = (ctx, ext) -> Lookup(
+                body = (ctx, j) -> Furlable(
+                    body = (ctx, ext) -> Thunk(
+                        preamble = quote
+                            $qos = $qos_fill + 1
+                            $(if issafe(get_mode_flag(ctx))
+                                quote
+                                    $(arr.prev_pos) < $(ctx(j)) || throw(FinchProtocolError("SparseMatrixCSCs cannot be updated multiple times"))
+                                end
+                            end)
+                        end,
+                        body = (ctx) -> Lookup(
+                            body = (ctx, idx) -> Thunk(
+                                preamble = quote
+                                    if $qos > $qos_stop
+                                        $qos_stop = max($qos_stop << 1, 1)
+                                        Finch.resize_if_smaller!($(arr.idx), $qos_stop)
+                                        Finch.resize_if_smaller!($(arr.val), $qos_stop)
+                                    end
+                                    $dirty = false
+                                end,
+                                body = (ctx) -> Finch.VirtualSparseScalar(nothing, arr.Tv, zero(arr.Tv), gensym(), :($(arr.val)[$(ctx(qos))]), dirty),
+                                epilogue = quote
+                                    if $dirty
+                                        $(arr.idx)[$qos] = $(ctx(idx))
+                                        $qos += $(Tp(1))
+                                        $(if issafe(get_mode_flag(ctx))
+                                            quote
+                                                $(arr.prev_pos) = $(ctx(j))
+                                            end
+                                        end)
+                                    end
+                                end
+                            )
+                        ),
+                        epilogue = quote
+                            $(arr.ptr)[$(ctx(j)) + 1] += $qos - $qos_fill - 1
+                            $qos_fill = $qos - 1
+                        end
+                    )
+                )
+            )
+        )
+    )
 end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseMatrixCSC) = virtual(x)
@@ -166,26 +297,75 @@ end
     ex
     Tv
     Ti
+    shape
+    idx
+    val
+    qos_fill
+    qos_stop
 end
 
 function Finch.virtual_size(ctx::AbstractCompiler, arr::VirtualSparseVector)
-    return Any[Extent(literal(1),value(:($(arr.ex).n), arr.Ti))]
+    return arr.shape
 end
 
-function lower(ctx::AbstractCompiler, arr::VirtualSparseVector, ::DefaultStyle)
-    return arr.ex
+function Finch.virtual_resize!(ctx::AbstractCompiler, arr::VirtualSparseVector, n)
+    arr.shape = [n,]
+end
+
+function Finch.lower(ctx::AbstractCompiler, arr::VirtualSparseVector, ::DefaultStyle)
+    return quote
+        $SparseVector($(ctx(getstop(arr.shape[1]))), $(arr.idx), $(arr.val))
+    end
 end
 
 function Finch.virtualize(ctx, ex, ::Type{<:SparseVector{Tv, Ti}}, tag=:tns) where {Tv, Ti}
     sym = freshen(ctx, tag)
+    shape = [Extent(literal(1), value(:($ex.n), Ti)),]
+    idx = freshen(ctx, tag, :_idx)
+    val = freshen(ctx, tag, :_val)
+    push_preamble!(ctx, quote
+        $sym = $ex
+        $idx = $sym.nzind
+        $val = $sym.nzval
+    end)
+    qos_fill = freshen(ctx, sym, :_qos_fill)
+    qos_stop = freshen(ctx, sym, :_qos_stop)
     push_preamble!(ctx, quote
         $sym = $ex
     end)
-    VirtualSparseVector(sym, Tv, Ti)
+    VirtualSparseVector(sym, Tv, Ti, shape, idx, val, qos_fill, qos_stop)
 end
 
 function Finch.declare!(ctx::AbstractCompiler, arr::VirtualSparseVector, init)
-    throw(FinchProtocolError("Finch does not support writes to SparseVector"))
+    #TODO check that init == fill_value
+    Tp = Ti = arr.Ti
+    push_preamble!(ctx, quote
+        $(arr.qos_fill) = $(Tp(0))
+        $(arr.qos_stop) = $(Tp(0))
+    end)
+    return arr
+end
+
+function Finch.freeze!(ctx::AbstractCompiler, arr::VirtualSparseVector)
+    p = freshen(ctx, :p)
+    qos_stop = freshen(ctx, :qos_stop)
+    push_preamble!(ctx, quote
+        $qos_stop = $(ctx(arr.qos_fill))
+        resize!($(arr.idx), $qos_stop)
+        resize!($(arr.val), $qos_stop)
+    end)
+    return arr
+end
+
+function Finch.thaw!(ctx::AbstractCompiler, arr::VirtualSparseVector)
+    p = freshen(ctx, :p)
+    qos_stop = freshen(ctx, :qos_stop)
+    push_preamble!(ctx, quote
+        $(arr.qos_fill) = length($(arr.idx))
+        $(arr.qos_stop) = $(arr.qos_fill)
+        $qos_stop = $(arr.qos_fill)
+    end)
+    return arr
 end
 
 function Finch.instantiate(ctx::AbstractCompiler, arr::VirtualSparseVector, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
@@ -246,8 +426,46 @@ function Finch.instantiate(ctx::AbstractCompiler, arr::VirtualSparseVector, mode
     )
 end
 
-function Finch.instantiate(ctx::AbstractCompiler, arr::VirtualSparseVector, mode::Updater, subprotos)
-    throw(FinchProtocolError("Finch does not support writes to SparseVector"))
+function Finch.instantiate(ctx, arr::VirtualSparseVector, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
+    tag = arr.ex
+    Tp = arr.Ti
+    qos = freshen(ctx, tag, :_qos)
+    qos_fill = arr.qos_fill
+    qos_stop = arr.qos_stop
+    dirty = freshen(ctx, tag, :dirty)
+
+    Unfurled(
+        arr = arr,
+        body = Furlable(
+            body = (ctx, ext) -> Thunk(
+                preamble = quote
+                    $qos = $qos_fill + 1
+                end,
+                body = (ctx) -> Lookup(
+                    body = (ctx, idx) -> Thunk(
+                        preamble = quote
+                            if $qos > $qos_stop
+                                $qos_stop = max($qos_stop << 1, 1)
+                                Finch.resize_if_smaller!($(arr.idx), $qos_stop)
+                                Finch.resize_if_smaller!($(arr.val), $qos_stop)
+                            end
+                            $dirty = false
+                        end,
+                        body = (ctx) -> Finch.VirtualSparseScalar(nothing, arr.Tv, zero(arr.Tv), gensym(), :($(arr.val)[$(ctx(qos))]), dirty),
+                        epilogue = quote
+                            if $dirty
+                                $(arr.idx)[$qos] = $(ctx(idx))
+                                $qos += $(Tp(1))
+                            end
+                        end
+                    )
+                ),
+                epilogue = quote
+                    $qos_fill = $qos - 1
+                end
+            )
+        )
+    )
 end
 
 Finch.FinchNotation.finch_leaf(x::VirtualSparseVector) = virtual(x)
