@@ -361,35 +361,39 @@ mark_dead(ex) = MarkDead()(ex, true)
 
 function prune_dead(ex)
     ex = desugar(ex)
-    
-    ex = Rewrite(Fixpoint(Chain([
-        Prewalk(Chain([
-            Fixpoint(@rule :block(:block(~a...), ~b...) => Expr(:block, a..., b...)),
-            (@rule :block(~a, ~b, ~c...) => Expr(:block, a, Expr(:block, b, c...))),
-            (@rule :block(:if(~cond, ~a, ~b), ~c) =>
-                Expr(:block, Expr(:if, cond, Expr(:block, a, nothing), Expr(:block, b, nothing)), c)),
-            (@rule :for(~itr, ~body) => Expr(:for, itr, Expr(:block, body, nothing))),
-            (@rule :while(~cond, ~body) => Expr(:while, cond, Expr(:block, body, nothing))),
-        ])),
-        Fixpoint(Postwalk(Chain([
-            Fixpoint(@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
-            (@rule (~f::isassign)(:_, ~rhs) => rhs),
-            (@rule :block(~a..., :call(~f::ispure, ~b...), ~c..., ~d) => Expr(:block, a..., b..., c..., d)),
-            (@rule :block(~a..., (~f)(~b...), ~c..., ~d) => if f in (:ref, :., :curly, :string, :kw, :parameters, :tuple) 
-                Expr(:block, a..., b..., c..., d)
+
+    ex = Rewrite(Prewalk(Chain([
+        Fixpoint(@rule :block(:block(~a...), ~b...) => Expr(:block, a..., b...)),
+        (@rule :block(~a, ~b, ~c...) => Expr(:block, a, Expr(:block, b, c...))),
+        (@rule :block(:if(~cond, ~a, ~b), ~c) => Expr(:block, Expr(:deadif, cond, Expr(:block, a, nothing), Expr(:block, b, nothing)), c)),
+        (@rule :for(~itr, ~body) => Expr(:for, itr, Expr(:block, body, nothing))),
+        (@rule :while(~cond, ~body) => Expr(:while, cond, Expr(:block, body, nothing))),
+    ])))(ex)
+
+    ex = Rewrite(Fixpoint(Postwalk(Chain([
+            (@rule :block(:block(~a...), ~b...) => Expr(:block, a..., b...)),
+            (@rule :block(~a, ~b, ~c, ~d...) => Expr(:block, a, Expr(:block, b, c, d...))),
+            (@rule :block(:if(~cond, ~a, ~b), ~c) => Expr(:block, Expr(:deadif, cond, Expr(:block, a, nothing), Expr(:block, b, nothing)), c)),
+            (@rule (~f::isassign)(:_, ~rhs) => Expr(:block, rhs)),
+            (@rule :block(:call(~f::ispure, ~a...), ~b) => Expr(:block, a..., b)),
+            (@rule :block((~f)(~a...), ~b) => if f in (:ref, :., :curly, :string, :kw, :parameters, :tuple) 
+                Expr(:block, a..., b)
             end),
-            (@rule :block(~a..., ~b::(!isexpr), ~c..., ~d) => Expr(:block, a..., c..., d)),
+            (@rule :block(~a::(!isexpr), ~b) => Expr(:block, b)),
             (@rule :if(~cond, ~a, ~a) => Expr(:block, cond, a)),
-            (@rule :if(true, ~a, ~b) => a), #TODO should probably go with a propagation pass
-            (@rule :if(false, ~a, ~b) => b), #TODO should probably go with a propagation pass
+            (@rule :if(true, ~a, ~b) => Expr(:block, a)),
+            (@rule :if(false, ~a, ~b) => Expr(:block, b)),
+            (@rule :deadif(~cond, ~a, ~a) => Expr(:block, cond, a)),
+            (@rule :deadif(true, ~a, ~b) => Expr(:block, a)),
+            (@rule :deadif(false, ~a, ~b) => Expr(:block, b)),
             (@rule :for(:(=)(~i, ~itr), ~body::(!iseffectful)) => Expr(:block, itr, nothing)),
             (@rule :while(~cond, ~body::(!iseffectful)) => Expr(:block, cond, nothing)),
             (@rule :for(:(=)(~i, ~itr), :block(nothing)) => Expr(:block, itr, nothing)),
             (@rule :while(~cond, :block(nothing)) => Expr(:block, cond, nothing)),
-        ])))
-    ])))(ex)
+    ]))))(ex)
 
     ex = Rewrite(Postwalk(Fixpoint(Chain([
+        (@rule :deadif(~a...) => Expr(:if, a...)),
         (@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
         (@rule :block(~a1..., :if(~cond, ~b1..., :block(~c..., nothing), ~b2...), ~a2..., ~d) =>
             Expr(:block, a1..., Expr(:if, cond, b1..., Expr(:block, c...), b2...), a2..., d)),
