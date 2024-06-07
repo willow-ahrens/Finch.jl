@@ -21,8 +21,8 @@ run this with a $(Sys.WORD_SIZE==32 ? 64 : 32)-bit julia executable.")
         help = "overwrite reference output for $(Sys.WORD_SIZE)-bit systems"
     "suites"
         nargs = '*'
-        default = ["all"]
-        help = "names of test suites to run, from: print, representation, constructors, conversions, merges, index, typical, kernels, issues, base, interface, continuous, apps, fileio, docs, debug, continuous, algebra, moveto."
+        default = split(get(ENV, "FINCH_TEST_SUITES", "all"), " ")
+        help = "names of test suites to run, from: print, representation, constructors, conversions, merges, index, typical, kernels, issues, base, interface, continuous, apps, fileio, docs, debug, continuous, algebra."
 end
 parsed_args = parse_args(ARGS, s)
 
