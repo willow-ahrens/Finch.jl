@@ -227,6 +227,7 @@ StaticHash() = StaticHash(Dict{Tuple{Any, DataType}, UInt}())
     shash = StaticHash()
     simplify_rules = get_simplify_rules(algebra, shash)
     prove_rules = get_prove_rules(algebra, shash)
+    prove_cache = Dict()
 end
 
 """

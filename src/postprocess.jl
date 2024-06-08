@@ -370,7 +370,7 @@ function prune_dead(ex)
         (@rule :while(~cond, ~body) => Expr(:while, cond, Expr(:block, body, nothing))),
     ])))(ex)
 
-    ex = Rewrite(Fixpoint(Postwalk(Chain([
+    ex = Rewrite(Fixpoint(Prewalk(Fixpoint(Chain([
             (@rule :block(:block(~a...), ~b...) => Expr(:block, a..., b...)),
             (@rule :block(~a, ~b, ~c, ~d...) => Expr(:block, a, Expr(:block, b, c, d...))),
             (@rule :block(:if(~cond, ~a, ~b), ~c) => Expr(:block, Expr(:deadif, cond, Expr(:block, a, nothing), Expr(:block, b, nothing)), c)),
@@ -390,7 +390,7 @@ function prune_dead(ex)
             (@rule :while(~cond, ~body::(!iseffectful)) => Expr(:block, cond, nothing)),
             (@rule :for(:(=)(~i, ~itr), :block(nothing)) => Expr(:block, itr, nothing)),
             (@rule :while(~cond, :block(nothing)) => Expr(:block, cond, nothing)),
-    ]))))(ex)
+    ])))))(ex)
 
     ex = Rewrite(Postwalk(Fixpoint(Chain([
         (@rule :deadif(~a...) => Expr(:if, a...)),

@@ -136,12 +136,12 @@ function prove(ctx::SymbolicContext, root::FinchNode; verbose = false)
             get!(names, node, value(Symbol(:virtual_, length(names) + 1)))
         elseif node.kind == index
             value(node.name)
-        elseif isvalue(node) && !(node.val isa Symbol)
+        elseif isvalue(node)
             get!(names, node, value(Symbol(:value_, length(names) + 1)))
         end
     end
     root = Rewrite(Postwalk(rename))(root)
-    res = Rewrite(Fixpoint(Prewalk(Fixpoint(Chain(ctx.prove_rules)))))(root)
+    res = Rewrite(Fixpoint(Prewalk(Memo(Fixpoint(Chain(ctx.prove_rules)), ctx.prove_cache))))(root)
     if verbose
       @info "proving..." root res 
     end
