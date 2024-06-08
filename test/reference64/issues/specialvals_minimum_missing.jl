@@ -30,7 +30,7 @@ begin
                 yf_lvl_q += 1
                 i = yf_lvl_i + 1
             else
-                phase_stop_3 = min(yf_lvl_i, phase_stop)
+                phase_stop_3 = min(phase_stop, yf_lvl_i)
                 if yf_lvl_i == phase_stop_3
                     cond_3 = 1 <= -i + phase_stop_3
                     if cond_3

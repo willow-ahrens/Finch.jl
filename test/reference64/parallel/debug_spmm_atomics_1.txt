@@ -91,7 +91,7 @@ begin
                                             CR_lvl_2_val[CR_lvl_2_q] = B_lvl_2_val * A_lvl_2_val + CR_lvl_2_val[CR_lvl_2_q]
                                             A_lvl_q_2 += 1
                                         else
-                                            phase_stop_7 = min(A_lvl_i_2, phase_stop_5)
+                                            phase_stop_7 = min(phase_stop_5, A_lvl_i_2)
                                             if A_lvl_i_2 == phase_stop_7
                                                 A_lvl_2_val = A_lvl_val[A_lvl_q_2]
                                                 CR_lvl_2_val[CR_lvl_2_q] += B_lvl_2_val * A_lvl_2_val
@@ -113,7 +113,7 @@ begin
                     end
                     B_lvl_q = B_lvl_q_step
                 else
-                    phase_stop_12 = min(B_lvl_i, phase_stop)
+                    phase_stop_12 = min(phase_stop, B_lvl_i)
                     if B_lvl_i == phase_stop_12
                         CR_lvl_q = (1 - 1) * B_lvl.shape[2] + phase_stop_12
                         CR_lvl_2_q_2 = (CR_lvl_q - 1) * A_lvl.shape[1] + i_4
@@ -167,7 +167,7 @@ begin
                                                 CR_lvl_2_val[CR_lvl_2_q_2] = B_lvl_2_val_3 * A_lvl_2_val_2 + CR_lvl_2_val[CR_lvl_2_q_2]
                                                 A_lvl_q_4 += 1
                                             else
-                                                phase_stop_17 = min(A_lvl_i_4, phase_stop_15)
+                                                phase_stop_17 = min(phase_stop_15, A_lvl_i_4)
                                                 if A_lvl_i_4 == phase_stop_17
                                                     A_lvl_2_val_2 = A_lvl_val[A_lvl_q_4]
                                                     CR_lvl_2_val[CR_lvl_2_q_2] += B_lvl_2_val_3 * A_lvl_2_val_2

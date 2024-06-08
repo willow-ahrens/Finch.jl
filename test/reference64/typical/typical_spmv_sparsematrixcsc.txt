@@ -56,7 +56,7 @@ quote
                     y[A_i] = val * A_val_2 + y[A_i]
                     A_q += 1
                 else
-                    phase_stop_3 = min(A_i, phase_stop)
+                    phase_stop_3 = min(phase_stop, A_i)
                     if A_i == phase_stop_3
                         A_val_2 = A.nzval[A_q]
                         y[phase_stop_3] = val * A_val_2 + y[phase_stop_3]
