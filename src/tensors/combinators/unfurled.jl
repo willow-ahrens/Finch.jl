@@ -49,7 +49,7 @@ get_point_body(ctx, node::Unfurled, ext, idx) =
         popdim(Unfurled(node.arr, node.ndims, body_2), ctx)
     end
 
-(ctx::ThunkVisitor)(node::Unfurled) = Unfurled(node.arr, node.ndims, ctx(node.body))
+unwrap_thunk(ctx, node::Unfurled) = Unfurled(node.arr, node.ndims, unwrap_thunk(ctx, node.body))
 
 get_run_body(ctx, node::Unfurled, ext) =
     pass_nothing(get_run_body(ctx, node.body, ext)) do body_2
@@ -79,7 +79,7 @@ visit_fill_leaf_leaf(node, tns::Unfurled) = visit_fill_leaf_leaf(node, tns.body)
 
 visit_simplify(node::Unfurled) = Unfurled(node.arr, node.ndims, visit_simplify(node.body))
 
-(ctx::SwitchVisitor)(node::Unfurled) = map(ctx(node.body)) do (guard, body)
+get_switch_cases(ctx, node::Unfurled) = map(get_switch_cases(ctx, node.body)) do (guard, body)
     guard => Unfurled(node.arr, node.ndims, body)
 end
 

@@ -25,39 +25,24 @@ combine_style(a::AcceptRunStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::SpikeStyle, b::SwitchStyle) = SwitchStyle()
 combine_style(a::SwitchStyle, b::SwitchStyle) = SwitchStyle()
 
-@kwdef struct SwitchVisitor
-    ctx
-end
-
-function (ctx::SwitchVisitor)(node)
-    if istree(node)
-        map(product(map(ctx, arguments(node))...)) do case
-            guards = map(first, case)
-            bodies = map(last, case)
-            return simplify(ctx.ctx, call(and, guards...)) => similarterm(node, operation(node), collect(bodies))
-        end
-    else
-        [(literal(true) => node)]
-    end
-end
-
-function (ctx::SwitchVisitor)(node::FinchNode)
+function get_switch_cases(ctx, node::FinchNode)
     if node.kind === virtual
-        ctx(node.val)
+        get_switch_cases(ctx, node.val)
     elseif istree(node)
-        map(product(map(ctx, arguments(node))...)) do case
+        map(product(map(arg -> get_switch_cases(ctx, arg), arguments(node))...)) do case
             guards = map(first, case)
             bodies = map(last, case)
-            return simplify(ctx.ctx, call(and, guards...)) => similarterm(node, operation(node), collect(bodies))
+            return simplify(ctx, call(and, guards...)) => similarterm(node, operation(node), collect(bodies))
         end
     else
         [(literal(true) => node)]
     end
 end
-(ctx::SwitchVisitor)(node::Switch) = node.cases
+get_switch_cases(ctx, node) = [(literal(true) => node)]
+get_switch_cases(ctx, node::Switch) = node.cases
 
 function lower(ctx::AbstractCompiler, stmt, ::SwitchStyle)
-    cases = (SwitchVisitor(ctx=ctx))(stmt)
+    cases = get_switch_cases(ctx, stmt)
     function nest(cases, inner=false)
         guard, body = cases[1]
         body = contain(ctx) do ctx_2

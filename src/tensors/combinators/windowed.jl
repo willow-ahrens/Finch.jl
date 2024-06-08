@@ -88,7 +88,7 @@ get_point_body(ctx, node::VirtualWindowedArray, ext, idx) =
         popdim(VirtualWindowedArray(body_2, node.dims))
     end
 
-(ctx::ThunkVisitor)(node::VirtualWindowedArray) = VirtualWindowedArray(ctx(node.body), node.dims)
+unwrap_thunk(ctx, node::VirtualWindowedArray) = VirtualWindowedArray(unwrap_thunk(ctx, node.body), node.dims)
 
 get_run_body(ctx, node::VirtualWindowedArray, ext) =
     pass_nothing(get_run_body(ctx, node.body, ext)) do body_2
@@ -114,7 +114,7 @@ get_spike_tail(ctx, node::VirtualWindowedArray, ext, ext_2) = VirtualWindowedArr
 visit_fill_leaf_leaf(node, tns::VirtualWindowedArray) = visit_fill_leaf_leaf(node, tns.body)
 visit_simplify(node::VirtualWindowedArray) = VirtualWindowedArray(visit_simplify(node.body), node.dims)
 
-(ctx::SwitchVisitor)(node::VirtualWindowedArray) = map(ctx(node.body)) do (guard, body)
+get_switch_cases(ctx, node::VirtualWindowedArray) = map(get_switch_cases(ctx, node.body)) do (guard, body)
     guard => VirtualWindowedArray(body, node.dims)
 end
 

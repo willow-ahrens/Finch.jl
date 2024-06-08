@@ -83,7 +83,7 @@ get_point_body(ctx, node::VirtualProtocolizedArray, ext, idx) =
         popdim(VirtualProtocolizedArray(body_2, node.protos))
     end
 
-(ctx::ThunkVisitor)(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(ctx(node.body), node.protos)
+unwrap_thunk(ctx, node::VirtualProtocolizedArray) = VirtualProtocolizedArray(unwrap_thunk(ctx, node.body), node.protos)
 
 get_run_body(ctx, node::VirtualProtocolizedArray, ext) =
     pass_nothing(get_run_body(ctx, node.body, ext)) do body_2
@@ -110,7 +110,7 @@ get_spike_tail(ctx, node::VirtualProtocolizedArray, ext, ext_2) = VirtualProtoco
 visit_fill_leaf_leaf(node, tns::VirtualProtocolizedArray) = visit_fill_leaf_leaf(node, tns.body)
 visit_simplify(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(visit_simplify(node.body), node.protos)
 
-(ctx::SwitchVisitor)(node::VirtualProtocolizedArray) = map(ctx(node.body)) do (guard, body)
+get_switch_cases(ctx, node::VirtualProtocolizedArray) = map(get_switch_cases(ctx, node.body)) do (guard, body)
     guard => VirtualProtocolizedArray(body, node.protos)
 end
 

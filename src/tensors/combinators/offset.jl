@@ -80,7 +80,7 @@ get_point_body(ctx, node::VirtualOffsetArray, ext, idx) =
         popdim(VirtualOffsetArray(body_2, node.delta))
     end
 
-(ctx::ThunkVisitor)(node::VirtualOffsetArray) = VirtualOffsetArray(ctx(node.body), node.delta)
+unwrap_thunk(ctx, node::VirtualOffsetArray) = VirtualOffsetArray(unwrap_thunk(ctx, node.body), node.delta)
 
 get_run_body(ctx, node::VirtualOffsetArray, ext) =
     pass_nothing(get_run_body(ctx, node.body, shiftdim(ext, node.delta[end]))) do body_2
@@ -112,7 +112,7 @@ visit_fill_leaf_leaf(node, tns::VirtualOffsetArray) =
 visit_simplify(node::VirtualOffsetArray) =
     VirtualOffsetArray(visit_simplify(node.body), node.delta)
 
-(ctx::SwitchVisitor)(node::VirtualOffsetArray) = map(ctx(node.body)) do (guard, body)
+get_switch_cases(ctx, node::VirtualOffsetArray) = map(get_switch_cases(ctx, node.body)) do (guard, body)
     guard => VirtualOffsetArray(body, node.delta)
 end
 

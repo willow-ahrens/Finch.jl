@@ -88,7 +88,7 @@ get_point_body(ctx, node::VirtualPermissiveArray, ext, idx) =
         popdim(VirtualPermissiveArray(body_2, node.dims))
     end
 
-(ctx::ThunkVisitor)(node::VirtualPermissiveArray) = VirtualPermissiveArray(ctx(node.body), node.dims)
+unwrap_thunk(ctx, node::VirtualPermissiveArray) = VirtualPermissiveArray(unwrap_thunk(ctx, node.body), node.dims)
 
 get_run_body(ctx, node::VirtualPermissiveArray, ext) =
     pass_nothing(get_run_body(ctx, node.body, ext)) do body_2
@@ -114,7 +114,7 @@ get_spike_tail(ctx, node::VirtualPermissiveArray, ext, ext_2) = VirtualPermissiv
 visit_fill_leaf_leaf(node, tns::VirtualPermissiveArray) = visit_fill_leaf_leaf(node, tns.body)
 visit_simplify(node::VirtualPermissiveArray) = VirtualPermissiveArray(visit_simplify(node.body), node.dims)
 
-(ctx::SwitchVisitor)(node::VirtualPermissiveArray) = map(ctx(node.body)) do (guard, body)
+get_switch_cases(ctx, node::VirtualPermissiveArray) = map(get_switch_cases(ctx, node.body)) do (guard, body)
     guard => VirtualPermissiveArray(body, node.dims)
 end
 

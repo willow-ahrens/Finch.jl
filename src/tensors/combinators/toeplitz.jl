@@ -99,7 +99,7 @@ get_point_body(ctx, node::VirtualToeplitzArray, ext, idx) =
         popdim(VirtualToeplitzArray(body_2, node.dim), ctx)
     end
 
-(ctx::ThunkVisitor)(node::VirtualToeplitzArray) = VirtualToeplitzArray(ctx(node.body), node.dim)
+unwrap_thunk(ctx, node::VirtualToeplitzArray) = VirtualToeplitzArray(unwrap_thunk(ctx, node.body), node.dim)
 
 get_run_body(ctx, node::VirtualToeplitzArray, ext) =
     pass_nothing(get_run_body(ctx, node.body, ext)) do body_2
@@ -125,7 +125,7 @@ get_spike_tail(ctx, node::VirtualToeplitzArray, ext, ext_2) = VirtualToeplitzArr
 visit_fill_leaf_leaf(node, tns::VirtualToeplitzArray) = visit_fill_leaf_leaf(node, tns.body)
 visit_simplify(node::VirtualToeplitzArray) = VirtualToeplitzArray(visit_simplify(node.body), node.dim)
 
-(ctx::SwitchVisitor)(node::VirtualToeplitzArray) = map(ctx(node.body)) do (guard, body)
+get_switch_cases(ctx, node::VirtualToeplitzArray) = map(get_switch_cases(ctx, node.body)) do (guard, body)
     guard => VirtualToeplitzArray(body, node.dim)
 end
 

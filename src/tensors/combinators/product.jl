@@ -105,7 +105,7 @@ get_point_body(ctx, node::VirtualProductArray, ext, idx) =
         popdim(VirtualProductArray(body_2, node.dim), ctx)
     end
 
-(ctx::ThunkVisitor)(node::VirtualProductArray) = VirtualProductArray(ctx(node.body), node.dim)
+unwrap_thunk(ctx, node::VirtualProductArray) = VirtualProductArray(unwrap_thunk(ctx, node.body), node.dim)
 
 get_run_body(ctx, node::VirtualProductArray, ext) =
     pass_nothing(get_run_body(ctx, node.body, ext)) do body_2
@@ -132,7 +132,7 @@ get_spike_tail(ctx, node::VirtualProductArray, ext, ext_2) = VirtualProductArray
 visit_fill_leaf_leaf(node, tns::VirtualProductArray) = visit_fill_leaf_leaf(node, tns.body)
 visit_simplify(node::VirtualProductArray) = VirtualProductArray(visit_simplify(node.body), node.dim)
 
-(ctx::SwitchVisitor)(node::VirtualProductArray) = map(ctx(node.body)) do (guard, body)
+get_switch_cases(ctx, node::VirtualProductArray) = map(get_switch_cases(ctx, node.body)) do (guard, body)
     guard => VirtualProductArray(body, node.dim)
 end
 
