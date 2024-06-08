@@ -72,8 +72,6 @@ instantiate(ctx, arr::VirtualWindowedArray, mode, protos) =
     VirtualWindowedArray(instantiate(ctx, arr.body, mode, protos), arr.dims)
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualWindowedArray) = ctx(node.body)
-stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualWindowedArray) =
-    stylize_access(ctx, node, tns.body)
 
 function popdim(node::VirtualWindowedArray)
     if length(node.dims) == 1

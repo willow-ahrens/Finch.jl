@@ -82,17 +82,12 @@ end
 function (ctx::Stylize)(node::FinchNode)
     if node.kind === virtual
         return ctx(node.val)
-    elseif node.kind === access
-        return mapreduce(ctx, result_style, arguments(node); init=stylize_access(ctx, node, node.tns))
     elseif istree(node)
         return mapreduce(ctx, result_style, arguments(node); init=DefaultStyle())
     else
         return DefaultStyle()
     end
 end
-
-stylize_access(ctx, node, @nospecialize tns) = DefaultStyle()
-stylize_access(ctx, node, tns::FinchNode) = stylize_access(ctx, node, resolve(ctx, tns))
 
 function lower(ctx::AbstractCompiler, root, ::DefaultStyle)
     node = finch_leaf(root)

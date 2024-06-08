@@ -63,8 +63,6 @@ instantiate(ctx, arr::VirtualOffsetArray, mode, protos) =
     VirtualOffsetArray(instantiate(ctx, arr.body, mode, protos), arr.delta)
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualOffsetArray) = ctx(node.body)
-stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualOffsetArray) =
-    stylize_access(ctx, node, tns.body)
 
 function popdim(node::VirtualOffsetArray)
     if length(node.delta) == 1

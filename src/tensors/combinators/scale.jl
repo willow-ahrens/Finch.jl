@@ -68,8 +68,6 @@ instantiate(ctx, arr::VirtualScaleArray, mode, protos) =
     VirtualScaleArray(instantiate(ctx, arr.body, mode, protos), arr.scale)
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualScaleArray) = ctx(node.body)
-stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualScaleArray) =
-    stylize_access(ctx, node, tns.body)
 
 function popdim(node::VirtualScaleArray)
     if length(node.scale) == 1

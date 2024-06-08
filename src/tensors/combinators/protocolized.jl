@@ -67,8 +67,6 @@ instantiate(ctx, arr::VirtualProtocolizedArray, mode, protos) =
     VirtualProtocolizedArray(instantiate(ctx, arr.body, mode, map(something, arr.protos, protos)), arr.protos)
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualProtocolizedArray) = ctx(node.body)
-stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualProtocolizedArray) =
-    stylize_access(ctx, node, tns.body)
 
 function popdim(node::VirtualProtocolizedArray)
     if length(node.protos) == 1

@@ -89,9 +89,6 @@ function instantiate_updater(arr::VirtualProductArray, ctx, protos)
 end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualProductArray) = ctx(node.body)
-function stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualProductArray)
-    stylize_access(ctx, node, tns.body)
-end
 
 function popdim(node::VirtualProductArray, ctx)
     if length(virtual_size(ctx, node)) == node.dim

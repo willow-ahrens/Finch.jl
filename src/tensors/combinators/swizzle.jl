@@ -73,8 +73,6 @@ instantiate(ctx, arr::VirtualSwizzleArray, mode, protos) =
     VirtualSwizzleArray(instantiate(ctx, arr.body, mode, protos), arr.dims)
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualSwizzleArray) = ctx(node.body)
-stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualSwizzleArray) =
-    stylize_access(ctx, node, tns.body)
 
 getroot(tns::VirtualSwizzleArray) = getroot(tns.body)
 
