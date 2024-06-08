@@ -92,7 +92,7 @@ begin
                                 end
                                 A_lvl_2_q_2 += 1
                             else
-                                phase_stop_5 = min(A_lvl_2_i_2, phase_stop_3)
+                                phase_stop_5 = min(phase_stop_3, A_lvl_2_i_2)
                                 if A_lvl_2_i_2 == phase_stop_5
                                     A_lvl_3_val_2 = A_lvl_2_val[A_lvl_2_q_2]
                                     w_lvl_q_2 = (1 - 1) * A_lvl_2.shape + phase_stop_5
@@ -114,7 +114,7 @@ begin
                     end
                     A_lvl_2_q += 1
                 else
-                    phase_stop_7 = min(A_lvl_2_i, phase_stop)
+                    phase_stop_7 = min(phase_stop, A_lvl_2_i)
                     if A_lvl_2_i == phase_stop_7
                         A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                         A_lvl_q_2 = (1 - 1) * A_lvl.shape + phase_stop_7
@@ -147,7 +147,7 @@ begin
                                     end
                                     A_lvl_2_q_3 += 1
                                 else
-                                    phase_stop_10 = min(A_lvl_2_i_3, phase_stop_8)
+                                    phase_stop_10 = min(phase_stop_8, A_lvl_2_i_3)
                                     if A_lvl_2_i_3 == phase_stop_10
                                         A_lvl_3_val_3 = A_lvl_2_val[A_lvl_2_q_3]
                                         w_lvl_q_2 = (1 - 1) * A_lvl_2.shape + phase_stop_10
@@ -220,7 +220,7 @@ begin
                     B_lvl_2_prev_pos = B_lvl_q
                     w_lvl_r_3 += 1
                 else
-                    phase_stop_15 = min(w_lvl_i_2, phase_stop_13)
+                    phase_stop_15 = min(phase_stop_13, w_lvl_i_2)
                     if w_lvl_i_2 == phase_stop_15
                         w_lvl_q_3 = (1 - 1) * A_lvl_2.shape + w_lvl_i_2
                         w_lvl_2_val_2 = w_lvl_val[w_lvl_q_3]

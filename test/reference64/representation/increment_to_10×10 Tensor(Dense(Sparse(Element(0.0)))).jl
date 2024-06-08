@@ -57,7 +57,7 @@ begin
                             Finch.subtable_commit!(fmt_lvl_tbl, fmt_lvl_2_subtbl, fmt_lvl_2_qos, arr_2_lvl_i_2)
                             arr_2_lvl_q_2 += 1
                         else
-                            phase_stop_5 = min(arr_2_lvl_i_2, phase_stop_3)
+                            phase_stop_5 = min(phase_stop_3, arr_2_lvl_i_2)
                             if arr_2_lvl_i_2 == phase_stop_5
                                 arr_2_lvl_2_val = arr_2_lvl_val[arr_2_lvl_q_2]
                                 fmt_lvl_2_qos = Finch.subtable_register(fmt_lvl_tbl, fmt_lvl_2_subtbl, phase_stop_5)
@@ -77,7 +77,7 @@ begin
                 Finch.table_commit!(fmt_lvl_tbl, fmt_lvl_q)
                 arr_2_lvl_q = arr_2_lvl_q_step
             else
-                phase_stop_7 = min(arr_2_lvl_i, phase_stop)
+                phase_stop_7 = min(phase_stop, arr_2_lvl_i)
                 if arr_2_lvl_i == phase_stop_7
                     fmt_lvl_q = (1 - 1) * fmt_lvl.shape + phase_stop_7
                     fmt_lvl_2_subtbl_2 = Finch.table_register(fmt_lvl_tbl, fmt_lvl_q)

@@ -97,13 +97,11 @@ Call f on a subcontext of `ctx` and return the result. Variable bindings,
 preambles, and epilogues defined in the subcontext will not escape the call to
 contain.
 """
-function contain(f, ctx::AbstractCompiler; task=nothing)
-    ctx_2 = shallowcopy(ctx)
-    ctx_2.task = something(task, ctx.task)
+function contain(f, ctx::JuliaContext; task=nothing)
+    task_2 = something(task, ctx.task)
     preamble = Expr(:block)
-    ctx_2.preamble = preamble.args
     epilogue = Expr(:block)
-    ctx_2.epilogue = epilogue.args
+    ctx_2 = JuliaContext(ctx.namespace, preamble.args, epilogue.args, task_2)
     body = f(ctx_2)
     if epilogue == Expr(:block)
         return quote

@@ -41,7 +41,7 @@ begin
                     B_prev_pos = j_4
                     A_q += 1
                 else
-                    phase_stop_3 = min(A_i, phase_stop)
+                    phase_stop_3 = min(phase_stop, A_i)
                     if A_i == phase_stop_3
                         A_val_2 = A.nzval[A_q]
                         if B_qos > B_qos_stop

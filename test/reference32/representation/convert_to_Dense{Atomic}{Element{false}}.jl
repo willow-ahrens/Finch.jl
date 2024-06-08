@@ -36,7 +36,7 @@ quote
                 tmp_lvl_2_val[tmp_lvl_2_q] = ref_lvl_2_val
                 ref_lvl_q += 1
             else
-                phase_stop_3 = min(ref_lvl_i, phase_stop)
+                phase_stop_3 = min(phase_stop, ref_lvl_i)
                 if ref_lvl_i == phase_stop_3
                     ref_lvl_2_val = ref_lvl_val[ref_lvl_q]
                     tmp_lvl_2_q = (1 - 1) * ref_lvl.shape + phase_stop_3

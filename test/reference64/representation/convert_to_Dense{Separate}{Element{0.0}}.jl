@@ -42,7 +42,7 @@ quote
                 pointer_to_lvl_5_val[pointer_to_lvl_5_q] = ref_lvl_2_val
                 ref_lvl_q += 1
             else
-                phase_stop_3 = min(ref_lvl_i, phase_stop)
+                phase_stop_3 = min(phase_stop, ref_lvl_i)
                 if ref_lvl_i == phase_stop_3
                     ref_lvl_2_val = ref_lvl_val[ref_lvl_q]
                     pointer_to_lvl_5_q = (1 - 1) * pointer_to_lvl_5.shape + phase_stop_3

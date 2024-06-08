@@ -60,7 +60,7 @@ begin
                     C_lvl_qos += 1
                     A_lvl_q += 1
                 else
-                    phase_stop_5 = min(A_lvl_i, phase_stop_3)
+                    phase_stop_5 = min(phase_stop_3, A_lvl_i)
                     if A_lvl_i == phase_stop_5
                         A_lvl_2_val = A_lvl_val[A_lvl_q]
                         if C_lvl_qos > C_lvl_qos_stop

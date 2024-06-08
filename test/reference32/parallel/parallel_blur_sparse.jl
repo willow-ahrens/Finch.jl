@@ -197,7 +197,7 @@ begin
                             x = phase_stop_8 + 1
                         end
                     end
-                    phase_start_9 = max(1, 1 + input_lvl_2_i1_2, 2 + input_lvl_2_i1)
+                    phase_start_9 = max(1, 2 + input_lvl_2_i1, 1 + input_lvl_2_i1_2)
                     phase_stop_9 = min(input_lvl_2.shape, -1 + input_lvl_2_i1_3)
                     if phase_stop_9 >= phase_start_9
                         if input_lvl_idx[input_lvl_2_q_3] < 1 + phase_start_9

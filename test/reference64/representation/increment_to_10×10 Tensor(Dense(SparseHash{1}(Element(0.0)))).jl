@@ -68,7 +68,7 @@ begin
                             end
                             arr_2_lvl_q_2 += 1
                         else
-                            phase_stop_5 = min(arr_2_lvl_i_2, phase_stop_3)
+                            phase_stop_5 = min(phase_stop_3, arr_2_lvl_i_2)
                             if arr_2_lvl_i_2 == phase_stop_5
                                 arr_2_lvl_2_val = arr_2_lvl_val[arr_2_lvl_q_2]
                                 fmt_lvl_2_key = (fmt_lvl_q, (phase_stop_5,))
@@ -92,7 +92,7 @@ begin
                 end
                 arr_2_lvl_q = arr_2_lvl_q_step
             else
-                phase_stop_7 = min(arr_2_lvl_i, phase_stop)
+                phase_stop_7 = min(phase_stop, arr_2_lvl_i)
                 if arr_2_lvl_i == phase_stop_7
                     fmt_lvl_q = (1 - 1) * fmt_lvl.shape + phase_stop_7
                     arr_2_lvl_q_2 = arr_2_lvl_q

@@ -69,7 +69,7 @@ begin
                                 D_val = C_lvl_2_val * A_lvl_3_val * B_lvl_3_val + D_val
                                 B_lvl_2_q += 1
                             else
-                                phase_stop_5 = min(B_lvl_2_i, phase_stop_3)
+                                phase_stop_5 = min(phase_stop_3, B_lvl_2_i)
                                 if B_lvl_2_i == phase_stop_5
                                     B_lvl_3_val = B_lvl_2_val[B_lvl_2_q]
                                     D_val += C_lvl_2_val * A_lvl_3_val * B_lvl_3_val
@@ -110,7 +110,7 @@ begin
                                     D_val += A_lvl_3_val * C_lvl_2_val * B_lvl_3_val_2
                                     B_lvl_2_q_2 += 1
                                 else
-                                    phase_stop_10 = min(B_lvl_2_i_2, phase_stop_8)
+                                    phase_stop_10 = min(phase_stop_8, B_lvl_2_i_2)
                                     if B_lvl_2_i_2 == phase_stop_10
                                         B_lvl_3_val_2 = B_lvl_2_val[B_lvl_2_q_2]
                                         D_val += A_lvl_3_val * C_lvl_2_val * B_lvl_3_val_2
@@ -152,7 +152,7 @@ begin
                                     D_val += C_lvl_2_val * A_lvl_3_val * B_lvl_3_val_3
                                     B_lvl_2_q_3 += 1
                                 else
-                                    phase_stop_15 = min(B_lvl_2_i_3, phase_stop_13)
+                                    phase_stop_15 = min(phase_stop_13, B_lvl_2_i_3)
                                     if B_lvl_2_i_3 == phase_stop_15
                                         B_lvl_3_val_3 = B_lvl_2_val[B_lvl_2_q_3]
                                         D_val += C_lvl_2_val * A_lvl_3_val * B_lvl_3_val_3
@@ -199,7 +199,7 @@ begin
                                         D_val += C_lvl_2_val * A_lvl_3_val * B_lvl_3_val_4
                                         B_lvl_2_q_4 += 1
                                     else
-                                        phase_stop_20 = min(B_lvl_2_i_4, phase_stop_18)
+                                        phase_stop_20 = min(phase_stop_18, B_lvl_2_i_4)
                                         if B_lvl_2_i_4 == phase_stop_20
                                             B_lvl_3_val_4 = B_lvl_2_val[B_lvl_2_q_4]
                                             D_val += C_lvl_2_val * A_lvl_3_val * B_lvl_3_val_4

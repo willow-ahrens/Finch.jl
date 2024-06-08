@@ -51,7 +51,7 @@ quote
                 i = tmp_lvl_i_stop + 1
             else
                 phase_start_4 = i
-                phase_stop_5 = min(tmp_lvl_i_stop, phase_stop)
+                phase_stop_5 = min(phase_stop, tmp_lvl_i_stop)
                 phase_start_6 = max(tmp_lvl_i_start, phase_start_4)
                 if phase_stop_5 >= phase_start_6
                     tmp_lvl_2_val_2 = tmp_lvl_val[tmp_lvl_q]

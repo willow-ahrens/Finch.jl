@@ -69,7 +69,7 @@ quote
                 X_lvl_q += 1
                 i = X_lvl_i + 1
             else
-                phase_stop_3 = min(X_lvl_i, phase_stop)
+                phase_stop_3 = min(phase_stop, X_lvl_i)
                 if X_lvl_i == phase_stop_3
                     cond_2 = 1 <= -i + phase_stop_3
                     if cond_2
