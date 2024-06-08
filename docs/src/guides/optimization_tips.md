@@ -65,7 +65,7 @@ quote
                     s_val = A_lvl_3_val + s_val
                     A_lvl_2_q += 1
                 else
-                    phase_stop_3 = min(A_lvl_2_i, phase_stop)
+                    phase_stop_3 = min(phase_stop, A_lvl_2_i)
                     if A_lvl_2_i == phase_stop_3
                         A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                         s_val += A_lvl_3_val
@@ -129,7 +129,7 @@ quote
                         s_val = A_lvl_3_val + s_val
                         A_lvl_2_q += 1
                     else
-                        phase_stop_3 = min(A_lvl_2_i, phase_stop)
+                        phase_stop_3 = min(phase_stop, A_lvl_2_i)
                         if A_lvl_2_i == phase_stop_3
                             A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                             s_val += A_lvl_3_val
@@ -276,7 +276,7 @@ quote
                     A_lvl_2_q += 1
                     i = A_lvl_2_i + 1
                 else
-                    phase_stop_3 = min(A_lvl_2_i, phase_stop)
+                    phase_stop_3 = min(phase_stop, A_lvl_2_i)
                     if A_lvl_2_i == phase_stop_3
                         for i_8 = i:-1 + phase_stop_3
                             val = B[i_8, j_4]

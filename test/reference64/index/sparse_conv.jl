@@ -85,7 +85,7 @@ begin
                 end
                 A_lvl_q_2 += 1
             else
-                phase_stop_10 = min(A_lvl_i_2, phase_stop)
+                phase_stop_10 = min(phase_stop, A_lvl_i_2)
                 if A_lvl_i_2 == phase_stop_10
                     A_lvl_2_val = A_lvl_val[A_lvl_q_2]
                     if C_lvl_qos > C_lvl_qos_stop

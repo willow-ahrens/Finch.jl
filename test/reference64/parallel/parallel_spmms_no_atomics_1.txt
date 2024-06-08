@@ -105,7 +105,7 @@ begin
                                                         Ct_lvl_2_val[Ct_lvl_2_q] += B_lvl_2_val * A_lvl_2_val
                                                         A_lvl_q_2 += 1
                                                     else
-                                                        phase_stop_9 = min(A_lvl_i_2, phase_stop_7)
+                                                        phase_stop_9 = min(phase_stop_7, A_lvl_i_2)
                                                         if A_lvl_i_2 == phase_stop_9
                                                             A_lvl_2_val = A_lvl_val[A_lvl_q_2]
                                                             Ct_lvl_2_val[Ct_lvl_2_q] += B_lvl_2_val * A_lvl_2_val
@@ -127,7 +127,7 @@ begin
                                 end
                                 B_lvl_q = B_lvl_q_step
                             else
-                                phase_stop_14 = min(B_lvl_i, phase_stop_3)
+                                phase_stop_14 = min(phase_stop_3, B_lvl_i)
                                 if B_lvl_i == phase_stop_14
                                     Ct_lvl_q = (1 - 1) * B_lvl.shape[2] + phase_stop_14
                                     Ct_lvl_2_q_2 = (Ct_lvl_q - 1) * A_lvl.shape[1] + i_7
@@ -181,7 +181,7 @@ begin
                                                             Ct_lvl_2_val[Ct_lvl_2_q_2] += B_lvl_2_val_3 * A_lvl_2_val_2
                                                             A_lvl_q_4 += 1
                                                         else
-                                                            phase_stop_19 = min(A_lvl_i_4, phase_stop_17)
+                                                            phase_stop_19 = min(phase_stop_17, A_lvl_i_4)
                                                             if A_lvl_i_4 == phase_stop_19
                                                                 A_lvl_2_val_2 = A_lvl_val[A_lvl_q_4]
                                                                 Ct_lvl_2_val[Ct_lvl_2_q_2] += B_lvl_2_val_3 * A_lvl_2_val_2

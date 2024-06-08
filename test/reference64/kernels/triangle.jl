@@ -70,7 +70,7 @@ begin
                     end
                     A_lvl_2_q += 1
                 else
-                    phase_stop_8 = min(A_lvl_2_i, phase_stop)
+                    phase_stop_8 = min(phase_stop, A_lvl_2_i)
                     if A_lvl_2_i == phase_stop_8
                         A_lvl_3_val = A_lvl_2_val[A_lvl_2_q]
                         A_lvl_q_3 = (1 - 1) * A_lvl.shape + phase_stop_8
