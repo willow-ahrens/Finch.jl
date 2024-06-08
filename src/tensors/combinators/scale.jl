@@ -67,7 +67,7 @@ virtual_fill_value(ctx::AbstractCompiler, arr::VirtualScaleArray) = virtual_fill
 instantiate(ctx, arr::VirtualScaleArray, mode, protos) =
     VirtualScaleArray(instantiate(ctx, arr.body, mode, protos), arr.scale)
 
-(ctx::Stylize{<:AbstractCompiler})(node::VirtualScaleArray) = ctx(node.body)
+get_style(ctx, node::VirtualScaleArray, root) = get_style(ctx, node.body, root)
 
 function popdim(node::VirtualScaleArray)
     if length(node.scale) == 1

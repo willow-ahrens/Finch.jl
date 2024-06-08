@@ -82,7 +82,7 @@ virtual_resize!(ctx::AbstractCompiler, arr::VirtualToeplitzArray, dims...) =
 instantiate(ctx, arr::VirtualToeplitzArray, mode, protos) =
     VirtualToeplitzArray(instantiate(ctx, arr.body, mode, [protos[1:arr.dim]; protos[arr.dim + 2:end]]), arr.dim)
 
-(ctx::Stylize{<:AbstractCompiler})(node::VirtualToeplitzArray) = ctx(node.body)
+get_style(ctx, node::VirtualToeplitzArray, root) = get_style(ctx, node.body, root)
 
 #Note, popdim is NOT recursive, it should only be called on the node itself to
 #reflect that the child lost a dimension and perhaps update this wrapper

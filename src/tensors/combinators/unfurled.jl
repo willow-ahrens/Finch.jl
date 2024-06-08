@@ -33,7 +33,7 @@ virtual_fill_value(ctx, tns::Unfurled) = virtual_fill_value(ctx, tns.arr)
 
 instantiate(ctx, tns::Unfurled, mode, protos) = tns
 
-(ctx::Stylize{<:AbstractCompiler})(node::Unfurled) = ctx(node.body)
+get_style(ctx, node::Unfurled, root) = get_style(ctx, node.body, root)
 
 function popdim(node::Unfurled, ctx)
     #I think this is an equivalent form, but it doesn't pop the unfurled node

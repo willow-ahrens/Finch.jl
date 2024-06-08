@@ -38,7 +38,7 @@ function contain(f, ctx::LowerJulia; kwargs...)
     end
 end
 
-(ctx::AbstractCompiler)(root) = ctx(root, Stylize(ctx, root)(root))
+(ctx::AbstractCompiler)(root) = ctx(root, get_style(ctx, root))
 (ctx::AbstractCompiler)(root, style) = lower(ctx, root, style)
 #(ctx::AbstractCompiler)(root, style) = (println(); println(); display(root); display(style); lower(ctx, root, style))
 function cache!(ctx::AbstractCompiler, var, val)
@@ -67,23 +67,23 @@ end
 
 (ctx::AbstractCompiler)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
 
-@kwdef struct Stylize{Ctx}
-    ctx::Ctx
-    root
-end
+"""
+    get_style(ctx, root)
 
-function (ctx::Stylize)(node)
-    if istree(node)
-        return mapreduce(ctx, result_style, arguments(node); init=DefaultStyle())
-    end
-    return DefaultStyle()
-end
+return the style to use for lowering `root` in `ctx`. This method is used to
+determine which pass should be used to lower a given node. The default
+implementation returns `DefaultStyle()`. Overload the three argument form
+of this method, `get_style(ctx, node, root)` and specialize on `node`.
+"""
+get_style(ctx, root)  = get_style(ctx, root, root)
 
-function (ctx::Stylize)(node::FinchNode)
+get_style(ctx, node, root) = DefaultStyle()
+
+function get_style(ctx, node::FinchNode, root)
     if node.kind === virtual
-        return ctx(node.val)
+        return get_style(ctx, node.val, root)
     elseif istree(node)
-        return mapreduce(ctx, result_style, arguments(node); init=DefaultStyle())
+        return mapreduce(arg -> get_style(ctx, arg, root), result_style, arguments(node); init=DefaultStyle())
     else
         return DefaultStyle()
     end
@@ -247,7 +247,7 @@ function lower_loop(ctx, root, ext)
             access(tns_2, mode, idxs...)
         end
     end))(root)
-    return ctx(root_2, result_style(LookupStyle(), Stylize(ctx, root_2)(root_2)))
+    return ctx(root_2, result_style(LookupStyle(), get_style(ctx, root_2)))
 end
 
 lower_loop(ctx, root, ext::ParallelDimension) = 

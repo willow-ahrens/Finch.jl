@@ -66,7 +66,7 @@ virtual_resize!(ctx::AbstractCompiler, arr::VirtualProtocolizedArray, dim) =
 instantiate(ctx, arr::VirtualProtocolizedArray, mode, protos) =
     VirtualProtocolizedArray(instantiate(ctx, arr.body, mode, map(something, arr.protos, protos)), arr.protos)
 
-(ctx::Stylize{<:AbstractCompiler})(node::VirtualProtocolizedArray) = ctx(node.body)
+get_style(ctx, node::VirtualProtocolizedArray, root) = get_style(ctx, node.body, root)
 
 function popdim(node::VirtualProtocolizedArray)
     if length(node.protos) == 1

@@ -71,7 +71,7 @@ virtual_fill_value(ctx::AbstractCompiler, arr::VirtualWindowedArray) = virtual_f
 instantiate(ctx, arr::VirtualWindowedArray, mode, protos) =
     VirtualWindowedArray(instantiate(ctx, arr.body, mode, protos), arr.dims)
 
-(ctx::Stylize{<:AbstractCompiler})(node::VirtualWindowedArray) = ctx(node.body)
+get_style(ctx, node::VirtualWindowedArray, root) = get_style(ctx, node.body, root)
 
 function popdim(node::VirtualWindowedArray)
     if length(node.dims) == 1

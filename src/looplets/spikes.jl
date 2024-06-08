@@ -14,7 +14,7 @@ FinchNotation.finch_leaf(x::Spike) = virtual(x)
 
 struct SpikeStyle end
 
-(ctx::Stylize{<:AbstractCompiler})(node::Spike) = ctx.root.kind === loop ? SpikeStyle() : DefaultStyle()
+get_style(ctx, ::Spike, root) = root.kind === loop ? SpikeStyle() : DefaultStyle()
 instantiate(ctx, tns::Spike, mode, protos) = tns
 combine_style(a::DefaultStyle, b::SpikeStyle) = SpikeStyle()
 combine_style(a::LookupStyle, b::SpikeStyle) = SpikeStyle()

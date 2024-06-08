@@ -11,7 +11,7 @@ FinchNotation.finch_leaf(x::Sequence) = virtual(x)
 
 struct SequenceStyle end
 
-(ctx::Stylize{<:AbstractCompiler})(node::Sequence) = ctx.root.kind === loop ? SequenceStyle() : DefaultStyle()
+get_style(ctx, ::Sequence, root) = root.kind === loop ? SequenceStyle() : DefaultStyle()
 instantiate(ctx, tns::Sequence, mode, protos) = tns
 combine_style(a::DefaultStyle, b::SequenceStyle) = SequenceStyle()
 combine_style(a::LookupStyle, b::SequenceStyle) = SequenceStyle()

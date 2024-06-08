@@ -62,7 +62,7 @@ virtual_fill_value(ctx::AbstractCompiler, arr::VirtualOffsetArray) = virtual_fil
 instantiate(ctx, arr::VirtualOffsetArray, mode, protos) =
     VirtualOffsetArray(instantiate(ctx, arr.body, mode, protos), arr.delta)
 
-(ctx::Stylize{<:AbstractCompiler})(node::VirtualOffsetArray) = ctx(node.body)
+get_style(ctx, node::VirtualOffsetArray, root) = get_style(ctx, node.body, root)
 
 function popdim(node::VirtualOffsetArray)
     if length(node.delta) == 1

@@ -71,7 +71,7 @@ virtual_fill_value(ctx::AbstractCompiler, arr::VirtualPermissiveArray) = virtual
 instantiate(ctx, arr::VirtualPermissiveArray, mode, protos) =
     VirtualPermissiveArray(instantiate(ctx, arr.body, mode, protos), arr.dims)
 
-(ctx::Stylize{<:AbstractCompiler})(node::VirtualPermissiveArray) = ctx(node.body)
+get_style(ctx, node::VirtualPermissiveArray, root) = get_style(ctx, node.body, root)
 
 function popdim(node::VirtualPermissiveArray)
     if length(node.dims) == 1

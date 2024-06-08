@@ -88,7 +88,7 @@ function instantiate_updater(arr::VirtualProductArray, ctx, protos)
     VirtualProductArray(instantiate_updater(arr.body, ctx, [protos[1:arr.dim]; protos[arr.dim + 2:end]]), arr.dim)
 end
 
-(ctx::Stylize{<:AbstractCompiler})(node::VirtualProductArray) = ctx(node.body)
+get_style(ctx, node::VirtualProductArray, root) = get_style(ctx, node.body, root)
 
 function popdim(node::VirtualProductArray, ctx)
     if length(virtual_size(ctx, node)) == node.dim

@@ -207,7 +207,7 @@ end
 
 struct SimplifyStyle end
 
-(ctx::Stylize{<:AbstractCompiler})(::Simplify) = SimplifyStyle()
+get_style(ctx, ::Simplify, root) = SimplifyStyle()
 combine_style(a::SimplifyStyle, b::SimplifyStyle) = a
 
 function lower(ctx::AbstractCompiler, root, ::SimplifyStyle)
