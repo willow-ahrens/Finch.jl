@@ -3,12 +3,12 @@
 
 A subfiber of a SparsePoint level does not need to represent slices `A[:, ..., :, i]`
 which are entirely [`fill_value`](@ref). Instead, only potentially non-fill
-slices are stored as subfibers in `lvl`. A main difference compared to SparseList 
+slices are stored as subfibers in `lvl`. A main difference compared to SparseList
 level is that SparsePoint level only stores a 'single' non-fill slice. It emits
 an error if the program tries to write multiple (>=2) coordinates into SparsePoint.
 
-`Ti` is the type of the last tensor index. The types `Ptr` and `Idx` are the 
-types of the arrays used to store positions and indicies. 
+`Ti` is the type of the last tensor index. The types `Ptr` and `Idx` are the
+types of the arrays used to store positions and indicies.
 
 ```jldoctest
 julia> Tensor(Dense(SparsePoint(Element(0.0))), [10 0 0; 0 20 0; 0 0 30])
@@ -45,7 +45,7 @@ SparsePointLevel{Ti}(lvl, shape) where {Ti} = SparsePointLevel{Ti}(lvl, shape, p
 
 SparsePointLevel{Ti}(lvl::Lvl, shape, ptr::Ptr, idx::Idx) where {Ti, Lvl, Ptr, Idx} =
     SparsePointLevel{Ti, Ptr, Idx, Lvl}(lvl, shape, ptr, idx)
-    
+
 Base.summary(lvl::SparsePointLevel) = "SparsePoint($(summary(lvl.lvl)))"
 similar_level(lvl::SparsePointLevel, fill_value, eltype::Type, dim, tail...) =
     SparsePoint(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
@@ -65,13 +65,13 @@ function countstored_level(lvl::SparsePointLevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
 
-pattern!(lvl::SparsePointLevel{Ti}) where {Ti} = 
+pattern!(lvl::SparsePointLevel{Ti}) where {Ti} =
     SparsePointLevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.idx)
 
-set_fill_value!(lvl::SparsePointLevel{Ti}, init) where {Ti} = 
+set_fill_value!(lvl::SparsePointLevel{Ti}, init) where {Ti} =
     SparsePointLevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx)
 
-Base.resize!(lvl::SparsePointLevel{Ti}, dims...) where {Ti} = 
+Base.resize!(lvl::SparsePointLevel{Ti}, dims...) where {Ti} =
     SparsePointLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.idx)
 
 function Base.show(io::IO, lvl::SparsePointLevel{Ti, Ptr, Idx, Lvl}) where {Ti, Lvl, Idx, Ptr}
@@ -136,7 +136,7 @@ mutable struct VirtualSparsePointLevel <: AbstractVirtualLevel
     qos_stop
     prev_pos
 end
-  
+
 is_level_injective(ctx, lvl::VirtualSparsePointLevel) = [is_level_injective(ctx, lvl.lvl)..., false]
 
 function is_level_atomic(ctx, lvl::VirtualSparsePointLevel)

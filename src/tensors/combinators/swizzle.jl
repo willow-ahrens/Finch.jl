@@ -60,7 +60,7 @@ unwrap(ctx, arr::VirtualSwizzleArray, var) = call(swizzle, unwrap(ctx, arr.body,
 
 lower(ctx::AbstractCompiler, tns::VirtualSwizzleArray, ::DefaultStyle) = :(SwizzleArray($(ctx(tns.body)), $((tns.dims...,))))
 
-virtual_fill_value(ctx::AbstractCompiler, arr::VirtualSwizzleArray) = 
+virtual_fill_value(ctx::AbstractCompiler, arr::VirtualSwizzleArray) =
     virtual_fill_value(ctx, arr.body)
 
 virtual_size(ctx::AbstractCompiler, arr::VirtualSwizzleArray) =

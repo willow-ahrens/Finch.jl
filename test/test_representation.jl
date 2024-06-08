@@ -1,6 +1,6 @@
 # This file tests the ground-truth level representations through conversion of
 # tensors between different representations, the conversion of tensors to and
-# from their string representation, validation against reference getindex, and 
+# from their string representation, validation against reference getindex, and
 # validation against reference conversion code
 
 @testset "representation" begin
@@ -31,7 +31,7 @@
         (key = "SparseCOO", Lvl = SparseCOO),
         (key = "SparseHash", Lvl = SparseHash),
     ]
-    
+
     levels_1D = []
     levels_2D = []
 
@@ -63,7 +63,7 @@
         ("6x_one_bool", [false, false, true, false, false, false]),
         ("1111x_bool_mix", begin
             x = fill(false, 1111)
-            x[2] = true 
+            x[2] = true
             x[3]= true
             x[555:999] .= true
             x[1001] = true
@@ -71,7 +71,7 @@
         end),
         ("11x_bool_mix", begin
             x = fill(false, 11)
-            x[2] = true 
+            x[2] = true
             x[3]= true
             x[5:9] .= true
             x[11] = true
@@ -90,7 +90,7 @@
             x[666]=6660.0
             x
         end),
-        
+
     ]
         for lvl in levels_1D
             lvl = merge((filter = (x) -> true, pattern = true, repr = true), lvl)
@@ -167,10 +167,10 @@
     for (key, arr) in [
         ("5x5_falses", fill(false, 5, 5)),
         ("5x5_trues", fill(true, 5, 5)),
-        ("4x4_one_bool", 
+        ("4x4_one_bool",
             [false false  false true ;
             false false false false
-            true  false false false 
+            true  false false false
             false true  false false ]),
         ("5x4_bool_mix",
             [false true  false true ;
@@ -180,7 +180,7 @@
             false true  false true ]),
         ("5x5_zeros", fill(0.0, 5, 5)),
         ("5x5_ones", fill(1.0, 5, 5)),
-        ("5x5_float_mix", 
+        ("5x5_float_mix",
             [0.0 1.0 2.0 2.0 3.0 ;
             0.0 0.0 0.0 0.0 0.0 ;
             1.0 1.0 2.0 0.0 0.0 ;

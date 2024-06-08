@@ -33,7 +33,7 @@ pattern!(::PatternLevel{Tp}) where {Tp} = Pattern{Tp}()
 
 function Base.show(io::IO, lvl::PatternLevel)
     print(io, "Pattern()")
-end 
+end
 
 @inline level_ndims(::Type{<:PatternLevel}) = 0
 @inline level_size(::PatternLevel) = ()

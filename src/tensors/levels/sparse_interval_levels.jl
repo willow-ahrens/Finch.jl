@@ -2,12 +2,12 @@
     SparseIntervalLevel{[Ti=Int], [Ptr, Left, Right]}(lvl, [dim])
 
 The single RLE level represent runs of equivalent slices `A[:, ..., :, i]`
-which are not entirely [`fill_value`](@ref). A main difference compared to SparseRLE 
+which are not entirely [`fill_value`](@ref). A main difference compared to SparseRLE
 level is that SparseInterval level only stores a 'single' non-fill run. It emits
-an error if the program tries to write multiple (>=2) runs into SparseInterval. 
+an error if the program tries to write multiple (>=2) runs into SparseInterval.
 
-`Ti` is the type of the last tensor index. The types `Ptr`, `Left`, and 'Right' 
-are the types of the arrays used to store positions and endpoints. 
+`Ti` is the type of the last tensor index. The types `Ptr`, `Left`, and 'Right'
+are the types of the arrays used to store positions and endpoints.
 
 ```jldoctest
 julia> Tensor(SparseInterval(Element(0)), [0, 10, 0])
@@ -48,11 +48,11 @@ similar_level(lvl::SparseIntervalLevel, fill_value, eltype::Type, dim, tail...) 
     SparseInterval(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
 
 function memtype(::Type{SparseIntervalLevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl}
-    return Ti 
+    return Ti
 end
 
 function postype(::Type{SparseIntervalLevel{Ti, Ptr, Left, Right, Lvl}}) where {Ti, Ptr, Left, Right, Lvl}
-    return postype(Lvl) 
+    return postype(Lvl)
 end
 
 function moveto(lvl::SparseIntervalLevel{Ti, Ptr, Left, Right, Lvl}, Tm) where {Ti, Ptr, Left, Right, Lvl}
@@ -67,13 +67,13 @@ function countstored_level(lvl::SparseIntervalLevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
 
-pattern!(lvl::SparseIntervalLevel{Ti}) where {Ti} = 
+pattern!(lvl::SparseIntervalLevel{Ti}) where {Ti} =
     SparseIntervalLevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.left, lvl.right)
 
-set_fill_value!(lvl::SparseIntervalLevel{Ti}, init) where {Ti} = 
+set_fill_value!(lvl::SparseIntervalLevel{Ti}, init) where {Ti} =
     SparseIntervalLevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.left, lvl.right)
 
-Base.resize!(lvl::SparseIntervalLevel{Ti}, dims...) where {Ti} = 
+Base.resize!(lvl::SparseIntervalLevel{Ti}, dims...) where {Ti} =
     SparseIntervalLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.left, lvl.right)
 
 function Base.show(io::IO, lvl::SparseIntervalLevel{Ti, Ptr, Left, Right, Lvl}) where {Ti, Lvl, Left, Right, Ptr}
@@ -203,7 +203,7 @@ postype(lvl::VirtualSparseIntervalLevel) = postype(lvl.lvl)
 
 function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseIntervalLevel, pos, init)
     Ti = lvl.Ti
-    Tp = postype(lvl) 
+    Tp = postype(lvl)
     push_preamble!(ctx, quote
         $(lvl.qos_fill) = $(Tp(0))
         $(lvl.qos_stop) = $(Tp(0))
@@ -265,9 +265,9 @@ function thaw_level!(ctx::AbstractCompiler, lvl::VirtualSparseIntervalLevel, pos
 end
 
 function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
-    (lvl, pos) = (fbr.lvl, fbr.pos) 
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
-    Tp = postype(lvl) 
+    Tp = postype(lvl)
     Ti = lvl.Ti
     my_i_end = freshen(ctx, tag, :_i_end)
     my_i_stop = freshen(ctx, tag, :_i_stop)
@@ -307,19 +307,19 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, mode
     )
 end
 
-instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, mode::Updater, protos) = 
+instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseIntervalLevel}, mode::Updater, protos) =
     instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx, :null)), mode, protos)
 
 function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseIntervalLevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
-    (lvl, pos) = (fbr.lvl, fbr.pos) 
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
-    Tp = postype(lvl) 
+    Tp = postype(lvl)
     Ti = lvl.Ti
     qos = freshen(ctx, tag, :_qos)
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
     dirty = freshen(ctx, tag, :dirty)
-    
+
     Furlable(
         body = (ctx, ext) -> Thunk(
             preamble = quote

@@ -7,7 +7,7 @@ left and right endpoints of each run. Optionally, `dim` is the size of the last 
 
 `Ti` is the type of the last tensor index, and `Tp` is the type used for
 positions in the level. The types `Ptr`, `Left`, and `Right` are the types of the
-arrays used to store positions and endpoints. 
+arrays used to store positions and endpoints.
 
 The `merge` keyword argument is used to specify whether the level should merge
 duplicate consecutive runs.
@@ -61,17 +61,17 @@ function moveto(lvl::SparseRLELevel{Ti}, device) where {Ti}
     return SparseRLELevel{Ti}(lvl_2, lvl.shape, lvl.ptr, lvl.left, lvl.right, lvl.buf; merge = getmerge(lvl))
 end
 
-pattern!(lvl::SparseRLELevel{Ti}) where {Ti} = 
+pattern!(lvl::SparseRLELevel{Ti}) where {Ti} =
     SparseRLELevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.left, lvl.right, pattern!(lvl.buf); merge = getmerge(lvl))
 
 function countstored_level(lvl::SparseRLELevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1]-1)
 end
 
-set_fill_value!(lvl::SparseRLELevel{Ti}, init) where {Ti} = 
+set_fill_value!(lvl::SparseRLELevel{Ti}, init) where {Ti} =
     SparseRLELevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.left, lvl.right, set_fill_value!(lvl.buf, init); merge = getmerge(lvl))
 
-Base.resize!(lvl::SparseRLELevel{Ti}, dims...) where {Ti} = 
+Base.resize!(lvl::SparseRLELevel{Ti}, dims...) where {Ti} =
     SparseRLELevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.left, lvl.right, resize!(lvl.buf, dims[1:end-1]...); merge = getmerge(lvl))
 
 function Base.show(io::IO, lvl::SparseRLELevel{Ti, Ptr, Left, Right, merge, Lvl}) where {Ti, Ptr, Left, Right, merge, Lvl}
@@ -394,7 +394,7 @@ function thaw_level!(ctx::AbstractCompiler, lvl::VirtualSparseRLELevel, pos_stop
 end
 
 function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseRLELevel}, mode::Reader, subprotos, ::Union{typeof(defaultread), typeof(walk)})
-    (lvl, pos) = (fbr.lvl, fbr.pos) 
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
     Ti = lvl.Ti
@@ -430,7 +430,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseRLELevel}, mode::Rea
                             $my_i_stop = $(lvl.right)[$my_q]
                         end,
                         stop = (ctx, ext) -> value(my_i_stop),
-                        body = (ctx, ext) -> Thunk( 
+                        body = (ctx, ext) -> Thunk(
                             body = (ctx) -> Sequence([
                                 Phase(
                                     stop = (ctx, ext) -> call(-, value(my_i_start), getunit(ext)),
@@ -457,11 +457,11 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseRLELevel}, mode::Rea
 end
 
 
-instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseRLELevel}, mode::Updater, protos) = 
+instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseRLELevel}, mode::Updater, protos) =
     instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx, :null)), mode, protos)
 
 function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseRLELevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
-    (lvl, pos) = (fbr.lvl, fbr.pos) 
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
     Ti = lvl.Ti
@@ -469,7 +469,7 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseRLELevel}, mod
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
     dirty = freshen(ctx, tag, :dirty)
-    
+
     Furlable(
         body = (ctx, ext) -> Thunk(
             preamble = quote

@@ -26,7 +26,7 @@ Base.copyto!(dst::AbstractArray, src::AbstractTensor) =
 function copyto_swizzled!(dst, src, perm)
     if issorted(perm)
         return copyto_helper!(dst, src)
-    else 
+    else
         tmp = rep_construct(permutedims_rep(data_rep(src), perm))
         tmp = copyto_helper!(swizzle(tmp, invperm(perm)...), src)
         return copyto_helper!(dst, tmp.body)

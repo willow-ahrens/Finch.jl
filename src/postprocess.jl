@@ -1,5 +1,5 @@
 """
-    pretty(ex) 
+    pretty(ex)
 
 Make ex prettier. Shorthand for `ex |> unblock |> striplines |> regensym`.
 """
@@ -27,7 +27,7 @@ Give gensyms prettier names by renumbering them. `ex` is the target Julia expres
 function regensym(ex)
     counter = 0
     syms = Dict{Symbol, Symbol}()
-    Rewrite(Postwalk((x) -> if isgensym(x) 
+    Rewrite(Postwalk((x) -> if isgensym(x)
         get!(()->Symbol("_", gensymname(x), "_", counter+=1), syms, x)
     end))(ex)
 end
@@ -170,7 +170,7 @@ end
 
 Base.:(==)(a::PropagateCopies, b::PropagateCopies) = (a.defs == b.defs)
 Base.copy(ctx::PropagateCopies) = PropagateCopies(copy(ctx.defs))
-function Base.merge!(ctx::PropagateCopies, ctx_2::PropagateCopies) 
+function Base.merge!(ctx::PropagateCopies, ctx_2::PropagateCopies)
     #This code basically performs intersect!(ctx.defs, ctx_2.defs)
     for (lhs, rhs) in ctx.defs
         if !haskey(ctx_2.defs, lhs) || rhs != ctx_2.defs[lhs]
@@ -282,7 +282,7 @@ Base.:(==)(a::MarkDead, b::MarkDead) = a.refs == b.refs
 
 branch(ctx::MarkDead) = MarkDead(copy(ctx.refs))
 Base.copy(ctx::MarkDead) = MarkDead(copy(ctx.refs))
-function meet!(ctx::MarkDead, ctx_2::MarkDead) 
+function meet!(ctx::MarkDead, ctx_2::MarkDead)
     union!(ctx.refs, ctx_2.refs)
 end
 
@@ -376,7 +376,7 @@ function prune_dead(ex)
             (@rule :block(:if(~cond, ~a, ~b), ~c) => Expr(:block, Expr(:deadif, cond, Expr(:block, a, nothing), Expr(:block, b, nothing)), c)),
             (@rule (~f::isassign)(:_, ~rhs) => Expr(:block, rhs)),
             (@rule :block(:call(~f::ispure, ~a...), ~b) => Expr(:block, a..., b)),
-            (@rule :block((~f)(~a...), ~b) => if f in (:ref, :., :curly, :string, :kw, :parameters, :tuple) 
+            (@rule :block((~f)(~a...), ~b) => if f in (:ref, :., :curly, :string, :kw, :parameters, :tuple)
                 Expr(:block, a..., b)
             end),
             (@rule :block(~a::(!isexpr), ~b) => Expr(:block, b)),

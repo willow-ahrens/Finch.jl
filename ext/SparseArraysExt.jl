@@ -1,8 +1,8 @@
-module SparseArraysExt 
+module SparseArraysExt
 
 using Finch
 using Finch: AbstractCompiler, DefaultStyle, Extent
-using Finch: Unfurled, Furlable, Stepper, Jumper, Run, FillLeaf, Lookup, Simplify, Sequence, Phase, Thunk, Spike 
+using Finch: Unfurled, Furlable, Stepper, Jumper, Run, FillLeaf, Lookup, Simplify, Sequence, Phase, Thunk, Spike
 using Finch: virtual_size, virtual_fill_value, getstart, getstop, freshen, push_preamble!, push_epilogue!, SwizzleArray
 using Finch: get_mode_flag, issafe, contain
 using Finch: FinchProtocolError

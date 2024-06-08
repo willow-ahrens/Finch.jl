@@ -35,7 +35,7 @@
         @finch begin
             CR .= 0
             for i = _
-                for j = _ 
+                for j = _
                     for  k = _
                         CR[i, j] += A[i, k] * B[k, j]
                     end
@@ -166,14 +166,14 @@
 
     end
 
-    #= 
+    #=
     formats = [Dense, SparseList]
     for fmatA1 in formats
         for fmatA2 in formats
             Af = fmatA2(fmatA1(Element(UInt(0))))
             At = Tensor(Af, A)
             for fmatB1 in formats
-                for fmatB2 in formats 
+                for fmatB2 in formats
                     Bf = fmatB2(fmatB1(Element(UInt(0))))
                     Bt = Tensor(Bf, B)
 
@@ -272,8 +272,8 @@
 
                     @test Ct == CR
 
-                end 
-            end 
+                end
+            end
         end
     end
     =#
@@ -283,10 +283,10 @@
         B = fsprand(UInt, 42, 42, 0.9)
         CR = Tensor(Dense(Dense(Element(UInt(0)))), undef, 42, 42)
 
-        check_output("parallel/debug_spmm_atomics_1.txt", @finch_code begin 
+        check_output("parallel/debug_spmm_atomics_1.txt", @finch_code begin
             CR .= 0
             for i = _
-                for j = _ 
+                for j = _
                     for  k = _
                         CR[i, j] += A[i, k] * B[k, j]
                     end
@@ -294,10 +294,10 @@
             end
         end)
 
-        @finch begin 
+        @finch begin
             CR .= 0
             for i = _
-                for j = _ 
+                for j = _
                     for  k = _
                         CR[i, j] += A[i, k] * B[k, j]
                     end
@@ -314,8 +314,8 @@
 
         #=
 
-        @test_throws Finch.FinchConcurrencyError begin 
-            @finch_code begin 
+        @test_throws Finch.FinchConcurrencyError begin
+            @finch_code begin
                 Ct .= 0
                 for i = _
                     for j = _
@@ -388,7 +388,7 @@
 
         @test Ct == CR
         =#
-    end 
+    end
 
     let
         io = IOBuffer()

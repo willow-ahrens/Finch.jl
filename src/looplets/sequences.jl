@@ -27,11 +27,11 @@ combine_style(a::SequenceStyle, b::PhaseStyle) = b
 function lower(ctx::AbstractCompiler, root::FinchNode, ::SequenceStyle)
     if root.kind === loop
         phases = get_sequence_phases(ctx, root.body, root.ext)
-        
+
         i = getname(root.idx)
         i0 = freshen(ctx, i, :_start)
         step = freshen(ctx, i, :_step)
-        
+
         thunk = quote
             $i = $(ctx(getstart(root.ext)))
         end
@@ -65,14 +65,14 @@ end
 
 function get_sequence_phases(ctx, node::Sequence, ext)
     new_phases = []
-    
+
     prev_stop = call(-, getstart(ext), getunit(ext))
     for curr in node.phases
         curr_start = call(+, prev_stop, getunit(ext))
         curr_stop = getstop(phase_range(ctx, curr, ext))
-        push!(new_phases, Phase(body = curr.body, start = (ctx, ext_2) -> curr_start, stop = curr.stop)) 
+        push!(new_phases, Phase(body = curr.body, start = (ctx, ext_2) -> curr_start, stop = curr.stop))
         prev_stop = curr_stop
     end
-    
+
     return enumerate(new_phases)
 end

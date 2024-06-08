@@ -55,17 +55,17 @@ Base.summary(lvl::SparseVBLLevel) = "SparseVBL($(summary(lvl.lvl)))"
 similar_level(lvl::SparseVBLLevel, fill_value, eltype::Type, dim, tail...) =
     SparseVBL(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
 
-pattern!(lvl::SparseVBLLevel{Ti}) where {Ti} = 
+pattern!(lvl::SparseVBLLevel{Ti}) where {Ti} =
     SparseVBLLevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
 
 function countstored_level(lvl::SparseVBLLevel, pos)
     countstored_level(lvl.lvl, lvl.ofs[lvl.ptr[pos + 1]]-1)
 end
 
-set_fill_value!(lvl::SparseVBLLevel{Ti}, init) where {Ti} = 
+set_fill_value!(lvl::SparseVBLLevel{Ti}, init) where {Ti} =
     SparseVBLLevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
 
-Base.resize!(lvl::SparseVBLLevel{Ti}, dims...) where {Ti} = 
+Base.resize!(lvl::SparseVBLLevel{Ti}, dims...) where {Ti} =
     SparseVBLLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.idx, lvl.ofs)
 
 function Base.show(io::IO, lvl::SparseVBLLevel{Ti, Ptr, Idx, Ofs, Lvl}) where {Ti, Ptr, Idx, Ofs, Lvl}
@@ -406,7 +406,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseVBLLevel}, mode::Rea
                                     )
                                 ]),
                         next = (ctx, ext) -> :($my_r += $(Tp(1))),
-                    ), 
+                    ),
                 ),
                 Phase(
                     body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl)))

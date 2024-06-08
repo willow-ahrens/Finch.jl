@@ -126,7 +126,7 @@ plan
     LogicNode
 
 A Finch Logic IR node. Finch uses a variant of Concrete Field Notation as an
-intermediate representation. 
+intermediate representation.
 
 The LogicNode struct represents many different Finch IR nodes. The nodes are
 differentiated by a `FinchLogic.LogicNodeKind` enum.
@@ -259,7 +259,7 @@ function Base.getproperty(node::LogicNode, sym::Symbol)
     end
 end
 
-function Base.show(io::IO, node::LogicNode) 
+function Base.show(io::IO, node::LogicNode)
     if node.kind === immediate || node.kind === field || node.kind === alias
         print(io, node.kind, "(", node.val, ")")
     elseif node.kind === deferred
@@ -269,7 +269,7 @@ function Base.show(io::IO, node::LogicNode)
     end
 end
 
-function Base.show(io::IO, mime::MIME"text/plain", node::LogicNode) 
+function Base.show(io::IO, mime::MIME"text/plain", node::LogicNode)
     print(io, "Finch Logic: ")
     try
         if isstateful(node)

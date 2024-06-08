@@ -60,7 +60,7 @@ function open_stmt(prgm, ctx::EnforceLifecyclesVisitor)
 end
 
 function (ctx::EnforceLifecyclesVisitor)(node::FinchNode)
-    if node.kind === loop 
+    if node.kind === loop
         open_stmt(loop(node.idx, ctx(node.ext), open_scope(ctx, node.body)), ctx)
     elseif node.kind === sieve
         open_stmt(sieve(ctx(node.cond), open_scope(ctx, node.body)), ctx)
@@ -68,7 +68,7 @@ function (ctx::EnforceLifecyclesVisitor)(node::FinchNode)
         open_stmt(define(node.lhs, ctx(node.rhs), open_scope(ctx, node.body)), ctx)
     elseif node.kind === declare
         ctx.scoped_uses[node.tns] = ctx.uses
-        if get(ctx.modes, node.tns, reader) === updater 
+        if get(ctx.modes, node.tns, reader) === updater
             node = block(freeze(node.tns), node)
         end
         ctx.modes[node.tns] = updater

@@ -115,7 +115,7 @@ end
 function (ctx::FinchParserVisitor)(ex::Symbol)
     if ex == :_ || ex == :(:)
         return :($dimless)
-    elseif ex in evaluable_exprs 
+    elseif ex in evaluable_exprs
         return ctx.nodes.literal(@eval($ex))
     else
         ctx.nodes.tag(ex)

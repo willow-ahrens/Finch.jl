@@ -46,7 +46,7 @@ end
 
 pattern!(lvl::ElementLevel{Vf, Tv, Tp}) where  {Vf, Tv, Tp} =
     Pattern{Tp}()
-set_fill_value!(lvl::ElementLevel{Vf, Tv, Tp}, init) where {Vf, Tv, Tp} = 
+set_fill_value!(lvl::ElementLevel{Vf, Tv, Tp}, init) where {Vf, Tv, Tp} =
     ElementLevel{init, Tv, Tp}(lvl.val)
 Base.resize!(lvl::ElementLevel) = lvl
 
@@ -60,7 +60,7 @@ function Base.show(io::IO, lvl::ElementLevel{Vf, Tv, Tp, Val}) where {Vf, Tv, Tp
         show(io, lvl.val)
     end
     print(io, ")")
-end 
+end
 
 labelled_show(io::IO, fbr::SubFiber{<:ElementLevel}) =
     print(io, fbr.lvl.val[fbr.pos])

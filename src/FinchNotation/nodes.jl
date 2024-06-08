@@ -17,7 +17,7 @@ const ID = 8
     virtual   =  4ID
     tag       =  5ID | IS_TREE
     call      =  6ID | IS_TREE
-    access    =  7ID | IS_TREE 
+    access    =  7ID | IS_TREE
     cached    = 10ID | IS_TREE
     assign    = 11ID | IS_TREE | IS_STATEFUL
     loop      = 12ID | IS_TREE | IS_STATEFUL
@@ -105,7 +105,7 @@ Finch AST expression `val`, equivalent to the quoted expression `ref`
 cached
 
 """
-    loop(idx, ext, body) 
+    loop(idx, ext, body)
 
 Finch AST statement that runs `body` for each value of `idx` in `ext`. Tensors
 in `body` must have ranges that agree with `ext`.
@@ -132,7 +132,7 @@ assign
 """
     define(lhs, rhs, body)
 
-Finch AST statement that defines `lhs` as having the value `rhs` in `body`. 
+Finch AST statement that defines `lhs` as having the value `rhs` in `body`.
 A new scope is introduced to evaluate `body`.
 """
 define
@@ -195,7 +195,7 @@ end
     isstateful(node)
 
 Returns true if the node is a finch statement, and false if the node is an
-index expression. Typically, statements specify control flow and 
+index expression. Typically, statements specify control flow and
 expressions describe values.
 """
 isstateful(node::FinchNode) = Int(node.kind) & IS_STATEFUL != 0
@@ -271,7 +271,7 @@ function FinchNode(kind::FinchNodeKind, args::Vector)
         (kind === declare && length(args) == 2) ||
         (kind === freeze && length(args) == 1) ||
         (kind === thaw && length(args) == 1) ||
-        (kind === block) || 
+        (kind === block) ||
         (kind === yieldbind)
         return FinchNode(kind, nothing, nothing, args)
     else
@@ -319,7 +319,7 @@ function Base.getproperty(node::FinchNode, sym::Symbol)
     end
 end
 
-function Base.show(io::IO, node::FinchNode) 
+function Base.show(io::IO, node::FinchNode)
     if node.kind === literal || node.kind === index || node.kind === variable || node.kind === virtual
         print(io, node.kind, "(", node.val, ")")
     elseif node.kind === value
@@ -329,7 +329,7 @@ function Base.show(io::IO, node::FinchNode)
     end
 end
 
-function Base.show(io::IO, mime::MIME"text/plain", node::FinchNode) 
+function Base.show(io::IO, mime::MIME"text/plain", node::FinchNode)
     print(io, "Finch program: ")
     if isstateful(node)
         display_statement(io, mime, node, 0)

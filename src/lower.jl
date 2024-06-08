@@ -163,7 +163,7 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::DefaultStyle)
         return lower_access(ctx, root, resolve(ctx, root.tns))
     elseif root.kind === call
         root = simplify(ctx, root)
-        if root.kind === call 
+        if root.kind === call
             if root.op == literal(and)
                 if isempty(root.args)
                     return true
@@ -179,8 +179,8 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::DefaultStyle)
             else
                 :($(ctx(root.op))($(map(ctx, root.args)...)))
             end
-         else 
-           return ctx(root) 
+         else
+           return ctx(root)
          end
     elseif root.kind === cached
         return ctx(root.arg)
@@ -191,7 +191,7 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::DefaultStyle)
     elseif root.kind === sieve
         cond = freshen(ctx,:cond)
         push_preamble!(ctx, :($cond = $(ctx(root.cond))))
-    
+
         return quote
             if $cond
                 $(contain(ctx) do ctx_2
@@ -250,17 +250,17 @@ function lower_loop(ctx, root, ext)
     return ctx(root_2, result_style(LookupStyle(), get_style(ctx, root_2)))
 end
 
-lower_loop(ctx, root, ext::ParallelDimension) = 
+lower_loop(ctx, root, ext::ParallelDimension) =
     lower_parallel_loop(ctx, root, ext, ext.device)
 function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualCPU)
     root = ensure_concurrent(root, ctx)
-    
+
     tid = index(freshen(ctx, :tid))
     i = freshen(ctx, :i)
 
     decl_in_scope = unique(filter(!isnothing, map(node-> begin
         if @capture(node, declare(~tns, ~init))
-            tns 
+            tns
         end
     end, PostOrderDFS(root.body))))
 

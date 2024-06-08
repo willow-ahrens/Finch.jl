@@ -5,7 +5,7 @@ struct DictTable{Ti, Tp, Ptr, Idx, Val, Tbl}
     tbl::Tbl
 end
 
-Base.:(==)(a::DictTable, b::DictTable) = 
+Base.:(==)(a::DictTable, b::DictTable) =
     a.ptr == b.ptr &&
     a.idx == b.idx &&
     a.val == b.val &&
@@ -120,7 +120,7 @@ slices are stored. Optionally, `dim` is the size of the last dimension.
 
 `Ti` is the type of the last fiber index, and `Tp` is the type used for
 positions in the level. The types `Ptr` and `Idx` are the types of the
-arrays used to store positions and indicies. 
+arrays used to store positions and indicies.
 
 ```jldoctest
 julia> Tensor(Dense(Sparse(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
@@ -160,7 +160,7 @@ SparseLevel{Ti}(lvl, shape) where {Ti} = SparseLevel{Ti}(lvl, shape, DictTable{T
 
 SparseLevel{Ti}(lvl::Lvl, shape, tbl::Tbl) where {Ti, Lvl, Tbl} =
     SparseLevel{Ti, Tbl, Lvl}(lvl, shape, tbl)
-    
+
 Base.summary(lvl::SparseLevel) = "Sparse($(summary(lvl.lvl)))"
 similar_level(lvl::SparseLevel, fill_value, eltype::Type, dim, tail...) =
     Sparse(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
@@ -169,7 +169,7 @@ function postype(::Type{SparseLevel{Ti, Tbl, Lvl}}) where {Ti, Tbl, Lvl}
     return postype(Lvl)
 end
 
-Base.resize!(lvl::SparseLevel{Ti}, dims...) where {Ti} = 
+Base.resize!(lvl::SparseLevel{Ti}, dims...) where {Ti} =
     SparseLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.tbl)
 
 function moveto(lvl::SparseLevel{Ti, Tbl, Lvl}, Tm) where {Ti, Tbl, Lvl}
@@ -183,10 +183,10 @@ function countstored_level(lvl::SparseLevel, pos)
     countstored_level(lvl.lvl, table_pos(lvl.tbl, pos) - 1)
 end
 
-pattern!(lvl::SparseLevel{Ti}) where {Ti} = 
+pattern!(lvl::SparseLevel{Ti}) where {Ti} =
     SparseLevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.tbl)
 
-set_fill_value!(lvl::SparseLevel{Ti}, init) where {Ti} = 
+set_fill_value!(lvl::SparseLevel{Ti}, init) where {Ti} =
     SparseLevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.tbl)
 
 function Base.show(io::IO, lvl::SparseLevel{Ti, Tbl, Lvl}) where {Ti, Tbl, Lvl}
@@ -254,7 +254,7 @@ mutable struct VirtualSparseLevel <: AbstractVirtualLevel
     shape
     qos_stop
 end
-  
+
 is_level_injective(ctx, lvl::VirtualSparseLevel) = [is_level_injective(ctx, lvl.lvl)..., false]
 function is_level_atomic(ctx, lvl::VirtualSparseLevel)
     (below, atomic) = is_level_atomic(ctx, lvl.lvl)
@@ -395,7 +395,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseLevel}, mode::Reader
                             body = FillLeaf(virtual_level_fill_value(lvl)),
                             tail = Simplify(instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Ti)), mode, subprotos))
                         ),
-                        next = (ctx, ext) -> :($state = Finch.subtable_next($(lvl.tbl), $subtbl, $state)) 
+                        next = (ctx, ext) -> :($state = Finch.subtable_next($(lvl.tbl), $subtbl, $state))
                     )
                 ),
                 Phase(

@@ -11,7 +11,7 @@ let
 
     formats = []
     Ts = [Bool, Int, Float64]
-    
+
     tik = time()
     for (n, T) in enumerate(Ts)
         if n > 1

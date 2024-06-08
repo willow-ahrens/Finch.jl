@@ -227,7 +227,7 @@ end
 =#
 
 """
-compute(args..., ctx = ctx) = 
+compute(args..., ctx = ctx) =
 
 FinchInterpreter(DefaultOptimizer())(prgm)
 FinchInterpreter(DefaultNormalizer(DefaultHeuristic()))(prgm)

@@ -268,7 +268,7 @@ function bspwrite(fname::AbstractString, arr, attrs = OrderedDict())
 end
 bspwrite(fname, arr, attrs = OrderedDict()) = bspwrite_tensor(fname, arr, attrs)
 
-bspwrite_tensor(io, fbr::Tensor, attrs = OrderedDict()) = 
+bspwrite_tensor(io, fbr::Tensor, attrs = OrderedDict()) =
     bspwrite_tensor(io, swizzle(fbr, 1:ndims(fbr)...), attrs)
 
 function bspwrite_tensor(io, arr::SwizzleArray{dims, <:Tensor}, attrs = OrderedDict()) where {dims}

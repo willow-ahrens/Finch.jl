@@ -69,7 +69,7 @@ function declare_level! end
     freeze_level!(ctx, lvl, pos, init)
 
 Given the last reference position, `pos`, freeze all fibers within `lvl` assuming
-that we have potentially updated `1:pos`. 
+that we have potentially updated `1:pos`.
 """
 function freeze_level! end
 
@@ -92,7 +92,7 @@ previously assembled.
 function assemble_level! end
 
 """
-    reassemble_level!(lvl, ctx, pos_start, pos_end) 
+    reassemble_level!(lvl, ctx, pos_start, pos_end)
 
 Set the previously assempled positions from `pos_start` to `pos_end` to
 `level_fill_value(lvl)`.  Not avaliable on all level types as this presumes updating.
@@ -100,7 +100,7 @@ Set the previously assempled positions from `pos_start` to `pos_end` to
 function reassemble_level! end
 
 """
-    freeze_level!(ctx, lvl, pos) 
+    freeze_level!(ctx, lvl, pos)
 
 Freeze all fibers in `lvl`. Positions `1:pos` need freezing.
 """

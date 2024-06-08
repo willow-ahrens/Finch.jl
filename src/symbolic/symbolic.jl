@@ -180,7 +180,7 @@ collapsed(alg, idx, ext, lhs, f::Any, rhs) = isidempotent(alg, f) ? sieve(call(>
 collapsed(alg, idx, ext, lhs, f::typeof(-), rhs) = assign(lhs, f, call(*, measure(ext), rhs))
 collapsed(alg, idx, ext, lhs, f::typeof(*), rhs) = assign(lhs, f, call(^, rhs, measure(ext)))
 collapsed(alg, idx, ext::Extent, lhs, f::typeof(+), rhs) = assign(lhs, f, call(*, measure(ext), rhs))
-collapsed(alg, idx, ext::ContinuousExtent, lhs, f::typeof(+), rhs) = begin 
+collapsed(alg, idx, ext::ContinuousExtent, lhs, f::typeof(+), rhs) = begin
     if (@capture rhs call(*, ~a1..., call(d, ~i1..., idx, ~i2...), ~a2...)) # Lebesgue
         if prove(LowerJulia(), call(==, measure(ext), 0))
             assign(lhs, f, literal(0))
@@ -191,7 +191,7 @@ collapsed(alg, idx, ext::ContinuousExtent, lhs, f::typeof(+), rhs) = begin
         if prove(LowerJulia(), call(==, measure(ext), 0))
             assign(lhs, f, rhs)
         else
-            sieve(call(==, measure(ext), 0), assign(lhs, f, rhs)) # Undefined if measure != 0 
+            sieve(call(==, measure(ext), 0), assign(lhs, f, rhs)) # Undefined if measure != 0
             #block(sieve(call(==, measure(ext), 0), assign(lhs, f, rhs)),
             #      sieve(call(!=, measure(ext), 0), assign(lhs, f, Inf))) #TODO : add "else" in sieve
         end
@@ -201,7 +201,7 @@ end
 getvars(arr::AbstractArray) = mapreduce(getvars, vcat, arr, init=[])
 getvars(arr) = getroot(arr) === nothing ? [] : [getroot(arr)]
 getroot(arr) = nothing
-function getvars(node::FinchNode) 
+function getvars(node::FinchNode)
     if node.kind == variable
         return [node]
     elseif node.kind == virtual

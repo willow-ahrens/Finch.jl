@@ -53,7 +53,7 @@ function Base.show(io::IO, lvl::AtomicLevel{AVal, Lvl}) where {AVal, Lvl}
         show(IOContext(io, :typeinfo=>AVal), lvl.locks)
     end
     print(io, ")")
-end 
+end
 
 labelled_show(io::IO, ::SubFiber{<:AtomicLevel}) =
     print(io, "Atomic -> ")
@@ -138,8 +138,8 @@ function assemble_level!(ctx, lvl::VirtualAtomicLevel, pos_start, pos_stop)
     pos_stop = cache!(ctx, :pos_stop, simplify(ctx, pos_stop))
     idx = freshen(ctx, :idx)
     lockVal = freshen(ctx, :lock)
-    push_preamble!(ctx, quote 
-              Finch.resize_if_smaller!($(lvl.locks), $(ctx(pos_stop))) 
+    push_preamble!(ctx, quote
+              Finch.resize_if_smaller!($(lvl.locks), $(ctx(pos_stop)))
               @inbounds for $idx = $(ctx(pos_start)):$(ctx(pos_stop))
                 $(lvl.locks)[$idx] = Finch.make_lock(eltype($(lvl.AVal)))
               end
@@ -153,8 +153,8 @@ function reassemble_level!(ctx, lvl::VirtualAtomicLevel, pos_start, pos_stop)
     pos_stop = cache!(ctx, :pos_stop, simplify(ctx, pos_stop))
     idx = freshen(ctx, :idx)
     lockVal = freshen(ctx, :lock)
-    push_preamble!(ctx, quote 
-              Finch.resize_if_smaller!($lvl.locks, $(ctx(pos_stop))) 
+    push_preamble!(ctx, quote
+              Finch.resize_if_smaller!($lvl.locks, $(ctx(pos_stop)))
               @inbounds for $idx = $(ctx(pos_start)):$(ctx(pos_stop))
                 $lvl.locks[$idx] = Finch.make_lock(eltype($(lvl.AVal)))
               end
@@ -206,24 +206,24 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualAtomicLevel}, mode::Update
     (lvl, pos) = (fbr.lvl, fbr.pos)
     sym = freshen(ctx, lvl.ex, :after_atomic_lvl)
     atomicData = freshen(ctx, lvl.ex, :atomicArraysAcc)
-    lockVal = freshen(ctx, lvl.ex, :lockVal) 
+    lockVal = freshen(ctx, lvl.ex, :lockVal)
     dev = lower(ctx, virtual_get_device(ctx.code.task), DefaultStyle())
     return Thunk(
-        
+
         body =  (ctx) -> begin
-        preamble = quote  
+        preamble = quote
             $atomicData =  Finch.get_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
             $lockVal = Finch.aquire_lock!($dev, $atomicData)
         end
-        epilogue = quote 
-            Finch.release_lock!($dev, $atomicData) end 
+        epilogue = quote
+            Finch.release_lock!($dev, $atomicData) end
         push_preamble!(ctx, preamble)
         push_epilogue!(ctx, epilogue)
             lvl_2 = lvl.lvl
             update = instantiate(ctx, VirtualSubFiber(lvl_2, pos), mode, protos)
             return update
         end,
-        
+
     )
 end
 function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, mode::Updater, protos)
@@ -235,12 +235,12 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualAtomicLevel}, mode::
     return Thunk(
 
         body =  (ctx) -> begin
-        preamble = quote  
+        preamble = quote
             $atomicData =  Finch.get_lock($dev, $(lvl.locks), $(ctx(pos)), eltype($(lvl.AVal)))
             $lockVal = Finch.aquire_lock!($dev, $atomicData)
         end
-        epilogue = quote 
-            Finch.release_lock!($dev, $atomicData) end 
+        epilogue = quote
+            Finch.release_lock!($dev, $atomicData) end
             push_preamble!(ctx, preamble)
             push_epilogue!(ctx, epilogue)
             lvl_2 = lvl.lvl

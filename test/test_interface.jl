@@ -12,14 +12,14 @@ using Finch: AsArray
             let
                 arr = [1 2 1 2; 2 1 2 1]
                 arr2 = arr .+ 2
-                
+
                 tns = Tensor(Dense(Dense(Element(0))), arr)
                 tns2 = Tensor(Dense(Dense(Element(0))), arr2)
-                
-                
+
+
                 broadcast(/, tns, tns2)  # passes
                 broadcast(Finch.fld_nothrow, tns, tns2)  # fails with RewriteTools.RuleRewriteError
-                broadcast(Finch.rem_nothrow, tns, tns2) 
+                broadcast(Finch.rem_nothrow, tns, tns2)
             end
 
             #https://github.com/willow-ahrens/Finch.jl/issues/520
@@ -50,7 +50,7 @@ using Finch: AsArray
                 a_raw = rand(LEN, LEN - 5) * 10;
                 b_raw = rand(LEN, LEN - 5) * 10;
                 c_raw = rand(LEN, LEN) * 10;
-                
+
                 a = lazy(swizzle(Tensor(a_raw), 1, 2));
                 b = lazy(swizzle(Tensor(b_raw), 1, 2));
                 c = lazy(swizzle(Tensor(c_raw), 1, 2));
@@ -81,10 +81,10 @@ using Finch: AsArray
             let
                 arr3d = rand(Int, 3, 2, 3) .% 10
                 tns = Tensor(Dense(Dense(Dense(Element(0)))), arr3d)
-                
+
                 tns_l = lazy(tns)
                 reduced = sum(tns_l, dims=(1, 2))
-                
+
                 plan = broadcast(+, tns_l, reduced)
                 result = compute(plan)
             end
@@ -268,7 +268,7 @@ using Finch: AsArray
                     #Test to ensure the results match
                     @test A == A_ref
 
-                    
+
                 end
             end
 
@@ -527,11 +527,11 @@ using Finch: AsArray
             ))),
             produces(C))
         @test Finch.concordize(prgm_in) == prgm_out
-    
+
         prgm_in = plan(produces())
         prgm_out = plan(produces())
         @test Finch.concordize(prgm_in) == prgm_out
-    
+
         prgm_in = plan(
             query(A, table(0, i, j)),
             query(B, table(0, i, j)),
@@ -554,7 +554,7 @@ using Finch: AsArray
             produces(C)
         )
         @test Finch.concordize(prgm_in) == prgm_out
-    
+
         prgm_in = plan(
             query(A, table(0, i, j)),
             query(B, reorder(relabel(A, i, j), i, j)),
@@ -566,7 +566,7 @@ using Finch: AsArray
             produces(B)
         )
         @test Finch.concordize(prgm_in) == prgm_out
-    
+
         D = alias(:D)
         prgm_in = plan(
             query(A, table(0, i, j)),
@@ -585,7 +585,7 @@ using Finch: AsArray
             produces(C, D)
         )
         @test Finch.concordize(prgm_in) == prgm_out
-    
+
         prgm_in = plan(
             query(A, table(0, i, j)),
             query(B, table(0, i, j)),
@@ -608,7 +608,7 @@ using Finch: AsArray
             produces(C)
         )
         @test Finch.concordize(prgm_in) == prgm_out
-    
+
         prgm_in = plan(
             query(A, table(0)),
             query(B, reorder(relabel(A, ), )),
@@ -620,12 +620,12 @@ using Finch: AsArray
             produces(B)
         )
         @test Finch.concordize(prgm_in) == prgm_out
-    
+
         prgm_in = plan(
             query(A, table(0, i, j, k)),
             query(B, reorder(relabel(A, i, j, k), k, j, i)),
             query(C, reorder(relabel(A, i, j, k), j, k, i)),
-            query(D, mapjoin(*, 
+            query(D, mapjoin(*,
                 reorder(relabel(B, k, j, i), i, j, k),
                 reorder(relabel(C, j, k, i), i, j, k)
             )),
@@ -641,7 +641,7 @@ using Finch: AsArray
             query(B_2, reorder(relabel(B, k, j, i), i, j, k)),
             query(C, reorder(relabel(A_3, j, k, i), j, k, i)),
             query(C_2, reorder(relabel(C, j, k, i), i, j, k)),
-            query(D, mapjoin(*, 
+            query(D, mapjoin(*,
                 reorder(relabel(B_2, i, j, k), i, j, k),
                 reorder(relabel(C_2, i, j, k), i, j, k)
             )),
@@ -656,17 +656,17 @@ using Finch: AsArray
         i = field(:i)
         j = field(:j)
         k = field(:k)
-        
+
         # Test 1: Simple reorder and relabel on a table
         expr_in = reorder(relabel(table(A, i, j, k), k, j, i), i, j, k)
         expr_out = reorder(table(A, k, j, i), i, j, k)  # After push_fields, reorder and relabel should be absorbed
         @test Finch.push_fields(expr_in) == expr_out
-    
+
         # Test 2: Nested reorders and relabels on a table
         expr_in = reorder(relabel(reorder(relabel(table(A, i, j, k), j, i, k), k, j, i), i, k, j), j, i, k)
         expr_out = reorder(table(A, k, j, i), j, i, k)
         @test Finch.push_fields(expr_in) == expr_out
-    
+
         # Test 3: Mapjoin with internal reordering and relabeling
         expr_in = mapjoin(+,
                     reorder(relabel(table(A, i, j), j, i), i, j),
@@ -675,12 +675,12 @@ using Finch: AsArray
                     reorder(table(A, j, i), i, j),
                     reorder(table(A, i, j), j, i))
         @test Finch.push_fields(expr_in) == expr_out
-    
+
         # Test 4: Immediate values absorbing relabel and reorder
         expr_in = reorder(relabel(immediate(42)), i)
         expr_out = reorder(immediate(42), i)
         @test Finch.push_fields(expr_in) == expr_out
-    
+
         # Test 5: Complex nested structure with mapjoin and aggregates
         expr_in = mapjoin(+,
                     reorder(relabel(mapjoin(*,
@@ -699,9 +699,9 @@ using Finch: AsArray
         #=
         query(A1, table(0, i0, i1))
         query(A2, table(1, i2, i3))
-        query(A5, 
+        query(A5,
             aggregate(+, 0.0, relabel(
-                mapjoin(*, 
+                mapjoin(*,
                     reorder(relabel(relabel(A2, i2, i3), i7, i8), i7, i8, i9),
                     reorder(relabel(relabel(A0, i0, i1), i8, i9), i7, i8, i9)
                 ), i13, i14, i15), i14))

@@ -8,7 +8,7 @@ slices are stored. Optionally, `dim` is the size of the last dimension.
 
 `Ti` is the type of the last tensor index, and `Tp` is the type used for
 positions in the level. The types `Ptr` and `Idx` are the types of the
-arrays used to store positions and indicies. 
+arrays used to store positions and indicies.
 
 ```jldoctest
 julia> Tensor(Dense(SparseList(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
@@ -48,7 +48,7 @@ SparseListLevel{Ti}(lvl, shape) where {Ti} = SparseListLevel{Ti}(lvl, shape, pos
 
 SparseListLevel{Ti}(lvl::Lvl, shape, ptr::Ptr, idx::Idx) where {Ti, Lvl, Ptr, Idx} =
     SparseListLevel{Ti, Ptr, Idx, Lvl}(lvl, shape, ptr, idx)
-    
+
 Base.summary(lvl::SparseListLevel) = "SparseList($(summary(lvl.lvl)))"
 similar_level(lvl::SparseListLevel, fill_value, eltype::Type, dim, tail...) =
     SparseList(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
@@ -68,13 +68,13 @@ function countstored_level(lvl::SparseListLevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
 
-pattern!(lvl::SparseListLevel{Ti}) where {Ti} = 
+pattern!(lvl::SparseListLevel{Ti}) where {Ti} =
     SparseListLevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.idx)
 
-set_fill_value!(lvl::SparseListLevel{Ti}, init) where {Ti} = 
+set_fill_value!(lvl::SparseListLevel{Ti}, init) where {Ti} =
     SparseListLevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx)
 
-Base.resize!(lvl::SparseListLevel{Ti}, dims...) where {Ti} = 
+Base.resize!(lvl::SparseListLevel{Ti}, dims...) where {Ti} =
     SparseListLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.idx)
 
 function Base.show(io::IO, lvl::SparseListLevel{Ti, Ptr, Idx, Lvl}) where {Ti, Lvl, Idx, Ptr}
@@ -138,7 +138,7 @@ mutable struct VirtualSparseListLevel <: AbstractVirtualLevel
     qos_stop
     prev_pos
 end
-  
+
 is_level_injective(ctx, lvl::VirtualSparseListLevel) = [is_level_injective(ctx, lvl.lvl)..., false]
 function is_level_atomic(ctx, lvl::VirtualSparseListLevel)
     (below, atomic) = is_level_atomic(ctx, lvl.lvl)
@@ -311,7 +311,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Re
                             body = FillLeaf(virtual_level_fill_value(lvl)),
                             tail = Simplify(instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Ti)), mode, subprotos))
                         ),
-                        next = (ctx, ext) -> :($my_q += $(Tp(1))) 
+                        next = (ctx, ext) -> :($my_q += $(Tp(1)))
                     )
                 ),
                 Phase(
@@ -356,7 +356,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Re
                             if $(lvl.idx)[$my_q] < $(ctx(getstart(ext)))
                                 $my_q = Finch.scansearch($(lvl.idx), $(ctx(getstart(ext))), $my_q, $my_q_stop - 1)
                             end
-                        end,                        
+                        end,
                         preamble = :($my_i2 = $(lvl.idx)[$my_q]),
                         stop = (ctx, ext) -> value(my_i2),
                         chunk =  Spike(
@@ -364,7 +364,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Re
                             tail = instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Ti)), mode, subprotos),
                         ),
                         next = (ctx, ext) -> :($my_q += $(Tp(1))),
-                    )  
+                    )
                 ),
                 Phase(
                     body = (ctx, ext) -> Run(FillLeaf(virtual_level_fill_value(lvl)))

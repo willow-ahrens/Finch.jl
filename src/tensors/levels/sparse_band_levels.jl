@@ -46,17 +46,17 @@ Base.summary(lvl::SparseBandLevel) = "SparseBand($(summary(lvl.lvl)))"
 similar_level(lvl::SparseBandLevel, fill_value, eltype::Type, dim, tail...) =
     SparseBand(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
 
-pattern!(lvl::SparseBandLevel{Ti}) where {Ti} = 
+pattern!(lvl::SparseBandLevel{Ti}) where {Ti} =
     SparseBandLevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
 
 function countstored_level(lvl::SparseBandLevel, pos)
     countstored_level(lvl.lvl, lvl.ofs[lvl.ptr[pos + 1]]-1)
 end
 
-set_fill_value!(lvl::SparseBandLevel{Ti}, init) where {Ti} = 
+set_fill_value!(lvl::SparseBandLevel{Ti}, init) where {Ti} =
     SparseBandLevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx, lvl.ofs)
 
-Base.resize!(lvl::SparseBandLevel{Ti}, dims...) where {Ti} = 
+Base.resize!(lvl::SparseBandLevel{Ti}, dims...) where {Ti} =
     SparseBandLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.idx, lvl.ofs)
 
 function Base.show(io::IO, lvl::SparseBandLevel{Ti, Ptr, Idx, Ofs, Lvl}) where {Ti, Ptr, Idx, Ofs, Lvl}
@@ -145,7 +145,7 @@ function is_level_concurrent(ctx, lvl::VirtualSparseBandLevel)
     (data, _) = is_level_concurrent(ctx, lvl.lvl)
     return ([data; [false]], false)
 end
-  
+
 postype(lvl::VirtualSparseBandLevel) = postype(lvl.lvl)
 
 

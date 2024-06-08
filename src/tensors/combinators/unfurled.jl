@@ -3,10 +3,10 @@
     ndims = 0
     body
     Unfurled(arr, ndims, body) = begin
-        new(arr, ndims, body) 
+        new(arr, ndims, body)
     end
     Unfurled(arr, ndims, body::Unfurled) = begin
-        Unfurled(arr, ndims, body.body) 
+        Unfurled(arr, ndims, body.body)
     end
     Unfurled(arr, body) = Unfurled(arr, 0, body)
 end

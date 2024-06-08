@@ -16,7 +16,7 @@ end
 A transformation to instantiate readers and updaters before executing an
 expression.
 """
-function instantiate!(ctx, prgm) 
+function instantiate!(ctx, prgm)
     prgm = InstantiateTensors(ctx=ctx)(prgm)
     return prgm
 end
@@ -124,7 +124,7 @@ Run a finch program `prgm`. The syntax for a finch program is a set of nested
 loops, statements, and branches over pointwise array assignments. For example,
 the following program computes the sum of two arrays `A = B + C`:
 
-```julia   
+```julia
 @finch begin
     A .= 0
     for i = _
@@ -151,7 +151,7 @@ index variables into the scope of their bodies.
 
 Finch uses the types of the arrays and symbolic analysis to discover program
 optimizations. If `B` and `C` are sparse array types, the program will only run
-over the nonzeros of either. 
+over the nonzeros of either.
 
 Semantically, Finch programs execute every iteration. However, Finch can use
 sparsity information to reliably skip iterations when possible.
@@ -264,7 +264,7 @@ macro finch_kernel(opts_def...)
     named_args = map(arg -> :($(QuoteNode(arg)) => $(esc(arg))), args)
     prgm = FinchNotation.finch_parse_instance(ex)
     for arg in args
-        prgm = quote    
+        prgm = quote
             let $(esc(arg)) = $(FinchNotation.variable_instance(arg))
                 $prgm
             end

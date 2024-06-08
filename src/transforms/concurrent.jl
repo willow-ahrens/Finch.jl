@@ -15,7 +15,7 @@ function is_injective end
 """
     is_atomic(ctx, tns)
 
-    Returns a tuple (atomicities, overall) where atomicities is a vector, indicating which indices have an atomic that guards them, 
+    Returns a tuple (atomicities, overall) where atomicities is a vector, indicating which indices have an atomic that guards them,
     and overall is a boolean that indicates is the last level had an atomic guarding it.
 """
 function is_atomic end
@@ -96,7 +96,7 @@ function ensure_concurrent(root, ctx)
                 if !all(atomicities) || !all(concurrencies)
                     throw(FinchConcurrencyError("Nonlocal assignments to $(root) are not all the same access so concurrency and atomics are needed on all acceses!"))
                 end
-            end 
+            end
             continue
         else
             #Since all operations/acceses are the same, a more fine grained analysis takes place:
@@ -119,7 +119,7 @@ function ensure_concurrent(root, ctx)
                 if all(injectivities[parallel_modes]) && all(concurrencies[parallel_modes])
                     continue # We pass due to injectivity!
                 end
-                # FIXME: This could be more fine grained: atomics need to only protect the non-injectivity. 
+                # FIXME: This could be more fine grained: atomics need to only protect the non-injectivity.
                 (atomicities, _) = is_atomic(ctx, acc.tns)
                 if all(atomicities[parallel_modes]) && all(concurrencies[parallel_modes])
                     continue # we pass due to atomics!

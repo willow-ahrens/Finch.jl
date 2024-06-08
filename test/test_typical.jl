@@ -8,7 +8,7 @@
         @repl io B = Tensor(Dense(Element(0.0)), fill(1.1, 10))
         @repl io @finch_code for i=_; B[i] += A[i] end
         @repl io @finch for i=_; B[i] += A[i] end
-        
+
         @test check_output("typical/typical_inplace_sparse_add.txt", String(take!(io)))
     end
 
@@ -34,7 +34,7 @@
                 end
             end
         end
-        
+
         @test check_output("typical/typical_spmv_sparsematrixcsc.txt", String(take!(io)))
     end
 
@@ -60,7 +60,7 @@
                 end
             end
         end
-        
+
         @test check_output("typical/typical_spmv_csc.txt", String(take!(io)))
     end
 
@@ -85,7 +85,7 @@
                 end
             end
         end
-        
+
         @test check_output("typical/typical_transpose_csc_to_coo.txt", String(take!(io)))
     end
 
@@ -99,7 +99,7 @@
                 Element{0.0, Float64}([1.0, 1.0, 1.0]),
                 10, [1, 4], [2, 5, 8]))
         z = Tensor(SparseList(Element{0.0}(), 10))
-    
+
         io = IOBuffer()
 
         @repl io @finch_code (z .= 0; for i=_; z[i] = x[gallop(i)] + y[gallop(i)] end)

@@ -7,7 +7,7 @@
     for (mtx, A_ref) in matrices
         A_ref = SparseMatrixCSC(A_ref)
         m, n = size(A_ref)
-        B_ref = transpose(A_ref) * A_ref 
+        B_ref = transpose(A_ref) * A_ref
         A = Tensor(A_ref)
         B = Tensor(Dense(SparseList(Element(0.0))), m, m)
 

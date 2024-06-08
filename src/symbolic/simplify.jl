@@ -76,7 +76,7 @@ function get_simplify_rules(alg, shash)
 
         (@rule call(==, ~a, ~a) => literal(true)),
         (@rule call(<=, ~a, ~a) => literal(true)),
-        (@rule call(<, ~a, ~a) => literal(false)), 
+        (@rule call(<, ~a, ~a) => literal(false)),
         (@rule assign(access(~a, updater, ~i...), ~f, ~b) => if isidentity(alg, f, b) block() end),
         (@rule assign(access(~a, ~m, ~i...), $(literal(missing))) => block()),
         (@rule assign(access(~a, ~m, ~i..., $(literal(missing)), ~j...), ~b) => block()),
@@ -143,10 +143,10 @@ function get_simplify_rules(alg, shash)
         (@rule loop(~idx, ~ext::isvirtual, ~body) => begin
             body_contain_idx = idx ∈ getunbound(body)
             if !body_contain_idx
-                decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns 
+                decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns
                                                               elseif @capture(node, define(~var, ~val, ~body_2)) var
                                                               end, PostOrderDFS(body)))
-                Postwalk(@rule assign(access(~lhs, updater, ~j...), ~f, ~rhs) => begin 
+                Postwalk(@rule assign(access(~lhs, updater, ~j...), ~f, ~rhs) => begin
                              access_in_rhs = filter(!isnothing, map(node-> if @capture(node, access(~tns, reader, ~k...)) tns # TODO add getroot here?
                                                                            elseif @capture(node, ~var::isvariable) var
                                                                            end, PostOrderDFS(rhs)))
@@ -157,7 +157,7 @@ function get_simplify_rules(alg, shash)
             end
         end),
 
-        # Lifting sieve 
+        # Lifting sieve
         (@rule loop(~idx, ~ext::isvirtual, sieve(~cond, ~body)) => begin
             if idx ∉ getunbound(cond)
                 sieve(cond, loop(idx, ext, body))
@@ -172,18 +172,18 @@ function get_simplify_rules(alg, shash)
         end),
 
         ## Bottom-up reduction2
-        (@rule loop(~idx, ~ext::isvirtual, block(~s1..., assign(access(~lhs, updater, ~j...), ~f, ~rhs), ~s2...)) => begin 
+        (@rule loop(~idx, ~ext::isvirtual, block(~s1..., assign(access(~lhs, updater, ~j...), ~f, ~rhs), ~s2...)) => begin
             if ortho(getroot(lhs), s1) && ortho(getroot(lhs), s2)
                 if idx ∉ j && idx ∉ getunbound(rhs)
                     body = block(s1..., assign(access(lhs, updater, j...), f, rhs), s2...)
-                    decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns 
+                    decl_in_scope = filter(!isnothing, map(node-> if @capture(node, declare(~tns, ~init)) tns
                                                                     elseif @capture(node, define(~var, ~val, ~body_2)) var
                                                                     end, PostOrderDFS(body)))
 
-                    access_in_rhs = filter(!isnothing, map(node-> if @capture(node, access(~tns, reader, ~k...)) tns 
+                    access_in_rhs = filter(!isnothing, map(node-> if @capture(node, access(~tns, reader, ~k...)) tns
                                                                     elseif @capture(node, ~var::isvariable) var
                                                                     end, PostOrderDFS(rhs)))
-                        
+
                     if !(lhs in decl_in_scope) && isempty(intersect(access_in_rhs, decl_in_scope))
                         collapsed_body = collapsed(alg, idx, ext.val, access(lhs, updater, j...), f, rhs)
                         block(collapsed_body, loop(idx, ext, block(s1..., s2...)))
@@ -231,7 +231,7 @@ function visit_simplify(node::FinchNode)
 end
 
 """
-   simplify(ctx, node) 
+   simplify(ctx, node)
 
 simplify the program `node` using the rules in `ctx`
 """

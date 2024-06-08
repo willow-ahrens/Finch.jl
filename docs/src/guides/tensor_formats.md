@@ -47,7 +47,7 @@ julia> A_fbr = Tensor(Dense(SparseList(Element(0.0))), A)
 
 This section describes the formatted storage for Finch tensors, the first
 argument to the [`Tensor`](@ref) constructor. Level storage types holds all of
-the tensor data, and can be nested hierarchichally. 
+the tensor data, and can be nested hierarchichally.
 
 Finch represents tensors hierarchically in a tree, where each node in the tree
 is a vector of subtensors and the leaves are the elements.  Thus, a matrix is
@@ -105,7 +105,7 @@ The "Level Format Name" is the name of the level datatype. Other columns have de
 | ⚙️     | Indicates the level is experimental and under development. |
 | 🕸️     | Indicates the level is deprecated, and may be removed in a future release. |
 
-### Groups 
+### Groups
 #### Core Group
 Contains the basic, minimal set of levels one should use to build and
 manipulate tensors.  These levels can be efficiently read and written to in any
@@ -115,7 +115,7 @@ Contains levels which are more specialized, and geared
 towards bulk updates. These levels may be more efficient in certain cases, but are
 also more restrictive about access orders and intended for more advanced usage.
 #### Modifier Group
-Contains levels which are also more specialized, but not towards a sparsity pattern. 
+Contains levels which are also more specialized, but not towards a sparsity pattern.
 These levels modify other levels in a variety of ways, but don't store novel sparsity patterns.
 Typically, they modify how levels are stored or attach data to levels to support the utilization
 of various hardware features.

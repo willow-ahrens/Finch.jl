@@ -87,7 +87,7 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::AcceptRunStyle)
             #The loop body is constant after removing AcceptRuns, lower only the body once
             return ctx(body)
         end
-    elseif root.kind === block 
+    elseif root.kind === block
         quote end #TODO this shouldn't need to be specified
     else
         error("unimplemented")

@@ -1,4 +1,4 @@
-module TensorMarketExt 
+module TensorMarketExt
 
 using Finch
 

@@ -273,7 +273,7 @@ getunit(ext::ContinuousExtent) = Eps
 getunit(ext::FinchNode) = ext.kind === virtual ? getunit(ext.val) : ext
 
 get_smallest_measure(ext::Extent) = literal(1)
-get_smallest_measure(ext::ContinuousExtent) = literal(0) 
+get_smallest_measure(ext::ContinuousExtent) = literal(0)
 get_smallest_measure(ext::FinchNode) = ext.kind === virtual ? get_smallest_measure(ext.val) : ext
 
 getstart(ext::ContinuousExtent) = ext.start

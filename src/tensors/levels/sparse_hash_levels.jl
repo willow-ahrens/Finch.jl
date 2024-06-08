@@ -170,7 +170,7 @@ mutable struct VirtualSparseHashLevel <: AbstractVirtualLevel
     qos_stop
     Lvl
 end
-  
+
 is_level_injective(ctx, lvl::VirtualSparseHashLevel) = [is_level_injective(ctx, lvl.lvl)..., (true for _ in 1:lvl.N)...]
 function is_level_atomic(ctx, lvl::VirtualSparseHashLevel)
     (below, atomic) = is_level_atomic(ctx, lvl.lvl)

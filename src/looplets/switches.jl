@@ -3,7 +3,7 @@
 end
 
 @kwdef struct Case
-    cond 
+    cond
     body
 end
 

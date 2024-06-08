@@ -178,9 +178,9 @@
         arr = [0.0 2.0 2.0 0.0 3.0 3.0;
             1.0 0.0 7.0 1.0 0.0 0.0;
             0.0 0.0 0.0 0.0 0.0 9.0]
-        
+
         println(io, "Tensor(Dense(Separate(Dense(Element(0))))):")
-        
+
         fbr = dropfills!(Tensor(Dense(Separate(Dense(Element(0))))), arr)
 
         # sublvl = Tensor(Dense(Element(0)), [])
@@ -191,8 +191,8 @@
         # col5 = dropfills!(Tensor((Dense(Element(0)))), arr[:, 5])
         # col6 = dropfills!(Tensor((Dense(Element(0)))), arr[:, 6])
         # vals = [col1, col2, col3, col4, col5, col6]
-        
-        
+
+
         println(io, "initialized tensor: ", fbr)
         @test Structure(fbr) == Structure(Tensor(Dense(Separate(fbr.lvl.lvl.lvl, fbr.lvl.lvl.val), 6)))
         @test Structure(fbr) == Structure(Tensor(Dense(Separate{typeof(fbr.lvl.lvl.lvl), typeof(fbr.lvl.lvl.val)}(fbr.lvl.lvl.lvl, fbr.lvl.lvl.val), 6)))
@@ -219,7 +219,7 @@
         arr = [0.0 2.0 2.0 0.0 3.0 3.0;
             1.0 0.0 7.0 1.0 0.0 0.0;
             0.0 0.0 0.0 0.0 0.0 9.0]
-        
+
         fbr = dropfills!(Tensor(Dense(Atomic(Dense(Element(0))))), arr)
 
         println(io, "initialized tensor: ", fbr)

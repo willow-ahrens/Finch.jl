@@ -8,19 +8,24 @@ not up to date.
 ├── benchmark                  # benchmarks for internal use
 │   ├── runbenchmarks.jl       # run benchmarks
 │   ├── runjudge.jl            # run benchmarks on current branch and compare with main
-│   └── ...                 
+│   └── ...
 ├── docs                       # documentation
 │   ├── [build]                # rendered docs website
 │   ├── src                    # docs website source
 │   ├── fix.jl                 # fix docstrings
 │   ├── examples               # example applications implemented in Finch!
-│   │   └── ...                 
+│   │   └── ...
 │   ├── make.jl                # build documentation locally
-│   └── ...                 
+│   └── ...
 ├── ext                        # conditionally-loaded code for interaction with other packages (e.g. SparseArrays)
 ├── src                        # Source files
 │   ├── interface              # Implementations of array api functions (e.g. map, reduce, etc.)
 │   │   ├── fileio             # File IO function definitions
+│   │   └── ...
+│   ├── FinchLogic             # SubModule containing the High-Level IR
+│   │   ├── nodes.jl           # defines the High-Level IR
+│   │   └── ...
+│   ├── scheduler              # Auto-Scheduler to compile High-Level IR to Finch IR
 │   │   └── ...
 │   ├── FinchNotation          # SubModule containing the Finch IR
 │   │   ├── nodes.jl           # defines the Finch IR
@@ -30,6 +35,9 @@ not up to date.
 │   ├── symbolic               # term rewriting systems for program and bounds
 │   ├── tensors                # built-in Finch tensor definitions
 │   │   ├── levels             # all of the levels
+│   │   │   └── ...
+│   │   ├── combinators        # tensor combinators which modify tensor behavior
+│   │   │   └── ...
 │   │   ├── fibers.jl          # fibers combine levels to form tensors
 │   │   ├── scalars.jl         # a nice scalar type
 │   │   └── masks.jl           # mask tensors (e.g. upper-triangular mask)
@@ -39,10 +47,9 @@ not up to date.
 │   │   ├── dimensionalize.jl  # computes extents for loops and declarations
 │   │   ├── concordize.jl      # adds loops to ensure all accesses are concordant
 │   │   └── wrapperize.jl      # converts index expressions to array wrappers
+│   ├── abstract_tensor.jl     # finch array interface functions
 │   ├── execute.jl             # global compiler calls
 │   ├── lower.jl               # inner compiler definition
-│   ├── semantics.jl           # finch array interface functions
-│   ├── traits.jl              # functions and types to reason about appropriate outputs
 │   ├── util                   # shims and julia codegen utils (Dead code elimination, etc...)
 │   │   └── ...
 │   └── ...
@@ -54,5 +61,6 @@ not up to date.
 ├── Project.toml               # julia-readable listing of project dependencies
 ├── [Manifest.toml]            # local listing of installed dependencies (don't commit this)
 ├── LICENSE
+├── CONTRIBUTING.md
 └── README.md
 ```

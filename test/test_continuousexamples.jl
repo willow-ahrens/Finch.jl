@@ -22,10 +22,10 @@
     end
 
     @testset "2D Box Search" begin
-        # Load 2d Points 
+        # Load 2d Points
         point = [Pinpoints2D[i,:] .+ 1e7 for i in 1:size(Pinpoints2D,1)]
         point = sort(point)
-        # Load 2d Box Query 
+        # Load 2d Box Query
         query = [QueryBox2D[i,:] .+ 1e7 for i in 1:size(QueryBox2D,1)]
         answer = [49, 11, 21, 18, 22, 18, 7, 95, 0, 19]
         radanswer = [73, 13, 27, 25, 37, 39, 11, 140, 7, 26]
@@ -50,7 +50,7 @@
                       point_ptr_x,
                       point_x))
 
-        # Setting up Box Fiber 
+        # Setting up Box Fiber
         box_x_start = [query[1][1]]
         box_y_start = [query[1][2]]
         box_x_stop = [query[1][3]]
@@ -70,7 +70,7 @@
         output = Tensor(SparseByteMap{Int64}(Pattern(), shape_id))
 
         def = @finch_kernel mode=:fast function rangequery(output, box, points)
-            output .= false 
+            output .= false
             for x=_, y=_, id=_
                 output[id] |= box[y,x] && points[id,y,x]
             end
@@ -78,7 +78,7 @@
 
         radius=ox=oy=0.0 #placeholder
         def2 = @finch_kernel mode=:fast function radiusquery(output, points, radius, ox, oy)
-            output .= false 
+            output .= false
             for x=realextent(ox-radius,ox+radius), y=realextent(oy-radius,oy+radius)
                 if (x-ox)^2 + (y-oy)^2 <= radius^2
                     for id=_
@@ -87,7 +87,7 @@
                 end
             end
         end
- 
+
         eval(def)
         eval(def2)
 
@@ -184,6 +184,6 @@
             end
         end
 
-        @test abs(res.val - 528.4) < 1e-4 
+        @test abs(res.val - 528.4) < 1e-4
     end
 end

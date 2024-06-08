@@ -18,13 +18,13 @@ Base.:(==)(a::Structure, b::Structure) = isstructequal(a.t, b.t)
 
 isstructequal(a, b) = a === b
 
-isstructequal(a::T, b::T) where {T <: Finch.SwizzleArray} = 
+isstructequal(a::T, b::T) where {T <: Finch.SwizzleArray} =
     isstructequal(a.body, b.body)
 
-isstructequal(a::T, b::T) where {T <: Tensor} = 
+isstructequal(a::T, b::T) where {T <: Tensor} =
     isstructequal(a.lvl, b.lvl)
 
-isstructequal(a::T, b::T) where {T <: Finch.SubFiber} = 
+isstructequal(a::T, b::T) where {T <: Finch.SubFiber} =
     isstructequal(a.lvl, b.lvl) &&
     isstructequal(a.ptr, b.ptr)
 

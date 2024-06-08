@@ -31,7 +31,7 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::SpikeStyle)
             @rule access(~a::isvirtual, ~i...) => access(get_spike_body(ctx, a.val, root.ext, body_ext), ~i...)
         ))(root.body)
         @assert isvirtual(root.ext)
-        if prove(ctx, call(<=, measure(body_ext), 0)) 
+        if prove(ctx, call(<=, measure(body_ext), 0))
             body_expr = quote end
         else
             #TODO check body nonempty
@@ -43,7 +43,7 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::SpikeStyle)
                 ))
             end
         end
-        
+
         tail_ext = similar_extent(root.ext, getstop(root.ext), getstop(root.ext))
         root_tail = Rewrite(Postwalk(
             @rule access(~a::isvirtual, ~i...) => access(get_spike_tail(ctx, a.val, root.ext, tail_ext), ~i...)

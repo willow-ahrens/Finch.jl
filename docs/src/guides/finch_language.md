@@ -72,7 +72,7 @@ Tensors have two modes: Read and Update. Tensors in read mode may be read, but n
 
 Tensor declaration is different than variable definition. Declaring a tensor initializes the memory (usually to zero) and sets the tensor to update mode. Defining a tensor simply gives a name to that memory. A tensor may be declared multiple times, but it may only be defined once.
 
-Tensors are assumed to be in read mode when they are defined. 
+Tensors are assumed to be in read mode when they are defined.
 Tensors must enter and exit scope in read mode. Finch inserts
 `freeze` and `thaw` statements to ensure that tensors are in the correct mode. Freezing a tensor prevents further updates and allows reads. Thawing a tensor allows further updates and prevents reads.
 
@@ -89,10 +89,10 @@ Finch loops have dimensions. Accessing a tensor with an unmodified loop index
 "hints" that the loop should have the same dimension as the corresponding axis
 of the tensor. Finch will automatically dimensionalize loops that are hinted by
 tensor accesses. One may refer to the automatically determined dimension using a
-variable named `_` or `:`. 
+variable named `_` or `:`.
 
 Similarly, tensor declarations also set the dimensions of a tensor. Accessing a tensor with an unmodified loop index
-"hints" that the tensor axis should have the same dimension as the corresponding loop. Finch will automatically dimensionalize declarations based on all updates up to the first read.  
+"hints" that the tensor axis should have the same dimension as the corresponding loop. Finch will automatically dimensionalize declarations based on all updates up to the first read.
 
 # Array Combinators
 

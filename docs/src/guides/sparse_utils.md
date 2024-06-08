@@ -3,7 +3,7 @@
 ## Sparse Constructors
 
 In addition to the `Tensor` constructor, Finch provides a number of convenience
-constructors for common tensor types. For example, the `spzeros` and `sprand` functions   
+constructors for common tensor types. For example, the `spzeros` and `sprand` functions
 have `fspzeros` and `fsprand` counterparts that return Finch tensors. We can also construct
 a sparse COO `Tensor` from a list of indices and values using the `fsparse` function.
 

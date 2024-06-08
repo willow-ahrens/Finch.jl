@@ -1,10 +1,10 @@
 """
     SeparateLevel{Lvl, [Val]}()
 
-A subfiber of a Separate level is a separate tensor of type `Lvl`, in it's 
+A subfiber of a Separate level is a separate tensor of type `Lvl`, in it's
 own memory space.
 
-Each sublevel is stored in a vector of type `Val` with `eltype(Val) = Lvl`. 
+Each sublevel is stored in a vector of type `Val` with `eltype(Val) = Lvl`.
 
 ```jldoctest
 julia> Tensor(Dense(Separate(Element(0.0))), [1, 2, 3])
@@ -54,7 +54,7 @@ function Base.show(io::IO, lvl::SeparateLevel{Lvl, Val}) where {Lvl, Val}
         show(io, lvl.val)
     end
     print(io, ")")
-end 
+end
 
 labelled_show(io::IO, ::SubFiber{<:SeparateLevel}) =
     print(io, "Pointer -> ")
@@ -126,7 +126,7 @@ virtual_level_eltype(lvl::VirtualSeparateLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_fill_value(lvl::VirtualSeparateLevel) = virtual_level_fill_value(lvl.lvl)
 
 function virtual_moveto_level(ctx, lvl::VirtualSeparateLevel, arch)
-    
+
     # Need to move each pointer...
     val_2 = freshen(ctx, lvl.val)
     push_preamble!(ctx, quote
@@ -229,7 +229,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSeparateLevel}, mode::Upda
             lvl_2 = thaw_level!(ctx, lvl_2, literal(1))
             push_preamble!(ctx, assemble_level!(ctx, lvl_2, literal(1), literal(1)))
             res = instantiate(ctx, VirtualSubFiber(lvl_2, literal(1)), mode, protos)
-            push_epilogue!(ctx, 
+            push_epilogue!(ctx,
                 contain(ctx) do ctx_2
                     lvl_2 = freeze_level!(ctx_2, lvl_2, literal(1))
                     :($(lvl.val)[$(ctx_2(pos))] = $(ctx_2(lvl_2)))
@@ -250,7 +250,7 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSeparateLevel}, mode
             lvl_2 = thaw_level!(ctx, lvl_2, literal(1))
             push_preamble!(ctx, assemble_level!(ctx, lvl_2, literal(1), literal(1)))
             res = instantiate(ctx, VirtualHollowSubFiber(lvl_2, literal(1), fbr.dirty), mode, protos)
-            push_epilogue!(ctx, 
+            push_epilogue!(ctx,
                 contain(ctx) do ctx_2
                     lvl_2 = freeze_level!(ctx_2, lvl_2, literal(1))
                     :($(lvl.val)[$(ctx_2(pos))] = $(ctx_2(lvl_2)))
