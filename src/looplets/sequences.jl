@@ -26,7 +26,7 @@ combine_style(a::SequenceStyle, b::PhaseStyle) = b
 
 function lower(ctx::AbstractCompiler, root::FinchNode, ::SequenceStyle)
     if root.kind === loop
-        phases = SequenceVisitor(ctx, root.idx, root.ext)(root.body)
+        phases = get_sequence_phases(ctx, root.body, root.ext)
         
         i = getname(root.idx)
         i0 = freshen(ctx, i, :_start)
@@ -48,18 +48,12 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::SequenceStyle)
     end
 end
 
-Base.@kwdef struct SequenceVisitor
-    ctx
-    idx
-    ext
-end
-
-(ctx::SequenceVisitor)(node) = [[] => node]
-function (ctx::SequenceVisitor)(node::FinchNode)
+get_sequence_phases(ctx, node, ext) = [[] => node]
+function get_sequence_phases(ctx, node::FinchNode, ext)
     if node.kind === virtual
-        ctx(node.val)
+        get_sequence_phases(ctx, node.val, ext)
     elseif istree(node)
-        map(flatten((product(map(ctx, arguments(node))...),))) do phases
+        map(flatten((product(map(arg -> get_sequence_phases(ctx, arg, ext), arguments(node))...),))) do phases
             keys = map(first, phases)
             bodies = map(last, phases)
             return reduce(vcat, keys, init=[]) => similarterm(node, operation(node), collect(bodies))
@@ -69,16 +63,16 @@ function (ctx::SequenceVisitor)(node::FinchNode)
     end
 end
 
-function (ctx::SequenceVisitor)(node::Sequence) 
-  new_phases = []
-  
-  prev_stop = call(-, getstart(ctx.ext), getunit(ctx.ext))
-  for curr in node.phases
-    curr_start = call(+, prev_stop, getunit(ctx.ext))
-    curr_stop = getstop(phase_range(ctx.ctx, curr, ctx.ext))
-    push!(new_phases, Phase(body = curr.body, start = (ctx, ext) -> curr_start, stop = curr.stop)) 
-    prev_stop = curr_stop
-  end
-  
-  return enumerate(new_phases)
+function get_sequence_phases(ctx, node::Sequence, ext)
+    new_phases = []
+    
+    prev_stop = call(-, getstart(ext), getunit(ext))
+    for curr in node.phases
+        curr_start = call(+, prev_stop, getunit(ext))
+        curr_stop = getstop(phase_range(ctx, curr, ext))
+        push!(new_phases, Phase(body = curr.body, start = (ctx, ext_2) -> curr_start, stop = curr.stop)) 
+        prev_stop = curr_stop
+    end
+    
+    return enumerate(new_phases)
 end

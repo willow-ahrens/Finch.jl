@@ -111,8 +111,8 @@ get_acceptrun_body(ctx, node::VirtualToeplitzArray, ext) =
         popdim(VirtualToeplitzArray(body_2, node.dim), ctx)
     end
 
-(ctx::SequenceVisitor)(node::VirtualToeplitzArray) =
-    map(ctx(node.body)) do (keys, body)
+get_sequence_phases(ctx, node::VirtualToeplitzArray, ext) =
+    map(get_sequence_phases(ctx, node.body, ext)) do (keys, body)
         return keys => VirtualToeplitzArray(body, node.dim)
     end
 

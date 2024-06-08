@@ -96,8 +96,8 @@ get_acceptrun_body(ctx, node::VirtualScaleArray, ext) =
         popdim(VirtualScaleArray(body_2, node.scale))
     end
 
-(ctx::SequenceVisitor)(node::VirtualScaleArray) =
-    map(SequenceVisitor(; kwfields(ctx)..., ext = scaledim(ctx.ext, node.scale[end]))(node.body)) do (keys, body)
+get_sequence_phases(ctx, node::VirtualScaleArray, ext) =
+    map(get_sequence_phases(ctx, node.body, scaledim(ext, node.scale[end]))) do (keys, body)
         return keys => VirtualScaleArray(body, node.scale)
     end
 

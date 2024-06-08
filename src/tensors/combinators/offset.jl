@@ -92,8 +92,8 @@ get_acceptrun_body(ctx, node::VirtualOffsetArray, ext) =
         popdim(VirtualOffsetArray(body_2, node.delta))
     end
 
-(ctx::SequenceVisitor)(node::VirtualOffsetArray) =
-    map(SequenceVisitor(; kwfields(ctx)..., ext = shiftdim(ctx.ext, node.delta[end]))(node.body)) do (keys, body)
+get_sequence_phases(ctx, node::VirtualOffsetArray, ext) =
+    map(get_sequence_phases(ctx, node.body, shiftdim(ext, node.delta[end]))) do (keys, body)
         return keys => VirtualOffsetArray(body, node.delta)
     end
 

@@ -117,11 +117,10 @@ get_acceptrun_body(ctx, node::VirtualProductArray, ext) =
         popdim(VirtualProductArray(body_2, node.dim), ctx)
     end
 
-function (ctx::SequenceVisitor)(node::VirtualProductArray)
-    map(ctx(node.body)) do (keys, body)
+get_sequence_phases(ctx, node::VirtualProductArray, ext) =
+    map(get_sequence_phases(ctx, node.body, ext)) do (keys, body)
         return keys => VirtualProductArray(body, node.dim)
     end
-end
 
 phase_body(ctx, node::VirtualProductArray, ext, ext_2) = VirtualProductArray(phase_body(ctx, node.body, ext, ext_2), node.dim)
 phase_range(ctx, node::VirtualProductArray, ext) = phase_range(ctx, node.body, ext)

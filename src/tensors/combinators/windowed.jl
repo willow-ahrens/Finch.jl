@@ -100,8 +100,8 @@ get_acceptrun_body(ctx, node::VirtualWindowedArray, ext) =
         popdim(VirtualWindowedArray(body_2, node.dims))
     end
 
-(ctx::SequenceVisitor)(node::VirtualWindowedArray) =
-    map(ctx(node.body)) do (keys, body)
+get_sequence_phases(ctx, node::VirtualWindowedArray, ext) =
+    map(get_sequence_phases(ctx, node.body, ext)) do (keys, body)
         return keys => VirtualWindowedArray(body, node.dims)
     end
 

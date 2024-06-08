@@ -95,11 +95,10 @@ get_acceptrun_body(ctx, node::VirtualProtocolizedArray, ext) =
         popdim(VirtualProtocolizedArray(body_2, node.protos))
     end
 
-function (ctx::SequenceVisitor)(node::VirtualProtocolizedArray)
-    map(ctx(node.body)) do (keys, body)
+get_sequence_phases(ctx, node::VirtualProtocolizedArray, ext) =
+    map(get_sequence_phases(ctx, node.body, ext)) do (keys, body)
         return keys => VirtualProtocolizedArray(body, node.protos)
     end
-end
 
 phase_body(ctx, node::VirtualProtocolizedArray, ext, ext_2) = VirtualProtocolizedArray(phase_body(ctx, node.body, ext, ext_2), node.protos)
 phase_range(ctx, node::VirtualProtocolizedArray, ext) = phase_range(ctx, node.body, ext)

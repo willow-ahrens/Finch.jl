@@ -61,11 +61,10 @@ get_acceptrun_body(ctx, node::Unfurled, ext) =
         popdim(Unfurled(node.arr, node.ndims, body_2), ctx)
     end
 
-function (ctx::SequenceVisitor)(node::Unfurled)
-    map(ctx(node.body)) do (keys, body)
+get_sequence_phases(ctx, node::Unfurled, ext) =
+    map(get_sequence_phases(ctx, node.body, ext)) do (keys, body)
         return keys => Unfurled(node.arr, node.ndims, body)
     end
-end
 
 phase_body(ctx, node::Unfurled, ext, ext_2) = Unfurled(node.arr, node.ndims, phase_body(ctx, node.body, ext, ext_2))
 

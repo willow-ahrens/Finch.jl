@@ -100,8 +100,8 @@ get_acceptrun_body(ctx, node::VirtualPermissiveArray, ext) =
         popdim(VirtualPermissiveArray(body_2, node.dims))
     end
 
-(ctx::SequenceVisitor)(node::VirtualPermissiveArray) =
-    map(ctx(node.body)) do (keys, body)
+get_sequence_phases(ctx, node::VirtualPermissiveArray, ext) =
+    map(get_sequence_phases(ctx, node.body, ext)) do (keys, body)
         return keys => VirtualPermissiveArray(body, node.dims)
     end
 
