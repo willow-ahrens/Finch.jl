@@ -58,7 +58,7 @@ quote
                 tmp_lvl_i_prev_3 = ref_lvl_i
                 ref_lvl_q += 1
             else
-                phase_stop_3 = min(ref_lvl_i, phase_stop)
+                phase_stop_3 = min(phase_stop, ref_lvl_i)
                 if ref_lvl_i == phase_stop_3
                     ref_lvl_2_val = ref_lvl_val[ref_lvl_q]
                     tmp_lvl_qos_3 = tmp_lvl_qos + (tmp_lvl_i_prev_3 < phase_stop_3 - 1)

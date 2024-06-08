@@ -24,7 +24,7 @@ begin
                 x_val = min(something(yf_lvl_2_val, Inf), x_val)
                 yf_lvl_q += 1
             else
-                phase_stop_3 = min(yf_lvl_i, phase_stop)
+                phase_stop_3 = min(phase_stop, yf_lvl_i)
                 if yf_lvl_i == phase_stop_3
                     yf_lvl_2_val = yf_lvl_val[yf_lvl_q]
                     x_val = min(x_val, something(yf_lvl_2_val, Inf))

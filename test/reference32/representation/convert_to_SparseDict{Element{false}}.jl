@@ -37,7 +37,7 @@ quote
                 Finch.subtable_commit!(tmp_lvl_tbl, tmp_lvl_subtbl, tmp_lvl_qos, ref_lvl_i)
                 ref_lvl_q += 1
             else
-                phase_stop_3 = min(ref_lvl_i, phase_stop)
+                phase_stop_3 = min(phase_stop, ref_lvl_i)
                 if ref_lvl_i == phase_stop_3
                     ref_lvl_2_val = ref_lvl_val[ref_lvl_q]
                     tmp_lvl_qos = Finch.subtable_register(tmp_lvl_tbl, tmp_lvl_subtbl, phase_stop_3)

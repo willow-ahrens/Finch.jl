@@ -37,7 +37,7 @@ quote
             tmp_lvl_q += 1
             i = tmp_lvl_i + 1
         else
-            phase_stop_2 = min(tmp_lvl_i, tmp_lvl.shape)
+            phase_stop_2 = min(tmp_lvl.shape, tmp_lvl_i)
             if tmp_lvl_i == phase_stop_2
                 tmp_lvl_2_val = tmp_lvl_val[tmp_lvl_q]
                 for i_6 = i:phase_stop_2
