@@ -5,16 +5,12 @@ end
 PermissiveArray(body, dims) = PermissiveArray{dims}(body)
 PermissiveArray{dims}(body::Body) where {dims, Body} = PermissiveArray{dims, Body}(body)
 
-function Base.show(io::IO, ex::PermissiveArray{dims}) where {dims}
-	print(io, "PermissiveArray($(ex.body), $dims)")
-end
+Base.show(io::IO, ex::PermissiveArray{dims}) where {dims} = print(io, "PermissiveArray($(ex.body), $dims)")
 
 labelled_show(io::IO, ::PermissiveArray{dims}) where {dims} =
     print(io, "PermissiveArray [$(join(map(d -> d ? "~:" : ":", dims), ", "))]")
 
-function labelled_children(ex::PermissiveArray)
-    [LabelledTree(ex.body)]
-end
+labelled_children(ex::PermissiveArray) = [LabelledTree(ex.body)]
 
 struct VirtualPermissiveArray <: AbstractVirtualCombinator
     body
@@ -27,17 +23,15 @@ is_concurrent(ctx, lvl::VirtualPermissiveArray) = is_concurrent(ctx, lvl.body)
 
 
 Base.show(io::IO, ex::VirtualPermissiveArray) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualPermissiveArray)
+Base.show(io::IO, mime::MIME"text/plain", ex::VirtualPermissiveArray) =
 	print(io, "VirtualPermissiveArray($(ex.body), $(ex.dims))")
-end
 
 Base.summary(io::IO, ex::VirtualPermissiveArray) = print(io, "VPermissive($(summary(ex.body)), $(ex.dims))")
 
 FinchNotation.finch_leaf(x::VirtualPermissiveArray) = virtual(x)
 
-function virtualize(ctx, ex, ::Type{PermissiveArray{dims, Body}}) where {dims, Body}
+virtualize(ctx, ex, ::Type{PermissiveArray{dims, Body}}) where {dims, Body} =
     VirtualPermissiveArray(virtualize(ctx, :($ex.body), Body), dims)
-end
 
 """
     permissive(tns, dims...)
@@ -66,24 +60,20 @@ unwrap(ctx, arr::VirtualPermissiveArray, var) = call(permissive, unwrap(ctx, arr
 
 lower(ctx::AbstractCompiler, tns::VirtualPermissiveArray, ::DefaultStyle) = :(PermissiveArray($(ctx(tns.body)), $(tns.dims)))
 
-function virtual_size(ctx::AbstractCompiler, arr::VirtualPermissiveArray)
+virtual_size(ctx::AbstractCompiler, arr::VirtualPermissiveArray) =
     ifelse.(arr.dims, (dimless,), virtual_size(ctx, arr.body))
-end
 
-function virtual_resize!(ctx::AbstractCompiler, arr::VirtualPermissiveArray, dims...)
+virtual_resize!(ctx::AbstractCompiler, arr::VirtualPermissiveArray, dims...) =
     virtual_resize!(ctx, arr.body, ifelse.(arr.dims, virtual_size(ctx, arr.body), dim))
-end
 
 virtual_fill_value(ctx::AbstractCompiler, arr::VirtualPermissiveArray) = virtual_fill_value(ctx, arr.body)
 
-function instantiate(ctx, arr::VirtualPermissiveArray, mode, protos)
+instantiate(ctx, arr::VirtualPermissiveArray, mode, protos) =
     VirtualPermissiveArray(instantiate(ctx, arr.body, mode, protos), arr.dims)
-end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualPermissiveArray) = ctx(node.body)
-function stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualPermissiveArray)
+stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualPermissiveArray) =
     stylize_access(ctx, node, tns.body)
-end
 
 function popdim(node::VirtualPermissiveArray)
     if length(node.dims) == 1
@@ -95,40 +85,27 @@ end
 
 truncate(ctx, node::VirtualPermissiveArray, ext, ext_2) = VirtualPermissiveArray(truncate(ctx, node.body, ext, ext_2), node.dims)
 
-function get_point_body(ctx, node::VirtualPermissiveArray, ext, idx)
-    body_2 = get_point_body(ctx, node.body, ext, idx)
-    if body_2 === nothing
-        return nothing
-    else
-        return popdim(VirtualPermissiveArray(body_2, node.dims))
+get_point_body(ctx, node::VirtualPermissiveArray, ext, idx) =
+    pass_nothing(get_point_body(ctx, node.body, ext, idx)) do body_2
+        popdim(VirtualPermissiveArray(body_2, node.dims))
     end
-end
 
 (ctx::ThunkVisitor)(node::VirtualPermissiveArray) = VirtualPermissiveArray(ctx(node.body), node.dims)
 
-function get_run_body(ctx, node::VirtualPermissiveArray, ext)
-    body_2 = get_run_body(ctx, node.body, ext)
-    if body_2 === nothing
-        return nothing
-    else
-        return popdim(VirtualPermissiveArray(body_2, node.dims))
+get_run_body(ctx, node::VirtualPermissiveArray, ext) =
+    pass_nothing(get_run_body(ctx, node.body, ext)) do body_2
+        popdim(VirtualPermissiveArray(body_2, node.dims))
     end
-end
 
-function get_acceptrun_body(ctx, node::VirtualPermissiveArray, ext)
-    body_2 = get_acceptrun_body(ctx, node.body, ext)
-    if body_2 === nothing
-        return nothing
-    else
-        return popdim(VirtualPermissiveArray(body_2, node.dims))
+get_acceptrun_body(ctx, node::VirtualPermissiveArray, ext) =
+    pass_nothing(get_acceptrun_body(ctx, node.body, ext)) do body_2
+        popdim(VirtualPermissiveArray(body_2, node.dims))
     end
-end
 
-function (ctx::SequenceVisitor)(node::VirtualPermissiveArray)
+(ctx::SequenceVisitor)(node::VirtualPermissiveArray) =
     map(ctx(node.body)) do (keys, body)
         return keys => VirtualPermissiveArray(body, node.dims)
     end
-end
 
 phase_body(ctx, node::VirtualPermissiveArray, ext, ext_2) = VirtualPermissiveArray(phase_body(ctx, node.body, ext, ext_2), node.dims)
 phase_range(ctx, node::VirtualPermissiveArray, ext) = phase_range(ctx, node.body, ext)

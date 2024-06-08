@@ -103,34 +103,22 @@ end
 
 truncate(ctx, node::VirtualProductArray, ext, ext_2) = VirtualProductArray(truncate(ctx, node.body, ext, ext_2), node.dim)
 
-function get_point_body(ctx, node::VirtualProductArray, ext, idx)
-    body_2 = get_point_body(ctx, node.body, ext, idx)
-    if body_2 === nothing
-        return nothing
-    else
-        return popdim(VirtualProductArray(body_2, node.dim), ctx)
+get_point_body(ctx, node::VirtualProductArray, ext, idx) =
+    pass_nothing(get_point_body(ctx, node.body, ext, idx)) do body_2
+        popdim(VirtualProductArray(body_2, node.dim), ctx)
     end
-end
 
 (ctx::ThunkVisitor)(node::VirtualProductArray) = VirtualProductArray(ctx(node.body), node.dim)
 
-function get_run_body(ctx, node::VirtualProductArray, ext)
-    body_2 = get_run_body(ctx, node.body, ext)
-    if body_2 === nothing
-        return nothing
-    else
-        return popdim(VirtualProductArray(body_2, node.dim), ctx)
+get_run_body(ctx, node::VirtualProductArray, ext) =
+    pass_nothing(get_run_body(ctx, node.body, ext)) do body_2
+        popdim(VirtualProductArray(body_2, node.dim), ctx)
     end
-end
 
-function get_acceptrun_body(ctx, node::VirtualProductArray, ext)
-    body_2 = get_acceptrun_body(ctx, node.body, ext)
-    if body_2 === nothing
-        return nothing
-    else
-        return popdim(VirtualProductArray(body_2, node.dim), ctx)
+get_acceptrun_body(ctx, node::VirtualProductArray, ext) =
+    pass_nothing(get_acceptrun_body(ctx, node.body, ext)) do body_2
+        popdim(VirtualProductArray(body_2, node.dim), ctx)
     end
-end
 
 function (ctx::SequenceVisitor)(node::VirtualProductArray)
     map(ctx(node.body)) do (keys, body)

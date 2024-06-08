@@ -17,16 +17,13 @@ countstored(arr::SwizzleArray) = countstored(arr.body)
 
 Base.size(arr::SwizzleArray{dims}) where {dims} = map(n->size(arr.body)[n], dims)
 
-function Base.show(io::IO, ex::SwizzleArray{dims}) where {dims}
+Base.show(io::IO, ex::SwizzleArray{dims}) where {dims} =
 	print(io, "SwizzleArray($(ex.body), $(dims))")
-end
 
 labelled_show(io::IO, ::SwizzleArray{dims}) where {dims} =
     print(io, "SwizzleArray ($(join(dims, ", ")))")
 
-function labelled_children(ex::SwizzleArray)
-    [LabelledTree(ex.body)]
-end
+labelled_children(ex::SwizzleArray) = [LabelledTree(ex.body)]
 
 struct VirtualSwizzleArray <: AbstractVirtualCombinator
     body
@@ -34,17 +31,15 @@ struct VirtualSwizzleArray <: AbstractVirtualCombinator
 end
 
 Base.show(io::IO, ex::VirtualSwizzleArray) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualSwizzleArray)
+Base.show(io::IO, mime::MIME"text/plain", ex::VirtualSwizzleArray) =
 	print(io, "VirtualSwizzleArray($(ex.body), $(ex.dims))")
-end
 
 Base.summary(io::IO, ex::VirtualSwizzleArray) = print(io, "VSwizzle($(summary(ex.body)), $(ex.dims))")
 
 FinchNotation.finch_leaf(x::VirtualSwizzleArray) = virtual(x)
 
-function virtualize(ctx, ex, ::Type{SwizzleArray{dims, Body}}) where {dims, Body}
+virtualize(ctx, ex, ::Type{SwizzleArray{dims, Body}}) where {dims, Body} =
     VirtualSwizzleArray(virtualize(ctx, :($ex.body), Body), dims)
-end
 
 """
     swizzle(tns, dims)
@@ -65,26 +60,21 @@ unwrap(ctx, arr::VirtualSwizzleArray, var) = call(swizzle, unwrap(ctx, arr.body,
 
 lower(ctx::AbstractCompiler, tns::VirtualSwizzleArray, ::DefaultStyle) = :(SwizzleArray($(ctx(tns.body)), $((tns.dims...,))))
 
-function virtual_fill_value(ctx::AbstractCompiler, arr::VirtualSwizzleArray)
+virtual_fill_value(ctx::AbstractCompiler, arr::VirtualSwizzleArray) = 
     virtual_fill_value(ctx, arr.body)
-end
 
-function virtual_size(ctx::AbstractCompiler, arr::VirtualSwizzleArray)
+virtual_size(ctx::AbstractCompiler, arr::VirtualSwizzleArray) =
     virtual_size(ctx, arr.body)[arr.dims]
-end
 
-function virtual_resize!(ctx::AbstractCompiler, arr::VirtualSwizzleArray, dims...)
+virtual_resize!(ctx::AbstractCompiler, arr::VirtualSwizzleArray, dims...) =
     virtual_resize!(ctx, arr.body, dims[invperm(arr.dims)]...)
-end
 
-function instantiate(ctx, arr::VirtualSwizzleArray, mode, protos)
+instantiate(ctx, arr::VirtualSwizzleArray, mode, protos) =
     VirtualSwizzleArray(instantiate(ctx, arr.body, mode, protos), arr.dims)
-end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualSwizzleArray) = ctx(node.body)
-function stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualSwizzleArray)
+stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualSwizzleArray) =
     stylize_access(ctx, node, tns.body)
-end
 
 getroot(tns::VirtualSwizzleArray) = getroot(tns.body)
 

@@ -9,9 +9,7 @@ Base.show(io::IO, ex::ProtocolizedArray) =
 labelled_show(io::IO, ex::ProtocolizedArray) =
     print(io, "ProtocolizedArray [$(join(map(p -> isnothing(p) ? ":" : "$p(:)", ex.protos), ", "))]")
 
-function labelled_children(ex::ProtocolizedArray)
-    [LabelledTree(ex.body)]
-end
+labelled_children(ex::ProtocolizedArray) = [LabelledTree(ex.body)]
 
 struct VirtualProtocolizedArray <: AbstractVirtualCombinator
     body
@@ -22,13 +20,11 @@ is_injective(ctx, lvl::VirtualProtocolizedArray) = is_injective(ctx, lvl.body)
 is_atomic(ctx, lvl::VirtualProtocolizedArray) = is_atomic(ctx, lvl.body)
 is_concurrent(ctx, lvl::VirtualProtocolizedArray) = is_concurrent(ctx, lvl.body)
 
-
 Base.:(==)(a::VirtualProtocolizedArray, b::VirtualProtocolizedArray) = a.body == b.body && a.protos == b.protos
 
 Base.show(io::IO, ex::VirtualProtocolizedArray) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualProtocolizedArray)
+Base.show(io::IO, mime::MIME"text/plain", ex::VirtualProtocolizedArray) =
 	print(io, "VirtualProtocolizedArray($(ex.body), $(ex.protos))")
-end
 
 Base.summary(io::IO, ex::VirtualProtocolizedArray) = print(io, "VProtocolized($(summary(ex.body)), $(summary(ex.protos)))")
 
@@ -62,21 +58,17 @@ function lower(ctx::AbstractCompiler, tns::VirtualProtocolizedArray, ::DefaultSt
     :(ProtocolizedArray($(ctx(tns.body)), $(ctx(tns.protos))))
 end
 
-function virtual_size(ctx::AbstractCompiler, arr::VirtualProtocolizedArray)
+virtual_size(ctx::AbstractCompiler, arr::VirtualProtocolizedArray) =
     virtual_size(ctx, arr.body)
-end
-function virtual_resize!(ctx::AbstractCompiler, arr::VirtualProtocolizedArray, dim)
+virtual_resize!(ctx::AbstractCompiler, arr::VirtualProtocolizedArray, dim) =
     virtual_resize!(ctx, arr.body, dim)
-end
 
-function instantiate(ctx, arr::VirtualProtocolizedArray, mode, protos)
+instantiate(ctx, arr::VirtualProtocolizedArray, mode, protos) =
     VirtualProtocolizedArray(instantiate(ctx, arr.body, mode, map(something, arr.protos, protos)), arr.protos)
-end
 
 (ctx::Stylize{<:AbstractCompiler})(node::VirtualProtocolizedArray) = ctx(node.body)
-function stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualProtocolizedArray)
+stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualProtocolizedArray) =
     stylize_access(ctx, node, tns.body)
-end
 
 function popdim(node::VirtualProtocolizedArray)
     if length(node.protos) == 1
@@ -88,34 +80,22 @@ end
 
 truncate(ctx, node::VirtualProtocolizedArray, ext, ext_2) = VirtualProtocolizedArray(truncate(ctx, node.body, ext, ext_2), node.protos)
 
-function get_point_body(ctx, node::VirtualProtocolizedArray, ext, idx)
-    body_2 = get_point_body(ctx, node.body, ext, idx)
-    if body_2 === nothing
-        return nothing
-    else
-        return popdim(VirtualProtocolizedArray(body_2, node.protos))
+get_point_body(ctx, node::VirtualProtocolizedArray, ext, idx) =
+    pass_nothing(get_point_body(ctx, node.body, ext, idx)) do body_2
+        popdim(VirtualProtocolizedArray(body_2, node.protos))
     end
-end
 
 (ctx::ThunkVisitor)(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(ctx(node.body), node.protos)
 
-function get_run_body(ctx, node::VirtualProtocolizedArray, ext)
-    body_2 = get_run_body(ctx, node.body, ext)
-    if body_2 === nothing
-        return nothing
-    else
-        return popdim(VirtualProtocolizedArray(body_2, node.protos))
+get_run_body(ctx, node::VirtualProtocolizedArray, ext) =
+    pass_nothing(get_run_body(ctx, node.body, ext)) do body_2
+        popdim(VirtualProtocolizedArray(body_2, node.protos))
     end
-end
 
-function get_acceptrun_body(ctx, node::VirtualProtocolizedArray, ext)
-    body_2 = get_acceptrun_body(ctx, node.body, ext)
-    if body_2 === nothing
-        return nothing
-    else
-        return popdim(VirtualProtocolizedArray(body_2, node.protos))
+get_acceptrun_body(ctx, node::VirtualProtocolizedArray, ext) =
+    pass_nothing(get_acceptrun_body(ctx, node.body, ext)) do body_2
+        popdim(VirtualProtocolizedArray(body_2, node.protos))
     end
-end
 
 function (ctx::SequenceVisitor)(node::VirtualProtocolizedArray)
     map(ctx(node.body)) do (keys, body)
@@ -136,10 +116,8 @@ visit_simplify(node::VirtualProtocolizedArray) = VirtualProtocolizedArray(visit_
     guard => VirtualProtocolizedArray(body, node.protos)
 end
 
-function unfurl(ctx, tns::VirtualProtocolizedArray, ext, mode, protos...)
+unfurl(ctx, tns::VirtualProtocolizedArray, ext, mode, protos...) =
     VirtualProtocolizedArray(unfurl(ctx, tns.body, ext, mode, map(something, tns.protos, protos)...), tns.protos)
-end
-
 
 stepper_range(ctx, node::VirtualProtocolizedArray, ext) = stepper_range(ctx, node.body, ext)
 stepper_body(ctx, node::VirtualProtocolizedArray, ext, ext_2) = VirtualProtocolizedArray(stepper_body(ctx, node.body, ext, ext_2), node.protos)
@@ -154,6 +132,5 @@ function short_circuit_cases(ctx, node::VirtualProtocolizedArray, op)
         guard => VirtualProtocolizedArray(body, node.protos)
     end
 end
-
 
 getroot(tns::VirtualProtocolizedArray) = getroot(tns.body)
