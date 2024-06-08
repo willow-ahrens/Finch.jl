@@ -88,7 +88,7 @@ let
     B = Tensor(Dense(SparseList(Element(0.0))))
     C = Tensor(Dense(SparseList(Element(0.0))))
 
-    SUITE["compile"]["compile_SpGeMM"] = @benchmarkable begin   
+    SUITE["compile"]["compile_SpGeMM"] = @benchmarkable begin
         A, B, C = ($A, $B, $C)
         Finch.execute_code(:ex, typeof(Finch.@finch_program_instance (C .= 0; for i=_, j=_, k=_; C[j, i] += A[k, i] * B[k, j] end; return C)))
     end
@@ -98,7 +98,7 @@ let
     A = Tensor(SparseList(SparseList(Element(0.0))))
     c = Scalar(0.0)
 
-    SUITE["compile"]["compile_pretty_triangle"] = @benchmarkable begin   
+    SUITE["compile"]["compile_pretty_triangle"] = @benchmarkable begin
         A, c = ($A, $c)
         @finch_code (c .= 0; for i=_, j=_, k=_; c[] += A[i, j] * A[j, k] * A[i, k] end; return c)
     end
@@ -108,12 +108,12 @@ SUITE["graphs"] = BenchmarkGroup()
 
 SUITE["graphs"]["pagerank"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
-    SUITE["graphs"]["pagerank"][mtx] = @benchmarkable pagerank($(pattern!(Tensor(SparseMatrixCSC(matrixdepot(mtx)))))) 
+    SUITE["graphs"]["pagerank"][mtx] = @benchmarkable pagerank($(pattern!(Tensor(SparseMatrixCSC(matrixdepot(mtx))))))
 end
 
 SUITE["graphs"]["bfs"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
-    SUITE["graphs"]["bfs"][mtx] = @benchmarkable bfs($(Tensor(SparseMatrixCSC(matrixdepot(mtx))))) 
+    SUITE["graphs"]["bfs"][mtx] = @benchmarkable bfs($(Tensor(SparseMatrixCSC(matrixdepot(mtx)))))
 end
 
 SUITE["graphs"]["bellmanford"] = BenchmarkGroup()
@@ -127,19 +127,19 @@ SUITE["matrices"] = BenchmarkGroup()
 SUITE["matrices"]["ATA_spgemm_inner"] = BenchmarkGroup()
 for mtx in []#"SNAP/soc-Epinions1", "SNAP/soc-LiveJournal1"]
     A = Tensor(permutedims(SparseMatrixCSC(matrixdepot(mtx))))
-    SUITE["matrices"]["ATA_spgemm_inner"][mtx] = @benchmarkable spgemm_inner($A, $A) 
+    SUITE["matrices"]["ATA_spgemm_inner"][mtx] = @benchmarkable spgemm_inner($A, $A)
 end
 
 SUITE["matrices"]["ATA_spgemm_gustavson"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1"]#], "SNAP/soc-LiveJournal1"]
     A = Tensor(SparseMatrixCSC(matrixdepot(mtx)))
-    SUITE["matrices"]["ATA_spgemm_gustavson"][mtx] = @benchmarkable spgemm_gustavson($A, $A) 
+    SUITE["matrices"]["ATA_spgemm_gustavson"][mtx] = @benchmarkable spgemm_gustavson($A, $A)
 end
 
 SUITE["matrices"]["ATA_spgemm_outer"] = BenchmarkGroup()
 for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     A = Tensor(SparseMatrixCSC(matrixdepot(mtx)))
-    SUITE["matrices"]["ATA_spgemm_outer"][mtx] = @benchmarkable spgemm_outer($A, $A) 
+    SUITE["matrices"]["ATA_spgemm_outer"][mtx] = @benchmarkable spgemm_outer($A, $A)
 end
 
 SUITE["indices"] = BenchmarkGroup()
@@ -155,7 +155,7 @@ for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     A = SparseMatrixCSC(matrixdepot(mtx))
     A = Tensor(Dense{Int32}(SparseList{Int32}(Element{0.0, Float64, Int32}())), A)
     x = Tensor(Dense{Int32}(Element{0.0, Float64, Int32}()), rand(size(A)[2]))
-    SUITE["indices"]["SpMV_32"][mtx] = @benchmarkable spmv32($A, $x) 
+    SUITE["indices"]["SpMV_32"][mtx] = @benchmarkable spmv32($A, $x)
 end
 
 function spmv_p1(A, x)
@@ -172,7 +172,7 @@ for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     idx = A.rowval .- 1
     A = Tensor(Dense(SparseList(Element(0.0, A.nzval), m, Finch.PlusOneVector(ptr), Finch.PlusOneVector(idx)), n))
     x = Tensor(Dense(Element(0.0)), rand(n))
-    SUITE["indices"]["SpMV_p1"][mtx] = @benchmarkable spmv_p1($A, $x) 
+    SUITE["indices"]["SpMV_p1"][mtx] = @benchmarkable spmv_p1($A, $x)
 end
 
 function spmv64(A, x)
@@ -186,5 +186,5 @@ for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     A = SparseMatrixCSC(matrixdepot(mtx))
     A = Tensor(Dense{Int64}(SparseList{Int64}(Element{0.0, Float64, Int64}())), A)
     x = Tensor(Dense{Int64}(Element{0.0, Float64, Int64}()), rand(size(A)[2]))
-    SUITE["indices"]["SpMV_64"][mtx] = @benchmarkable spmv64($A, $x) 
+    SUITE["indices"]["SpMV_64"][mtx] = @benchmarkable spmv64($A, $x)
 end

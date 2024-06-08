@@ -12,7 +12,7 @@ Julia, Matlab, etc. index arrays [starting at
 index starting at 0. In a dense array, we can simply subtract one from the
 index, and in fact, this is what Julia will does under the hood when you pass a
 vector [between C to
-Julia](https://docs.julialang.org/en/v1/manual/embedding/#Working-with-Arrays). 
+Julia](https://docs.julialang.org/en/v1/manual/embedding/#Working-with-Arrays).
 
 However, for sparse array formats, it's not just a matter of subtracting one
 from the index, as the internal lists of indices, positions, etc all start from

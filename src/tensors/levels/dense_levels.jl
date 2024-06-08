@@ -47,13 +47,13 @@ function moveto(lvl::DenseLevel{Ti}, device) where {Ti}
     return DenseLevel{Ti}(moveto(lvl.lvl, device), lvl.shape)
 end
 
-pattern!(lvl::DenseLevel{Ti, Lvl}) where {Ti, Lvl} = 
+pattern!(lvl::DenseLevel{Ti, Lvl}) where {Ti, Lvl} =
     DenseLevel{Ti}(pattern!(lvl.lvl), lvl.shape)
 
-set_fill_value!(lvl::DenseLevel{Ti}, init) where {Ti} = 
+set_fill_value!(lvl::DenseLevel{Ti}, init) where {Ti} =
     DenseLevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape)
 
-Base.resize!(lvl::DenseLevel{Ti}, dims...) where {Ti} = 
+Base.resize!(lvl::DenseLevel{Ti}, dims...) where {Ti} =
     DenseLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end])
 
 @inline level_ndims(::Type{<:DenseLevel{Ti, Lvl}}) where {Ti, Lvl} = 1 + level_ndims(Lvl)
@@ -87,7 +87,7 @@ function Base.show(io::IO, lvl::DenseLevel{Ti}) where {Ti}
     print(io, ", ")
     show(io, lvl.shape)
     print(io, ")")
-end 
+end
 
 labelled_show(io::IO, fbr::SubFiber{<:DenseLevel}) =
     print(io, "Dense [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")

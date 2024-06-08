@@ -18,7 +18,7 @@ end
 
 FinchNotation.finch_leaf(x::Stepper) = virtual(x)
 
-(ctx::Stylize{<:AbstractCompiler})(node::Stepper) = ctx.root.kind === loop ? StepperStyle() : DefaultStyle()
+get_style(ctx, ::Stepper, root) = root.kind === loop ? StepperStyle() : DefaultStyle()
 instantiate(ctx, tns::Stepper, mode, protos) = tns
 combine_style(a::DefaultStyle, b::StepperStyle) = b
 combine_style(a::LookupStyle, b::StepperStyle) = b
@@ -87,7 +87,7 @@ end
 
 function lower(ctx::AbstractCompiler, root::FinchNode, style::StepperStyle)
     root.kind === loop || error("unimplemented")
-    
+
     i = getname(root.idx)
     i0 = freshen(ctx, i, :_start)
     push_preamble!(ctx, quote
@@ -99,7 +99,7 @@ function lower(ctx::AbstractCompiler, root::FinchNode, style::StepperStyle)
     foreach(filter(isvirtual, collect(PostOrderDFS(root.body)))) do node
         push_preamble!(ctx, stepper_seek(ctx, node.val, root.ext))
     end
-    
+
     if style.count == 1 && !prove(ctx, call(==, measure(root.ext.val), get_smallest_measure(root.ext.val)))
         body_2 = contain(ctx) do ctx_2
             push_preamble!(ctx_2, :($i0 = $i))
@@ -116,7 +116,7 @@ function lower(ctx::AbstractCompiler, root::FinchNode, style::StepperStyle)
                 $(contain(ctx_2) do ctx_3
                     ctx_3(loop(root.idx, ext_5, full_body))
                 end)
-                
+
                 $i = $(ctx_2(getstop(ext_5))) + $(ctx_2(getunit(ext_5)))
             end
 
@@ -128,11 +128,11 @@ function lower(ctx::AbstractCompiler, root::FinchNode, style::StepperStyle)
                     $(contain(ctx_3) do ctx_4
                         ctx_4(loop(root.idx, ext_4, truncated_body))
                     end)
-                    
+
                     $i = $(ctx_3(getstop(ext_4))) + $(ctx_3(getunit(ext_4)))
                 end
 
-                truncated_body = if prove(ctx_3, call(>=, measure(ext_4), 0))  
+                truncated_body = if prove(ctx_3, call(>=, measure(ext_4), 0))
                     truncated_body
                 else
                     quote
@@ -196,11 +196,11 @@ function lower(ctx::AbstractCompiler, root::FinchNode, style::StepperStyle)
                 $(contain(ctx_2) do ctx_3
                     ctx_3(loop(root.idx, ext_4, body))
                 end)
-                
+
                 $i = $(ctx_2(getstop(ext_4))) + $(ctx_2(getunit(ext_4)))
             end
 
-            if prove(ctx_2, call(>=, measure(ext_4), 0))  
+            if prove(ctx_2, call(>=, measure(ext_4), 0))
                 body
             else
                 quote
@@ -231,7 +231,7 @@ function lower(ctx::AbstractCompiler, root::FinchNode, style::StepperStyle)
             body_2
         else
             return quote
-                while $guard 
+                while $guard
                     $cases
                     $body_2
                 end

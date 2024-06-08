@@ -49,7 +49,7 @@ function (ctx::ConcordizeVisitor)(node::FinchNode)
     end
     isboundindex(x) = isindex(x) && isbound(x)
     isboundnotindex(x) = !isindex(x) && isbound(x)
-        
+
     selects = []
 
     if node.kind === loop || node.kind === assign || node.kind === define || node.kind === sieve

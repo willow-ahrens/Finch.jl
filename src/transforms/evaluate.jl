@@ -31,7 +31,7 @@ function evaluate_partial(ctx, root)
                    finch_leaf(x)
                end
              end),
-            (@rule ~v::isvariable => if has_binding(ctx, v) 
+            (@rule ~v::isvariable => if has_binding(ctx, v)
                 val = get_binding(ctx, v)
                 if isvariable(val) || isconstant(val)
                     val
@@ -47,7 +47,7 @@ function evaluate_partial(ctx, root)
             end),
             (@rule block(~a) => a),
             (@rule block(~a1..., block(~b...), ~a2...) => block(a1..., b..., a2...)),
-            (@rule block(~a1..., define(~b, ~v, ~c), yieldbind(~d...), ~a2...) => 
+            (@rule block(~a1..., define(~b, ~v, ~c), yieldbind(~d...), ~a2...) =>
                 block(a1..., define(b, v, block(c, yieldbind(d...))), a2...)),
         ])))
     ])))(root)
@@ -55,7 +55,7 @@ end
 
 virtual_call(ctx, f, a...) = nothing
 
-function virtual_call(ctx, ::typeof(fill_value), a) 
+function virtual_call(ctx, ::typeof(fill_value), a)
     if has_binding(ctx, getroot(a))
         return virtual_fill_value(ctx, a)
     end

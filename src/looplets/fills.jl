@@ -8,7 +8,7 @@ virtual_fill_value(ctx, f::FillLeaf) = f.body
 
 struct FillStyle end
 
-(ctx::Stylize{<:AbstractCompiler})(::FillLeaf) = FillStyle()
+get_style(ctx, ::FillLeaf, root) = FillStyle()
 
 instantiate(ctx, tns::FillLeaf, mode, protos) = tns
 

@@ -42,7 +42,7 @@ phase_op(::SequencePhaseStyle) = virtual_intersect
 phase_op(::StepperPhaseStyle) = virtual_intersect
 phase_op(::JumperPhaseStyle) = virtual_union
 
-(ctx::Stylize{<:AbstractCompiler})(node::Phase) = ctx.root.kind === loop ? SequencePhaseStyle() : DefaultStyle()
+get_style(ctx, ::Phase, root) = root.kind === loop ? SequencePhaseStyle() : DefaultStyle()
 
 combine_style(a::DefaultStyle, b::PhaseStyle) = b
 combine_style(a::LookupStyle, b::PhaseStyle) = b
@@ -77,12 +77,12 @@ function lower(ctx::AbstractCompiler, root::FinchNode, style::PhaseStyle)
                     body
                 ))
             end)
-            
+
             $i = $(ctx(getstop(ext_4))) + $(ctx(getunit(ext_4)))
         end
 
 
-        if prove(ctx, call(>=, measure(ext_4), 0))  
+        if prove(ctx, call(>=, measure(ext_4), 0))
             return body
         else
             return quote

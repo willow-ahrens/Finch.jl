@@ -20,10 +20,9 @@ And(fs...) = And{typeof(fs)}(fs)
 
 @inline (f::And{Fs})(arg) where {Fs} = all(g->g(arg), f.fs)
 
-shallowcopy(x::T) where T = T([getfield(x, k) for k ∈ fieldnames(T)]...)
-
 kwfields(x::T) where T = Dict((k=>getfield(x, k) for k ∈ fieldnames(T))...)
-
 
 (Base.:^)(T::Type, i::Int) = ∘(repeated(T, i)..., identity)
 (Base.:^)(f::Function, i::Int) = ∘(repeated(f, i)..., identity)
+
+pass_nothing(f, val) = val === nothing ? nothing : f(val)

@@ -167,15 +167,15 @@ function:
 postype
 ```
 
-Additionally, many levels have a `Vp` or `Vi` in their constructors; these stand for vector of element type `Tp` or `Ti`. 
-More generally, levels are paramterized by the types that they use for storage. By default, all levels use `Vector`, but a user 
-could could change any or all of the storage types of a tensor so that the tensor would be stored on a GPU or CPU or some combination thereof, 
-or even just via a vector with a different allocation mechanism.  The storage type should behave like `AbstractArray` 
-and needs to implement the usual abstract array functions and `Base.resize!`. See the tests for an example. 
+Additionally, many levels have a `Vp` or `Vi` in their constructors; these stand for vector of element type `Tp` or `Ti`.
+More generally, levels are paramterized by the types that they use for storage. By default, all levels use `Vector`, but a user
+could could change any or all of the storage types of a tensor so that the tensor would be stored on a GPU or CPU or some combination thereof,
+or even just via a vector with a different allocation mechanism.  The storage type should behave like `AbstractArray`
+and needs to implement the usual abstract array functions and `Base.resize!`. See the tests for an example.
 
 When levels are constructed in short form as in the examples above, the index, position, and storage types are inferred
 from the level below. All the levels at the bottom of a Tensor (`Element, Pattern, Repeater`) specify an index type, position type,
-and storage type even if they don't need them. These are used by levels that take these as parameters. 
+and storage type even if they don't need them. These are used by levels that take these as parameters.
 
 ### Move to: Copying Fibers to a new storage type.
 

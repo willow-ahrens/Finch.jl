@@ -134,7 +134,7 @@ limit(x::T, s) where {T} = Limit{T}(x, s)
 plus_eps(x)::Limit = limit(x, tiny_positive())
 minus_eps(x)::Limit = limit(x, tiny_negative())
 limit(x) = limit(x, tiny_zero())
-limit(x::Limit) = x 
+limit(x::Limit) = x
 Limit{T}(x::Number) where {T} = limit(T(x))
 drop_eps(x::Limit) = x.val
 drop_eps(x::Number) = x
@@ -152,7 +152,7 @@ end
 
 #Core definitions for limit type
 Base.:(+)(x::Limit, y::Limit)::Limit = limit(x.val + y.val, x.sign + y.sign)
-Base.:(*)(x::Limit, y::Limit)::Limit = limit(x.val * y.val, x.val * y.sign + y.val * x.sign) 
+Base.:(*)(x::Limit, y::Limit)::Limit = limit(x.val * y.val, x.val * y.sign + y.val * x.sign)
 Base.:(-)(x::Limit, y::Limit)::Limit = limit(x.val - y.val, x.sign - y.sign)
 Base.:(<)(x::Limit, y::Limit)::Bool = x.val < y.val || (x.val == y.val && x.sign < y.sign)
 Base.:(<=)(x::Limit, y::Limit)::Bool = x.val < y.val || (x.val == y.val && x.sign <= y.sign)

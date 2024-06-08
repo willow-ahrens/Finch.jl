@@ -49,7 +49,7 @@ function Base.getindex(arr::SwizzleArray{perm}, inds...) where {perm}
         perm_3 = sortperm(filter(n -> ndims(inds_2[n]) > 0, perm_2))
         if issorted(perm_3)
             return res
-        else 
+        else
             return swizzle(res, perm_3...)
         end
     end
@@ -84,7 +84,7 @@ end
     end
     dst_modes = modes[filter(n->ndims(inds[n]) != 0, 1:N)]
     exts = Expr(:block, (:($idx = _) for idx in reverse(dst_modes))...)
-    
+
     dst = fiber_ctr(getindex_rep(data_rep(arr), inds...))
 
     quote

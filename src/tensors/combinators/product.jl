@@ -88,10 +88,7 @@ function instantiate_updater(arr::VirtualProductArray, ctx, protos)
     VirtualProductArray(instantiate_updater(arr.body, ctx, [protos[1:arr.dim]; protos[arr.dim + 2:end]]), arr.dim)
 end
 
-(ctx::Stylize{<:AbstractCompiler})(node::VirtualProductArray) = ctx(node.body)
-function stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualProductArray)
-    stylize_access(ctx, node, tns.body)
-end
+get_style(ctx, node::VirtualProductArray, root) = get_style(ctx, node.body, root)
 
 function popdim(node::VirtualProductArray, ctx)
     if length(virtual_size(ctx, node)) == node.dim
@@ -103,40 +100,27 @@ end
 
 truncate(ctx, node::VirtualProductArray, ext, ext_2) = VirtualProductArray(truncate(ctx, node.body, ext, ext_2), node.dim)
 
-function get_point_body(ctx, node::VirtualProductArray, ext, idx)
-    body_2 = get_point_body(ctx, node.body, ext, idx)
-    if body_2 === nothing
-        return nothing
-    else
-        return popdim(VirtualProductArray(body_2, node.dim), ctx)
+get_point_body(ctx, node::VirtualProductArray, ext, idx) =
+    pass_nothing(get_point_body(ctx, node.body, ext, idx)) do body_2
+        popdim(VirtualProductArray(body_2, node.dim), ctx)
     end
-end
 
-(ctx::ThunkVisitor)(node::VirtualProductArray) = VirtualProductArray(ctx(node.body), node.dim)
+unwrap_thunk(ctx, node::VirtualProductArray) = VirtualProductArray(unwrap_thunk(ctx, node.body), node.dim)
 
-function get_run_body(ctx, node::VirtualProductArray, ext)
-    body_2 = get_run_body(ctx, node.body, ext)
-    if body_2 === nothing
-        return nothing
-    else
-        return popdim(VirtualProductArray(body_2, node.dim), ctx)
+get_run_body(ctx, node::VirtualProductArray, ext) =
+    pass_nothing(get_run_body(ctx, node.body, ext)) do body_2
+        popdim(VirtualProductArray(body_2, node.dim), ctx)
     end
-end
 
-function get_acceptrun_body(ctx, node::VirtualProductArray, ext)
-    body_2 = get_acceptrun_body(ctx, node.body, ext)
-    if body_2 === nothing
-        return nothing
-    else
-        return popdim(VirtualProductArray(body_2, node.dim), ctx)
+get_acceptrun_body(ctx, node::VirtualProductArray, ext) =
+    pass_nothing(get_acceptrun_body(ctx, node.body, ext)) do body_2
+        popdim(VirtualProductArray(body_2, node.dim), ctx)
     end
-end
 
-function (ctx::SequenceVisitor)(node::VirtualProductArray)
-    map(ctx(node.body)) do (keys, body)
+get_sequence_phases(ctx, node::VirtualProductArray, ext) =
+    map(get_sequence_phases(ctx, node.body, ext)) do (keys, body)
         return keys => VirtualProductArray(body, node.dim)
     end
-end
 
 phase_body(ctx, node::VirtualProductArray, ext, ext_2) = VirtualProductArray(phase_body(ctx, node.body, ext, ext_2), node.dim)
 phase_range(ctx, node::VirtualProductArray, ext) = phase_range(ctx, node.body, ext)
@@ -147,7 +131,7 @@ get_spike_tail(ctx, node::VirtualProductArray, ext, ext_2) = VirtualProductArray
 visit_fill_leaf_leaf(node, tns::VirtualProductArray) = visit_fill_leaf_leaf(node, tns.body)
 visit_simplify(node::VirtualProductArray) = VirtualProductArray(visit_simplify(node.body), node.dim)
 
-(ctx::SwitchVisitor)(node::VirtualProductArray) = map(ctx(node.body)) do (guard, body)
+get_switch_cases(ctx, node::VirtualProductArray) = map(get_switch_cases(ctx, node.body)) do (guard, body)
     guard => VirtualProductArray(body, node.dim)
 end
 
@@ -162,7 +146,7 @@ function unfurl(ctx, tns::VirtualProductArray, ext, mode, protos...)
     if length(virtual_size(ctx, tns)) == tns.dim + 1
         Unfurled(tns,
             Lookup(
-                body = (ctx, idx) -> VirtualPermissiveArray(VirtualScaleArray(tns.body, ([literal(1) for _ in 1:tns.dim - 1]..., idx)), ([false for _ in 1:tns.dim - 1]..., true)), 
+                body = (ctx, idx) -> VirtualPermissiveArray(VirtualScaleArray(tns.body, ([literal(1) for _ in 1:tns.dim - 1]..., idx)), ([false for _ in 1:tns.dim - 1]..., true)),
             )
         )
     else

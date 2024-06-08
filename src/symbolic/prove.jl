@@ -78,32 +78,32 @@ function get_prove_rules(alg, shash)
         (@rule call(min, ~a1..., call(max), ~a2...) => call(min, a1..., a2...)),
         (@rule call(max, ~a1..., call(min), ~a2...) => call(min, a1..., a2...)),
 
-        (@rule call(min, ~a1..., call(+, ~b::isliteral, ~a2...), ~a3..., call(+, ~c::isliteral, ~a2...), ~a4...) => 
+        (@rule call(min, ~a1..., call(+, ~b::isliteral, ~a2...), ~a3..., call(+, ~c::isliteral, ~a2...), ~a4...) =>
             call(min, a1..., call(+, min(b.val, c.val), ~a2...), ~a3..., ~a4...)),
-        (@rule call(min, ~a1..., call(+, ~a2...), ~a3..., call(+, ~c::isliteral, ~a2...), ~a4...) => 
+        (@rule call(min, ~a1..., call(+, ~a2...), ~a3..., call(+, ~c::isliteral, ~a2...), ~a4...) =>
             call(min, a1..., call(+, min(0, c.val), ~a2...), ~a3..., ~a4...)),
-        (@rule call(min, ~a1..., ~a2, ~a3..., call(+, ~c::isliteral, ~a2), ~a4...) => 
+        (@rule call(min, ~a1..., ~a2, ~a3..., call(+, ~c::isliteral, ~a2), ~a4...) =>
             call(min, a1..., call(+, min(0, c.val), ~a2), ~a3..., ~a4...)),
-        (@rule call(min, ~a1..., call(+, ~b::isliteral, ~a2...), ~a3..., call(+, ~a2...), ~a4...) => 
+        (@rule call(min, ~a1..., call(+, ~b::isliteral, ~a2...), ~a3..., call(+, ~a2...), ~a4...) =>
             call(min, a1..., call(+, min(b.val, 0), ~a2...), ~a3..., ~a4...)),
-        (@rule call(min, ~a1..., call(+, ~b::isliteral, ~a2), ~a3..., ~a2, ~a4...) => 
+        (@rule call(min, ~a1..., call(+, ~b::isliteral, ~a2), ~a3..., ~a2, ~a4...) =>
             call(min, a1..., call(+, min(b.val, 0), ~a2), ~a3..., ~a4...)),
 
-        (@rule call(max, ~a1..., call(+, ~b::isliteral, ~a2...), ~a3..., call(+, ~c::isliteral, ~a2...), ~a4...) => 
+        (@rule call(max, ~a1..., call(+, ~b::isliteral, ~a2...), ~a3..., call(+, ~c::isliteral, ~a2...), ~a4...) =>
             call(max, a1..., call(+, max(b.val, c.val), ~a2...), ~a3..., ~a4...)),
-        (@rule call(max, ~a1..., call(+, ~a2...), ~a3..., call(+, ~c::isliteral, ~a2...), ~a4...) => 
+        (@rule call(max, ~a1..., call(+, ~a2...), ~a3..., call(+, ~c::isliteral, ~a2...), ~a4...) =>
             call(max, a1..., call(+, max(0, c.val), ~a2...), ~a3..., ~a4...)),
-        (@rule call(max, ~a1..., ~a2, ~a3..., call(+, ~c::isliteral, ~a2), ~a4...) => 
+        (@rule call(max, ~a1..., ~a2, ~a3..., call(+, ~c::isliteral, ~a2), ~a4...) =>
             call(max, a1..., call(+, max(0, c.val), ~a2), ~a3..., ~a4...)),
-        (@rule call(max, ~a1..., call(+, ~b::isliteral, ~a2...), ~a3..., call(+, ~a2...), ~a4...) => 
+        (@rule call(max, ~a1..., call(+, ~b::isliteral, ~a2...), ~a3..., call(+, ~a2...), ~a4...) =>
             call(max, a1..., call(+, max(b.val, 0), ~a2...), ~a3..., ~a4...)),
-        (@rule call(max, ~a1..., call(+, ~b::isliteral, ~a2), ~a3..., ~a2, ~a4...) => 
+        (@rule call(max, ~a1..., call(+, ~b::isliteral, ~a2), ~a3..., ~a2, ~a4...) =>
             call(max, a1..., call(+, max(b.val, 0), ~a2), ~a3..., ~a4...)),
 
         (@rule call(~f::isinvolution(alg), call(~f, ~a)) => a),
 
         # Clamping rules
-        #=        
+        #=
         # this rule is great but too expensive
         (@rule call(max, ~a, call(min, ~b, ~c)) => begin
             if prove(LowerJulia(), call(<=, a, b)) # a = low, b = high
@@ -111,7 +111,7 @@ function get_prove_rules(alg, shash)
             elseif prove(LowerJulia(), call(<=, a, c)) # a = low, c = high
               call(min, c, call(max, b, a))
             end
-          end), 
+          end),
         =#
 
         #(@rule call(~f, ~a..., call(~g, ~b), ~c...) => if isdistributive(alg, g, f)
@@ -143,7 +143,7 @@ function prove(ctx::SymbolicContext, root::FinchNode; verbose = false)
     root = Rewrite(Postwalk(rename))(root)
     res = Rewrite(Fixpoint(Prewalk(Memo(Fixpoint(Chain(ctx.prove_rules)), ctx.prove_cache))))(root)
     if verbose
-      @info "proving..." root res 
+      @info "proving..." root res
     end
     if isliteral(res)
         return res.val

@@ -132,7 +132,7 @@ function fsprand_erdos_renyi_sample_knuth(r::AbstractRNG, M::Tuple, nnz::Int)
                 for m = 1:N
                     I[m][k] = i[m]
                 end
-            elseif rand(r) * p < k 
+            elseif rand(r) * p < k
                 l = rand(r, 1:nnz)
                 for m = 1:N
                     I[m][l] = i[m]
@@ -161,7 +161,7 @@ function fsprand_erdos_renyi_sample_self_avoid(r::AbstractRNG, M::Tuple, nnz::In
     k = 0
     while length(S) < nnz
         i = ntuple(n -> rand(r, 1:M[n]), N)
-        push!(S, i)       
+        push!(S, i)
         if length(S) > k
             k += 1
             for m = 1:N
@@ -216,7 +216,7 @@ function fsprand_erdos_renyi_gilbert(r::AbstractRNG, T, M::Tuple, p::AbstractFlo
         # poisson would work in that case
     end
     #now we generate exactly nnz nonzeros:
-    return fsprand_erdos_renyi(r, T, M, nnz, rfn) 
+    return fsprand_erdos_renyi(r, T, M, nnz, rfn)
 end
 
 fsprandn(args...) = fsprand(args..., randn)

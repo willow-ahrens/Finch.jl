@@ -25,7 +25,7 @@ have unique index names.
 
 See also: [`virtual_size`](@ref), [`virtual_resize!`](@ref), [`combinedim`](@ref)
 """
-function dimensionalize!(prgm, ctx) 
+function dimensionalize!(prgm, ctx)
     prgm = DeclareDimensions(ctx=ctx)(prgm)
     return prgm
 end
@@ -52,7 +52,7 @@ function (ctx::DeclareDimensions)(node::FinchNode)
             end
         end
         access(tns, mode, idxs...)
-    elseif node.kind === loop 
+    elseif node.kind === loop
         if node.ext.kind !== virtual
             error("could not evaluate $(node.ext) into a dimension")
         end

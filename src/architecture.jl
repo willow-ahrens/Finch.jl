@@ -83,7 +83,7 @@ end
 @inline function aquire_lock!(dev:: CPU, val::Threads.Atomic{T}) where {T}
     # Keep trying to catch x === false so we can set it to true.
     while (Threads.atomic_cas!(x, zero(T), one(T)) === one(T))
-        
+
     end
     # when it is true because we did it, we leave, but let's make sure it is true in debug mode.
     @assert x === one(T)
@@ -96,7 +96,7 @@ end
 
 @inline function release_lock!(dev:: CPU, val::Threads.Atomic{T}) where {T}
     # set the atomic to false so someone else can grab it.
-    Threads.atomic_cas!(x, one(T), zero(T)) 
+    Threads.atomic_cas!(x, one(T), zero(T))
 end
 
 @inline function release_lock!(dev:: CPU, val::Base.Threads.SpinLock)

@@ -5,9 +5,8 @@ end
 ToeplitzArray(body, dim) = ToeplitzArray{dim}(body)
 ToeplitzArray{dim}(body::Body) where {dim, Body} = ToeplitzArray{dim, Body}(body)
 
-function Base.show(io::IO, ex::ToeplitzArray{dim}) where {dim}
+Base.show(io::IO, ex::ToeplitzArray{dim}) where {dim} =
 	print(io, "ToeplitzArray{$dim}($(ex.body))")
-end
 
 function labelled_show(io::IO, tns::ToeplitzArray{dim}) where {dim}
     dims = [":" for _ in ndims(tns)]
@@ -15,9 +14,7 @@ function labelled_show(io::IO, tns::ToeplitzArray{dim}) where {dim}
     print(io, "ToeplitzArray [$(join(dims, ", "))]")
 end
 
-function labelled_children(ex::ToeplitzArray)
-    [LabelledTree(ex.body)]
-end
+labelled_children(ex::ToeplitzArray) = [LabelledTree(ex.body)]
 
 struct VirtualToeplitzArray <: AbstractVirtualCombinator
     body
@@ -46,17 +43,15 @@ function is_concurrent(ctx, lvl::VirtualToeplitzArray)
 end
 
 Base.show(io::IO, ex::VirtualToeplitzArray) = Base.show(io, MIME"text/plain"(), ex)
-function Base.show(io::IO, mime::MIME"text/plain", ex::VirtualToeplitzArray)
+Base.show(io::IO, mime::MIME"text/plain", ex::VirtualToeplitzArray) =
 	print(io, "VirtualToeplitzArray($(ex.body), $(ex.dim))")
-end
 
 Base.summary(io::IO, ex::VirtualToeplitzArray) = print(io, "VToeplitz($(summary(ex.body)), $(ex.dim))")
 
 FinchNotation.finch_leaf(x::VirtualToeplitzArray) = virtual(x)
 
-function virtualize(ctx, ex, ::Type{ToeplitzArray{dim, Body}}) where {dim, Body}
+virtualize(ctx, ex, ::Type{ToeplitzArray{dim, Body}}) where {dim, Body} =
     VirtualToeplitzArray(virtualize(ctx, :($ex.body), Body), dim)
-end
 
 """
     toeplitz(tns, dim)
@@ -81,18 +76,13 @@ function virtual_size(ctx::AbstractCompiler, arr::VirtualToeplitzArray)
     dims = virtual_size(ctx, arr.body)
     return (dims[1:arr.dim - 1]..., dimless, dimless, dims[arr.dim + 1:end]...)
 end
-function virtual_resize!(ctx::AbstractCompiler, arr::VirtualToeplitzArray, dims...)
+virtual_resize!(ctx::AbstractCompiler, arr::VirtualToeplitzArray, dims...) =
     virtual_resize!(ctx, arr.body, dims[1:arr.dim - 1]..., dimless, dims[arr.dim + 2:end]...)
-end
 
-function instantiate(ctx, arr::VirtualToeplitzArray, mode, protos)
+instantiate(ctx, arr::VirtualToeplitzArray, mode, protos) =
     VirtualToeplitzArray(instantiate(ctx, arr.body, mode, [protos[1:arr.dim]; protos[arr.dim + 2:end]]), arr.dim)
-end
 
-(ctx::Stylize{<:AbstractCompiler})(node::VirtualToeplitzArray) = ctx(node.body)
-function stylize_access(ctx::Stylize{<:AbstractCompiler}, node, tns::VirtualToeplitzArray)
-    stylize_access(ctx, node, tns.body)
-end
+get_style(ctx, node::VirtualToeplitzArray, root) = get_style(ctx, node.body, root)
 
 #Note, popdim is NOT recursive, it should only be called on the node itself to
 #reflect that the child lost a dimension and perhaps update this wrapper
@@ -104,40 +94,27 @@ end
 
 truncate(ctx, node::VirtualToeplitzArray, ext, ext_2) = VirtualToeplitzArray(truncate(ctx, node.body, ext, ext_2), node.dim)
 
-function get_point_body(ctx, node::VirtualToeplitzArray, ext, idx)
-    body_2 = get_point_body(ctx, node.body, ext, idx)
-    if body_2 === nothing
-        return nothing
-    else
-        return popdim(VirtualToeplitzArray(body_2, node.dim), ctx)
+get_point_body(ctx, node::VirtualToeplitzArray, ext, idx) =
+    pass_nothing(get_point_body(ctx, node.body, ext, idx)) do body_2
+        popdim(VirtualToeplitzArray(body_2, node.dim), ctx)
     end
-end
 
-(ctx::ThunkVisitor)(node::VirtualToeplitzArray) = VirtualToeplitzArray(ctx(node.body), node.dim)
+unwrap_thunk(ctx, node::VirtualToeplitzArray) = VirtualToeplitzArray(unwrap_thunk(ctx, node.body), node.dim)
 
-function get_run_body(ctx, node::VirtualToeplitzArray, ext)
-    body_2 = get_run_body(ctx, node.body, ext)
-    if body_2 === nothing
-        return nothing
-    else
-        return popdim(VirtualToeplitzArray(body_2, node.dim), ctx)
+get_run_body(ctx, node::VirtualToeplitzArray, ext) =
+    pass_nothing(get_run_body(ctx, node.body, ext)) do body_2
+        popdim(VirtualToeplitzArray(body_2, node.dim), ctx)
     end
-end
 
-function get_acceptrun_body(ctx, node::VirtualToeplitzArray, ext)
-    body_2 = get_acceptrun_body(ctx, node.body, ext)
-    if body_2 === nothing
-        return nothing
-    else
-        return popdim(VirtualToeplitzArray(body_2, node.dim), ctx)
+get_acceptrun_body(ctx, node::VirtualToeplitzArray, ext) =
+    pass_nothing(get_acceptrun_body(ctx, node.body, ext)) do body_2
+        popdim(VirtualToeplitzArray(body_2, node.dim), ctx)
     end
-end
 
-function (ctx::SequenceVisitor)(node::VirtualToeplitzArray)
-    map(ctx(node.body)) do (keys, body)
+get_sequence_phases(ctx, node::VirtualToeplitzArray, ext) =
+    map(get_sequence_phases(ctx, node.body, ext)) do (keys, body)
         return keys => VirtualToeplitzArray(body, node.dim)
     end
-end
 
 phase_body(ctx, node::VirtualToeplitzArray, ext, ext_2) = VirtualToeplitzArray(phase_body(ctx, node.body, ext, ext_2), node.dim)
 phase_range(ctx, node::VirtualToeplitzArray, ext) = phase_range(ctx, node.body, ext)
@@ -148,7 +125,7 @@ get_spike_tail(ctx, node::VirtualToeplitzArray, ext, ext_2) = VirtualToeplitzArr
 visit_fill_leaf_leaf(node, tns::VirtualToeplitzArray) = visit_fill_leaf_leaf(node, tns.body)
 visit_simplify(node::VirtualToeplitzArray) = VirtualToeplitzArray(visit_simplify(node.body), node.dim)
 
-(ctx::SwitchVisitor)(node::VirtualToeplitzArray) = map(ctx(node.body)) do (guard, body)
+get_switch_cases(ctx, node::VirtualToeplitzArray) = map(get_switch_cases(ctx, node.body)) do (guard, body)
     guard => VirtualToeplitzArray(body, node.dim)
 end
 
@@ -160,12 +137,10 @@ jumper_range(ctx, node::VirtualToeplitzArray, ext) = jumper_range(ctx, node.body
 jumper_body(ctx, node::VirtualToeplitzArray, ext, ext_2) = VirtualToeplitzArray(jumper_body(ctx, node.body, ext, ext_2), node.dim)
 jumper_seek(ctx, node::VirtualToeplitzArray, ext) = jumper_seek(ctx, node.body, ext)
 
-function short_circuit_cases(ctx, node::VirtualToeplitzArray, op)
+short_circuit_cases(ctx, node::VirtualToeplitzArray, op) =
     map(short_circuit_cases(ctx, node.body, op)) do (guard, body)
         guard => VirtualToeplitzArray(body, node.dim)
     end
-end
-
 
 getroot(tns::VirtualToeplitzArray) = getroot(tns.body)
 
@@ -173,7 +148,7 @@ function unfurl(ctx, tns::VirtualToeplitzArray, ext, mode, protos...)
     if length(virtual_size(ctx, tns)) == tns.dim + 1
         Unfurled(tns,
             Lookup(
-                body = (ctx, idx) -> VirtualPermissiveArray(VirtualOffsetArray(tns.body, ([literal(0) for _ in 1:tns.dim - 1]..., idx)), ([false for _ in 1:tns.dim - 1]..., true)), 
+                body = (ctx, idx) -> VirtualPermissiveArray(VirtualOffsetArray(tns.body, ([literal(0) for _ in 1:tns.dim - 1]..., idx)), ([false for _ in 1:tns.dim - 1]..., true)),
             )
         )
     else

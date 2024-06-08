@@ -37,7 +37,7 @@ function declare!(ctx::AbstractCompiler, arr::VirtualAbstractUnitRange, init)
     throw(FinchProtocolError("$(arr.arrtype) is not writeable"))
 end
 
-instantiate(ctx::AbstractCompiler, arr::VirtualAbstractUnitRange, mode::Updater, protos...) = 
+instantiate(ctx::AbstractCompiler, arr::VirtualAbstractUnitRange, mode::Updater, protos...) =
     throw(FinchProtocolError("$(arr.arrtype) is not writeable"))
 
 FinchNotation.finch_leaf(x::VirtualAbstractUnitRange) = virtual(x)

@@ -51,10 +51,10 @@ SparseCOOLevel(lvl, shape::NTuple{N, Any}, args...) where {N} = SparseCOOLevel{N
 SparseCOOLevel{N}(lvl) where {N} = SparseCOOLevel{N, NTuple{N, Int}}(lvl)
 SparseCOOLevel{N}(lvl, shape::TI, args...) where {N, TI} = SparseCOOLevel{N, TI}(lvl, shape, args...)
 SparseCOOLevel{N, TI}(lvl) where {N, TI} = SparseCOOLevel{N, TI}(lvl, ((zero(Ti) for Ti in TI.parameters)...,))
-SparseCOOLevel{N, TI}(lvl, shape) where {N, TI} = 
+SparseCOOLevel{N, TI}(lvl, shape) where {N, TI} =
     SparseCOOLevel{N, TI}(lvl, TI(shape), postype(lvl)[1], ((Ti[] for Ti in TI.parameters)...,))
 
-SparseCOOLevel{N, TI}(lvl::Lvl, shape, ptr::Ptr, tbl::Tbl) where {N, TI, Lvl, Ptr, Tbl} = 
+SparseCOOLevel{N, TI}(lvl::Lvl, shape, ptr::Ptr, tbl::Tbl) where {N, TI, Lvl, Ptr, Tbl} =
     SparseCOOLevel{N, TI, Ptr, Tbl, Lvl}(lvl, TI(shape), ptr, tbl)
 
 Base.summary(lvl::SparseCOOLevel{N}) where {N} = "SparseCOO{$N}($(summary(lvl.lvl)))"
@@ -72,17 +72,17 @@ function moveto(lvl::SparseCOOLevel{N, TI}, device) where {N, TI}
     return SparseCOOLevel{N, TI}(lvl_2, lvl.shape, ptr_2, tbl_2)
 end
 
-pattern!(lvl::SparseCOOLevel{N, TI}) where {N, TI} = 
+pattern!(lvl::SparseCOOLevel{N, TI}) where {N, TI} =
     SparseCOOLevel{N, TI}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.tbl)
 
 function countstored_level(lvl::SparseCOOLevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
 
-set_fill_value!(lvl::SparseCOOLevel{N, TI}, init) where {N, TI} = 
+set_fill_value!(lvl::SparseCOOLevel{N, TI}, init) where {N, TI} =
     SparseCOOLevel{N, TI}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.tbl)
 
-Base.resize!(lvl::SparseCOOLevel{N, TI}, dims...) where {N, TI} = 
+Base.resize!(lvl::SparseCOOLevel{N, TI}, dims...) where {N, TI} =
     SparseCOOLevel{N, TI}(resize!(lvl.lvl, dims[1:end-N]...), (dims[end-N + 1:end]...,), lvl.ptr, lvl.tbl)
 
 function Base.show(io::IO, lvl::SparseCOOLevel{N, TI}) where {N, TI}
@@ -325,7 +325,7 @@ function instantiate(ctx, trv::SparseCOOWalkTraversal, mode::Reader, subprotos, 
             body = (ctx) -> Sequence([
                 Phase(
                     stop = (ctx, ext) -> value(my_i_stop),
-                    body = (ctx, ext) -> 
+                    body = (ctx, ext) ->
                         if R == 1
                             Stepper(
                                 seek = (ctx, ext) -> quote
@@ -424,7 +424,7 @@ function instantiate(ctx, trv::SparseCOOExtrudeTraversal, mode::Updater, subprot
     qos_fill = lvl.qos_fill
     qos_stop = lvl.qos_stop
     Furlable(
-        body = (ctx, ext) -> 
+        body = (ctx, ext) ->
             if length(coords) + 1 < lvl.N
                 Lookup(
                     body = (ctx, i) -> instantiate(ctx, SparseCOOExtrudeTraversal(lvl, qos, fbr_dirty, (i, coords...), trv.prev_coord), mode, subprotos),

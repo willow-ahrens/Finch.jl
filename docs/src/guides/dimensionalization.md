@@ -52,6 +52,6 @@ The rules of declaration dimensionalization are as follows:
 - The dimensions of a declaration are the “meet” of all hints from the declaration to the first read
 - The new dimensions of the declared tensor are used when the tensor is on the right hand side (reading) access.
 
-```@docs 
+```@docs
 Finch.FinchNotation.Dimensionless
 ```

@@ -13,7 +13,7 @@ FinchNotation.finch_leaf(x::Run) = virtual(x)
 
 struct RunStyle end
 
-(ctx::Stylize{<:AbstractCompiler})(node::Run) = ctx.root.kind === loop ? RunStyle() : DefaultStyle()
+get_style(ctx, ::Run, root) = root.kind === loop ? RunStyle() : DefaultStyle()
 instantiate(ctx, tns::Run, mode, protos) = tns
 combine_style(a::DefaultStyle, b::RunStyle) = RunStyle()
 combine_style(a::LookupStyle, b::RunStyle) = RunStyle()
@@ -33,7 +33,7 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::RunStyle)
                 end
             end
         ))(root)
-        if Stylize(ctx, root)(root) isa RunStyle #TODO do we need this always? Can we do this generically?
+        if get_style(ctx, root) isa RunStyle #TODO do we need this always? Can we do this generically?
             error("run style couldn't lower runs")
         end
         return ctx(root)
@@ -60,7 +60,7 @@ end
 
 struct AcceptRunStyle end
 
-(ctx::Stylize{<:AbstractCompiler})(node::AcceptRun) = ctx.root.kind === loop ? AcceptRunStyle() : DefaultStyle()
+get_style(ctx, ::AcceptRun, root) = root.kind === loop ? AcceptRunStyle() : DefaultStyle()
 combine_style(a::DefaultStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::LookupStyle, b::AcceptRunStyle) = AcceptRunStyle()
 combine_style(a::ThunkStyle, b::AcceptRunStyle) = ThunkStyle()
@@ -87,7 +87,7 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::AcceptRunStyle)
             #The loop body is constant after removing AcceptRuns, lower only the body once
             return ctx(body)
         end
-    elseif root.kind === block 
+    elseif root.kind === block
         quote end #TODO this shouldn't need to be specified
     else
         error("unimplemented")

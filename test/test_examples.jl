@@ -31,13 +31,13 @@ include(joinpath(@__DIR__, "../docs/examples/triangle_counting.jl"))
         size, sparsity = 50, 0.5
         source = rand(1:size)
         input = sprand(size, size, sparsity)
-    
+
         graphs_input = Graphs.SimpleDiGraph(transpose(input))
-        finch_input = Tensor(Dense(SparseList(Element(0.0))), input) 
-    
+        finch_input = Tensor(Dense(SparseList(Element(0.0))), input)
+
         expected = Graphs.bfs_parents(graphs_input, source)
         output = bfs(finch_input, source)
-    
+
         @test output == expected
     end
 
@@ -45,10 +45,10 @@ include(joinpath(@__DIR__, "../docs/examples/triangle_counting.jl"))
         size, sparsity = 50, 0.5
         source = rand(1:size)
         input = sprand(size, size, sparsity)
-        
+
         graphs_input = SimpleWeightedDiGraph(transpose(input))
         finch_input = set_fill_value!(Tensor(Dense(SparseList(Element(0.0))), input), Inf)
-        
+
         expected = Graphs.bellman_ford_shortest_paths(graphs_input, source)
         output = bellmanford(finch_input, source)
 
@@ -59,13 +59,13 @@ include(joinpath(@__DIR__, "../docs/examples/triangle_counting.jl"))
         size, sparsity = 1000, 0.5
         input = sprand(size, size, sparsity)
         input = SparseMatrixCSC(Symmetric(input))
-        
+
         graphs_input = SimpleDiGraph(input)
         finch_input = pattern!(Tensor(Dense(SparseList(Element(0.0))), input))
-    
+
         expected = sum(Graphs.triangles(graphs_input))
         output = tricount(finch_input) * 6
-        
+
         @test expected == output
     end
 

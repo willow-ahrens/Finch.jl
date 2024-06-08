@@ -5,7 +5,7 @@ struct JumperStyle end
     stop = (ctx, ext) -> nothing
     chunk = nothing
     next = (ctx, ext) -> nothing
-    body = (ctx, ext) -> chunk 
+    body = (ctx, ext) -> chunk
     seek = (ctx, start) -> error("seek not implemented error")
 end
 
@@ -16,7 +16,8 @@ end
 
 FinchNotation.finch_leaf(x::Jumper) = virtual(x)
 
-(ctx::Stylize{<:AbstractCompiler})(node::Jumper) = ctx.root.kind === loop ? JumperStyle() : DefaultStyle()
+get_style(ctx, ::Jumper, root) = root.kind === loop ? JumperStyle() : DefaultStyle()
+
 instantiate(ctx, tns::Jumper, mode, protos) = tns
 
 combine_style(a::DefaultStyle, b::JumperStyle) = JumperStyle()
@@ -87,7 +88,7 @@ end
 
 function lower(ctx::AbstractCompiler, root::FinchNode, style::JumperStyle)
     root.kind === loop || error("unimplemented")
-    
+
     i = getname(root.idx)
     i0 = freshen(ctx, i, :_start)
     push_preamble!(ctx, quote
@@ -115,11 +116,11 @@ function lower(ctx::AbstractCompiler, root::FinchNode, style::JumperStyle)
             $(contain(ctx_2) do ctx_3
                 ctx_3(loop(root.idx, ext_4, body))
             end)
-            
+
             $i = $(ctx_2(getstop(ext_4))) + $(ctx_2(getunit(ext_4)))
         end
 
-        if prove(ctx_2, call(>=, measure(ext_4), 0))  
+        if prove(ctx_2, call(>=, measure(ext_4), 0))
             body
         else
             quote

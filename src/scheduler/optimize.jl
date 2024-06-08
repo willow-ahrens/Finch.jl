@@ -277,7 +277,7 @@ COMPUTE_QUERY := query(ALIAS, COMPUTE)
   INPUT_QUERY := query(ALIAS, TABLE)
          STEP := COMPUTE_QUERY | INPUT_QUERY | produces((ALIAS | ACCESS)...)
          ROOT := PLAN(STEP...)
-```   
+```
 
 Inserts permutation statements of the form `query(ALIAS, reorder(ALIAS,
 FIELD...))` and updates `relabel`s so that

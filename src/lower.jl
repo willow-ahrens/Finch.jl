@@ -38,7 +38,7 @@ function contain(f, ctx::LowerJulia; kwargs...)
     end
 end
 
-(ctx::AbstractCompiler)(root) = ctx(root, Stylize(ctx, root)(root))
+(ctx::AbstractCompiler)(root) = ctx(root, get_style(ctx, root))
 (ctx::AbstractCompiler)(root, style) = lower(ctx, root, style)
 #(ctx::AbstractCompiler)(root, style) = (println(); println(); display(root); display(style); lower(ctx, root, style))
 function cache!(ctx::AbstractCompiler, var, val)
@@ -67,32 +67,27 @@ end
 
 (ctx::AbstractCompiler)(root::Union{Symbol, Expr}, ::DefaultStyle) = root
 
-@kwdef struct Stylize{Ctx}
-    ctx::Ctx
-    root
-end
+"""
+    get_style(ctx, root)
 
-function (ctx::Stylize)(node)
-    if istree(node)
-        return mapreduce(ctx, result_style, arguments(node); init=DefaultStyle())
-    end
-    return DefaultStyle()
-end
+return the style to use for lowering `root` in `ctx`. This method is used to
+determine which pass should be used to lower a given node. The default
+implementation returns `DefaultStyle()`. Overload the three argument form
+of this method, `get_style(ctx, node, root)` and specialize on `node`.
+"""
+get_style(ctx, root)  = get_style(ctx, root, root)
 
-function (ctx::Stylize)(node::FinchNode)
+get_style(ctx, node, root) = DefaultStyle()
+
+function get_style(ctx, node::FinchNode, root)
     if node.kind === virtual
-        return ctx(node.val)
-    elseif node.kind === access
-        return mapreduce(ctx, result_style, arguments(node); init=stylize_access(ctx, node, node.tns))
+        return get_style(ctx, node.val, root)
     elseif istree(node)
-        return mapreduce(ctx, result_style, arguments(node); init=DefaultStyle())
+        return mapreduce(arg -> get_style(ctx, arg, root), result_style, arguments(node); init=DefaultStyle())
     else
         return DefaultStyle()
     end
 end
-
-stylize_access(ctx, node, @nospecialize tns) = DefaultStyle()
-stylize_access(ctx, node, tns::FinchNode) = stylize_access(ctx, node, resolve(ctx, tns))
 
 function lower(ctx::AbstractCompiler, root, ::DefaultStyle)
     node = finch_leaf(root)
@@ -168,7 +163,7 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::DefaultStyle)
         return lower_access(ctx, root, resolve(ctx, root.tns))
     elseif root.kind === call
         root = simplify(ctx, root)
-        if root.kind === call 
+        if root.kind === call
             if root.op == literal(and)
                 if isempty(root.args)
                     return true
@@ -184,8 +179,8 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::DefaultStyle)
             else
                 :($(ctx(root.op))($(map(ctx, root.args)...)))
             end
-         else 
-           return ctx(root) 
+         else
+           return ctx(root)
          end
     elseif root.kind === cached
         return ctx(root.arg)
@@ -196,7 +191,7 @@ function lower(ctx::AbstractCompiler, root::FinchNode, ::DefaultStyle)
     elseif root.kind === sieve
         cond = freshen(ctx,:cond)
         push_preamble!(ctx, :($cond = $(ctx(root.cond))))
-    
+
         return quote
             if $cond
                 $(contain(ctx) do ctx_2
@@ -252,20 +247,20 @@ function lower_loop(ctx, root, ext)
             access(tns_2, mode, idxs...)
         end
     end))(root)
-    return ctx(root_2, result_style(LookupStyle(), Stylize(ctx, root_2)(root_2)))
+    return ctx(root_2, result_style(LookupStyle(), get_style(ctx, root_2)))
 end
 
-lower_loop(ctx, root, ext::ParallelDimension) = 
+lower_loop(ctx, root, ext::ParallelDimension) =
     lower_parallel_loop(ctx, root, ext, ext.device)
 function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualCPU)
     root = ensure_concurrent(root, ctx)
-    
+
     tid = index(freshen(ctx, :tid))
     i = freshen(ctx, :i)
 
     decl_in_scope = unique(filter(!isnothing, map(node-> begin
         if @capture(node, declare(~tns, ~init))
-            tns 
+            tns
         end
     end, PostOrderDFS(root.body))))
 

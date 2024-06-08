@@ -146,7 +146,7 @@ representation, which is then used to generate code. This process is called
 "virtualization".  All of the Finch AST nodes have both instance and virtual
 representations. For example, the literal `42` is represented as
 `Finch.FinchNotation.LiteralInstance(42)` and then virtualized to `literal(42)`.
-The virtualization process is implemented by the `virtualize` function. 
+The virtualization process is implemented by the `virtualize` function.
 
 ```jldoctest example2; setup = :(using Finch)
 julia> A = Tensor(SparseList(Element(0)), [0, 2, 0, 0, 3]);
@@ -260,7 +260,7 @@ virtualize
 
 Calling print on a finch program or program instance will print the
 structure of the program as one would call constructors to build it. For
-example, 
+example,
 
 ```jldoctest example2; setup = :(using Finch)
 julia> prgm_inst = Finch.@finch_program_instance for i = _
@@ -289,7 +289,7 @@ Finch program: for i = virtual(Finch.FinchNotation.Dimensionless)
 end
 
 ```
-    
+
 Both the virtual and instance representations of Finch IR define
 [SyntaxInterface.jl](https://github.com/willow-ahrens/SyntaxInterface.jl) and
 [AbstractTrees.jl](https://github.com/JuliaCollections/AbstractTrees.jl)
@@ -306,7 +306,7 @@ julia> (@capture prgm loop(~idx, ~ext, ~val))
 true
 
 julia> idx
-Finch program: i 
+Finch program: i
 
 ```
 

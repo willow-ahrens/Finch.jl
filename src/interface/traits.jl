@@ -2,7 +2,7 @@ using Base.Broadcast: Broadcasted
 
 """
     SparseData(lvl)
-    
+
 Represents a tensor `A` where `A[:, ..., :, i]` is sometimes entirely fill_value(lvl)
 and is sometimes represented by `lvl`.
 """
@@ -18,7 +18,7 @@ is_concordant_rep(fbr::SparseData) = true
 
 """
     RepeatData(lvl)
-    
+
 Represents a tensor `A` where `A[:, ..., :, i]` is sometimes entirely fill_value(lvl)
 and is sometimes represented by repeated runs of `lvl`.
 """
@@ -30,11 +30,11 @@ Finch.finch_leaf(x::RepeatData) = virtual(x)
 Base.ndims(fbr::RepeatData) = 1 + ndims(fbr.lvl)
 fill_value(fbr::RepeatData) = fill_value(fbr.lvl)
 Base.eltype(fbr::RepeatData) = eltype(fbr.lvl)
-is_concordant_rep(fbr::RepeatData) = true 
+is_concordant_rep(fbr::RepeatData) = true
 
 """
     DenseData(lvl)
-    
+
 Represents a tensor `A` where each `A[:, ..., :, i]` is represented by `lvl`.
 """
 struct DenseData
@@ -48,7 +48,7 @@ is_concordant_rep(fbr::DenseData) = is_concordant_rep(fbr.lvl)
 
 """
     ExtrudeData(lvl)
-    
+
 Represents a tensor `A` where `A[:, ..., :, 1]` is the only slice, and is represented by `lvl`.
 """
 struct ExtrudeData
@@ -62,7 +62,7 @@ is_concordant_rep(fbr::ExtrudeData) = is_concordant_rep(fbr.lvl)
 
 """
     HollowData(lvl)
-    
+
 Represents a tensor which is represented by `lvl` but is sometimes entirely `fill_value(lvl)`.
 """
 struct HollowData
@@ -76,7 +76,7 @@ is_concordant_rep(fbr::HollowData) = true
 
 """
     ElementData(fill_value, eltype)
-    
+
 Represents a scalar element of type `eltype` and fill_value `fill_value`.
 """
 struct ElementData

@@ -1,4 +1,4 @@
-module NPZExt 
+module NPZExt
 
 using Finch
 using Finch: NPYPath

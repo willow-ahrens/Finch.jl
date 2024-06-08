@@ -54,7 +54,7 @@ macro staged(def)
                 code = $name_generator($(args...))
                 if has_function_def(macroexpand($@__MODULE__, code))
                     :($($(name_invokelatest))($($(map(QuoteNode, args)...))))
-                else 
+                else
                     quote
                         $code
                     end

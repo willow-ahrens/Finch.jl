@@ -110,7 +110,7 @@ function Base.show(io::IO, node::FinchNodeInstance)
 	print(io, ")")
 end
 
-function Base.show(io::IO, mime::MIME"text/plain", node::FinchNodeInstance) 
+function Base.show(io::IO, mime::MIME"text/plain", node::FinchNodeInstance)
     print(io, "Finch program instance: ")
     if isstateful(node)
         display_statement(io, mime, node, 0)

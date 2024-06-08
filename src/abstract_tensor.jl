@@ -11,8 +11,8 @@ declare!(ctx, tns, init) = @assert virtual_fill_value(ctx, tns) == init
 
 """
     instantiate(ctx, tns, mode, protos)
-    
-Return an object (usually a looplet nest) capable of unfurling the 
+
+Return an object (usually a looplet nest) capable of unfurling the
 virtual tensor `tns`. Before executing a statement, each
 subsequent in-scope access will be initialized with a separate call to
 `instantiate`. `protos` is the list of protocols in each case.
@@ -114,7 +114,7 @@ function is used to move data to the device before a kernel is launched.
 function virtual_moveto end
 
 struct LabelledTree
-    key 
+    key
     node
 end
 

@@ -52,7 +52,7 @@ function compile_pointwise_logic(ex)
     bound_idxs = ctx.bound_idxs
     (code, bound_idxs)
 end
-    
+
 function (ctx::PointwiseLowerer)(ex)
     if @capture ex mapjoin(~op, ~args...)
         :($(op.val)($(map(ctx, args)...)))

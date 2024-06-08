@@ -7,7 +7,7 @@ is the size of the last dimension.
 
 `Ti` is the type of the last tensor index, and `Tp` is the type used for
 positions in the level. The types `Ptr` and `Right` are the types of the
-arrays used to store positions and endpoints. 
+arrays used to store positions and endpoints.
 
 The `merge` keyword argument is used to specify whether the level should merge
 duplicate consecutive runs.
@@ -62,17 +62,17 @@ function moveto(lvl::DenseRLELevel{Ti}, device) where {Ti}
     return DenseRLELevel{Ti}(lvl_2, lvl.shape, lvl.ptr, lvl.right, lvl.buf; merge = getmerge(lvl))
 end
 
-pattern!(lvl::DenseRLELevel{Ti}) where {Ti} = 
+pattern!(lvl::DenseRLELevel{Ti}) where {Ti} =
     DenseRLELevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.right, pattern!(lvl.buf); merge = getmerge(lvl))
 
 function countstored_level(lvl::DenseRLELevel, pos)
     countstored_level(lvl.lvl, lvl.ptr[pos + 1] - 1)
 end
 
-set_fill_value!(lvl::DenseRLELevel{Ti}, init) where {Ti} = 
+set_fill_value!(lvl::DenseRLELevel{Ti}, init) where {Ti} =
     DenseRLELevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.right, set_fill_value!(lvl.buf, init); merge = getmerge(lvl))
 
-Base.resize!(lvl::DenseRLELevel{Ti}, dims...) where {Ti} = 
+Base.resize!(lvl::DenseRLELevel{Ti}, dims...) where {Ti} =
     DenseRLELevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.right, resize!(lvl.buf, dims[1:end-1]...); merge = getmerge(lvl))
 
 function Base.show(io::IO, lvl::DenseRLELevel{Ti, Ptr, Right, merge, Lvl}) where {Ti, Ptr, Right, merge, Lvl}
@@ -94,7 +94,7 @@ function Base.show(io::IO, lvl::DenseRLELevel{Ti, Ptr, Right, merge, Lvl}) where
         print(io, ", ")
         show(io, lvl.buf)
         print(io, "; merge = ")
-        show(io, merge) 
+        show(io, merge)
     end
     print(io, ")")
 end
@@ -447,7 +447,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualDenseRLELevel}, mode::Read
     )
 end
 
-instantiate(ctx, fbr::VirtualSubFiber{VirtualDenseRLELevel}, mode::Updater, protos) = 
+instantiate(ctx, fbr::VirtualSubFiber{VirtualDenseRLELevel}, mode::Updater, protos) =
     instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx, :null)), mode, protos)
 
 #Invariants of the level (Write Mode):
@@ -457,7 +457,7 @@ instantiate(ctx, fbr::VirtualSubFiber{VirtualDenseRLELevel}, mode::Updater, prot
 # 4. qos_fill is the position of the last index written
 
 function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, mode::Updater, subprotos, ::Union{typeof(defaultupdate), typeof(extrude)})
-    (lvl, pos) = (fbr.lvl, fbr.pos) 
+    (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
     Ti = lvl.Ti
@@ -471,7 +471,7 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, mode
     qos_set = freshen(ctx, tag, :_qos_set)
     qos_3 = freshen(ctx, tag, :_qos_3)
     local_i_prev = freshen(ctx, tag, :_i_prev)
-    
+
     Furlable(
         body = (ctx, ext) -> Thunk(
             preamble = quote
@@ -487,7 +487,7 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualDenseRLELevel}, mode
                     $qos += $(ctx(pos)) - $(lvl.prev_pos) - 1
                     #only if we did not write something to finish out the last run do we eventually need to fill that in too
                     $qos += $(lvl.i_prev) < $(ctx(lvl.shape))
-                    $local_i_prev = $(Ti(1)) - $unit 
+                    $local_i_prev = $(Ti(1)) - $unit
                 end
                 $qos_set = $qos
             end,
