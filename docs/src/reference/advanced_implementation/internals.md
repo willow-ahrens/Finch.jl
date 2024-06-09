@@ -331,30 +331,3 @@ julia> idx
 Finch program: i
 
 ```
-
-## Tensor internals
-
-Tensor levels are implemented using the following methods:
-
-```@docs
-fill_value
-declare_level!
-assemble_level!
-reassemble_level!
-freeze_level!
-level_ndims
-level_size
-level_axes
-level_eltype
-level_fill_value
-```
-
-## Virtual Tensor Methods
-
-```@docs
-declare!
-instantiate
-freeze!
-thaw!
-unfurl
-```

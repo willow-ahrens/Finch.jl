@@ -127,9 +127,20 @@ function Base.show(io::IO, node::LabelledTree)
     end
     labelled_show(io, node.node)
 end
+"""
+    labelled_show(node)
+
+Show the `node` in a `LabelledTree`.
+"""
 labelled_show(io, node) = show(io, node)
 
 AbstractTrees.children(node::LabelledTree) = labelled_children(node.node)
+"""
+    labelled_children(node)
+
+Return the children of `node` in a `LabelledTree`. You may label the children by
+returning a `LabelledTree(key, value)`, which will be shown as `key: value` a.
+"""
 labelled_children(node) = ()
 
 struct TruncatedTree
