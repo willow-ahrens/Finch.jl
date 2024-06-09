@@ -134,19 +134,19 @@ julia> pointwise_sum([1, 2], [3, 4])
 ## Virtualization
 
 Finch generates different code depending on the types of the arguments to the
-program. For example, in the following program, `A` and `B` have different
-types, and so the code generated for the loop is different. In order to execute
-a program, Finch builds a typed AST (Abstract Syntax Tree), then calls
-`Finch.execute` on it. The AST object is just an instance of a program to
-execute, and contains the program to execute along with the data to execute it.
-The type of the program instance contains only the program portion; there may be
-many program instances with different inputs, but the same program type. During
-compilation, Finch uses the type of the program to construct a more ergonomic
-representation, which is then used to generate code. This process is called
-"virtualization".  All of the Finch AST nodes have both instance and virtual
-representations. For example, the literal `42` is represented as
-`Finch.FinchNotation.LiteralInstance(42)` and then virtualized to `literal(42)`.
-The virtualization process is implemented by the `virtualize` function.
+program. For example, in the following program, Finch generates different code
+depending on the types of `A` and `B`. In order to execute a program, Finch
+builds a typed AST (Abstract Syntax Tree), then calls `Finch.execute` on it. The
+AST object is just an instance of a program to execute, and contains the program
+to execute along with the data to execute it.  The type of the program instance
+contains only the program portion; there may be many program instances with
+different inputs, but the same program type. During compilation, Finch uses the
+type of the program to construct a more ergonomic representation, which is then
+used to generate code. This process is called "virtualization".  All of the
+Finch AST nodes have both instance and virtual representations. For example, the
+literal `42` is represented as `Finch.FinchNotation.LiteralInstance(42)` and
+then virtualized to `literal(42)`.  The virtualization process is implemented by
+the `virtualize` function. 
 
 ```jldoctest example2; setup = :(using Finch)
 julia> A = Tensor(SparseList(Element(0)), [0, 2, 0, 0, 3]);
@@ -246,14 +246,36 @@ end
 
 ```
 
+### The "virtual" IR Node
+
 Users can also create their own virtual nodes to represent their custom types.
-These types may contain constants and other virtuals, as well as reference variables
-in the scope of the executing context. Any aspect of virtuals visible to Finch should be
-considered immutable, but virtuals may reference mutable variables in the scope of the
-executing context.
+While most calls to virtualize result in a Finch IR Node, some objects, such as
+tensors and dimensions, are virtualized to a `virtual` object, which holds the
+custom virtual type.  These types may contain constants and other virtuals, as
+well as reference variables in the scope of the executing context. Any aspect of
+virtuals visible to Finch should be considered immutable, but virtuals may
+reference mutable variables in the scope of the executing context.
 
 ```@docs
 virtualize
+```
+
+### Virtual Methods
+
+Many methods have analogues we can call on the virtual version of the object.
+For example, we can call `size` an an array, and `virtual_size` on a virtual
+array. The virtual methods are used to generate code, so if they are pure they
+may return an expression which computes the results, and if they have side
+effects they may accept a context argument into which they can emit their
+side-effecting code.
+
+In addition to the special compiler methods which are prefixed `virtual_`, there
+is also a function `virtual_call`, which is used to evaluate function calls on
+Finch IR when it would result in a virtual object. The behavior should mirror
+the concrete behavior of the corresponding function.
+
+```@docs
+virtual_call
 ```
 
 ## Working with Finch IR

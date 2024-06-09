@@ -53,6 +53,14 @@ function evaluate_partial(ctx, root)
     ])))(root)
 end
 
+"""
+    virtual_call(ctx, f, a...)
+
+Given the virtual arguments `a...`, and a literal function `f`, return a virtual
+object representing the result of the function call. If the function is not
+foldable, return nothing. This function is used so that we can call e.g. tensor
+constructors in finch code.
+"""
 virtual_call(ctx, f, a...) = nothing
 
 function virtual_call(ctx, ::typeof(fill_value), a)
