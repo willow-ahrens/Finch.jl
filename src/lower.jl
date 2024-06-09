@@ -1,4 +1,9 @@
-@kwdef mutable struct LowerJulia <: AbstractCompiler
+"""
+    FinchCompiler
+
+The core compiler for Finch, lowering canonicalized Finch IR to Julia code.
+"""
+@kwdef mutable struct FinchCompiler <: AbstractCompiler
     code = JuliaContext()
     algebra = DefaultAlgebra()
     mode = :fast
@@ -7,34 +12,46 @@
     scope = ScopeContext()
 end
 
-get_result(ctx::LowerJulia) = ctx.result
-get_mode_flag(ctx::LowerJulia) = ctx.mode
-get_binding(ctx::LowerJulia, var) = get_binding(ctx.scope, var)
-has_binding(ctx::LowerJulia, var) = has_binding(ctx.scope, var)
-set_binding!(ctx::LowerJulia, var, val) = set_binding!(ctx.scope, var, val)
-set_declared!(ctx::LowerJulia, var, val) = set_declared!(ctx.scope, var, val)
-set_frozen!(ctx::LowerJulia, var, val) = set_frozen!(ctx.scope, var, val)
-set_thawed!(ctx::LowerJulia, var, val) = set_thawed!(ctx.scope, var, val)
-get_tensor_mode(ctx::LowerJulia, var) = get_tensor_mode(ctx.scope, var)
-function open_scope(f::F, ctx::LowerJulia) where {F}
+"""
+    get_result(ctx)
+
+Return a variable which evaluates to the result of the program which should be
+returned to the user.
+"""
+get_result(ctx::FinchCompiler) = ctx.result
+"""
+    get_mode_flag(ctx)
+
+Return the mode flag given in `@finch mode = ?`.
+"""
+get_mode_flag(ctx::FinchCompiler) = ctx.mode
+
+get_binding(ctx::FinchCompiler, var) = get_binding(ctx.scope, var)
+has_binding(ctx::FinchCompiler, var) = has_binding(ctx.scope, var)
+set_binding!(ctx::FinchCompiler, var, val) = set_binding!(ctx.scope, var, val)
+set_declared!(ctx::FinchCompiler, var, val) = set_declared!(ctx.scope, var, val)
+set_frozen!(ctx::FinchCompiler, var, val) = set_frozen!(ctx.scope, var, val)
+set_thawed!(ctx::FinchCompiler, var, val) = set_thawed!(ctx.scope, var, val)
+get_tensor_mode(ctx::FinchCompiler, var) = get_tensor_mode(ctx.scope, var)
+function open_scope(f::F, ctx::FinchCompiler) where {F}
     open_scope(ctx.scope) do scope_2
-        f(LowerJulia(ctx.code, ctx.algebra, ctx.mode, ctx.result, ctx.symbolic, scope_2))
+        f(FinchCompiler(ctx.code, ctx.algebra, ctx.mode, ctx.result, ctx.symbolic, scope_2))
     end
 end
 
-push_preamble!(ctx::LowerJulia, thunk) = push_preamble!(ctx.code, thunk)
-push_epilogue!(ctx::LowerJulia, thunk) = push_epilogue!(ctx.code, thunk)
-get_task(ctx::LowerJulia) = get_task(ctx.code)
-freshen(ctx::LowerJulia, tags...) = freshen(ctx.code, tags...)
+push_preamble!(ctx::FinchCompiler, thunk) = push_preamble!(ctx.code, thunk)
+push_epilogue!(ctx::FinchCompiler, thunk) = push_epilogue!(ctx.code, thunk)
+get_task(ctx::FinchCompiler) = get_task(ctx.code)
+freshen(ctx::FinchCompiler, tags...) = freshen(ctx.code, tags...)
 
-get_algebra(ctx::LowerJulia) = ctx.algebra
-get_static_hash(ctx::LowerJulia) = get_static_hash(ctx.symbolic)
-prove(ctx::LowerJulia, root) = prove(ctx.symbolic, root)
-simplify(ctx::LowerJulia, root) = simplify(ctx.symbolic, root)
+get_algebra(ctx::FinchCompiler) = ctx.algebra
+get_static_hash(ctx::FinchCompiler) = get_static_hash(ctx.symbolic)
+prove(ctx::FinchCompiler, root) = prove(ctx.symbolic, root)
+simplify(ctx::FinchCompiler, root) = simplify(ctx.symbolic, root)
 
-function contain(f, ctx::LowerJulia; kwargs...)
+function contain(f, ctx::FinchCompiler; kwargs...)
     contain(ctx.code; kwargs...) do code_2
-        f(LowerJulia(code_2, ctx.algebra, ctx.mode, ctx.result, ctx.symbolic, ctx.scope))
+        f(FinchCompiler(code_2, ctx.algebra, ctx.mode, ctx.result, ctx.symbolic, ctx.scope))
     end
 end
 

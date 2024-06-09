@@ -265,7 +265,7 @@ countstored(fbr::Tensor) = countstored_level(fbr.lvl, 1)
 countstored(arr::Array) = length(arr)
 
 @staged function assemble!(lvl)
-    contain(LowerJulia()) do ctx
+    contain(FinchCompiler()) do ctx
         lvl = virtualize(ctx.code, :lvl, lvl)
         def = literal(virtual_level_fill_value(lvl))
         lvl = declare_level!(ctx, lvl, literal(0), def)

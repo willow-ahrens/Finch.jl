@@ -2,16 +2,6 @@
 CurrentModule = Finch
 ```
 
-## Finch Compilation
-
-## Finch Notation
-
-```@docs
-FinchNode
-cached
-finch_leaf
-```
-
 ### Program Instances
 
 Finch relies heavily on Julia's
@@ -258,6 +248,7 @@ reference mutable variables in the scope of the executing context.
 
 ```@docs
 virtualize
+FinchNotation.virtual
 ```
 
 ### Virtual Methods

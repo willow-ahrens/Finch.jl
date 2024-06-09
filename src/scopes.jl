@@ -1,3 +1,8 @@
+"""
+    ScopeContext
+
+A context for managing variable bindings and tensor modes.
+"""
 @kwdef struct ScopeContext
     bindings::Dict{FinchNode, FinchNode} = Dict{FinchNode, FinchNode}()
     modes::Dict{Any, Any} = Dict()
