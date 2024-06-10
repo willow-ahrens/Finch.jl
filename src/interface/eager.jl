@@ -95,10 +95,10 @@ Base.sum(arr::AbstractTensorOrBroadcast; kwargs...) = reduce(+, arr; kwargs...)
 Base.prod(arr::AbstractTensorOrBroadcast; kwargs...) = reduce(*, arr; kwargs...)
 Base.any(arr::AbstractTensorOrBroadcast; kwargs...) = reduce(or, arr; init = false, kwargs...)
 Base.all(arr::AbstractTensorOrBroadcast; kwargs...) = reduce(and, arr; init = true, kwargs...)
-Base.minimum(arr::AbstractTensorOrBroadcast; kwargs...) = reduce(min, arr; init = typemax(eltype(arr)), kwargs...)
-Base.maximum(arr::AbstractTensorOrBroadcast; kwargs...) = reduce(max, arr; init = typemin(eltype(arr)), kwargs...)
+Base.minimum(arr::AbstractTensorOrBroadcast; kwargs...) = reduce(min, arr; init = typemax(broadcast_to_eltype(arr)), kwargs...)
+Base.maximum(arr::AbstractTensorOrBroadcast; kwargs...) = reduce(max, arr; init = typemin(broadcast_to_eltype(arr)), kwargs...)
 
-Base.extrema(arr::AbstractTensorOrBroadcast; kwargs...) = mapreduce(plex, min1max2, arr; init = (typemax(eltype(arr)), typemin(eltype(arr))), kwargs...)
+Base.extrema(arr::AbstractTensorOrBroadcast; kwargs...) = mapreduce(plex, min1max2, arr; init = (typemax(broadcast_to_eltype(arr)), typemin(broadcast_to_eltype(arr))), kwargs...)
 
 function LinearAlgebra.norm(arr::AbstractTensorOrBroadcast, p::Real = 2)
     if p == 2

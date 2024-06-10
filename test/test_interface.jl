@@ -443,7 +443,8 @@ using Finch: AsArray
             let
                 A_ref = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
                 A_ref = A_ref * floatmax()/sum(A_ref)
-                A= Tensor(Dense(SparseList(Element(0.0))), A_ref)
+                A = Tensor(Dense(SparseList(Element(0.0))), A_ref)
+                
                 @test sum(A) == sum(A_ref)
                 @test minimum(A) == minimum(A_ref)
                 @test maximum(A) == maximum(A_ref)
