@@ -406,7 +406,7 @@ end
 
 function LinearAlgebra.norm(arr::LazyTensor, p::Real = 2)
     if p == 2
-        return root(sum(map(square, arr)))
+        return map(root, sum(map(square, arr)))
     elseif p == 1
         return sum(map(abs, arr))
     elseif p == Inf
@@ -416,7 +416,7 @@ function LinearAlgebra.norm(arr::LazyTensor, p::Real = 2)
     elseif p == -Inf
         return minimum(map(abs, arr))
     else
-        return root(sum(map(power, map(norm, arr, p), p)))
+        return map(root, sum(map(power, map(norm, arr, p), p)))
     end
 end
 
