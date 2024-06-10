@@ -101,19 +101,7 @@ Base.maximum(arr::AbstractTensorOrBroadcast; kwargs...) = reduce(max, arr; init 
 Base.extrema(arr::AbstractTensorOrBroadcast; kwargs...) = mapreduce(plex, min1max2, arr; init = (typemax(broadcast_to_eltype(arr)), typemin(broadcast_to_eltype(arr))), kwargs...)
 
 function LinearAlgebra.norm(arr::AbstractTensorOrBroadcast, p::Real = 2)
-    if p == 2
-        return root(sum(broadcasted(square, arr)))
-    elseif p == 1
-        return sum(broadcasted(abs, arr))
-    elseif p == Inf
-        return maximum(broadcasted(abs, arr))
-    elseif p == 0
-        return sum(broadcasted(!, broadcasted(iszero, arr)))
-    elseif p == -Inf
-        return minimum(broadcasted(abs, arr))
-    else
-        return root(sum(broadcasted(power, broadcasted(norm, arr, p), p)))
-    end
+    compute(norm(lazy(arr), p))[]
 end
 
 """
