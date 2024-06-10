@@ -182,13 +182,13 @@ collapsed(alg, idx, ext, lhs, f::typeof(*), rhs) = assign(lhs, f, call(^, rhs, m
 collapsed(alg, idx, ext::Extent, lhs, f::typeof(+), rhs) = assign(lhs, f, call(*, measure(ext), rhs))
 collapsed(alg, idx, ext::ContinuousExtent, lhs, f::typeof(+), rhs) = begin
     if (@capture rhs call(*, ~a1..., call(d, ~i1..., idx, ~i2...), ~a2...)) # Lebesgue
-        if prove(LowerJulia(), call(==, measure(ext), 0))
+        if prove(FinchCompiler(), call(==, measure(ext), 0))
             assign(lhs, f, literal(0))
         else
             assign(lhs, f, call(*, call(drop_eps, measure(ext)), a1..., a2..., call(d, i1..., i2...)))
         end
     else # Counting
-        if prove(LowerJulia(), call(==, measure(ext), 0))
+        if prove(FinchCompiler(), call(==, measure(ext), 0))
             assign(lhs, f, rhs)
         else
             sieve(call(==, measure(ext), 0), assign(lhs, f, rhs)) # Undefined if measure != 0
@@ -215,6 +215,12 @@ end
 
 ortho(var, stmt) = !(var in getvars(stmt))
 
+"""
+    StaticHash
+
+A hash function which is static, i.e. the hashes are the same when objects are hashed in the same order.
+The hash is used to memoize the results of simplification and proof rules.
+"""
 struct StaticHash
     counts::Dict{Tuple{Any, DataType}, UInt}
 end
@@ -222,6 +228,11 @@ StaticHash() = StaticHash(Dict{Tuple{Any, DataType}, UInt}())
 
 (h::StaticHash)(x) = get!(h.counts, (x, typeof(x)), UInt(length(h.counts)))
 
+"""
+    SymbolicContext
+
+A compiler context for symbolic computation, defined on an algebra.
+"""
 @kwdef struct SymbolicContext
     algebra
     shash = StaticHash()

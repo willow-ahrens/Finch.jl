@@ -66,6 +66,10 @@ struct FinchExtensionError <: Exception
     msg::String
 end
 
+struct NotImplementedError <: Exception
+    msg::String
+end
+
 const FINCH_VERSION = VersionNumber(TOML.parsefile(joinpath(dirname(@__DIR__), "Project.toml"))["version"])
 
 include("util/convenience.jl")

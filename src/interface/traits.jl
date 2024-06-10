@@ -209,7 +209,7 @@ function map_rep_def(::MapRepSparseStyle, f, args)
         if arg isa SparseData
             args_2 = map(arg -> value(gensym(), eltype(arg)), collect(args))
             args_2[n] = literal(fill_value(arg))
-            if finch_leaf(simplify(LowerJulia(), call(f, args_2...))) == literal(fill_value(lvl))
+            if finch_leaf(simplify(FinchCompiler(), call(f, args_2...))) == literal(fill_value(lvl))
                 return SparseData(lvl)
             end
         end
@@ -226,7 +226,7 @@ function map_rep_def(::MapRepRepeatStyle, f, args)
         if arg isa RepeatData
             args_2 = map(arg -> value(gensym(), eltype(arg)), collect(args))
             args_2[n] = literal(fill_value(arg))
-            if finch_leaf(simplify(LowerJulia(), call(f, args_2...))) == literal(fill_value(lvl))
+            if finch_leaf(simplify(FinchCompiler(), call(f, args_2...))) == literal(fill_value(lvl))
                 return RepeatData(lvl)
             end
         end

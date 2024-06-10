@@ -81,7 +81,7 @@ getvalue(::Type{Val{v}}) where {v} = v
     end
 end
 
-function execute_code(ex, T; algebra = DefaultAlgebra(), mode = :safe, ctx = LowerJulia(algebra = algebra, mode=mode))
+function execute_code(ex, T; algebra = DefaultAlgebra(), mode = :safe, ctx = FinchCompiler(algebra = algebra, mode=mode))
     code = contain(ctx) do ctx_2
         prgm = nothing
         prgm = virtualize(ctx_2.code, ex, T)
@@ -227,7 +227,7 @@ type `prgm`. Here, `fname` is the name of the function and `args` is a
 
 See also: [`@finch`](@ref)
 """
-function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = :safe, ctx = LowerJulia(algebra=algebra, mode=mode))
+function finch_kernel(fname, args, prgm; algebra = DefaultAlgebra(), mode = :safe, ctx = FinchCompiler(algebra=algebra, mode=mode))
     maybe_typeof(x) = x isa Type ? x : typeof(x)
     unreachable = gensym(:unreachable)
     code = contain(ctx) do ctx_2

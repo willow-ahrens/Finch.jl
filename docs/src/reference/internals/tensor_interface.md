@@ -1,4 +1,34 @@
-# Advanced Tensor Storage Formats
+```@meta
+CurrentModule = Finch
+```
+
+# Tensor Interface
+
+The `AbstractTensor` interface (defined in `src/abstract_tensor.jl`) is the interface through which Finch understands tensors. It is a high-level interace which allows tensors to interact with the rest of the Finch system. The interface is designed to be extensible, allowing users to define their own tensor types and behaviors. For a minimal example, read the definitions in [`/ext/SparseArraysExt.jl`](https://github.com/willow-ahrens/Finch.jl/blob/main/ext/SparseArraysExt.jl) and in [`/src/interface/abstractarray.jl`](https://github.com/willow-ahrens/Finch.jl/blob/main/src/interface/abstractarray.jl). Once these methods are defined that tell Finch how to generate code for an array, the `AbstractTensor` interface will also use Finch to generate code for several Julia `AbstractArray` methods, such as `getindex`, `setindex!`, `map`, and `reduce`. An important note: `getindex` and `setindex!` are not a source of truth for Finch tensors. Search the codebase for `::AbstractTensor` for a full list of methods that are implemented for `AbstractTensor`. Note than most `AbstractTensor` implement `labelled_show` and `labelled_children` methods instead of `show(::IO, ::MIME"text/plain", t::AbstractTensor)` for pretty printed display.
+
+## Tensor Methods
+
+```@docs
+declare!
+instantiate
+freeze!
+thaw!
+unfurl
+fill_value
+virtual_eltype
+virtual_fill_value
+virtual_size
+virtual_resize!
+moveto
+virtual_moveto
+labelled_show
+labelled_children
+is_injective
+is_atomic
+is_concurrent
+```
+
+# Level Interface
 
 ```jldoctest example1; setup=:(using Finch)
 julia> A = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
@@ -177,10 +207,22 @@ When levels are constructed in short form as in the examples above, the index, p
 from the level below. All the levels at the bottom of a Tensor (`Element, Pattern, Repeater`) specify an index type, position type,
 and storage type even if they don't need them. These are used by levels that take these as parameters.
 
-### Move to: Copying Fibers to a new storage type.
+## Level Methods
 
-If one needs to copy a tensor to another tensor with a different storage type, one can use the `moveto` function, described below.
+Tensor levels are implemented using the following methods:
 
 ```@docs
-moveto
+declare_level!
+assemble_level!
+reassemble_level!
+freeze_level!
+level_ndims
+level_size
+level_axes
+level_eltype
+level_fill_value
 ```
+
+# Combinator Interface
+
+Tensor Combinators allow us to modify the behavior of tensors. The `AbstractCombinator` interface (defined in [`src/tensors/abstract_combinator.jl`](https://github.com/willow-ahrens/Finch.jl/blob/main/src/tensors/abstract_combinator.jl)) is the interface through which Finch understands tensor combinators. The interface requires the combinator to overload all of the tensor methods, as well as the methods used by Looplets when lowering ranges, etc. For a minimal example, read the definitions in [`/src/tensors/combinators/offset.jl`](https://github.com/willow-ahrens/Finch.jl/blob/main/src/tensors/combinators/offset.jl).

@@ -47,15 +47,14 @@ makedocs(;
             #"Debugging Tips" => "guides/debugging_tips.md",
         ],
         "Technical Reference" => [
-        #    "Finch Core API" => "reference/core_api.md",
             "Documentation Listing" => "reference/listing.md",
-            "Advanced Implementation Details" => [
-                "Internals" => "reference/advanced_implementation/internals.md",
-        #        "Looplets and Coiteration" => "reference/advanced_implementation/looplets_coiteration.md",
-        #        "Concordization" => "reference/advanced_implementation/concordization.md",
-        #        "Local Variables and Constant Propagation" => "reference/advanced_implementation/local_variables.md",
-                "Tensor Interface" => "reference/advanced_implementation/tensor_interface.md",
-        #        "Looplet Interface" => "reference/advanced_implementation/looplet_interface.md",
+            "Advanced Internal Details" => [
+                "Virtualization" => "reference/internals/virtualization.md",
+                "Tensor Interface" => "reference/internals/tensor_interface.md",
+                "Compiler Interfaces" => "reference/internals/compiler_interface.md",
+                "Finch Notation" => "reference/internals/finch_notation.md",
+                "Finch Logic" => "reference/internals/finch_logic.md",
+        #        "Looplets and Coiteration" => "reference/internals/looplets_coiteration.md",
             ],
         ],
         "Community and Contributions" => "CONTRIBUTING.md",

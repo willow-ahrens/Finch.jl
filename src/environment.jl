@@ -1,5 +1,10 @@
 abstract type AbstractCompiler end
 
+"""
+    Namespace
+
+A namespace for managing variable names and aesthetic fresh variable generation.
+"""
 struct Namespace
     counts
 end
@@ -29,6 +34,12 @@ function freshen(spc::Namespace, tags...)
     end
 end
 
+"""
+    JuliaContext
+
+A context for compiling Julia code, managing side effects, parallelism, and
+variable names in the generated code of the executing environment.
+"""
 @kwdef mutable struct JuliaContext <: AbstractCompiler
     namespace::Namespace = Namespace()
     preamble::Vector{Any} = []

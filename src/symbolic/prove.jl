@@ -106,9 +106,9 @@ function get_prove_rules(alg, shash)
         #=
         # this rule is great but too expensive
         (@rule call(max, ~a, call(min, ~b, ~c)) => begin
-            if prove(LowerJulia(), call(<=, a, b)) # a = low, b = high
+            if prove(FinchCompiler(), call(<=, a, b)) # a = low, b = high
               call(min, b, call(max, a, c))
-            elseif prove(LowerJulia(), call(<=, a, c)) # a = low, c = high
+            elseif prove(FinchCompiler(), call(<=, a, c)) # a = low, c = high
               call(min, c, call(max, b, a))
             end
           end),

@@ -144,7 +144,7 @@
     let
         #=
             function wrapper_result(inst)
-                ctx = Finch.LowerJulia()
+                ctx = Finch.FinchCompiler()
                 prgm = Finch.virtualize(ctx.code, :inst, typeof(inst))
                 prgm = Finch.evaluate_partial(ctx, prgm)
                 Finch.wrapperize(ctx, prgm)
