@@ -136,8 +136,7 @@ used to generate code. This process is called "virtualization".  All of the
 Finch AST nodes have both instance and virtual representations. For example, the
 literal `42` is represented as `Finch.FinchNotation.LiteralInstance(42)` and
 then virtualized to `literal(42)`.  The virtualization process is implemented by
-the `virtualize` function. 
-
+the `virtualize` function.
 ```jldoctest example2; setup = :(using Finch)
 julia> A = Tensor(SparseList(Element(0)), [0, 2, 0, 0, 3]);
 

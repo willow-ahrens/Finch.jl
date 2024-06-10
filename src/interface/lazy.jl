@@ -75,8 +75,8 @@ Base.sum(arr::LazyTensor; kwargs...) = reduce(+, arr; kwargs...)
 Base.prod(arr::LazyTensor; kwargs...) = reduce(*, arr; kwargs...)
 Base.any(arr::LazyTensor; kwargs...) = reduce(or, arr; init = false, kwargs...)
 Base.all(arr::LazyTensor; kwargs...) = reduce(and, arr; init = true, kwargs...)
-Base.minimum(arr::LazyTensor; kwargs...) = reduce(min, arr; init = Inf, kwargs...)
-Base.maximum(arr::LazyTensor; kwargs...) = reduce(max, arr; init = -Inf, kwargs...)
+Base.minimum(arr::LazyTensor; kwargs...) = reduce(min, arr; init = typemax(eltype(arr)), kwargs...)
+Base.maximum(arr::LazyTensor; kwargs...) = reduce(max, arr; init = typemin(eltype(arr)), kwargs...)
 
 function Base.mapreduce(f, op, src::LazyTensor, args...; kw...)
     reduce(op, map(f, src, args...); kw...)
@@ -124,7 +124,7 @@ function fixpoint_type(op, z, tns)
     T
 end
 
-function Base.reduce(op, arg::LazyTensor{T, N}; dims=:, init = initial_value(op, Float64)) where {T, N}
+function Base.reduce(op, arg::LazyTensor{T, N}; dims=:, init = initial_value(op, T)) where {T, N}
     dims = dims == Colon() ? (1:N) : collect(dims)
     extrude = ((arg.extrude[n] for n in 1:N if !(n in dims))...,)
     fields = [field(gensym(:i)) for _ in 1:N]
@@ -134,7 +134,7 @@ function Base.reduce(op, arg::LazyTensor{T, N}; dims=:, init = initial_value(op,
 end
 
 # tensordot takes in two tensors `A` and `B` and performs a product and contraction
-function tensordot(A::LazyTensor{T1, N1}, B::LazyTensor{T2, N2}, idxs; mult_op=*, add_op=+, init = initial_value(add_op, Float64)) where {T1, T2, N1, N2}
+function tensordot(A::LazyTensor{T1, N1}, B::LazyTensor{T2, N2}, idxs; mult_op=*, add_op=+, init = initial_value(add_op, Base.promote_op(*, T1, T2))) where {T1, T2, N1, N2}
     if idxs isa Number
         idxs = ([i for i in 1:idxs], [i for i in 1:idxs])
     end
@@ -206,6 +206,14 @@ function broadcast_to_default(tns::LazyTensor)
     tns.fill_value
 end
 
+function broadcast_to_eltype(bc::Broadcast.Broadcasted)
+    Base.promote_op(bc.f, map(arg -> broadcast_to_eltype(arg), bc.args)...)
+end
+
+function broadcast_to_eltype(arg)
+    eltype(arg)
+end
+
 Base.Broadcast.instantiate(bc::Broadcasted{LazyStyle{N}}) where {N} = bc
 
 Base.copyto!(out, bc::Broadcasted{LazyStyle{N}}) where {N} = copyto!(out, copy(bc))
@@ -216,7 +224,7 @@ function Base.copy(bc::Broadcasted{LazyStyle{N}}) where {N}
     data = reorder(broadcast_to_query(bc_lgc, idxs), idxs)
     extrude = ntuple(n -> broadcast_to_extrude(bc_lgc, n), N)
     def = broadcast_to_default(bc_lgc)
-    return LazyTensor{eltype(bc)}(identify(data), extrude, def)
+    return LazyTensor{broadcast_to_eltype(bc)}(identify(data), extrude, def)
 end
 
 function Base.copyto!(::LazyTensor, ::Any)
@@ -280,7 +288,7 @@ iscommutative(::AbstractAlgebra, ::typeof(min1max2)) = true
 isidempotent(::AbstractAlgebra, ::typeof(min1max2)) = true
 isidentity(alg::AbstractAlgebra, ::typeof(min1max2), x::Tuple) = !ismissing(x) && isinf(x[1]) && x[1] > 0 && isinf(x[2]) && x[2] < 0
 isannihilator(alg::AbstractAlgebra, ::typeof(min1max2), x::Tuple) = !ismissing(x) && isinf(x[1]) && x[1] < 0 && isinf(x[2]) && x[2] > 0
-Base.extrema(arr::LazyTensor; kwargs...) = mapreduce(plex, min1max2, arr; init = (Inf, -Inf), kwargs...)
+Base.extrema(arr::LazyTensor; kwargs...) = mapreduce(plex, min1max2, arr; init = (typemax(eltype(arr)), typemin(eltype(arr))), kwargs...)
 
 struct Square{T, S}
     arg::T
