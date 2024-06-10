@@ -4,6 +4,39 @@ using Finch: AsArray
 
     @info "Testing Finch Interface"
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/578
+    let
+        @test maximum(Tensor(ones(Int8, 4,4))) === Int8(1)
+        @test minimum(Tensor(ones(Int8, 4,4))) === Int8(1)
+        @test extrema(Tensor(ones(Int8, 4,4))) === (Int8(1), Int8(1))
+        @test compute(maximum(lazy(Tensor(ones(Int8, 4,4)))))[] === Int8(1)
+        @test compute(minimum(lazy(Tensor(ones(Int8, 4,4)))))[] === Int8(1)
+        @test compute(extrema(lazy(Tensor(ones(Int8, 4,4)))))[] === (Int8(1), Int8(1))
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/576
+    let
+        a = zeros(ComplexF64, 2, 1)
+        a[1, 1] = 1.8 + 1.8im
+        a[2, 1] = 4.8 + 4.8im
+
+        b = [1 + 1im, 2 + 2im]
+
+        a_tns = Tensor(a)
+        b_tns = Tensor(b)
+
+        res = Finch.tensordot(a_tns, b_tns, ((1,), (1,)))
+
+        @test eltype(res) == ComplexF64
+    end
+
+    #https://github.com/willow-ahrens/Finch.jl/issues/577
+    let
+        a = Tensor(ones(UInt8, 1))
+        b = Tensor(ones(UInt8, 1))
+        @test eltype(Finch.tensordot(a, b, 0)) == UInt8
+    end
+
     for scheduler in [Finch.default_scheduler(), Finch.DefaultLogicOptimizer(Finch.LogicInterpreter())]
         Finch.with_scheduler(scheduler) do
             @info "Testing $scheduler"
@@ -40,8 +73,8 @@ using Finch: AsArray
 
             #https://github.com/willow-ahrens/Finch.jl/issues/533
             let
-                A = lazy(fsprand(1, 1,0.5))
-                compute(sum(A .+ A)) #fails
+                A = lazy(fsprand(1, 1, 0.5))
+                compute(sum(A .+ A)) #should not error
             end
 
             #https://github.com/willow-ahrens/Finch.jl/issues/535
@@ -410,7 +443,8 @@ using Finch: AsArray
             let
                 A_ref = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
                 A_ref = A_ref * floatmax()/sum(A_ref)
-                A= Tensor(Dense(SparseList(Element(0.0))), A_ref)
+                A = Tensor(Dense(SparseList(Element(0.0))), A_ref)
+                
                 @test sum(A) == sum(A_ref)
                 @test minimum(A) == minimum(A_ref)
                 @test maximum(A) == maximum(A_ref)
