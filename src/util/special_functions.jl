@@ -101,39 +101,39 @@ maxby(a, b) = a[1] < b[1] ? b : a
 
 Returns `rem(x, y)` normally, returns zero and issues a warning if `y` is zero.
 """
-rem_nothrow(x, y) = iszero(y) ? (@warn("Division by zero in rem"); zero(y)) : rem(x, y)
+rem_nothrow(x, y) = iszero(y) ? (@warn("Division by zero in rem"); zero(promote_type(typeof(x), typeof(y)))) : rem(x, y)
 
 """
     mod_nothrow(x, y)
 
 Returns `mod(x, y)` normally, returns zero and issues a warning if `y` is zero.
 """
-mod_nothrow(x, y) = iszero(y) ? (@warn("Division by zero in mod"); zero(y)) : mod(x, y)
+mod_nothrow(x, y) = iszero(y) ? (@warn("Division by zero in mod"); zero(promote_type(typeof(x), typeof(y)))) : mod(x, y)
 
 """
     mod1_nothrow(x, y)
 
 Returns `mod1(x, y)` normally, returns one and issues a warning if `y` is zero.
 """
-mod1_nothrow(x, y) = iszero(y) ? (@warn("Division by zero in mod1"); one(y)) : mod1(x, y)
+mod1_nothrow(x, y) = iszero(y) ? (@warn("Division by zero in mod1"); one(promote_type(typeof(x), typeof(y)))) : mod1(x, y)
 
 """
     fld_nothrow(x, y)
 
 Returns `fld(x, y)` normally, returns zero and issues a warning if `y` is zero.
 """
-fld_nothrow(x, y) = iszero(y) ? (@warn("Division by zero in fld"); zero(y)) : fld(x, y)
+fld_nothrow(x, y) = iszero(y) ? (@warn("Division by zero in fld"); zero(promote_type(typeof(x), typeof(y)))) : fld(x, y)
 
 """
     fld1_nothrow(x, y)
 
 Returns `fld1(x, y)` normally, returns one and issues a warning if `y` is zero.
 """
-fld1_nothrow(x, y) = iszero(y) ? (@warn("Division by zero in fld1"); one(y)) : fld1(x, y)
+fld1_nothrow(x, y) = iszero(y) ? (@warn("Division by zero in fld1"); one(promote_type(typeof(x), typeof(y)))) : fld1(x, y)
 
 """
     cld_nothrow(x, y)
 
 Returns `cld(x, y)` normally, returns zero and issues a warning if `y` is zero.
 """
-cld_nothrow(x, y) = iszero(y) ? (@warn("Division by zero in cld"); zero(y)) : cld(x, y)
+cld_nothrow(x, y) = iszero(y) ? (@warn("Division by zero in cld"); zero(promote_type(typeof(x), typeof(y)))) : cld(x, y)

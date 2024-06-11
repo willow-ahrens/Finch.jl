@@ -212,7 +212,7 @@ end
 
 ## Use Known Functions
 
-Unless you declare the properties of your functions using Finch's [Custom Operators](@ref) interface, Finch doesn't know how they work. For example, using a lambda obscures
+Unless you declare the properties of your functions using Finch's [User-Defined Functions](@ref) interface, Finch doesn't know how they work. For example, using a lambda obscures
 the meaning of `*`.
 
 ```jldoctest example1

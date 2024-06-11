@@ -4,6 +4,15 @@ using Finch: AsArray
 
     @info "Testing Finch Interface"
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/592
+    let
+        @test eltype(broadcast(Finch.fld_nothrow, Tensor(ones(Int16, 1)), Tensor(ones(Int8, 1)))) == Int16
+        @test eltype(broadcast(Finch.fld_nothrow, Tensor(ones(Int16, 0)), Tensor(ones(Int8, 0)))) == Int16
+
+        @test eltype(broadcast(Finch.fld_nothrow, Tensor(ones(Float64, 1)), Tensor(ones(Float32, 1)))) == Float64
+        @test eltype(broadcast(Finch.fld_nothrow, Tensor(ones(Float64, 0)), Tensor(ones(Float32, 0)))) == Float64
+    end
+
     #https://github.com/willow-ahrens/Finch.jl/issues/578
     let
         @test maximum(Tensor(ones(Int8, 4,4))) === Int8(1)

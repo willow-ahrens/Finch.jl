@@ -32,7 +32,7 @@ einsum_access(tns::EinsumTensor, idxs...) = EinsumArgument{eltype(tns.arg)}(
     tns.arg.fill_value
 )
 
-einsum_op(op, args::EinsumArgument...) = EinsumArgument{combine_eltypes(op, args)}(
+einsum_op(op, args::EinsumArgument...) = EinsumArgument{return_type(DefaultAlgebra(), op, map(eltype, args)...)}(
     reduce(result_style, [arg.style for arg in args]; init=EinsumEagerStyle()),
     mapjoin(op, (arg.data for arg in args)...),
     mergewith(&, (arg.extrude for arg in args)...),

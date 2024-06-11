@@ -95,7 +95,7 @@ function Base.map(f, src::LazyTensor, args...)
             throw(DimensionMismatch("Cannot map across arrays with different sizes."))
         end
     end
-    T = combine_eltypes(f, (src, args...))
+    T = return_type(DefaultAlgebra(), f, eltype(src), map(eltype, args)...)
     new_default = f(map(fill_value, largs)...)
     data = mapjoin(immediate(f), ldatas...)
     return LazyTensor{T}(identify(data), src.extrude, new_default)
@@ -119,7 +119,7 @@ function fixpoint_type(op, z, tns)
     T = typeof(z)
     while T != S
         S = T
-        T = Union{T, Base.promote_op(op, T, eltype(tns))}
+        T = Union{T, return_type(DefaultAlgebra(), op, T, eltype(tns))}
     end
     T
 end
@@ -134,7 +134,7 @@ function Base.reduce(op, arg::LazyTensor{T, N}; dims=:, init = initial_value(op,
 end
 
 # tensordot takes in two tensors `A` and `B` and performs a product and contraction
-function tensordot(A::LazyTensor{T1, N1}, B::LazyTensor{T2, N2}, idxs; mult_op=*, add_op=+, init = initial_value(add_op, Base.promote_op(*, T1, T2))) where {T1, T2, N1, N2}
+function tensordot(A::LazyTensor{T1, N1}, B::LazyTensor{T2, N2}, idxs; mult_op=*, add_op=+, init = initial_value(add_op, return_type(DefaultAlgebra(), *, T1, T2))) where {T1, T2, N1, N2}
     if idxs isa Number
         idxs = ([i for i in 1:idxs], [i for i in 1:idxs])
     end
@@ -207,7 +207,7 @@ function broadcast_to_default(tns::LazyTensor)
 end
 
 function broadcast_to_eltype(bc::Broadcast.Broadcasted)
-    Base.promote_op(bc.f, map(arg -> broadcast_to_eltype(arg), bc.args)...)
+    return_type(DefaultAlgebra(), bc.f, map(arg -> broadcast_to_eltype(arg), bc.args)...)
 end
 
 function broadcast_to_eltype(arg)

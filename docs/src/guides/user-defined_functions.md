@@ -1,7 +1,7 @@
 ```@meta
 CurrentModule = Finch
 ```
-# Custom Operators
+# User-Defined Functions
 
 ## User Functions
 
@@ -59,6 +59,7 @@ isidentity
 isannihilator
 isinverse
 isinvolution
+Finch.return_type
 ```
 
 ## Finch Kernel Caching
