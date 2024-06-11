@@ -37,7 +37,7 @@ makedocs(;
             "Index Sugar" => "guides/index_sugar.md",
             "Mask Sugar" => "guides/mask_sugar.md",
             "Iteration Protocols" => "guides/iteration_protocols.md",
-            "Custom Operators" => "guides/custom_operators.md",
+            "User-Defined Functions" => "guides/user-defined_functions.md",
             "High-Level Array API" => "guides/array_api.md",
             #"Parallelization and Architectures" => "guides/parallelization.md",
             "FileIO" => "guides/fileio.md",

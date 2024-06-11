@@ -1,7 +1,7 @@
 ```@meta
 CurrentModule = Finch
 ```
-# Custom Operators
+# User-Defined Functions
 
 ## User Functions
 
