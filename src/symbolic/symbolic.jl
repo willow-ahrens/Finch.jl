@@ -167,7 +167,15 @@ isinvolution(::Any, f) = false
 isinvolution(::AbstractAlgebra, ::typeof(-)) = true
 isinvolution(::AbstractAlgebra, ::typeof(inv)) = true
 
+return_type(alg) = (f, args...) -> return_type(alg, f, args...)
+"""
+    return_type(algebra, f, arg_types...)
 
+Give the return type of `f` when applied to arguments of types `arg_types...` in `algebra`.
+Used to determine output types of functions in the high-level interface.
+This function falls back to [`Base.promote_op`](https://github.com/JuliaLang/julia/blob/46933b8a708453f9caecb8abce88770c4bff675d/base/promotion.jl#L508-L619).
+"""
+return_type(alg, f, arg_types...) = Base.promote_op(f, arg_types...)
 
 collapsed(alg, idx, ext, lhs, f::FinchNode, rhs) = collapsed(alg, idx, ext, lhs, f.val, rhs)
 """

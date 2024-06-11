@@ -235,7 +235,7 @@ function map_rep_def(::MapRepRepeatStyle, f, args)
 end
 
 function map_rep_def(::MapRepElementStyle, f, args)
-    return ElementData(f(map(fill_value, args)...), combine_eltypes(f, (args...,)))
+    return ElementData(f(map(fill_value, args)...), return_type(DefaultAlgebra(), f, map(eltype, args)...))
 end
 
 """

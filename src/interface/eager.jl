@@ -1,6 +1,5 @@
 using Base: Broadcast
 using Base.Broadcast: Broadcasted, BroadcastStyle, AbstractArrayStyle
-using Base.Broadcast: combine_eltypes
 using Base: broadcasted
 using LinearAlgebra
 
@@ -41,7 +40,7 @@ function Base.map!(dst, f, src::AbstractTensor, args::Union{AbstractTensor, Base
     copyto!(dst, Base.broadcasted(f, src, args...))
 end
 
-function Base.reduce(op::Function, bc::Broadcasted{FinchStyle{N}}; dims=:, init = initial_value(op, combine_eltypes(bc.f, bc.args))) where {N}
+function Base.reduce(op::Function, bc::Broadcasted{FinchStyle{N}}; dims=:, init = initial_value(op, return_type(DefaultAlgebra(), bc.f, map(eltype, bc.args)...))) where {N}
     res = compute(reduce(op, copy(Broadcasted{LazyStyle{N}}(bc.f, bc.args)); dims=dims, init=init))
     if dims === Colon()
         return res[]
