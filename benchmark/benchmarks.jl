@@ -22,6 +22,22 @@ SUITE["high-level"] = BenchmarkGroup()
 
 let
     k = Ref(0.0)
+    A = Tensor(Dense(Sparse(Element(0.0))), fsprand(10000, 10000, 0.01))
+    x = rand(1)
+    y = rand(1)
+    SUITE["high-level"]["permutedims(Dense(Sparse()))"] = @benchmarkable(permutedims($A, (2, 1)))
+end
+
+let
+    k = Ref(0.0)
+    A = Tensor(Dense(Dense(Element(0.0))), rand(10000, 10000))
+    x = rand(1)
+    y = rand(1)
+    SUITE["high-level"]["permutedims(Dense(Dense()))"] = @benchmarkable(permutedims($A, (2, 1)))
+end
+
+let
+    k = Ref(0.0)
     x = rand(1)
     y = rand(1)
     SUITE["high-level"]["einsum_spmv_compile_overhead"] = @benchmarkable(
@@ -188,3 +204,5 @@ for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     x = Tensor(Dense{Int64}(Element{0.0, Float64, Int64}()), rand(size(A)[2]))
     SUITE["indices"]["SpMV_64"][mtx] = @benchmarkable spmv64($A, $x)
 end
+
+SUITE = SUITE["high-level"]
