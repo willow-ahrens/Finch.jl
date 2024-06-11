@@ -332,11 +332,7 @@ function permutedims_rep(tns, perm)
         return tns
     end
     tns_2 = collapse_rep(permutedims_rep_select_def(tns, reverse([i == perm[end] for i = 1:ndims(tns)])...))
-    if tns_2 isa HollowData
-        tns_2.lvl
-    end
     leaf = permutedims_rep(tns_2, [p - (p > perm[end]) for p in perm[1:end-1]])
-    @info "permutedims_rep" tns tns_2 perm leaf
     collapse_rep(permutedims_rep_aggregate_def(leaf, tns, reverse([i != perm[end] for i = 1:ndims(tns)])...))
 end
 
