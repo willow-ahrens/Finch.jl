@@ -100,7 +100,7 @@ data_rep(tns) = (DenseData^(ndims(tns)))(ElementData(fill_value(tns), eltype(tns
 data_rep(T::Type{<:Number}) = ElementData(zero(T), T)
 
 """
-    data_rep(tns)
+    collapse_rep(tns)
 
 Normalize a trait object to collapse subfiber information into the parent tensor.
 """
@@ -159,31 +159,38 @@ expanddims_rep_def(tns::DenseData, dim, dims) =
 expanddims_rep_def(tns::ExtrudeData, dim, dims) =
     dim in dims ? ExtrudeData(expanddims_rep_def(tns, dim-1, dims)) : ExtrudeData(expanddims_rep_def(tns.lvl, dim-1, dims))
 
+struct MapRepHollowStyle end
 struct MapRepExtrudeStyle end
 struct MapRepSparseStyle end
 struct MapRepDenseStyle end
 struct MapRepRepeatStyle end
 struct MapRepElementStyle end
 
-combine_style(a::MapRepExtrudeStyle, b::MapRepExtrudeStyle) = a
+combine_style(a::MapRepHollowStyle, b::MapRepHollowStyle) = a
+combine_style(a::MapRepHollowStyle, b::MapRepExtrudeStyle) = a
+combine_style(a::MapRepHollowStyle, b::MapRepSparseStyle) = a
+combine_style(a::MapRepHollowStyle, b::MapRepDenseStyle) = a
+combine_style(a::MapRepHollowStyle, b::MapRepRepeatStyle) = a
+
+combine_style(a::MapRepHollowStyle, b::MapRepElementStyle) = a
 
 combine_style(a::MapRepSparseStyle, b::MapRepExtrudeStyle) = a
 combine_style(a::MapRepSparseStyle, b::MapRepSparseStyle) = a
 combine_style(a::MapRepSparseStyle, b::MapRepDenseStyle) = a
 combine_style(a::MapRepSparseStyle, b::MapRepRepeatStyle) = a
-combine_style(a::MapRepSparseStyle, b::MapRepElementStyle) = a
 
 combine_style(a::MapRepDenseStyle, b::MapRepExtrudeStyle) = a
 combine_style(a::MapRepDenseStyle, b::MapRepDenseStyle) = a
 combine_style(a::MapRepDenseStyle, b::MapRepRepeatStyle) = a
-combine_style(a::MapRepDenseStyle, b::MapRepElementStyle) = a
 
 combine_style(a::MapRepRepeatStyle, b::MapRepExtrudeStyle) = a
 combine_style(a::MapRepRepeatStyle, b::MapRepRepeatStyle) = a
-combine_style(a::MapRepRepeatStyle, b::MapRepElementStyle) = a
+
+combine_style(a::MapRepExtrudeStyle, b::MapRepExtrudeStyle) = a
 
 combine_style(a::MapRepElementStyle, b::MapRepElementStyle) = a
 
+map_rep_style(r::HollowData) = MapRepHollowStyle()
 map_rep_style(r::ExtrudeData) = MapRepExtrudeStyle()
 map_rep_style(r::SparseData) = MapRepSparseStyle()
 map_rep_style(r::DenseData) = MapRepDenseStyle()
@@ -199,6 +206,23 @@ map_rep_child(r::RepeatData) = r.lvl
 
 map_rep_def(::MapRepDenseStyle, f, args) = DenseData(map_rep_def(f, map(map_rep_child, args)))
 map_rep_def(::MapRepExtrudeStyle, f, args) = ExtrudeData(map_rep_def(f, map(map_rep_child, args)))
+
+function map_rep_def(::MapRepHollowStyle, f, args)
+    lvl = map_rep_def(f, map(arg -> arg isa HollowData ? arg.lvl : arg, args))
+    if all(arg -> isa(arg, HollowData), args)
+        return HollowData(lvl)
+    end
+    for (n, arg) in enumerate(args)
+        if arg isa HollowData
+            args_2 = map(arg -> value(gensym(), eltype(arg)), collect(args))
+            args_2[n] = literal(fill_value(arg))
+            if finch_leaf(simplify(FinchCompiler(), call(f, args_2...))) == literal(fill_value(lvl))
+                return HollowData(lvl)
+            end
+        end
+    end
+    return lvl
+end
 
 function map_rep_def(::MapRepSparseStyle, f, args)
     lvl = map_rep_def(f, map(map_rep_child, args))
@@ -304,30 +328,67 @@ Return a trait object representing the result of permuting a tensor represented
 by `tns` to the permutation `perm`.
 """
 function permutedims_rep(tns, perm)
-    j = 1
-    n = 1
-    dst_dims = []
-    src_dims = []
-    diags = []
-    for i = 1:length(perm)
-        push!(dst_dims, n)
-        while j <= length(perm) && perm[j] <= i
-            if perm[j] < i
-                n += 1
-                push!(diags, (perm[j], n))
-            end
-            j += 1
-            push!(src_dims, n)
-        end
-        n += 1
+    if length(perm) == 0
+        return tns
     end
-    src = expanddims_rep(tns, setdiff(1:maximum(src_dims, init=0), src_dims))
-    for mask_dims in diags
-        mask = expanddims_rep(DenseData(SparseData(ElementData(false, Bool))), setdiff(1:ndims(src), mask_dims))
-        src = map_rep(filterop(fill_value(src)), mask, src)
+    tns_2 = collapse_rep(permutedims_rep_select_def(tns, reverse([i == perm[end] for i = 1:ndims(tns)])...))
+    if tns_2 isa HollowData
+        tns_2.lvl
     end
-    res = aggregate_rep(initwrite(fill_value(tns)), fill_value(tns), src, setdiff(src_dims, dst_dims))
+    leaf = permutedims_rep(tns_2, [p - (p > perm[end]) for p in perm[1:end-1]])
+    @info "permutedims_rep" tns tns_2 perm leaf
+    collapse_rep(permutedims_rep_aggregate_def(leaf, tns, reverse([i != perm[end] for i = 1:ndims(tns)])...))
 end
+
+function permutedims_rep(tns::HollowData, perm)
+    return HollowData(permutedims_rep(tns.lvl, perm))
+end
+
+permutedims_rep_aggregate_def(tns, lvl::HollowData, drops...) =
+    permutedims_rep_aggregate_def(tns, lvl.lvl, drops...)
+permutedims_rep_aggregate_def(tns, lvl::SparseData, drop, drops...) = if drop
+        permutedims_rep_aggregate_def(tns, lvl.lvl, drops...)
+    else
+        SparseData(permutedims_rep_aggregate_def(tns, lvl.lvl, drops...))
+    end
+permutedims_rep_aggregate_def(tns, lvl::ExtrudeData, drop, drops...) = if drop
+        permutedims_rep_aggregate_def(tns, lvl.lvl, drops...)
+    else
+        ExtrudeData(permutedims_rep_aggregate_def(tns, lvl.lvl, drops...))
+    end
+permutedims_rep_aggregate_def(tns, lvl::DenseData, drop, drops...) = if drop
+        permutedims_rep_aggregate_def(tns, lvl.lvl, drops...)
+    else
+        DenseData(permutedims_rep_aggregate_def(tns, lvl.lvl, drops...))
+    end
+permutedims_rep_aggregate_def(tns, lvl::RepeatData, drop, drops...) = if drop
+        permutedims_rep_aggregate_def(tns, lvl.lvl, drops...)
+    else
+        RepeatData(permutedims_rep_aggregate_def(tns, lvl.lvl, drops...))
+    end
+permutedims_rep_aggregate_def(tns, lvl::ElementData) = tns
+
+permutedims_rep_select_def(lvl::SparseData, drop, drops...) = if drop
+        HollowData(permutedims_rep_select_def(lvl.lvl, drops...))
+    else
+        SparseData(permutedims_rep_select_def(lvl.lvl, drops...))
+    end
+permutedims_rep_select_def(lvl::DenseData, drop, drops...) = if drop
+        permutedims_rep_select_def(lvl.lvl, drops...)
+    else
+        DenseData(permutedims_rep_select_def(lvl.lvl, drops...))
+    end
+permutedims_rep_select_def(lvl::ExtrudeData, drop, drops...) = if drop
+        permutedims_rep_select_def(lvl.lvl, drops...)
+    else
+        ExtrudeData(permutedims_rep_select_def(lvl.lvl, drops...))
+    end
+permutedims_rep_select_def(lvl::RepeatData, drop, drops...) = if drop
+        permutedims_rep_select_def(lvl.lvl, drops...)
+    else
+        RepeatData(permutedims_rep_select_def(lvl.lvl, drops...))
+    end
+permutedims_rep_select_def(lvl::ElementData) = lvl
 
 """
     rep_construct(tns, protos...)
