@@ -59,6 +59,7 @@ isidentity
 isannihilator
 isinverse
 isinvolution
+Finch.return_type
 ```
 
 ## Finch Kernel Caching
