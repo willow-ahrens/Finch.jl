@@ -36,7 +36,7 @@ Finch supports a wide variety of array structure beyond sparsity. Whether you're
 | Major Sparse Formats and Structured Arrays |  `A = Tensor(Dense(SparseList(Element(0.0)), 3, 4)`|
 | Background Values Other Than Zero |  `B = Tensor(SparseList(Element(1.0)), 9)`|
 | Broadcasts and Reductions |  `sum(A .* B)`|
-| Custom Operators |  `x[] <<min>>= y[i] + z[i]`|
+| User-Defined Functions |  `x[] <<min>>= y[i] + z[i]`|
 | Multiple Outputs |  `x[] <<min>>= y[i]; z[] <<max>>= y[i]`|
 | Multicore Parallelism |  `for i = parallel(1:100)`|
 | Conditionals |  `if dist[] < best_dist[]`|
