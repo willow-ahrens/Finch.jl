@@ -4,6 +4,55 @@ using Finch: AsArray
 
     @info "Testing Finch Interface"
 
+    @testset "permutedims" begin
+        let
+            io = IOBuffer()
+            println(io, "permute tests")
+
+            @repl io A = Tensor(Dense(Sparse(Element(0.0))), ones(1, 1))
+            @repl io permutedims(A, (1, 2))
+            @repl io permutedims(A, (2, 1))
+
+            @repl io A = Tensor(Dense(Dense(Element(0.0))), ones(1, 1))
+            @repl io permutedims(A, (1, 2))
+            @repl io permutedims(A, (2, 1))
+
+            @repl io A = Tensor(Sparse(Dense(Element(0.0))), ones(1, 1))
+            @repl io permutedims(A, (1, 2))
+            @repl io permutedims(A, (2, 1))
+
+            @repl io A = Tensor(Sparse(Sparse(Element(0.0))), ones(1, 1))
+            @repl io permutedims(A, (1, 2))
+            @repl io permutedims(A, (2, 1))
+
+            @repl io A = Tensor(Dense(Dense(Sparse(Element(0.0)))), ones(1, 1, 1))
+            @repl io permutedims(A, (2, 1, 3))
+
+            @repl io A = Tensor(Dense(Dense(Dense(Element(0.0)))), ones(1, 1, 1))
+            @repl io permutedims(A, (2, 1, 3))
+
+            @repl io A = Tensor(Dense(Sparse(Dense(Element(0.0)))), ones(1, 1, 1))
+            @repl io permutedims(A, (2, 1, 3))
+
+            @repl io A = Tensor(Dense(Sparse(Sparse(Element(0.0)))), ones(1, 1, 1))
+            @repl io permutedims(A, (2, 1, 3))
+
+            @repl io A = Tensor(Dense(Sparse(Dense(Element(0.0)))), ones(1, 1, 1))
+            @repl io permutedims(A, (1, 3, 2))
+
+            @repl io A = Tensor(Dense(Dense(Dense(Element(0.0)))), ones(1, 1, 1))
+            @repl io permutedims(A, (1, 3, 2))
+
+            @repl io A = Tensor(Sparse(Dense(Dense(Element(0.0)))), ones(1, 1, 1))
+            @repl io permutedims(A, (1, 3, 2))
+
+            @repl io A = Tensor(Sparse(Sparse(Dense(Element(0.0)))), ones(1, 1, 1))
+            @repl io permutedims(A, (1, 3, 2))
+
+            @test check_output("interface/permutedims.txt", String(take!(io)))
+        end
+    end
+
     #https://github.com/willow-ahrens/Finch.jl/issues/592
     let
         @test eltype(broadcast(Finch.fld_nothrow, Tensor(ones(Int16, 1)), Tensor(ones(Int8, 1)))) == Int16
@@ -542,7 +591,7 @@ using Finch: AsArray
         end
     end
 
-    @info "Testing Finch Interface (FinchLogic)"
+
     @testset "concordize" begin
         using Finch.FinchLogic
         A = alias(:A)
