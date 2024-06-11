@@ -55,7 +55,7 @@ end
 
 function Base.permutedims(src::AbstractTensor, perm)
     dst = rep_construct(permutedims_rep(data_rep(src), perm))
-    copyto!(dst, swizzle(src, perm...))
+    dst = copyto_helper!(swizzle(dst, invperm(perm)...), src)
 end
 
 """
