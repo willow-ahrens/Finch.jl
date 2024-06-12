@@ -59,18 +59,3 @@ Base.@propagate_inbounds function bin_scansearch(v, x, lo::T1, hi::T2) where {T1
     end
     return hi
 end
-
-"""
-    @barrier args... ex
-
-Wrap `ex` in a let block that captures all free variables in `ex` that are bound in the arguments. This is useful for
-ensuring that the variables in `ex` are not mutated by the arguments.
-"""
-macro barrier(args_ex...)
-    (args, ex) = args_ex[1:end-1], args_ex[end]
-    f = gensym()
-    esc(quote
-        f = @closure ($(args...),) -> $ex
-        f()
-    end)
-end

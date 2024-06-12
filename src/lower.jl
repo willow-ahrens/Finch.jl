@@ -312,15 +312,12 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
             end
         end
     end
-    code = quote
-        $code
-        nothing
-    end
 
     return quote
         Finch.@batch for $i = 1:$(ctx(device.n))
             begin
                 $code
+                nothing
             end
         end
     end
