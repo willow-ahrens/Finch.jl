@@ -339,7 +339,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Re
                         preamble = quote
                             $my_q = $(lvl.ptr)[$(ctx(pos))]
                             $my_q_stop = $(lvl.ptr)[$(ctx(pos)) + $(Tp(1))]
-                            $qos = bin_scansearch($(lvl.idx), $(ctx(i)), $my_q, $my_q_stop)
+                            $qos = bin_scansearch($(lvl.idx), $(ctx(i)), $my_q, $(my_q_stop-1))
                         end,
                         body = (ctx) -> Switch([
                             value(:($(lvl.idx)[$qos] == $(ctx(i)))) => instantiate(ctx, VirtualSubFiber(lvl.lvl, value(qos, Tp)), mode, subprotos),
