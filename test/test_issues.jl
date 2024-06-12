@@ -863,4 +863,29 @@ using SparseArrays
         end
         @test C1 == C2
     end
+
+
+    # Basic Sparse Follow Test
+    let
+
+        n = 1000
+        A = Tensor(SparseList(Element(0.0)), fsprand(n, 100))
+        B = Tensor(SparseList(Element(0.0)), fsprand(n, 100))
+        C_follow = Tensor(SparseList(Element(0.0)))
+        @finch begin
+            C_follow .= 0
+            for i=_
+                C_follow[i] = A[follow(i)] * B[i]
+            end
+        end
+        C_walk = Tensor(SparseList(Element(0.0)))
+        @finch begin
+            C_walk .= 0
+            for i=_
+                C_walk[i] = A[i] * B[i]
+            end
+        end
+        @test C_follow == C_walk
+    end
+
 end
