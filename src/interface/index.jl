@@ -23,11 +23,11 @@ getindex_rep_def(lvl::SparseData, idx::Type{<:Base.Slice}, idxs...) = SparseData
 getindex_rep_def(lvl::DenseData, idx::Drop, idxs...) = getindex_rep_def(lvl.lvl, idxs...)
 getindex_rep_def(lvl::DenseData, idx, idxs...) = DenseData(getindex_rep_def(lvl.lvl, idxs...))
 
+getindex_rep_def(lvl::RepeatData, idx::Drop, idxs...) = getindex_rep_def(lvl.lvl, idxs...)
+getindex_rep_def(lvl::RepeatData, idx, idxs...) = RepeatData(getindex_rep_def(lvl.lvl, idxs...))
+
 getindex_rep_def(lvl::ElementData) = lvl
 
-getindex_rep_def(lvl::RepeatData, idx::Drop) = SolidData(ElementData(lvl.fill_value, lvl.eltype))
-getindex_rep_def(lvl::RepeatData, idx) = SolidData(ElementData(lvl.fill_value, lvl.eltype))
-getindex_rep_def(lvl::RepeatData, idx::Type{<:AbstractUnitRange}) = SolidData(ElementData(lvl.fill_value, lvl.eltype))
 
 Base.getindex(arr::AbstractTensor, inds::AbstractVector) = getindex_helper(arr, to_indices(arr, axes(arr), (inds,)))
 function Base.getindex(arr::AbstractTensor, inds...)
