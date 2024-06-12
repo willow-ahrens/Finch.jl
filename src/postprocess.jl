@@ -295,7 +295,7 @@ function (ctx::MarkDead)(ex, res)
     elseif !isexpr(ex) || ex.head === :break
         ex
     elseif @capture ex :macrocall(~f, ~ln, ~args...)
-        return Expr(:macrocall, f, ln, reverse(map((arg)->ctx(arg, res), reverse(args)))...)
+        return Expr(:macrocall, f, ln, reverse(map((arg)->ctx(arg, true), reverse(args)))...)
     elseif @capture ex :block(~args...)
         args_2 = []
         for arg in args[end:-1:1]
@@ -366,7 +366,6 @@ function prune_dead(ex)
         Fixpoint(@rule :block(:block(~a...), ~b...) => Expr(:block, a..., b...)),
         (@rule :block(~a, ~b, ~c...) => Expr(:block, a, Expr(:block, b, c...))),
         (@rule :block(:if(~cond, ~a, ~b), ~c) => Expr(:block, Expr(:deadif, cond, Expr(:block, a, nothing), Expr(:block, b, nothing)), c)),
-        (@rule :block(:macrocall(~f, ~ln, ~a..., ~b), ~c) => Expr(:block, Expr(:deadmacrocall, f, ln, a..., Expr(:block, b, nothing)), c)),
         (@rule :for(~itr, ~body) => Expr(:for, itr, Expr(:block, body, nothing))),
         (@rule :while(~cond, ~body) => Expr(:while, cond, Expr(:block, body, nothing))),
     ])))(ex)
@@ -375,7 +374,6 @@ function prune_dead(ex)
             (@rule :block(:block(~a...), ~b...) => Expr(:block, a..., b...)),
             (@rule :block(~a, ~b, ~c, ~d...) => Expr(:block, a, Expr(:block, b, c, d...))),
             (@rule :block(:if(~cond, ~a, ~b), ~c) => Expr(:block, Expr(:deadif, cond, Expr(:block, a, nothing), Expr(:block, b, nothing)), c)),
-            (@rule :block(:macrocall(~f, ~ln, ~a..., ~b), ~c) => Expr(:block, Expr(:deadmacrocall, f, ln, a..., Expr(:block, b, nothing)), c)),
             (@rule (~f::isassign)(:_, ~rhs) => Expr(:block, rhs)),
             (@rule :block(:call(~f::ispure, ~a...), ~b) => Expr(:block, a..., b)),
             (@rule :block((~f)(~a...), ~b) => if f in (:ref, :., :curly, :string, :kw, :parameters, :tuple)
@@ -395,17 +393,12 @@ function prune_dead(ex)
     ])))))(ex)
 
     ex = Rewrite(Postwalk(Fixpoint(Chain([
+        (@rule :deadif(~a...) => Expr(:if, a...)),
         (@rule :block(~a) => a),
         (@rule :block(~a..., :block(~b...), ~c...) => Expr(:block, a..., b..., c...)),
-        (@rule :deadif(~cond, :block(~a..., nothing), ~b) => Expr(:deadif, cond, Expr(:block, a...), b)),
-        (@rule :deadif(~cond, ~a, :block(~b..., nothing)) => Expr(:deadif, cond, a, Expr(:block, b...))),
-        (@rule :deadmacrocall(~f, ~ln, ~a..., :block(~b..., nothing)) => Expr(:macrocall, f, ln, a..., Expr(:block, b...))),
+        (@rule :block(~a1..., :if(~cond, ~b1..., :block(~c..., nothing), ~b2...), ~a2..., ~d) =>
+            Expr(:block, a1..., Expr(:if, cond, b1..., Expr(:block, c...), b2...), a2..., d)),
         (@rule :for(~itr, :block(~body..., nothing)) => Expr(:for, itr, Expr(:block, body...))),
         (@rule :while(~cond, :block(~body..., nothing)) => Expr(:while, cond, Expr(:block, body...))),
-    ]))))(ex)
-
-    ex = Rewrite(Postwalk(Fixpoint(Chain([
-        (@rule :deadif(~cond, ~a, ~b) => Expr(:if, cond, a, b)),
-        (@rule :deadmacrocall(~f, ~ln, ~a..., ~b) => Expr(:macrocall, f, ln, a..., b)),
     ]))))(ex)
 end

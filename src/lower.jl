@@ -324,6 +324,7 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
         Threads.@threads for $i = 1:$(ctx(device.n))
             Finch.@barrier begin
                 $code
+                nothing
             end
         end
     end
