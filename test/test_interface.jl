@@ -4,6 +4,15 @@ using Finch: AsArray
 
     @info "Testing Finch Interface"
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/383
+    let
+        A = [0.0 0.0 4.4; 1.1 0.0 0.0; 2.2 0.0 5.5; 3.3 0.0 0.0]
+        A_fbr = Tensor(Dense(Dense(Element(0.0))), A)
+
+        -A # works
+        -A_fbr # used to fail
+    end
+
     @testset "permutedims" begin
         let
             io = IOBuffer()

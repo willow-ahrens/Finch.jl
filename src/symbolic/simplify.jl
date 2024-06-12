@@ -100,7 +100,6 @@ function get_simplify_rules(alg, shash)
         (@rule call(ifelse, true, ~a, ~b) => a),
         (@rule call(ifelse, false, ~a, ~b) => b),
         (@rule call(ifelse, ~a, ~b, ~b) => b),
-        (@rule $(literal(-0.0)) => literal(0.0)),
         (@rule call(norm, ~x::isliteral, ~y) => if iszero(x.val) x end),
 
         (@rule block(~a1..., sieve(~c, ~b1), sieve(~c, ~b2), ~a2...) =>
