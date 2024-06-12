@@ -205,4 +205,40 @@ for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
     SUITE["indices"]["SpMV_64"][mtx] = @benchmarkable spmv64($A, $x)
 end
 
-SUITE = SUITE["high-level"]
+SUITE["parallel"] = BenchmarkGroup()
+
+function spmv_serial(A, x)
+    y = Tensor(Dense{Int64}(Element{0.0, Float64}()))
+    @finch begin
+        y .= 0
+        for i=_
+            for j=_
+                y[i] += A[j, i] * x[j]
+            end
+        end
+        return y
+    end
+end
+
+function spmv_threaded(A, x)
+    y = Tensor(Dense{Int64}(Element{0.0, Float64}()))
+    @finch begin
+        y .= 0
+        for i=parallel(_)
+            for j=_
+                y[i] += A[j, i] * x[j]
+            end
+        end
+        return y
+    end
+end
+
+SUITE["parallel"]["SpMV_serial"] = BenchmarkGroup()
+SUITE["parallel"]["SpMV_threaded"] = BenchmarkGroup()
+for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
+    A = SparseMatrixCSC(matrixdepot(mtx))
+    A = Tensor(Dense{Int64}(SparseList{Int64}(Element{0.0, Float64, Int64}())), A)
+    x = Tensor(Dense{Int64}(Element{0.0, Float64, Int64}()), rand(size(A)[2]))
+    SUITE["parallel"]["SpMV_serial"][mtx] = @benchmarkable spmv_serial($A, $x)
+    SUITE["parallel"]["SpMV_threaded"][mtx] = @benchmarkable spmv_threaded($A, $x)
+end
