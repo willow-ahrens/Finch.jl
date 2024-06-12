@@ -312,19 +312,15 @@ function lower_parallel_loop(ctx, root, ext::ParallelDimension, device::VirtualC
             end
         end
     end
-    if ctx.mode !== :debug
-        code = quote
-            @inbounds @fastmath begin
-                $code
-            end
-        end
+    code = quote
+        $code
+        nothing
     end
 
     return quote
-        Threads.@threads for $i = 1:$(ctx(device.n))
-            Finch.@barrier begin
+        Finch.@batch for $i = 1:$(ctx(device.n))
+            begin
                 $code
-                nothing
             end
         end
     end
