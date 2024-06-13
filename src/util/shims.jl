@@ -134,12 +134,6 @@ macro closure(ex)
     esc(wrap_closure(__module__, ex))
 end
 
-using Base.Meta
-
-# Find arguments in closure arg list
-#FIXME function find_closure_args(ex)
-#end
-
 # Utility function - fill `varlist` with all accesses to variables inside `ex`
 # which are not bound before being accessed.  Variables which were bound
 # before access are returned in `bound_vars` as a side effect.
