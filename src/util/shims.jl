@@ -90,7 +90,6 @@ function wrap_closure(module_, ex)
         throw(ArgumentError("Argument to @closure must be a closure!  (Got $closure_expression)"))
     end
     append!(bound_vars, [v for v in args])
-    # FIXME support type assertions and kw args
     find_var_uses!(captured_vars, bound_vars, body)
     quote
         let $(map(var -> :($var = $var), captured_vars)...)
