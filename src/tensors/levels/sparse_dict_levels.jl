@@ -240,7 +240,7 @@ function (fbr::SubFiber{<:SparseLevel{Ti}})(idxs...) where {Ti}
     isempty(idxs) && return fbr
     lvl = fbr.lvl
     p = fbr.pos
-    crds = table_coords(lvl.tbl, p)
+    crds = @view lvl.idx[lvl.ptr[p]:lvl.ptr[p + 1] - 1]
     r = searchsorted(crds, idxs[end])
     q = lvl.tbl.ptr[p] + first(r) - 1
     length(r) == 0 ? fill_value(fbr) : SubFiber(lvl.lvl, lvl.tbl.val[q])(idxs[1:end-1]...)
