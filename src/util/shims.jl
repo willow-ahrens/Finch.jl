@@ -89,36 +89,18 @@ function makelet(v::Var)
 end
 
 # Wrap `closure_expression` in a `let` block to improve efficiency.
-function wrap_closure(module_, closure_expression)
-    #ex = macroexpand(module_, closure_expression)
-    ex = closure_expression
-    if Base.isexpr(ex, :error)
-        # There was an error in macroexpand - just return the original
-        # expression so that the user gets a comprehensible error message.
-        return closure_expression
-    end
-    if Base.isexpr(ex, :do) && length(ex.args) >= 2 && Base.isexpr(ex.args[2], :(->)) # do syntax
-        ex = ex.args[2]
-    end
-    if Base.isexpr(ex, :(->))
-        args1 = ex.args[1]
-        if isa(args1, Symbol)
-            funcargs = [args1]
-        else
-            @assert Base.isexpr(args1, :tuple)
-            funcargs = args1.args
-        end
-    elseif Base.isexpr(ex, :function)
-        @assert Base.isexpr(ex.args[1], :call)
-        funcargs = ex.args[1].args[2:end]
+function wrap_closure(module_, ex)
+    bound_vars = Var[]
+    captured_vars = Var[]
+    if @capture ex :->(:tuple(~args...), ~body)
+    elseif @capture ex :function(:call(~f, ~args...), ~body)
+        push!(bound_vars, Var(f,0))
     else
         throw(ArgumentError("Argument to @closure must be a closure!  (Got $closure_expression)"))
     end
+    append!(bound_vars, [Var(v,0) for v in args])
     # FIXME support type assertions and kw args
-    bound_vars = Var[Var(v,0) for v in funcargs]
-    @assert isa(ex.args[2], Expr) && ex.args[2].head == :block
-    captured_vars = Var[]
-    find_var_uses!(captured_vars, bound_vars, ex.args[2], 0)
+    find_var_uses!(captured_vars, bound_vars, body, 0)
     quote
         let $(map(makelet, captured_vars)...)
             $ex
