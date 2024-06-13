@@ -75,34 +75,21 @@ macro barrier(args_ex...)
     end)
 end
 
-struct Var
-    name::Symbol
-    num_esc::Int
-end
-
-function makelet(v::Var)
-    ex = v.name
-    for i=1:v.num_esc
-        ex = esc(ex)
-    end
-    :($ex=$ex)
-end
-
 # Wrap `closure_expression` in a `let` block to improve efficiency.
 function wrap_closure(module_, ex)
-    bound_vars = Var[]
-    captured_vars = Var[]
+    bound_vars = Symbol[]
+    captured_vars = Symbol[]
     if @capture ex :->(:tuple(~args...), ~body)
     elseif @capture ex :function(:call(~f, ~args...), ~body)
-        push!(bound_vars, Var(f,0))
+        push!(bound_vars, f)
     else
         throw(ArgumentError("Argument to @closure must be a closure!  (Got $closure_expression)"))
     end
-    append!(bound_vars, [Var(v,0) for v in args])
+    append!(bound_vars, [v for v in args])
     # FIXME support type assertions and kw args
-    find_var_uses!(captured_vars, bound_vars, body, 0)
+    find_var_uses!(captured_vars, bound_vars, body)
     quote
-        let $(map(makelet, captured_vars)...)
+        let $(map(var -> :($var = $var), captured_vars)...)
             $ex
         end
     end
@@ -151,94 +138,74 @@ using Base.Meta
 #
 # With works with the surface syntax so it unfortunately has to reproduce some
 # of the lowering logic (and consequently likely has bugs!)
-function find_var_uses!(varlist, bound_vars, ex, num_esc)
+function find_var_uses!(capture_vars, bound_vars, ex)
     if isa(ex, Symbol)
-        var = Var(ex,num_esc)
-        if !(var in bound_vars)
+        if !(ex in bound_vars)
             #occursin("threadsfor", string(ex)) && error()
-            var ∈ varlist || push!(varlist, var)
+            ex ∈ capture_vars || push!(capture_vars, ex)
         end
-        return varlist
+        return capture_vars
     elseif isa(ex, Expr)
-        if ex.head == :quote || ex.head == :line || ex.head == :inbounds
-            return varlist
-        end
         if ex.head == :(=)
-            find_var_uses_lhs!(varlist, bound_vars, ex.args[1], num_esc)
-            find_var_uses!(varlist, bound_vars, ex.args[2], num_esc)
-        elseif @capture ex :function(:call(~name, ~args...), ~body)
-            find_var_uses_lhs!(varlist, bound_vars, name, num_esc)
-            body_vars = copy(bound_vars)
-            for arg in args
-                find_var_uses_lhs!(varlist, body_vars, arg, num_esc)
-            end
-            find_var_uses!(varlist, body_vars, body, num_esc)
+            find_var_uses_lhs!(capture_vars, bound_vars, ex.args[1])
+            find_var_uses!(capture_vars, bound_vars, ex.args[2])
         elseif @capture ex :->(:tuple(~args...), ~body)
             body_vars = copy(bound_vars)
             for arg in args
-                find_var_uses_lhs!(varlist, body_vars, arg, num_esc)
+                find_var_uses_lhs!(capture_vars, body_vars, arg)
             end
-            find_var_uses!(varlist, body_vars, body, num_esc)
+            find_var_uses!(capture_vars, body_vars, body)
         elseif ex.head == :kw
-            find_var_uses!(varlist, bound_vars, ex.args[2], num_esc)
-        elseif ex.head == :for || ex.head == :while || ex.head == :comprehension || ex.head == :let
+            find_var_uses!(capture_vars, bound_vars, ex.args[2])
+        elseif ex.head == :for || ex.head == :while || ex.head == :let
             # New scopes
             inner_bindings = copy(bound_vars)
-            find_var_uses!(varlist, inner_bindings, ex.args, num_esc)
+            find_var_uses!(capture_vars, inner_bindings, ex.args)
         elseif ex.head == :try
             # New scope + ex.args[2] is a new binding
-            find_var_uses!(varlist, copy(bound_vars), ex.args[1], num_esc)
+            find_var_uses!(capture_vars, copy(bound_vars), ex.args[1])
             catch_bindings = copy(bound_vars)
-            !isa(ex.args[2], Symbol) || push!(catch_bindings, Var(ex.args[2],num_esc))
-            find_var_uses!(varlist,catch_bindings,ex.args[3], num_esc)
+            !isa(ex.args[2], Symbol) || push!(catch_bindings, ex.args[2])
+            find_var_uses!(capture_vars,catch_bindings,ex.args[3])
             if length(ex.args) > 3
                 finally_bindings = copy(bound_vars)
-                find_var_uses!(varlist,finally_bindings,ex.args[4], num_esc)
+                find_var_uses!(capture_vars,finally_bindings,ex.args[4])
             end
         elseif ex.head == :call
-            find_var_uses!(varlist, bound_vars, ex.args[2:end], num_esc)
+            find_var_uses!(capture_vars, bound_vars, ex.args[2:end])
         elseif ex.head == :local
            foreach(ex.args) do e
                if !isa(e, Symbol)
-                   find_var_uses!(varlist, bound_vars, e, num_esc)
+                   find_var_uses!(capture_vars, bound_vars, e)
                end
            end
         elseif ex.head == :(::)
-            find_var_uses_lhs!(varlist, bound_vars, ex, num_esc)
-        elseif ex.head == :escape
-            # In the 0.7-DEV churn, escapes persist during recursive macro
-            # expansion until all macros are expanded.  Therefore, we
-            # need to need to keep track of the number of escapes we're
-            # currently inside, and to replay these when we construct the let
-            # expression. See https://github.com/JuliaLang/julia/issues/23221
-            # for additional pain and gnashing of teeth ;-)
-            find_var_uses!(varlist, bound_vars, ex.args[1], num_esc+1)
+            find_var_uses_lhs!(capture_vars, bound_vars, ex)
         else
-            find_var_uses!(varlist, bound_vars, ex.args, num_esc)
+            find_var_uses!(capture_vars, bound_vars, ex.args)
         end
     end
-    varlist
+    capture_vars
 end
 
-find_var_uses!(varlist, bound_vars, exs::Vector, num_esc) =
-    foreach(e->find_var_uses!(varlist, bound_vars, e, num_esc), exs)
+find_var_uses!(capture_vars, bound_vars, exs::Vector) =
+    foreach(e->find_var_uses!(capture_vars, bound_vars, e), exs)
 
 # Find variable uses on the left hand side of an assignment.  Some of what may
 # be variable uses turn into bindings in this context (cf. tuple unpacking).
-function find_var_uses_lhs!(varlist, bound_vars, ex, num_esc)
+function find_var_uses_lhs!(capture_vars, bound_vars, ex)
     if isa(ex, Symbol)
-        var = Var(ex,num_esc)
-        var ∈ bound_vars || push!(bound_vars, var)
+        ex ∈ bound_vars || push!(bound_vars, ex)
     elseif isa(ex, Expr)
         if ex.head == :tuple
-            find_var_uses_lhs!(varlist, bound_vars, ex.args, num_esc)
+            find_var_uses_lhs!(capture_vars, bound_vars, ex.args)
         elseif ex.head == :(::)
-            find_var_uses!(varlist, bound_vars, ex.args[2], num_esc)
-            find_var_uses_lhs!(varlist, bound_vars, ex.args[1], num_esc)
+            find_var_uses!(capture_vars, bound_vars, ex.args[2])
+            find_var_uses_lhs!(capture_vars, bound_vars, ex.args[1])
         else
-            find_var_uses!(varlist, bound_vars, ex.args, num_esc)
+            find_var_uses!(capture_vars, bound_vars, ex.args)
         end
     end
 end
 
-find_var_uses_lhs!(varlist, bound_vars, exs::Vector, num_esc) = foreach(e->find_var_uses_lhs!(varlist, bound_vars, e, num_esc), exs)
+find_var_uses_lhs!(capture_vars, bound_vars, exs::Vector) = foreach(e->find_var_uses_lhs!(capture_vars, bound_vars, e), exs)
