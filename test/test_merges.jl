@@ -7,6 +7,7 @@
     fmts = [
         (;fmt = (z) -> Tensor(Dense(SparseList(Element(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
         (;fmt = (z) -> Tensor(Dense(SparseList(Element(z)))), proto = [literal_instance(gallop), literal_instance(follow)]),
+        (;fmt = (z) -> Tensor(Dense(SparseList(Element(z)))), proto = [literal_instance(follow), literal_instance(follow)]),
         (;fmt = (z) -> Tensor(Dense(SparseVBL(Element(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
         (;fmt = (z) -> Tensor(Dense(SparseVBL(Element(z)))), proto = [literal_instance(gallop), literal_instance(follow)]),
         (;fmt = (z) -> Tensor(Dense(SparseByteMap(Element(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
