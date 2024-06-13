@@ -9,7 +9,6 @@ using Finch
 using BenchmarkTools
 using MatrixDepot
 using SparseArrays
-
 include(joinpath(@__DIR__, "../docs/examples/bfs.jl"))
 include(joinpath(@__DIR__, "../docs/examples/pagerank.jl"))
 include(joinpath(@__DIR__, "../docs/examples/shortest_paths.jl"))
@@ -235,10 +234,13 @@ end
 
 SUITE["parallel"]["SpMV_serial"] = BenchmarkGroup()
 SUITE["parallel"]["SpMV_threaded"] = BenchmarkGroup()
-for mtx in ["SNAP/soc-Epinions1"]#, "SNAP/soc-LiveJournal1"]
-    A = SparseMatrixCSC(matrixdepot(mtx))
-    A = Tensor(Dense{Int64}(SparseList{Int64}(Element{0.0, Float64, Int64}())), A)
+for (key, mtx) in [
+    "SNAP/soc-Epinions1" => SparseMatrixCSC(matrixdepot("SNAP/soc-Epinions1")),
+    "fsprand(10_000, 10_000, 0.01)" => fsprand(10_000, 10_000, 0.01)]
+    A = Tensor(Dense{Int64}(SparseList{Int64}(Element{0.0, Float64, Int64}())), mtx)
     x = Tensor(Dense{Int64}(Element{0.0, Float64, Int64}()), rand(size(A)[2]))
-    SUITE["parallel"]["SpMV_serial"][mtx] = @benchmarkable spmv_serial($A, $x)
-    SUITE["parallel"]["SpMV_threaded"][mtx] = @benchmarkable spmv_threaded($A, $x)
+    SUITE["parallel"]["SpMV_serial"][key] = @benchmarkable spmv_serial($A, $x)
+    SUITE["parallel"]["SpMV_threaded"][key] = @benchmarkable spmv_threaded($A, $x)
 end
+
+SUITE = SUITE["parallel"]

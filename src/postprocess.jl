@@ -295,7 +295,7 @@ function (ctx::MarkDead)(ex, res)
     elseif !isexpr(ex) || ex.head === :break
         ex
     elseif @capture ex :macrocall(~f, ~ln, ~args...)
-        return Expr(:macrocall, f, ln, reverse(map((arg)->ctx(arg, res), reverse(args)))...)
+        return Expr(:macrocall, f, ln, reverse(map((arg)->ctx(arg, true), reverse(args)))...)
     elseif @capture ex :block(~args...)
         args_2 = []
         for arg in args[end:-1:1]
