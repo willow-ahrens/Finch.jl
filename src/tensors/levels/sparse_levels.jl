@@ -32,6 +32,24 @@ function assemble_table!(tbl::DictTable, pos_start, pos_stop)
     fill_range!(tbl.ptr, 0, pos_start + 1, pos_stop + 1)
 end
 
+#=
+function freeze_table!(tbl::DictTable, pos_stop)
+    srt = sort(collect(pairs(tbl.tbl)))
+    resize!(tbl.idx, length(srt))
+    resize!(tbl.val, length(srt))
+    for (q, ((p, i), v)) in enumerate(srt)
+        tbl.val[q] = v
+        tbl.idx[q] = i
+    end
+    resize!(tbl.ptr, pos_stop + 1)
+    tbl.ptr[1] = 1
+    for p = 2:pos_stop + 1
+        tbl.ptr[p] += tbl.ptr[p - 1]
+    end
+    tbl.ptr[pos_stop + 1] - 1
+end
+ =#
+
 function freeze_table!(tbl::DictTable, pos_stop)
     max_pos = maximum(tbl.ptr)
     resize!(tbl.ptr, pos_stop + 1)
@@ -58,15 +76,14 @@ function freeze_table!(tbl::DictTable, pos_stop)
     for p = 1:pos_stop
         start = tbl.ptr[p]
         stop = tbl.ptr[p+1] - 1
-        perm = perm_vec[1:stop-start+1]
-        sortperm!(perm, tbl.idx[start:stop])
+        sortperm!((@view perm_vec[1:stop-start+1]), tbl.idx[start:stop])
         # Store the correctly permuted version of the idxs and vals in a temporary
-        for i in eachindex(perm)
-            idx_temp[i] = tbl.idx[start + perm[i] - 1]
-            val_temp[i] = tbl.val[start + perm[i] - 1]
+        for i in 1:(stop-start+1)
+            idx_temp[i] = tbl.idx[start + perm_vec[i] - 1]
+            val_temp[i] = tbl.val[start + perm_vec[i] - 1]
         end
         # Overwrite the segment of the idx and vals array with the correct order
-        for i in eachindex(perm)
+        for i in 1:(stop-start+1)
             tbl.idx[start + i - 1] = idx_temp[i]
             tbl.val[start + i - 1] = val_temp[i]
         end
