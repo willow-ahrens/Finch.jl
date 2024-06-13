@@ -43,11 +43,6 @@ end
 
 Base.@propagate_inbounds function bin_scansearch(v, x, lo::T1, hi::T2) where {T1<:Integer, T2<:Integer} # TODO types for `lo` and `hi` #406
     u = T1(1)
-    stop = min(hi, lo + T1(32))
-    while lo + u < stop && v[lo] < x
-        lo += u
-    end
-    lo = lo - u
     hi = hi + u
     while lo < hi - u
         m = lo + ((hi - lo) >>> 0x01)
