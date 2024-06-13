@@ -24,38 +24,50 @@ begin
     val_2 = output_lvl_2_val
     output_lvl_2_val = (Finch).moveto(output_lvl_2_val, cpu)
     Threads.@threads for i = 1:cpu.n
-            val_3 = tmp_lvl_val
-            tmp_lvl_val = (Finch).moveto(tmp_lvl_val, CPUThread(i, cpu, Serial()))
-            phase_start_2 = max(1, 1 + fld(y_stop * (-1 + i), cpu.n))
-            phase_stop_2 = min(y_stop, fld(y_stop * i, cpu.n))
-            if phase_stop_2 >= phase_start_2
-                for y_8 = phase_start_2:phase_stop_2
-                    input_lvl_q_2 = (1 - 1) * input_lvl.shape + y_8
-                    input_lvl_q = (1 - 1) * input_lvl.shape + y_8
-                    input_lvl_q_3 = (1 - 1) * input_lvl.shape + y_8
-                    output_lvl_q = (1 - 1) * input_lvl.shape + y_8
-                    Finch.resize_if_smaller!(tmp_lvl_val, input_lvl_2.shape)
-                    Finch.fill_range!(tmp_lvl_val, 0, 1, input_lvl_2.shape)
-                    for x_9 = 1:input_lvl_2.shape
-                        tmp_lvl_q = (1 - 1) * input_lvl_2.shape + x_9
-                        input_lvl_2_q = (input_lvl_q_2 - 1) * input_lvl_2.shape + (-1 + x_9)
-                        input_lvl_2_q_2 = (input_lvl_q - 1) * input_lvl_2.shape + x_9
-                        input_lvl_2_q_3 = (input_lvl_q_3 - 1) * input_lvl_2.shape + (1 + x_9)
-                        input_lvl_3_val = input_lvl_2_val[input_lvl_2_q]
-                        input_lvl_3_val_2 = input_lvl_2_val[input_lvl_2_q_2]
-                        input_lvl_3_val_3 = input_lvl_2_val[input_lvl_2_q_3]
-                        tmp_lvl_val[tmp_lvl_q] = input_lvl_3_val + tmp_lvl_val[tmp_lvl_q] + input_lvl_3_val_2 + input_lvl_3_val_3
-                    end
-                    resize!(tmp_lvl_val, input_lvl_2.shape)
-                    for x_10 = 1:input_lvl_2.shape
-                        output_lvl_2_q = (output_lvl_q - 1) * input_lvl_2.shape + x_10
-                        tmp_lvl_q_2 = (1 - 1) * input_lvl_2.shape + x_10
-                        tmp_lvl_2_val = tmp_lvl_val[tmp_lvl_q_2]
-                        output_lvl_2_val[output_lvl_2_q] = tmp_lvl_2_val
-                    end
+            Finch.@barrier begin
+                    @inbounds @fastmath(begin
+                                val_3 = tmp_lvl_val
+                                tmp_lvl_val = (Finch).moveto(tmp_lvl_val, CPUThread(i, cpu, Serial()))
+                                res_6 = begin
+                                        phase_start_2 = max(1, 1 + fld(y_stop * (-1 + i), cpu.n))
+                                        phase_stop_2 = min(y_stop, fld(y_stop * i, cpu.n))
+                                        if phase_stop_2 >= phase_start_2
+                                            for y_8 = phase_start_2:phase_stop_2
+                                                input_lvl_q_2 = (1 - 1) * input_lvl.shape + y_8
+                                                input_lvl_q = (1 - 1) * input_lvl.shape + y_8
+                                                input_lvl_q_3 = (1 - 1) * input_lvl.shape + y_8
+                                                output_lvl_q = (1 - 1) * input_lvl.shape + y_8
+                                                Finch.resize_if_smaller!(tmp_lvl_val, input_lvl_2.shape)
+                                                Finch.fill_range!(tmp_lvl_val, 0, 1, input_lvl_2.shape)
+                                                for x_9 = 1:input_lvl_2.shape
+                                                    tmp_lvl_q = (1 - 1) * input_lvl_2.shape + x_9
+                                                    input_lvl_2_q = (input_lvl_q_2 - 1) * input_lvl_2.shape + (-1 + x_9)
+                                                    input_lvl_2_q_2 = (input_lvl_q - 1) * input_lvl_2.shape + x_9
+                                                    input_lvl_2_q_3 = (input_lvl_q_3 - 1) * input_lvl_2.shape + (1 + x_9)
+                                                    input_lvl_3_val = input_lvl_2_val[input_lvl_2_q]
+                                                    input_lvl_3_val_2 = input_lvl_2_val[input_lvl_2_q_2]
+                                                    input_lvl_3_val_3 = input_lvl_2_val[input_lvl_2_q_3]
+                                                    tmp_lvl_val[tmp_lvl_q] = input_lvl_3_val + tmp_lvl_val[tmp_lvl_q] + input_lvl_3_val_2 + input_lvl_3_val_3
+                                                end
+                                                resize!(tmp_lvl_val, input_lvl_2.shape)
+                                                for x_10 = 1:input_lvl_2.shape
+                                                    output_lvl_2_q = (output_lvl_q - 1) * input_lvl_2.shape + x_10
+                                                    tmp_lvl_q_2 = (1 - 1) * input_lvl_2.shape + x_10
+                                                    tmp_lvl_2_val = tmp_lvl_val[tmp_lvl_q_2]
+                                                    output_lvl_2_val[output_lvl_2_q] = tmp_lvl_2_val
+                                                end
+                                            end
+                                        end
+                                        phase_start_3 = max(1, 1 + fld(y_stop * i, cpu.n))
+                                        if y_stop >= phase_start_3
+                                            y_stop + 1
+                                        end
+                                    end
+                                tmp_lvl_val = val_3
+                                res_6
+                            end)
+                    nothing
                 end
-            end
-            tmp_lvl_val = val_3
         end
     resize!(val_2, input_lvl_2.shape * input_lvl.shape)
     (output = Tensor((DenseLevel){Int64}((DenseLevel){Int64}(output_lvl_3, input_lvl_2.shape), input_lvl.shape)),)

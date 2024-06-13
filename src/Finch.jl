@@ -19,7 +19,6 @@ using Distributions: Binomial, Normal, Poisson
 using TOML
 using UUIDs
 using Preferences
-using Polyester
 
 export @finch, @finch_program, @finch_code, @finch_kernel, value
 

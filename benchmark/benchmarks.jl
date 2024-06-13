@@ -242,3 +242,5 @@ for (key, mtx) in [
     SUITE["parallel"]["SpMV_serial"][key] = @benchmarkable spmv_serial($A, $x)
     SUITE["parallel"]["SpMV_threaded"][key] = @benchmarkable spmv_threaded($A, $x)
 end
+
+SUITE = SUITE["parallel"]
