@@ -327,10 +327,9 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Re
     (lvl, pos) = (fbr.lvl, fbr.pos)
     tag = lvl.ex
     Tp = postype(lvl)
-    Ti = lvl.Ti
     my_q = freshen(ctx, tag, :_q)
     my_q_stop = freshen(ctx, tag, :_q_stop)
-    qos = freshen(ctx, tag, :_qos)
+    my_qos = freshen(ctx, tag, :_qos)
 
     Furlable(
         body = (ctx, ext) ->
@@ -339,10 +338,10 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Re
                         preamble = quote
                             $my_q = $(lvl.ptr)[$(ctx(pos))]
                             $my_q_stop = $(lvl.ptr)[$(ctx(pos)) + $(Tp(1))]
-                            $qos = bin_scansearch($(lvl.idx), $(ctx(i)), $my_q, $(my_q_stop-1))
+                            $my_qos = scansearch($(lvl.idx), $(ctx(i)), $my_q, $my_q_stop-1)
                         end,
                         body = (ctx) -> Switch([
-                            value(:($(lvl.idx)[$qos] == $(ctx(i)))) => instantiate(ctx, VirtualSubFiber(lvl.lvl, value(qos, Tp)), mode, subprotos),
+                            value(:($my_qos < $my_q_stop && $(lvl.idx)[$my_qos] == $(ctx(i)))) => instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_qos, Tp)), mode, subprotos),
                             literal(true) => FillLeaf(virtual_level_fill_value(lvl))
                         ])
                     )
