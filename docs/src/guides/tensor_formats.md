@@ -191,7 +191,7 @@ SparseBandLevel
 SparsePointLevel
 SparseIntervalLevel
 SparseByteMapLevel
-SparseLevel
+SparseDictLevel
 ```
 
 ## Modifier Levels
