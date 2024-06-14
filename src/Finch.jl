@@ -26,8 +26,9 @@ export Tensor
 export SparseRLE, SparseRLELevel
 export DenseRLE, DenseRLELevel
 export SparseInterval, SparseIntervalLevel
-export Sparse, SparseLevel, SparseDict
+export Sparse, SparseLevel
 export SparseList, SparseListLevel
+export SparseDict, SparseDictLevel
 export SparsePoint, SparsePointLevel
 export SparseBand, SparseBandLevel
 export SparseCOO, SparseCOOLevel
@@ -148,6 +149,9 @@ include("tensors/combinators/windowed.jl")
 include("tensors/combinators/swizzle.jl")
 include("tensors/combinators/scale.jl")
 include("tensors/combinators/product.jl")
+
+const Sparse = SparseDictLevel
+const SparseLevel = SparseDictLevel
 
 include("postprocess.jl")
 
