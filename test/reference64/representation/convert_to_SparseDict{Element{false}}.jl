@@ -73,27 +73,27 @@ quote
     end
     resize!(tmp_lvl_idx, length(tmp_lvl_tbl))
     resize!(tmp_lvl_val, length(tmp_lvl_tbl))
-    pos_pts = copy(tmp_lvl_ptr)
+    ps = copy(tmp_lvl_ptr)
     for entry = pairs(tmp_lvl_tbl)
         sugar_2 = entry[1]
         p_2 = sugar_2[1]
         i_9 = sugar_2[2]
         v = entry[2]
-        pos = pos_pts[p_2]
-        tmp_lvl_idx[pos] = i_9
-        tmp_lvl_val[pos] = v
-        pos_pts[p_2] += 1
+        q = ps[p_2]
+        tmp_lvl_idx[q] = i_9
+        tmp_lvl_val[q] = v
+        ps[p_2] += 1
     end
-    perm_vec = Vector{Int64}(undef, max_pos)
+    perm = Vector{Int64}(undef, max_pos)
     idx_temp = (typeof(tmp_lvl_idx))(undef, max_pos)
     val_temp = (typeof(tmp_lvl_val))(undef, max_pos)
     for p_2 = 1:1
         start = tmp_lvl_ptr[p_2]
         stop = tmp_lvl_ptr[p_2 + 1] - 1
-        sortperm!(@view(perm_vec[1:(stop - start) + 1]), tmp_lvl_idx[start:stop])
+        sortperm!(@view(perm[1:(stop - start) + 1]), tmp_lvl_idx[start:stop])
         for i_9 = 1:(stop - start) + 1
-            idx_temp[i_9] = tmp_lvl_idx[(start + perm_vec[i_9]) - 1]
-            val_temp[i_9] = tmp_lvl_val[(start + perm_vec[i_9]) - 1]
+            idx_temp[i_9] = tmp_lvl_idx[(start + perm[i_9]) - 1]
+            val_temp[i_9] = tmp_lvl_val[(start + perm[i_9]) - 1]
         end
         for i_9 = 1:(stop - start) + 1
             tmp_lvl_idx[(start + i_9) - 1] = idx_temp[i_9]
