@@ -7,7 +7,6 @@
         "list" => SparseList,
         "byte" => SparseByteMap,
         "dict" => SparseDict,
-        "hash1" => SparseHash{1},
         "coo1" => SparseCOO{1},
     ]
 
@@ -32,7 +31,6 @@
     end
 
     formats = [
-        "hash2" => SparseHash{2},
         "coo2" =>SparseCOO{2},
         ]
 

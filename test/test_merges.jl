@@ -13,10 +13,9 @@
         (;fmt = (z) -> Tensor(Dense(SparseByteMap(Element(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
         (;fmt = (z) -> Tensor(Dense(SparseByteMap(Element(z)))), proto = [literal_instance(gallop), literal_instance(follow)]),
         (;fmt = (z) -> Tensor(Dense(SparseDict(Element(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
+        (;fmt = (z) -> Tensor(Dense(SparseDict(Element(z)))), proto = [literal_instance(follow),literal_instance(follow)]),
         (;fmt = (z) -> Tensor(Dense(SparseCOO{1}(Element(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
         (;fmt = (z) -> Tensor(SparseCOO{2}(Element(z))), proto = [literal_instance(walk), literal_instance(walk)]),
-        (;fmt = (z) -> Tensor(Dense(SparseHash{1}(Element(z)))), proto = [literal_instance(walk),literal_instance(follow)]),
-        (;fmt = (z) -> Tensor(SparseHash{2}(Element(z))), proto = [literal_instance(walk), literal_instance(walk)]),
         (;fmt = (z) -> Tensor(Dense(SparseRLE(Element(z)))), proto = [literal_instance(walk), literal_instance(follow)]),
     ]
 
