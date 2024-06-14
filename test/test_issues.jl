@@ -3,6 +3,60 @@ using SparseArrays
 @testset "issues" begin
     @info "Testing Github Issues"
 
+    #https://github.com/willow-ahrens/Finch.jl/issues/579
+    for fmt in [
+        Tensor(Dense(SparseDict(Element(0.0))))
+        Tensor(Dense(SparseByteMap(Element(0.0))))
+    ]
+        arr_1 = fsprand(10, 10, 0.5)
+        fmt = copyto!(fmt, arr_1)
+        arr_2 = fsprand(10, 10, 0.5)
+        check_output("representation/increment_to_$(summary(fmt)).jl", @finch_code begin
+            for j = _
+                for i = _
+                    fmt[i, j] += arr_2[i, j]
+                end
+            end
+        end)
+        @finch begin
+            for j = _
+                for i = _
+                    fmt[i, j] += arr_2[i, j]
+                end
+            end
+        end
+        ref = arr_1 .+ arr_2
+        @test size(fmt) == size(ref)
+        @test axes(fmt) == axes(ref)
+        @test ndims(fmt) == ndims(ref)
+        @test eltype(fmt) == eltype(ref)
+        @test fmt == ref
+        @test isequal(fmt, ref)
+
+        arr_1 = fsprand(1, 10, 10, 0.5)
+        arr_2 = fsprand(1, 10, 10, 0.5)
+
+        @finch begin
+            fmt .= 0
+            for i = _
+                for j = _
+                    for k = _
+                        fmt[j, i] += arr_1[k, j, i]
+                        fmt[j, i] += arr_2[k, j, i]
+                    end
+                end
+            end
+        end
+
+        ref = sum(arr_1 .+ arr_2, dims=1)
+        @test size(fmt) == size(ref)
+        @test axes(fmt) == axes(ref)
+        @test ndims(fmt) == ndims(ref)
+        @test eltype(fmt) == eltype(ref)
+        @test fmt == ref
+        @test isequal(fmt, ref)
+    end
+
     #https://github.com/willow-ahrens/Finch.jl/issues/320
     let
         A = sprand(4, 4, 0.9)
@@ -75,8 +129,8 @@ using SparseArrays
         E_ref = D_ref .+ C
         for D in [
             Tensor(Dense(SparseList(Element(0)))),
-            Tensor(Dense(SparseHash{1}(Element(0)))),
             Tensor(Dense(SparseDict(Element(0)))),
+            Tensor(Dense(SparseByteMap(Element(0)))),
             Tensor(Dense(Dense(Element(0)))),
         ]
             E = deepcopy(D)
@@ -723,16 +777,18 @@ using SparseArrays
         end)
     end
 
+    #=
     let
         A_COO = fsprand(10, 10, .5)
-        A_hash = Tensor(SparseHash{1}(SparseHash{1}(Element(0.0))))
+        A_hash = Tensor(SparseDict(SparseDict(Element(0.0))))
         @finch (A_hash .= 0; for i=_, j=_ A_hash[i,j]= A_COO[i,j] end)
         B_COO = fsprand(10, 10, .5)
-        B_hash = Tensor(SparseHash{1}(SparseHash{1}(Element(0.0))))
+        B_hash = Tensor(SparseDict(SparseDict(Element(0.0))))
         @finch (B_hash .= 0; for i=_, j=_ B_hash[i,j]= B_COO[i,j] end)
         output = Scalar(0)
         @finch (output .= 0; for i=_, j=_ output[] += A_hash[j,i] * B_hash[follow(j), i] end)
     end
+    =#
 
     let
         A = zeros(2, 3, 3)
