@@ -237,6 +237,18 @@ BenchmarkTools.Trial: 53 samples with 1 evaluation.
   83.8 ms         Histogram: frequency by time          150 ms <
 
  Memory estimate: 139.52 MiB, allocs estimate: 20261.
+
+#after
+BenchmarkTools.Trial: 63 samples with 1 evaluation.
+ Range (min … max):  77.385 ms … 136.858 ms  ┊ GC (min … max): 0.00% … 43.67%
+ Time  (median):     78.664 ms               ┊ GC (median):    2.26%
+ Time  (mean ± σ):   79.770 ms ±   7.407 ms  ┊ GC (mean ± σ):  3.49% ±  5.34%
+
+       ▂█ ▇                                                     
+  ▃▁▄▃▄██▇██▅▁▅▃▁▃▁▄▃▁▁▁▃▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▃ ▁
+  77.4 ms         Histogram: frequency by time         86.9 ms <
+
+ Memory estimate: 152.70 MiB, allocs estimate: 261.
 =#
 
 function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos_stop)
@@ -244,59 +256,45 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos_stop)
     pos_stop = cache!(ctx, :pos_stop, simplify(ctx, pos_stop))
     qos_stop = freshen(ctx, :qos_stop)
     p = freshen(ctx, :p)
-    i = freshen(ctx, :i)
     q = freshen(ctx, :q)
+    r = freshen(ctx, :r)
+    i = freshen(ctx, :i)
     v = freshen(ctx, :v)
-    max_pos = freshen(ctx, :max_pos)
-    idx_temp = freshen(ctx, :idx_temp)
-    val_temp = freshen(ctx, :val_temp)
+    idx_tmp = freshen(ctx, :idx_tmp)
+    val_tmp = freshen(ctx, :val_tmp)
     perm = freshen(ctx, :perm)
-    ps = freshen(ctx, :ps)
-    start = freshen(ctx, :start)
-    stop = freshen(ctx, :stop)
+    pos_vec = freshen(ctx, :pos_vec)
     entry = freshen(ctx, :entry)
+    ptr_2 = freshen(ctx, :ptr_2)
     push_preamble!(ctx, quote
         resize!($(lvl.ptr), $(ctx(pos_stop)) + 1)
         $(lvl.ptr)[1] = 1
         fill_range!($(lvl.ptr), 0, 2, $(ctx(pos_stop)) + 1)
-        for $entry in keys($(lvl.tbl))
-            ($p, $i) = $entry
+        $pos_vec = Vector{Int}(undef, length($(lvl.tbl)))
+        resize!($(lvl.idx), length($(lvl.tbl)))
+        resize!($(lvl.val), length($(lvl.tbl)))
+        $idx_tmp = Vector{Int}(undef, length($(lvl.tbl)))
+        $val_tmp = Vector{Int}(undef, length($(lvl.tbl)))
+        $q = 0
+        for $entry in pairs($(lvl.tbl))
+            (($p, $i), $v) = $entry
+            $q += 1
+            $idx_tmp[$q] = $i
+            $val_tmp[$q] = $v
+            $pos_vec[$q] = $p
             $(lvl.ptr)[$p + 1] += 1
         end
-        $max_pos = maximum($(lvl.ptr))
         for $p = 2:$(ctx(pos_stop)) + 1
             $(lvl.ptr)[$p] += $(lvl.ptr)[$p - 1]
         end
-
-        resize!($(lvl.idx), length($(lvl.tbl)))
-        resize!($(lvl.val), length($(lvl.tbl)))
-        $ps = copy($(lvl.ptr))
-        for $entry in pairs($(lvl.tbl))
-            (($p, $i), $v) = $entry
-            $q = $ps[$p]
-            $(lvl.idx)[$q] = $i
-            $(lvl.val)[$q] = $v
-            $ps[$p] += 1
-        end
-
-        # To reduce allocations, we pre-allocate the workspaces for perm, idx, and val
-        $perm = Vector{Int64}(undef, $max_pos)
-        $idx_temp = typeof($(lvl.idx))(undef, $max_pos)
-        $val_temp = typeof($(lvl.val))(undef, $max_pos)
-        for $p = 1:$(ctx(pos_stop))
-            $start = $(lvl.ptr)[$p]
-            $stop = $(lvl.ptr)[$p+1] - 1
-            sortperm!(view($perm, 1:$stop-$start+1), $(lvl.idx)[$start:$stop])
-            # Store the correctly permuted version of the idxs and vals in a temporary
-            for $i in 1:($stop-$start+1)
-                $idx_temp[$i] = $(lvl.idx)[$start + $perm[$i] - 1]
-                $val_temp[$i] = $(lvl.val)[$start + $perm[$i] - 1]
-            end
-            # Overwrite the segment of the idx and vals array with the correct order
-            for $i in 1:($stop-$start+1)
-                $(lvl.idx)[$start + $i - 1] = $idx_temp[$i]
-                $(lvl.val)[$start + $i - 1] = $val_temp[$i]
-            end
+        $perm = sortperm($idx_tmp)
+        $ptr_2 = copy($(lvl.ptr))
+        for $q in $perm
+            $p = $pos_vec[$q]
+            $r = $ptr_2[$p]
+            $(lvl.idx)[$r] = $idx_tmp[$q]
+            $(lvl.val)[$r] = $val_tmp[$q]
+            $ptr_2[$p] += 1
         end
         $qos_stop = $(lvl.ptr)[$(ctx(pos_stop)) + 1] - 1
     end)
