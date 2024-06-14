@@ -1,16 +1,21 @@
 quote
     tmp_lvl = ((ex.bodies[1]).bodies[1]).tns.bind.lvl
+    tmp_lvl_ptr = tmp_lvl.ptr
+    tmp_lvl_idx = tmp_lvl.idx
+    tmp_lvl_val = tmp_lvl.val
     tmp_lvl_tbl = tmp_lvl.tbl
     tmp_lvl_2 = tmp_lvl.lvl
-    tmp_lvl_val = tmp_lvl.lvl.val
+    tmp_lvl_val_2 = tmp_lvl.lvl.val
     ref_lvl = ((ex.bodies[1]).bodies[2]).body.rhs.tns.bind.lvl
     ref_lvl_ptr = ref_lvl.ptr
     ref_lvl_idx = ref_lvl.idx
     ref_lvl_val = ref_lvl.lvl.val
-    Finch.declare_table!(tmp_lvl_tbl, 1)
+    resize!(tmp_lvl_ptr, 1 + 1)
+    Finch.fill_range!(tmp_lvl_ptr, 0, 1 + 1, 1 + 1)
+    empty!(tmp_lvl_tbl)
     tmp_lvl_qos_stop = 0
-    Finch.assemble_table!(tmp_lvl_tbl, 1, 1)
-    tmp_lvl_subtbl = Finch.table_register(tmp_lvl_tbl, 1)
+    Finch.resize_if_smaller!(tmp_lvl_ptr, 1 + 1)
+    Finch.fill_range!(tmp_lvl_ptr, 0, 1 + 1, 1 + 1)
     ref_lvl_q = ref_lvl_ptr[1]
     ref_lvl_q_stop = ref_lvl_ptr[1 + 1]
     if ref_lvl_q < ref_lvl_q_stop
@@ -27,35 +32,75 @@ quote
             ref_lvl_i = ref_lvl_idx[ref_lvl_q]
             if ref_lvl_i < phase_stop
                 ref_lvl_2_val = ref_lvl_val[ref_lvl_q]
-                tmp_lvl_qos = Finch.subtable_register(tmp_lvl_tbl, tmp_lvl_subtbl, ref_lvl_i)
+                tmp_lvl_qos = get(tmp_lvl_tbl, (1, ref_lvl_i), length(tmp_lvl_tbl) + 1)
                 if tmp_lvl_qos > tmp_lvl_qos_stop
                     tmp_lvl_qos_stop = max(tmp_lvl_qos_stop << 1, 1)
-                    Finch.resize_if_smaller!(tmp_lvl_val, tmp_lvl_qos_stop)
-                    Finch.fill_range!(tmp_lvl_val, false, tmp_lvl_qos, tmp_lvl_qos_stop)
+                    Finch.resize_if_smaller!(tmp_lvl_val_2, tmp_lvl_qos_stop)
+                    Finch.fill_range!(tmp_lvl_val_2, false, tmp_lvl_qos, tmp_lvl_qos_stop)
                 end
-                tmp_lvl_val[tmp_lvl_qos] = ref_lvl_2_val
-                Finch.subtable_commit!(tmp_lvl_tbl, tmp_lvl_subtbl, tmp_lvl_qos, ref_lvl_i)
+                tmp_lvl_val_2[tmp_lvl_qos] = ref_lvl_2_val
+                if tmp_lvl_qos > length(tmp_lvl_tbl)
+                    tmp_lvl_tbl[(1, ref_lvl_i)] = tmp_lvl_qos
+                    tmp_lvl_ptr[1 + 1] += 1
+                end
                 ref_lvl_q += 1
             else
                 phase_stop_3 = min(phase_stop, ref_lvl_i)
                 if ref_lvl_i == phase_stop_3
                     ref_lvl_2_val = ref_lvl_val[ref_lvl_q]
-                    tmp_lvl_qos = Finch.subtable_register(tmp_lvl_tbl, tmp_lvl_subtbl, phase_stop_3)
+                    tmp_lvl_qos = get(tmp_lvl_tbl, (1, phase_stop_3), length(tmp_lvl_tbl) + 1)
                     if tmp_lvl_qos > tmp_lvl_qos_stop
                         tmp_lvl_qos_stop = max(tmp_lvl_qos_stop << 1, 1)
-                        Finch.resize_if_smaller!(tmp_lvl_val, tmp_lvl_qos_stop)
-                        Finch.fill_range!(tmp_lvl_val, false, tmp_lvl_qos, tmp_lvl_qos_stop)
+                        Finch.resize_if_smaller!(tmp_lvl_val_2, tmp_lvl_qos_stop)
+                        Finch.fill_range!(tmp_lvl_val_2, false, tmp_lvl_qos, tmp_lvl_qos_stop)
                     end
-                    tmp_lvl_val[tmp_lvl_qos] = ref_lvl_2_val
-                    Finch.subtable_commit!(tmp_lvl_tbl, tmp_lvl_subtbl, tmp_lvl_qos, phase_stop_3)
+                    tmp_lvl_val_2[tmp_lvl_qos] = ref_lvl_2_val
+                    if tmp_lvl_qos > length(tmp_lvl_tbl)
+                        tmp_lvl_tbl[(1, phase_stop_3)] = tmp_lvl_qos
+                        tmp_lvl_ptr[1 + 1] += 1
+                    end
                     ref_lvl_q += 1
                 end
                 break
             end
         end
     end
-    Finch.table_commit!(tmp_lvl_tbl, 1)
-    qos_stop = Finch.freeze_table!(tmp_lvl_tbl, 1)
-    resize!(tmp_lvl_val, qos_stop)
-    (tmp = Tensor((SparseLevel){Int32}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_tbl)),)
+    max_pos = maximum(tmp_lvl_ptr)
+    resize!(tmp_lvl_ptr, 1 + 1)
+    tmp_lvl_ptr[1] = 1
+    for p_2 = 2:1 + 1
+        tmp_lvl_ptr[p_2] += tmp_lvl_ptr[p_2 - 1]
+    end
+    resize!(tmp_lvl_idx, length(tmp_lvl_tbl))
+    resize!(tmp_lvl_val, length(tmp_lvl_tbl))
+    ps = copy(tmp_lvl_ptr)
+    for entry = pairs(tmp_lvl_tbl)
+        sugar_2 = entry[1]
+        p_2 = sugar_2[1]
+        i_9 = sugar_2[2]
+        v = entry[2]
+        q = ps[p_2]
+        tmp_lvl_idx[q] = i_9
+        tmp_lvl_val[q] = v
+        ps[p_2] += 1
+    end
+    perm = Vector{Int64}(undef, max_pos)
+    idx_temp = (typeof(tmp_lvl_idx))(undef, max_pos)
+    val_temp = (typeof(tmp_lvl_val))(undef, max_pos)
+    for p_2 = 1:1
+        start = tmp_lvl_ptr[p_2]
+        stop = tmp_lvl_ptr[p_2 + 1] - 1
+        sortperm!(@view(perm[1:(stop - start) + 1]), tmp_lvl_idx[start:stop])
+        for i_9 = 1:(stop - start) + 1
+            idx_temp[i_9] = tmp_lvl_idx[(start + perm[i_9]) - 1]
+            val_temp[i_9] = tmp_lvl_val[(start + perm[i_9]) - 1]
+        end
+        for i_9 = 1:(stop - start) + 1
+            tmp_lvl_idx[(start + i_9) - 1] = idx_temp[i_9]
+            tmp_lvl_val[(start + i_9) - 1] = val_temp[i_9]
+        end
+    end
+    qos_stop = tmp_lvl_ptr[1 + 1] - 1
+    resize!(tmp_lvl_val_2, qos_stop)
+    (tmp = Tensor((SparseLevel){Int32}(tmp_lvl_2, ref_lvl.shape, tmp_lvl_ptr, tmp_lvl_idx, tmp_lvl_val, tmp_lvl_tbl)),)
 end
