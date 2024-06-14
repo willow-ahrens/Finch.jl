@@ -27,7 +27,7 @@ julia> reduce(+, A, dims = 1)
 
 julia> reduce(+, A, dims = (2,))
 4-Tensor
-└─ Sparse (0.0) [1:4]
+└─ SparseDict (0.0) [1:4]
    ├─ [1]: 4.4
    ├─ [2]: 1.1
    ├─ [3]: 7.7
@@ -35,7 +35,7 @@ julia> reduce(+, A, dims = (2,))
 
 julia> reduce(+, A, dims = 2)
 4-Tensor
-└─ Sparse (0.0) [1:4]
+└─ SparseDict (0.0) [1:4]
    ├─ [1]: 4.4
    ├─ [2]: 1.1
    ├─ [3]: 7.7

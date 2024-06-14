@@ -60,12 +60,12 @@ julia> B = set_fill_value!(A, -Inf)
 
 julia> min.(B, -1)
 3×6-Tensor
-└─ Sparse (-Inf) [:,1:6]
-   ├─ [:, 2]: Sparse (-Inf) [1:3]
+└─ SparseDict (-Inf) [:,1:6]
+   ├─ [:, 2]: SparseDict (-Inf) [1:3]
    │  └─ [1]: -1.0
-   ├─ [:, 4]: Sparse (-Inf) [1:3]
+   ├─ [:, 4]: SparseDict (-Inf) [1:3]
    │  └─ [1]: -1.0
-   └─ [:, 5]: Sparse (-Inf) [1:3]
+   └─ [:, 5]: SparseDict (-Inf) [1:3]
       └─ [2]: -1.0
 
 julia> countstored(A)

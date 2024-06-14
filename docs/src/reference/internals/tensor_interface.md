@@ -184,7 +184,7 @@ julia> A_fbr = Tensor(SparseCOO{2}(Element(0.0)), A)
 ![COO Format Index Tree](../../assets/levels-A-sc2-e.png)
 
 The COO format is compact and straightforward, but doesn't support random
-access. For random access, one should use the `SparseHash` format. A full listing
+access. For random access, one should use the `SparseDict` or `SparseBytemap` format. A full listing
 of supported formats is described after a rough description of shared common internals of level,
 relating to types and storage.
 

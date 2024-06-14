@@ -174,11 +174,11 @@ begin
     resize!(fmt_lvl_ptr, fmt_lvl.shape + 1)
     fmt_lvl_ptr[1] = 1
     Finch.fill_range!(fmt_lvl_ptr, 0, 2, fmt_lvl.shape + 1)
-    pdx_tmp = Vector{Int64}(undef, length(fmt_lvl_tbl))
+    pdx_tmp = Vector{Int32}(undef, length(fmt_lvl_tbl))
     resize!(fmt_lvl_idx, length(fmt_lvl_tbl))
     resize!(fmt_lvl_val, length(fmt_lvl_tbl))
-    idx_tmp = Vector{Int64}(undef, length(fmt_lvl_tbl))
-    val_tmp = Vector{Int64}(undef, length(fmt_lvl_tbl))
+    idx_tmp = Vector{Int32}(undef, length(fmt_lvl_tbl))
+    val_tmp = Vector{Int32}(undef, length(fmt_lvl_tbl))
     q = 0
     for entry = pairs(fmt_lvl_tbl)
         sugar_2 = entry[1]

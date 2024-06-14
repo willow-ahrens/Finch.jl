@@ -1,1 +1,1 @@
-Tensor(Dense(Sparse(Element{0.0, Float64, Int32}(…), 5, …), 10))
+Tensor(Dense(SparseDict(Element{0.0, Float64, Int32}(…), 5, …), 10))

@@ -26,11 +26,11 @@ export Tensor
 export SparseRLE, SparseRLELevel
 export DenseRLE, DenseRLELevel
 export SparseInterval, SparseIntervalLevel
-export Sparse, SparseLevel, SparseDict
+export Sparse, SparseLevel
 export SparseList, SparseListLevel
+export SparseDict, SparseDictLevel
 export SparsePoint, SparsePointLevel
 export SparseBand, SparseBandLevel
-export SparseHash, SparseHashLevel
 export SparseCOO, SparseCOOLevel
 export SparseByteMap, SparseByteMapLevel
 export SparseVBL, SparseVBLLevel
@@ -126,10 +126,9 @@ include("tensors/levels/sparse_rle_levels.jl")
 include("tensors/levels/sparse_interval_levels.jl")
 include("tensors/levels/sparse_list_levels.jl")
 include("tensors/levels/sparse_point_levels.jl")
-include("tensors/levels/sparse_hash_levels.jl")
 include("tensors/levels/sparse_coo_levels.jl")
 include("tensors/levels/sparse_band_levels.jl")
-include("tensors/levels/sparse_levels.jl")
+include("tensors/levels/sparse_dict_levels.jl")
 include("tensors/levels/sparse_bytemap_levels.jl")
 include("tensors/levels/sparse_vbl_levels.jl")
 include("tensors/levels/dense_levels.jl")
@@ -150,6 +149,9 @@ include("tensors/combinators/windowed.jl")
 include("tensors/combinators/swizzle.jl")
 include("tensors/combinators/scale.jl")
 include("tensors/combinators/product.jl")
+
+const Sparse = SparseDictLevel
+const SparseLevel = SparseDictLevel
 
 include("postprocess.jl")
 

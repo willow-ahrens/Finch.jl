@@ -60,28 +60,28 @@ julia> A + 1
 
 julia> B = A .* 2
 3×6-Tensor
-└─ Sparse (0.0) [:,1:6]
-   ├─ [:, 2]: Sparse (0.0) [1:3]
+└─ SparseDict (0.0) [:,1:6]
+   ├─ [:, 2]: SparseDict (0.0) [1:3]
    │  └─ [1]: 2.0
-   ├─ [:, 4]: Sparse (0.0) [1:3]
+   ├─ [:, 4]: SparseDict (0.0) [1:3]
    │  └─ [1]: 4.0
-   └─ [:, 5]: Sparse (0.0) [1:3]
+   └─ [:, 5]: SparseDict (0.0) [1:3]
       └─ [2]: 6.0
 
 julia> B[1:2, 1:2]
 2×2-Tensor
-└─ Sparse (0.0) [:,1:2]
-   └─ [:, 2]: Sparse (0.0) [1:2]
+└─ SparseDict (0.0) [:,1:2]
+   └─ [:, 2]: SparseDict (0.0) [1:2]
       └─ [1]: 2.0
 
 julia> map(x -> x^2, B)
 3×6-Tensor
-└─ Sparse (0.0) [:,1:6]
-   ├─ [:, 2]: Sparse (0.0) [1:3]
+└─ SparseDict (0.0) [:,1:6]
+   ├─ [:, 2]: SparseDict (0.0) [1:3]
    │  └─ [1]: 4.0
-   ├─ [:, 4]: Sparse (0.0) [1:3]
+   ├─ [:, 4]: SparseDict (0.0) [1:3]
    │  └─ [1]: 16.0
-   └─ [:, 5]: Sparse (0.0) [1:3]
+   └─ [:, 5]: SparseDict (0.0) [1:3]
       └─ [2]: 36.0
 ```
 
@@ -103,12 +103,12 @@ julia> E = (C .+ D)/2;
 
 julia> compute(E)
 3×6-Tensor
-└─ Sparse (0.0) [:,1:6]
-   ├─ [:, 2]: Sparse (0.0) [1:3]
+└─ SparseDict (0.0) [:,1:6]
+   ├─ [:, 2]: SparseDict (0.0) [1:3]
    │  └─ [1]: 1.5
-   ├─ [:, 4]: Sparse (0.0) [1:3]
+   ├─ [:, 4]: SparseDict (0.0) [1:3]
    │  └─ [1]: 3.0
-   └─ [:, 5]: Sparse (0.0) [1:3]
+   └─ [:, 5]: SparseDict (0.0) [1:3]
       └─ [2]: 4.5
 
 ```

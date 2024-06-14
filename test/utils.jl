@@ -62,13 +62,6 @@ isstructequal(a::T, b::T) where {T <: SparseCOO} =
     a.tbl == b.tbl &&
     isstructequal(a.lvl, b.lvl)
 
-isstructequal(a::T, b::T) where {T <: SparseHash} =
-    a.shape == b.shape &&
-    a.ptr == b.ptr &&
-    a.tbl == b.tbl &&
-    a.srt == b.srt &&
-    isstructequal(a.lvl, b.lvl)
-
 isstructequal(a::T, b::T) where {T <: SparseVBL} =
     a.shape == b.shape &&
     a.ptr == b.ptr &&
