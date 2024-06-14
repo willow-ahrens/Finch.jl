@@ -242,10 +242,11 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos_stop)
     max_pos = freshen(ctx, :max_pos)
     idx_temp = freshen(ctx, :idx_temp)
     val_temp = freshen(ctx, :val_temp)
-    perm_vec = freshen(ctx, :perm_vec)
-    pos_pts = freshen(ctx, :pos_pts)
+    perm = freshen(ctx, :perm)
+    ps = freshen(ctx, :ps)
     start = freshen(ctx, :start)
     stop = freshen(ctx, :stop)
+    entry = freshen(ctx, :entry)
     push_preamble!(ctx, quote
         $max_pos = maximum($(lvl.ptr))
         resize!($(lvl.ptr), $(ctx(pos_stop)) + 1)
@@ -256,27 +257,27 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos_stop)
 
         resize!($(lvl.idx), length($(lvl.tbl)))
         resize!($(lvl.val), length($(lvl.tbl)))
-        $pos_pts = copy($(lvl.ptr))
-        for entry in pairs($(lvl.tbl))
-            (($p, $i), $v) = entry
-            pos = $pos_pts[$p]
-            $(lvl.idx)[pos] = $i
-            $(lvl.val)[pos] = $v
-            $pos_pts[$p] += 1
+        $ps = copy($(lvl.ptr))
+        for $entry in pairs($(lvl.tbl))
+            (($p, $i), $v) = $entry
+            $q = $ps[$p]
+            $(lvl.idx)[$q] = $i
+            $(lvl.val)[$q] = $v
+            $ps[$p] += 1
         end
 
         # To reduce allocations, we pre-allocate the workspaces for perm, idx, and val
-        $perm_vec = Vector{Int64}(undef, $max_pos)
+        $perm = Vector{Int64}(undef, $max_pos)
         $idx_temp = typeof($(lvl.idx))(undef, $max_pos)
         $val_temp = typeof($(lvl.val))(undef, $max_pos)
         for $p = 1:$(ctx(pos_stop))
             $start = $(lvl.ptr)[$p]
             $stop = $(lvl.ptr)[$p+1] - 1
-            sortperm!((@view $perm_vec[1:$stop-$start+1]), $(lvl.idx)[$start:$stop])
+            sortperm!((@view $perm[1:$stop-$start+1]), $(lvl.idx)[$start:$stop])
             # Store the correctly permuted version of the idxs and vals in a temporary
             for $i in 1:($stop-$start+1)
-                $idx_temp[$i] = $(lvl.idx)[$start + $perm_vec[$i] - 1]
-                $val_temp[$i] = $(lvl.val)[$start + $perm_vec[$i] - 1]
+                $idx_temp[$i] = $(lvl.idx)[$start + $perm[$i] - 1]
+                $val_temp[$i] = $(lvl.val)[$start + $perm[$i] - 1]
             end
             # Overwrite the segment of the idx and vals array with the correct order
             for $i in 1:($stop-$start+1)
