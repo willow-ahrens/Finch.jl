@@ -28,7 +28,7 @@ julia> AsArray(C)
 julia> D = A .* B
 
 julia> AsArray(D)
-4×3 Tensor{DenseLevel{Int64, SparseLevel{Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}}}:
+4×3 Tensor{DenseLevel{Int64, SparseLevel{Int64, Vector{Int64}, Vector{Int64}, Vector{Int64}, Dict{Tuple{Int64, Int64}, Int64}, Vector{Int64}, ElementLevel{0.0, Float64, Int64, Vector{Float64}}}}}:
   0.0  0.0   4.4
   2.2  0.0   0.0
   6.6  0.0  16.5

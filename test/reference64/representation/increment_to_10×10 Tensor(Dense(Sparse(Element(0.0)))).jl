@@ -60,8 +60,8 @@ begin
                                         fmt_lvl_qos_stop = max(fmt_lvl_qos_stop << 1, 1)
                                         Finch.resize_if_smaller!(fmt_lvl_2_val, fmt_lvl_qos_stop)
                                         Finch.fill_range!(fmt_lvl_2_val, 0.0, fmt_lvl_2_qos, fmt_lvl_qos_stop)
-                                        resize_if_smaller!(fmt_lvl_val, fmt_lvl_qos_stop)
-                                        fill_range!(fmt_lvl_val, 0, fmt_lvl_2_qos, fmt_lvl_qos_stop)
+                                        Finch.resize_if_smaller!(fmt_lvl_val, fmt_lvl_qos_stop)
+                                        Finch.fill_range!(fmt_lvl_val, 0, fmt_lvl_2_qos, fmt_lvl_qos_stop)
                                     end
                                 end
                                 fmt_lvl_tbl[(fmt_lvl_q, arr_2_lvl_i_2)] = fmt_lvl_2_qos
@@ -83,8 +83,8 @@ begin
                                             fmt_lvl_qos_stop = max(fmt_lvl_qos_stop << 1, 1)
                                             Finch.resize_if_smaller!(fmt_lvl_2_val, fmt_lvl_qos_stop)
                                             Finch.fill_range!(fmt_lvl_2_val, 0.0, fmt_lvl_2_qos, fmt_lvl_qos_stop)
-                                            resize_if_smaller!(fmt_lvl_val, fmt_lvl_qos_stop)
-                                            fill_range!(fmt_lvl_val, 0, fmt_lvl_2_qos, fmt_lvl_qos_stop)
+                                            Finch.resize_if_smaller!(fmt_lvl_val, fmt_lvl_qos_stop)
+                                            Finch.fill_range!(fmt_lvl_val, 0, fmt_lvl_2_qos, fmt_lvl_qos_stop)
                                         end
                                     end
                                     fmt_lvl_tbl[(fmt_lvl_q, phase_stop_5)] = fmt_lvl_2_qos
@@ -127,8 +127,8 @@ begin
                                             fmt_lvl_qos_stop = max(fmt_lvl_qos_stop << 1, 1)
                                             Finch.resize_if_smaller!(fmt_lvl_2_val, fmt_lvl_qos_stop)
                                             Finch.fill_range!(fmt_lvl_2_val, 0.0, fmt_lvl_2_qos_2, fmt_lvl_qos_stop)
-                                            resize_if_smaller!(fmt_lvl_val, fmt_lvl_qos_stop)
-                                            fill_range!(fmt_lvl_val, 0, fmt_lvl_2_qos_2, fmt_lvl_qos_stop)
+                                            Finch.resize_if_smaller!(fmt_lvl_val, fmt_lvl_qos_stop)
+                                            Finch.fill_range!(fmt_lvl_val, 0, fmt_lvl_2_qos_2, fmt_lvl_qos_stop)
                                         end
                                     end
                                     fmt_lvl_tbl[(fmt_lvl_q, arr_2_lvl_i_2)] = fmt_lvl_2_qos_2
@@ -150,8 +150,8 @@ begin
                                                 fmt_lvl_qos_stop = max(fmt_lvl_qos_stop << 1, 1)
                                                 Finch.resize_if_smaller!(fmt_lvl_2_val, fmt_lvl_qos_stop)
                                                 Finch.fill_range!(fmt_lvl_2_val, 0.0, fmt_lvl_2_qos_2, fmt_lvl_qos_stop)
-                                                resize_if_smaller!(fmt_lvl_val, fmt_lvl_qos_stop)
-                                                fill_range!(fmt_lvl_val, 0, fmt_lvl_2_qos_2, fmt_lvl_qos_stop)
+                                                Finch.resize_if_smaller!(fmt_lvl_val, fmt_lvl_qos_stop)
+                                                Finch.fill_range!(fmt_lvl_val, 0, fmt_lvl_2_qos_2, fmt_lvl_qos_stop)
                                             end
                                         end
                                         fmt_lvl_tbl[(fmt_lvl_q, phase_stop_10)] = fmt_lvl_2_qos_2
@@ -173,7 +173,7 @@ begin
     result = ()
     resize!(fmt_lvl_ptr, fmt_lvl.shape + 1)
     fmt_lvl_ptr[1] = 1
-    fill_range!(fmt_lvl_ptr, 0, 2, fmt_lvl.shape + 1)
+    Finch.fill_range!(fmt_lvl_ptr, 0, 2, fmt_lvl.shape + 1)
     pdx_tmp = Vector{Int64}(undef, length(fmt_lvl_tbl))
     resize!(fmt_lvl_idx, length(fmt_lvl_tbl))
     resize!(fmt_lvl_val, length(fmt_lvl_tbl))
