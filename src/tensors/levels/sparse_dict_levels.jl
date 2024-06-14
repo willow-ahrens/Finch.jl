@@ -255,7 +255,7 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos_stop)
     push_preamble!(ctx, quote
         resize!($(lvl.ptr), $(ctx(pos_stop)) + 1)
         $(lvl.ptr)[1] = 1
-        fill_range!($(lvl.ptr), 0, 2, $(ctx(pos_stop)) + 1)
+        Finch.fill_range!($(lvl.ptr), 0, 2, $(ctx(pos_stop)) + 1)
         $pdx_tmp = Vector{$Tp}(undef, length($(lvl.tbl)))
         resize!($(lvl.idx), length($(lvl.tbl)))
         resize!($(lvl.val), length($(lvl.tbl)))
@@ -415,8 +415,8 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseLevel}, mode::
                                 if $qos > $qos_stop
                                     $qos_stop = max($qos_stop << 1, 1)
                                     $(contain(ctx_2->assemble_level!(ctx_2, lvl.lvl, value(qos, Tp), value(qos_stop, Tp)), ctx))
-                                    resize_if_smaller!($(lvl.val), $qos_stop)
-                                    fill_range!($(lvl.val), 0, $qos, $qos_stop)
+                                    Finch.resize_if_smaller!($(lvl.val), $qos_stop)
+                                    Finch.fill_range!($(lvl.val), 0, $qos, $qos_stop)
                                 end
                             end
                             $(lvl.tbl)[($(ctx(pos)), $(ctx(idx)))] = $qos
