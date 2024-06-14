@@ -12,16 +12,25 @@ arrays used to store positions and indicies.
 
 ```jldoctest
 julia> Tensor(Dense(SparseDict(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
-ERROR: UndefVarError: `SparseDict` not defined
-Stacktrace:
- [1] top-level scope
-   @ none:1
+3×3-Tensor
+└─ Dense [:,1:3]
+   ├─ [:, 1]: SparseDict (0.0) [1:3]
+   │  ├─ [1]: 10.0
+   │  └─ [2]: 30.0
+   ├─ [:, 2]: SparseDict (0.0) [1:3]
+   └─ [:, 3]: SparseDict (0.0) [1:3]
+      ├─ [1]: 20.0
+      └─ [3]: 40.0
 
 julia> Tensor(SparseDict(SparseDict(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
-ERROR: UndefVarError: `SparseDict` not defined
-Stacktrace:
- [1] top-level scope
-   @ none:1
+3×3-Tensor
+└─ SparseDict (0.0) [:,1:3]
+   ├─ [:, 1]: SparseDict (0.0) [1:3]
+   │  ├─ [1]: 10.0
+   │  └─ [2]: 30.0
+   └─ [:, 3]: SparseDict (0.0) [1:3]
+      ├─ [1]: 20.0
+      └─ [3]: 40.0
 
 ```
 """
