@@ -105,6 +105,8 @@ function Base.show(io::IO, lvl::SparseLevel{Ti}) where {Ti}
         show(io, lvl.val)
         print(io, ", ")
         show(io, lvl.tbl)
+        print(io, ", ")
+        show(io, lvl.pool)
     end
     print(io, ")")
 end
