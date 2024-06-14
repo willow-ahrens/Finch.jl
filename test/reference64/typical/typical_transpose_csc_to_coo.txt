@@ -130,40 +130,76 @@ quote
             end
         end
     end
-    srt = sort(collect(pairs(B_lvl_tbl)))
-    resize!(B_lvl_idx, length(srt))
-    resize!(B_lvl_val, length(srt))
-    for q = 1:length(srt)
-        sugar_1 = srt[q]
-        sugar_2 = sugar_1[1]
-        p = sugar_2[1]
-        i = sugar_2[2]
-        v = sugar_1[2]
-        B_lvl_val[q] = v
-        B_lvl_idx[q] = i
-    end
+    max_pos = maximum(B_lvl_ptr)
     resize!(B_lvl_ptr, 1 + 1)
     B_lvl_ptr[1] = 1
-    for p = 2:1 + 1
-        B_lvl_ptr[p] += B_lvl_ptr[p - 1]
+    for p_2 = 2:1 + 1
+        B_lvl_ptr[p_2] += B_lvl_ptr[p_2 - 1]
+    end
+    resize!(B_lvl_idx, length(B_lvl_tbl))
+    resize!(B_lvl_val, length(B_lvl_tbl))
+    pos_pts = copy(B_lvl_ptr)
+    for entry = pairs(B_lvl_tbl)
+        sugar_2 = entry[1]
+        p_2 = sugar_2[1]
+        i_13 = sugar_2[2]
+        v_8 = entry[2]
+        pos = pos_pts[p_2]
+        B_lvl_idx[pos] = i_13
+        B_lvl_val[pos] = v_8
+        pos_pts[p_2] += 1
+    end
+    perm_vec = Vector{Int64}(undef, max_pos)
+    idx_temp = (typeof(B_lvl_idx))(undef, max_pos)
+    val_temp = (typeof(B_lvl_val))(undef, max_pos)
+    for p_2 = 1:1
+        start = B_lvl_ptr[p_2]
+        stop = B_lvl_ptr[p_2 + 1] - 1
+        sortperm!(@view(perm_vec[1:(stop - start) + 1]), B_lvl_idx[start:stop])
+        for i_13 = 1:(stop - start) + 1
+            idx_temp[i_13] = B_lvl_idx[(start + perm_vec[i_13]) - 1]
+            val_temp[i_13] = B_lvl_val[(start + perm_vec[i_13]) - 1]
+        end
+        for i_13 = 1:(stop - start) + 1
+            B_lvl_idx[(start + i_13) - 1] = idx_temp[i_13]
+            B_lvl_val[(start + i_13) - 1] = val_temp[i_13]
+        end
     end
     qos_stop = B_lvl_ptr[1 + 1] - 1
-    srt = sort(collect(pairs(B_lvl_tbl_2)))
-    resize!(B_lvl_idx_2, length(srt))
-    resize!(B_lvl_val_2, length(srt))
-    for q = 1:length(srt)
-        sugar_3 = srt[q]
-        sugar_4 = sugar_3[1]
-        p = sugar_4[1]
-        i = sugar_4[2]
-        v = sugar_3[2]
-        B_lvl_val_2[q] = v
-        B_lvl_idx_2[q] = i
-    end
+    max_pos_2 = maximum(B_lvl_ptr_2)
     resize!(B_lvl_ptr_2, qos_stop + 1)
     B_lvl_ptr_2[1] = 1
-    for p = 2:qos_stop + 1
-        B_lvl_ptr_2[p] += B_lvl_ptr_2[p - 1]
+    for p_4 = 2:qos_stop + 1
+        B_lvl_ptr_2[p_4] += B_lvl_ptr_2[p_4 - 1]
+    end
+    resize!(B_lvl_idx_2, length(B_lvl_tbl_2))
+    resize!(B_lvl_val_2, length(B_lvl_tbl_2))
+    pos_pts_2 = copy(B_lvl_ptr_2)
+    for entry = pairs(B_lvl_tbl_2)
+        sugar_4 = entry[1]
+        p_4 = sugar_4[1]
+        i_14 = sugar_4[2]
+        v_9 = entry[2]
+        pos = pos_pts_2[p_4]
+        B_lvl_idx_2[pos] = i_14
+        B_lvl_val_2[pos] = v_9
+        pos_pts_2[p_4] += 1
+    end
+    perm_vec_2 = Vector{Int64}(undef, max_pos_2)
+    idx_temp_2 = (typeof(B_lvl_idx_2))(undef, max_pos_2)
+    val_temp_2 = (typeof(B_lvl_val_2))(undef, max_pos_2)
+    for p_4 = 1:qos_stop
+        start_2 = B_lvl_ptr_2[p_4]
+        stop_2 = B_lvl_ptr_2[p_4 + 1] - 1
+        sortperm!(@view(perm_vec_2[1:(stop_2 - start_2) + 1]), B_lvl_idx_2[start_2:stop_2])
+        for i_14 = 1:(stop_2 - start_2) + 1
+            idx_temp_2[i_14] = B_lvl_idx_2[(start_2 + perm_vec_2[i_14]) - 1]
+            val_temp_2[i_14] = B_lvl_val_2[(start_2 + perm_vec_2[i_14]) - 1]
+        end
+        for i_14 = 1:(stop_2 - start_2) + 1
+            B_lvl_idx_2[(start_2 + i_14) - 1] = idx_temp_2[i_14]
+            B_lvl_val_2[(start_2 + i_14) - 1] = val_temp_2[i_14]
+        end
     end
     qos_stop_2 = B_lvl_ptr_2[qos_stop + 1] - 1
     resize!(B_lvl_2_val, qos_stop_2)

@@ -145,22 +145,40 @@ begin
         end
     end
     result = ()
-    srt = sort(collect(pairs(fmt_lvl_tbl)))
-    resize!(fmt_lvl_idx, length(srt))
-    resize!(fmt_lvl_val, length(srt))
-    for q = 1:length(srt)
-        sugar_1 = srt[q]
-        sugar_2 = sugar_1[1]
-        p = sugar_2[1]
-        i = sugar_2[2]
-        v = sugar_1[2]
-        fmt_lvl_val[q] = v
-        fmt_lvl_idx[q] = i
-    end
+    max_pos = maximum(fmt_lvl_ptr)
     resize!(fmt_lvl_ptr, fmt_lvl.shape + 1)
     fmt_lvl_ptr[1] = 1
-    for p = 2:fmt_lvl.shape + 1
-        fmt_lvl_ptr[p] += fmt_lvl_ptr[p - 1]
+    for p_3 = 2:fmt_lvl.shape + 1
+        fmt_lvl_ptr[p_3] += fmt_lvl_ptr[p_3 - 1]
+    end
+    resize!(fmt_lvl_idx, length(fmt_lvl_tbl))
+    resize!(fmt_lvl_val, length(fmt_lvl_tbl))
+    pos_pts = copy(fmt_lvl_ptr)
+    for entry = pairs(fmt_lvl_tbl)
+        sugar_2 = entry[1]
+        p_3 = sugar_2[1]
+        i_14 = sugar_2[2]
+        v = entry[2]
+        pos = pos_pts[p_3]
+        fmt_lvl_idx[pos] = i_14
+        fmt_lvl_val[pos] = v
+        pos_pts[p_3] += 1
+    end
+    perm_vec = Vector{Int64}(undef, max_pos)
+    idx_temp = (typeof(fmt_lvl_idx))(undef, max_pos)
+    val_temp = (typeof(fmt_lvl_val))(undef, max_pos)
+    for p_3 = 1:fmt_lvl.shape
+        start = fmt_lvl_ptr[p_3]
+        stop = fmt_lvl_ptr[p_3 + 1] - 1
+        sortperm!(@view(perm_vec[1:(stop - start) + 1]), fmt_lvl_idx[start:stop])
+        for i_14 = 1:(stop - start) + 1
+            idx_temp[i_14] = fmt_lvl_idx[(start + perm_vec[i_14]) - 1]
+            val_temp[i_14] = fmt_lvl_val[(start + perm_vec[i_14]) - 1]
+        end
+        for i_14 = 1:(stop - start) + 1
+            fmt_lvl_idx[(start + i_14) - 1] = idx_temp[i_14]
+            fmt_lvl_val[(start + i_14) - 1] = val_temp[i_14]
+        end
     end
     qos_stop = fmt_lvl_ptr[fmt_lvl.shape + 1] - 1
     resize!(fmt_lvl_2_val, qos_stop)
