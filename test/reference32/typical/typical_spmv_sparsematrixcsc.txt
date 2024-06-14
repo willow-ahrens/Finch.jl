@@ -1,0 +1,81 @@
+julia> A = sparse([0 0 3.3; 1.1 0 0; 2.2 0 4.4; 0 0 5.5])
+4×3 SparseMatrixCSC{Float64, Int32} with 5 stored entries:
+  ⋅    ⋅   3.3
+ 1.1   ⋅    ⋅ 
+ 2.2   ⋅   4.4
+  ⋅    ⋅   5.5
+julia> y = [1.0, 2.0, 3.0, 4.0]
+4-element Vector{Float64}:
+ 1.0
+ 2.0
+ 3.0
+ 4.0
+julia> x = [1, 2, 3]
+3-element Vector{Int32}:
+ 1
+ 2
+ 3
+julia> @finch_code begin
+        y .= 0
+        for j = _
+            for i = _
+                y[i] += A[i, j] * x[j]
+            end
+        end
+    end
+quote
+    y = ((ex.bodies[1]).bodies[1]).tns.bind
+    sugar_1 = size(((ex.bodies[1]).bodies[1]).tns.bind)
+    y_mode1_stop = sugar_1[1]
+    A = (((ex.bodies[1]).bodies[2]).body.body.rhs.args[1]).tns.bind
+    x = (((ex.bodies[1]).bodies[2]).body.body.rhs.args[2]).tns.bind
+    sugar_3 = size((((ex.bodies[1]).bodies[2]).body.body.rhs.args[2]).tns.bind)
+    x_mode1_stop = sugar_3[1]
+    x_mode1_stop == (((ex.bodies[1]).bodies[2]).body.body.rhs.args[1]).tns.bind.n || throw(DimensionMismatch("mismatched dimension limits ($(x_mode1_stop) != $((((ex.bodies[1]).bodies[2]).body.body.rhs.args[1]).tns.bind.n))"))
+    1 == 1 || throw(DimensionMismatch("mismatched dimension start"))
+    (((ex.bodies[1]).bodies[2]).body.body.rhs.args[1]).tns.bind.m == y_mode1_stop || throw(DimensionMismatch("mismatched dimension stop"))
+    fill!(y, 0)
+    for j_4 = 1:x_mode1_stop
+        val = x[j_4]
+        A_q = A.colptr[j_4]
+        A_q_stop = A.colptr[j_4 + 1]
+        if A_q < A_q_stop
+            A_i1 = A.rowval[A_q_stop - 1]
+        else
+            A_i1 = 0
+        end
+        phase_stop = min(A_i1, (((ex.bodies[1]).bodies[2]).body.body.rhs.args[1]).tns.bind.m)
+        if phase_stop >= 1
+            if A.rowval[A_q] < 1
+                A_q = Finch.scansearch(A.rowval, 1, A_q, A_q_stop - 1)
+            end
+            while true
+                A_i = A.rowval[A_q]
+                if A_i < phase_stop
+                    A_val_2 = A.nzval[A_q]
+                    y[A_i] = val * A_val_2 + y[A_i]
+                    A_q += 1
+                else
+                    phase_stop_3 = min(phase_stop, A_i)
+                    if A_i == phase_stop_3
+                        A_val_2 = A.nzval[A_q]
+                        y[phase_stop_3] = val * A_val_2 + y[phase_stop_3]
+                        A_q += 1
+                    end
+                    break
+                end
+            end
+        end
+    end
+    (y = y,)
+end
+julia> @finch begin
+        y .= 0
+        for j = _
+            for i = _
+                y[i] += A[i, j] * x[j]
+            end
+        end
+    end
+(y = [9.899999999999999, 1.1, 15.400000000000002, 16.5],)
+

@@ -1,0 +1,24 @@
+SparseList{Separate}{Dense} representation:
+
+5x5_falses: Bool[0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0; 0 0 0 0 0]
+tensor: Tensor(SparseList{Int32}(Separate(Dense{Int32}(Element{false, Bool, Int32}(Bool[]), 5), DenseLevel{Int32, ElementLevel{false, Bool, Int32, Vector{Bool}}}[]), 5, [1, 1], Int32[]))
+countstored: 0
+5x5_trues: Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
+tensor: Tensor(SparseList{Int32}(Separate(Dense{Int32}(Element{false, Bool, Int32}(Bool[]), 5), DenseLevel{Int32, ElementLevel{false, Bool, Int32, Vector{Bool}}}[Dense{Int32}(Element{false, Bool, Int32}(Bool[1, 1, 1, 1, 1]), 5), Dense{Int32}(Element{false, Bool, Int32}(Bool[1, 1, 1, 1, 1]), 5), Dense{Int32}(Element{false, Bool, Int32}(Bool[1, 1, 1, 1, 1]), 5), Dense{Int32}(Element{false, Bool, Int32}(Bool[1, 1, 1, 1, 1]), 5), Dense{Int32}(Element{false, Bool, Int32}(Bool[1, 1, 1, 1, 1]), 5), Dense{Int32}(Element{false, Bool, Int32}(Bool[0, 0, 0, 0, 0]), 5), Dense{Int32}(Element{false, Bool, Int32}(Bool[0, 0, 0, 0, 0]), 5), Dense{Int32}(Element{false, Bool, Int32}(Bool[0, 0, 0, 0, 0]), 5)]), 5, [1, 6], [1, 2, 3, 4, 5]))
+countstored: 5
+4x4_one_bool: Bool[0 0 0 1; 0 0 0 0; 1 0 0 0; 0 1 0 0]
+tensor: Tensor(SparseList{Int32}(Separate(Dense{Int32}(Element{false, Bool, Int32}(Bool[]), 4), DenseLevel{Int32, ElementLevel{false, Bool, Int32, Vector{Bool}}}[Dense{Int32}(Element{false, Bool, Int32}(Bool[0, 0, 1, 0]), 4), Dense{Int32}(Element{false, Bool, Int32}(Bool[0, 0, 0, 1]), 4), Dense{Int32}(Element{false, Bool, Int32}(Bool[1, 0, 0, 0]), 4), Dense{Int32}(Element{false, Bool, Int32}(Bool[0, 0, 0, 0]), 4)]), 4, [1, 4], [1, 2, 4]))
+countstored: 3
+5x4_bool_mix: Bool[0 1 0 1; 0 0 0 0; 1 1 1 1; 1 1 1 1; 0 1 0 1]
+tensor: Tensor(SparseList{Int32}(Separate(Dense{Int32}(Element{false, Bool, Int32}(Bool[]), 5), DenseLevel{Int32, ElementLevel{false, Bool, Int32, Vector{Bool}}}[Dense{Int32}(Element{false, Bool, Int32}(Bool[0, 0, 1, 1, 0]), 5), Dense{Int32}(Element{false, Bool, Int32}(Bool[1, 0, 1, 1, 1]), 5), Dense{Int32}(Element{false, Bool, Int32}(Bool[0, 0, 1, 1, 0]), 5), Dense{Int32}(Element{false, Bool, Int32}(Bool[1, 0, 1, 1, 1]), 5)]), 4, [1, 5], [1, 2, 3, 4]))
+countstored: 4
+5x5_zeros: [0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0 0.0]
+tensor: Tensor(SparseList{Int32}(Separate(Dense{Int32}(Element{0.0, Float64, Int32}(Float64[]), 5), DenseLevel{Int32, ElementLevel{0.0, Float64, Int32, Vector{Float64}}}[]), 5, [1, 1], Int32[]))
+countstored: 0
+5x5_ones: [1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0; 1.0 1.0 1.0 1.0 1.0]
+tensor: Tensor(SparseList{Int32}(Separate(Dense{Int32}(Element{0.0, Float64, Int32}(Float64[]), 5), DenseLevel{Int32, ElementLevel{0.0, Float64, Int32, Vector{Float64}}}[Dense{Int32}(Element{0.0, Float64, Int32}([1.0, 1.0, 1.0, 1.0, 1.0]), 5), Dense{Int32}(Element{0.0, Float64, Int32}([1.0, 1.0, 1.0, 1.0, 1.0]), 5), Dense{Int32}(Element{0.0, Float64, Int32}([1.0, 1.0, 1.0, 1.0, 1.0]), 5), Dense{Int32}(Element{0.0, Float64, Int32}([1.0, 1.0, 1.0, 1.0, 1.0]), 5), Dense{Int32}(Element{0.0, Float64, Int32}([1.0, 1.0, 1.0, 1.0, 1.0]), 5), Dense{Int32}(Element{0.0, Float64, Int32}([0.0, 0.0, 0.0, 0.0, 0.0]), 5), Dense{Int32}(Element{0.0, Float64, Int32}([0.0, 0.0, 0.0, 0.0, 0.0]), 5), Dense{Int32}(Element{0.0, Float64, Int32}([0.0, 0.0, 0.0, 0.0, 0.0]), 5)]), 5, [1, 6], [1, 2, 3, 4, 5]))
+countstored: 5
+5x5_float_mix: [0.0 1.0 2.0 2.0 3.0; 0.0 0.0 0.0 0.0 0.0; 1.0 1.0 2.0 0.0 0.0; 0.0 0.0 0.0 3.0 0.0; 0.0 0.0 0.0 0.0 0.0]
+tensor: Tensor(SparseList{Int32}(Separate(Dense{Int32}(Element{0.0, Float64, Int32}(Float64[]), 5), DenseLevel{Int32, ElementLevel{0.0, Float64, Int32, Vector{Float64}}}[Dense{Int32}(Element{0.0, Float64, Int32}([0.0, 0.0, 1.0, 0.0, 0.0]), 5), Dense{Int32}(Element{0.0, Float64, Int32}([1.0, 0.0, 1.0, 0.0, 0.0]), 5), Dense{Int32}(Element{0.0, Float64, Int32}([2.0, 0.0, 2.0, 0.0, 0.0]), 5), Dense{Int32}(Element{0.0, Float64, Int32}([2.0, 0.0, 0.0, 3.0, 0.0]), 5), Dense{Int32}(Element{0.0, Float64, Int32}([3.0, 0.0, 0.0, 0.0, 0.0]), 5), Dense{Int32}(Element{0.0, Float64, Int32}([0.0, 0.0, 0.0, 0.0, 0.0]), 5), Dense{Int32}(Element{0.0, Float64, Int32}([0.0, 0.0, 0.0, 0.0, 0.0]), 5), Dense{Int32}(Element{0.0, Float64, Int32}([0.0, 0.0, 0.0, 0.0, 0.0]), 5)]), 5, [1, 6], [1, 2, 3, 4, 5]))
+countstored: 5
+
