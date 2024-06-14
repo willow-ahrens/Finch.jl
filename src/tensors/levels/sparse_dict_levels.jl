@@ -212,8 +212,6 @@ function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos, ini
     Tp = postype(lvl)
     qos = freshen(ctx, tag, :qos)
     push_preamble!(ctx, quote
-        resize!($(lvl.ptr), $(ctx(pos)) + $(Tp(1)))
-        Finch.fill_range!($(lvl.ptr), 0, $(ctx(pos)) + $(Tp(1)), $(ctx(pos)) + $(Tp(1)))
         empty!($(lvl.tbl))
         $qos = $(Tp(0))
         $(lvl.qos_stop) = 0
@@ -225,11 +223,21 @@ end
 function assemble_level!(ctx, lvl::VirtualSparseLevel, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
-    quote
-        Finch.resize_if_smaller!($(lvl.ptr), $(ctx(pos_stop)) + 1)
-        Finch.fill_range!($(lvl.ptr), 0, $(ctx(pos_start)) + 1, $(ctx(pos_stop)) + 1)
-    end
 end
+
+#=
+#before
+BenchmarkTools.Trial: 53 samples with 1 evaluation.
+ Range (min … max):  83.772 ms … 149.788 ms  ┊ GC (min … max): 0.00% … 41.99%
+ Time  (median):     87.880 ms               ┊ GC (median):    2.43%
+ Time  (mean ± σ):   94.682 ms ±  18.937 ms  ┊ GC (mean ± σ):  9.68% ± 12.69%
+
+   ▂█▃▂                                                         
+  ▆████▆▁▄▃▃▃▄▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▃▄▃▁▁▃ ▁
+  83.8 ms         Histogram: frequency by time          150 ms <
+
+ Memory estimate: 139.52 MiB, allocs estimate: 20261.
+=#
 
 function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos_stop)
     p = freshen(ctx, :p)
@@ -248,9 +256,14 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos_stop)
     stop = freshen(ctx, :stop)
     entry = freshen(ctx, :entry)
     push_preamble!(ctx, quote
-        $max_pos = maximum($(lvl.ptr))
         resize!($(lvl.ptr), $(ctx(pos_stop)) + 1)
         $(lvl.ptr)[1] = 1
+        fill_range!($(lvl.ptr), 0, 2, $(ctx(pos_stop)) + 1)
+        for $entry in keys($(lvl.tbl))
+            ($p, $i) = $entry
+            $(lvl.ptr)[$p + 1] += 1
+        end
+        $max_pos = maximum($(lvl.ptr))
         for $p = 2:$(ctx(pos_stop)) + 1
             $(lvl.ptr)[$p] += $(lvl.ptr)[$p - 1]
         end
@@ -273,7 +286,7 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos_stop)
         for $p = 1:$(ctx(pos_stop))
             $start = $(lvl.ptr)[$p]
             $stop = $(lvl.ptr)[$p+1] - 1
-            sortperm!((@view $perm[1:$stop-$start+1]), $(lvl.idx)[$start:$stop])
+            sortperm!(view($perm, 1:$stop-$start+1), $(lvl.idx)[$start:$stop])
             # Store the correctly permuted version of the idxs and vals in a temporary
             for $i in 1:($stop-$start+1)
                 $idx_temp[$i] = $(lvl.idx)[$start + $perm[$i] - 1]
@@ -296,9 +309,6 @@ function thaw_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos_stop)
     pos_stop = ctx(cache!(ctx, :pos_stop, simplify(ctx, pos_stop)))
     push_preamble!(ctx, quote
         $(lvl.qos_stop) = $(lvl.ptr)[$(ctx(pos_stop)) + 1] - 1
-        for p = $(ctx(pos_stop)):-1:1
-            $(lvl.ptr)[p + 1] -= $(lvl.ptr)[p]
-        end
     end)
     lvl.lvl = thaw_level!(ctx, lvl.lvl, value(lvl.qos_stop))
     return lvl
@@ -403,7 +413,6 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseLevel}, mode::
                         if $dirty
                             if $qos > length($(lvl.tbl))
                                 $(lvl.tbl)[($subtbl, $(ctx(idx)))] = $qos
-                                $(lvl.ptr)[$subtbl + 1] += 1
                             end
                             $(fbr.dirty) = true
                         end
