@@ -253,6 +253,8 @@ BenchmarkTools.Trial: 63 samples with 1 evaluation.
 
 function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos_stop)
     p = freshen(ctx, :p)
+    Tp = postype(lvl)
+    Ti = lvl.Ti
     pos_stop = cache!(ctx, :pos_stop, simplify(ctx, pos_stop))
     qos_stop = freshen(ctx, :qos_stop)
     p = freshen(ctx, :p)
@@ -263,25 +265,25 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos_stop)
     idx_tmp = freshen(ctx, :idx_tmp)
     val_tmp = freshen(ctx, :val_tmp)
     perm = freshen(ctx, :perm)
-    pos_vec = freshen(ctx, :pos_vec)
+    pdx_tmp = freshen(ctx, :pdx_tmp)
     entry = freshen(ctx, :entry)
     ptr_2 = freshen(ctx, :ptr_2)
     push_preamble!(ctx, quote
         resize!($(lvl.ptr), $(ctx(pos_stop)) + 1)
         $(lvl.ptr)[1] = 1
         fill_range!($(lvl.ptr), 0, 2, $(ctx(pos_stop)) + 1)
-        $pos_vec = Vector{Int}(undef, length($(lvl.tbl)))
+        $pdx_tmp = Vector{$Tp}(undef, length($(lvl.tbl)))
         resize!($(lvl.idx), length($(lvl.tbl)))
         resize!($(lvl.val), length($(lvl.tbl)))
-        $idx_tmp = Vector{Int}(undef, length($(lvl.tbl)))
-        $val_tmp = Vector{Int}(undef, length($(lvl.tbl)))
+        $idx_tmp = Vector{$Ti}(undef, length($(lvl.tbl)))
+        $val_tmp = Vector{$Tp}(undef, length($(lvl.tbl)))
         $q = 0
         for $entry in pairs($(lvl.tbl))
             (($p, $i), $v) = $entry
             $q += 1
             $idx_tmp[$q] = $i
             $val_tmp[$q] = $v
-            $pos_vec[$q] = $p
+            $pdx_tmp[$q] = $p
             $(lvl.ptr)[$p + 1] += 1
         end
         for $p = 2:$(ctx(pos_stop)) + 1
@@ -290,7 +292,7 @@ function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos_stop)
         $perm = sortperm($idx_tmp)
         $ptr_2 = copy($(lvl.ptr))
         for $q in $perm
-            $p = $pos_vec[$q]
+            $p = $pdx_tmp[$q]
             $r = $ptr_2[$p]
             $(lvl.idx)[$r] = $idx_tmp[$q]
             $(lvl.val)[$r] = $val_tmp[$q]
@@ -389,17 +391,13 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseLevel}, mode::
     qos = freshen(ctx, tag, :_qos)
     qos_stop = lvl.qos_stop
     dirty = freshen(ctx, tag, :_dirty)
-    subtbl = freshen(ctx, tag, :_subtbl)
 
     Furlable(
         body = (ctx, ext) -> Thunk(
-            preamble = quote
-                $subtbl = $(ctx(pos))
-            end,
             body = (ctx) -> Lookup(
                 body = (ctx, idx) -> Thunk(
                     preamble = quote
-                        $qos = get($(lvl.tbl), ($subtbl, $(ctx(idx))), length($(lvl.tbl)) + 1)
+                        $qos = get($(lvl.tbl), ($(ctx(pos)), $(ctx(idx))), length($(lvl.tbl)) + 1)
                         if $qos > $qos_stop
                             $qos_stop = max($qos_stop << 1, 1)
                             $(contain(ctx_2->assemble_level!(ctx_2, lvl.lvl, value(qos, Tp), value(qos_stop, Tp)), ctx))
@@ -410,7 +408,7 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseLevel}, mode::
                     epilogue = quote
                         if $dirty
                             if $qos > length($(lvl.tbl))
-                                $(lvl.tbl)[($subtbl, $(ctx(idx)))] = $qos
+                                $(lvl.tbl)[($(ctx(pos)), $(ctx(idx)))] = $qos
                             end
                             $(fbr.dirty) = true
                         end
