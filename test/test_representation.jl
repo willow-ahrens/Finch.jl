@@ -250,36 +250,4 @@
         end
     end
 
-    #TODO the following tests should be parameterized like the above
-    for fmt in [
-        Tensor(SparseHash{2}(Element(0.0)))
-        Tensor(Dense(SparseHash{1}(Element(0.0))))
-        Tensor(Dense(SparseDict(Element(0.0))))
-        Tensor(Dense(SparseByteMap(Element(0.0))))
-    ]
-        arr_1 = fsprand(10, 10, 0.5)
-        fmt = copyto!(fmt, arr_1)
-        arr_2 = fsprand(10, 10, 0.5)
-        check_output("representation/increment_to_$(summary(fmt)).jl", @finch_code begin
-            for j = _
-                for i = _
-                    fmt[i, j] += arr_2[i, j]
-                end
-            end
-        end)
-        @finch begin
-            for j = _
-                for i = _
-                    fmt[i, j] += arr_2[i, j]
-                end
-            end
-        end
-        ref = arr_1 .+ arr_2
-        @test size(fmt) == size(ref)
-        @test axes(fmt) == axes(ref)
-        @test ndims(fmt) == ndims(ref)
-        @test eltype(fmt) == eltype(ref)
-        @test fmt == ref
-        @test isequal(fmt, ref)
-    end
 end

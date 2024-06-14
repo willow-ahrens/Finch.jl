@@ -1,5 +1,5 @@
 """
-    SparseLevel{[Ti=Int], [Tp=Int], [Ptr, Idx, Val, Tbl=Dict]}(lvl, [dim])
+    SparseLevel{[Ti=Int], [Tp=Int], [Ptr, Idx, Val, Tbl, Pool=Dict]}(lvl, [dim])
 
 A subfiber of a sparse level does not need to represent slices `A[:, ..., :, i]`
 which are entirely [`fill_value`](@ref). Instead, only potentially non-fill
@@ -34,39 +34,44 @@ julia> Tensor(Sparse(Sparse(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
 
 ```
 """
-struct SparseLevel{Ti, Ptr, Idx, Val, Tbl, Lvl} <: AbstractLevel
+struct SparseLevel{Ti, Ptr, Idx, Val, Tbl, Pool, Lvl} <: AbstractLevel
     lvl::Lvl
     shape::Ti
     ptr::Ptr
     idx::Idx
     val::Val
     tbl::Tbl
+    pool::Pool
 end
 const Sparse = SparseLevel
 const SparseDict = SparseLevel
 SparseLevel(lvl) = SparseLevel{Int}(lvl)
 SparseLevel(lvl, shape::Ti) where {Ti} = SparseLevel{Ti}(lvl, shape)
 SparseLevel{Ti}(lvl) where {Ti} = SparseLevel{Ti}(lvl, zero(Ti))
-SparseLevel{Ti}(lvl, shape) where {Ti} = SparseLevel{Ti}(lvl, shape, postype(lvl)[1], Ti[], postype(lvl)[], Dict{Tuple{postype(lvl), Ti}, postype(lvl)}())
+SparseLevel{Ti}(lvl, shape) where {Ti} = SparseLevel{Ti}(lvl, shape, postype(lvl)[1], Ti[], postype(lvl)[], Dict{Tuple{postype(lvl), Ti}, postype(lvl)}(), postype(lvl)[])
 
-SparseLevel{Ti}(lvl::Lvl, shape, ptr::Ptr, idx::Idx, val::Val, tbl::Tbl) where {Ti, Ptr, Idx, Val, Tbl, Lvl} =
-    SparseLevel{Ti, Ptr, Idx, Val, Tbl, Lvl}(lvl, shape, ptr, idx, val, tbl)
+SparseLevel{Ti}(lvl::Lvl, shape, ptr::Ptr, idx::Idx, val::Val, tbl::Tbl, pool::Pool) where {Ti, Ptr, Idx, Val, Tbl, Pool, Lvl} =
+    SparseLevel{Ti, Ptr, Idx, Val, Tbl, Pool, Lvl}(lvl, shape, ptr, idx, val, tbl, pool)
 
 Base.summary(lvl::SparseLevel) = "Sparse($(summary(lvl.lvl)))"
 similar_level(lvl::SparseLevel, fill_value, eltype::Type, dim, tail...) =
     Sparse(similar_level(lvl.lvl, fill_value, eltype, tail...), dim)
 
-function postype(::Type{SparseLevel{Ti, Ptr, Idx, Val, Tbl, Lvl}}) where {Ti, Ptr, Idx, Val, Tbl, Lvl}
+function postype(::Type{SparseLevel{Ti, Ptr, Idx, Val, Tbl, Pool, Lvl}}) where {Ti, Ptr, Idx, Val, Tbl, Pool, Lvl}
     return postype(Lvl)
 end
 
 Base.resize!(lvl::SparseLevel{Ti}, dims...) where {Ti} =
-    SparseLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.idx, lvl.val, lvl.tbl)
+    SparseLevel{Ti}(resize!(lvl.lvl, dims[1:end-1]...), dims[end], lvl.ptr, lvl.idx, lvl.val, lvl.tbl, lvl.pool)
 
-function moveto(lvl::SparseLevel{Ti, Ptr, Idx, Val, Tbl, Lvl}, Tm) where {Ti, Ptr, Idx, Val, Tbl, Lvl}
+function moveto(lvl::SparseLevel{Ti, Ptr, Idx, Val, Tbl, Pool, Lvl}, Tm) where {Ti, Ptr, Idx, Val, Tbl, Pool, Lvl}
     lvl_2 = moveto(lvl.lvl, Tm)
+    ptr_2 = moveto(lvl.ptr, Tm)
+    idx_2 = moveto(lvl.idx, Tm)
+    val_2 = moveto(lvl.val, Tm)
     tbl_2 = moveto(lvl.tbl, Tm)
-    return SparseLevel{Ti}(lvl_2, lvl.shape, tbl_2)
+    pool_2 = moveto(lvl.pool, Tm)
+    return SparseLevel{Ti}(lvl_2, lvl.shape, ptr_2, idx_2, val_2, tbl_2, pool_2)
 end
 
 function countstored_level(lvl::SparseLevel, pos)
@@ -75,10 +80,10 @@ function countstored_level(lvl::SparseLevel, pos)
 end
 
 pattern!(lvl::SparseLevel{Ti}) where {Ti} =
-    SparseLevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.idx, lvl.val, lvl.tbl)
+    SparseLevel{Ti}(pattern!(lvl.lvl), lvl.shape, lvl.ptr, lvl.idx, lvl.val, lvl.tbl, lvl.pool)
 
 set_fill_value!(lvl::SparseLevel{Ti}, init) where {Ti} =
-    SparseLevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx, lvl.val, lvl.tbl)
+    SparseLevel{Ti}(set_fill_value!(lvl.lvl, init), lvl.shape, lvl.ptr, lvl.idx, lvl.val, lvl.tbl, lvl.pool)
 
 function Base.show(io::IO, lvl::SparseLevel{Ti}) where {Ti}
     if get(io, :compact, false)
@@ -116,12 +121,12 @@ function labelled_children(fbr::SubFiber{<:SparseLevel})
     end
 end
 
-@inline level_ndims(::Type{<:SparseLevel{Ti, Ptr, Idx, Val, Tbl, Lvl}}) where {Ti, Ptr, Idx, Val, Tbl, Lvl} = 1 + level_ndims(Lvl)
+@inline level_ndims(::Type{<:SparseLevel{Ti, Ptr, Idx, Val, Tbl, Pool, Lvl}}) where {Ti, Ptr, Idx, Val, Tbl, Pool, Lvl} = 1 + level_ndims(Lvl)
 @inline level_size(lvl::SparseLevel) = (level_size(lvl.lvl)..., lvl.shape)
 @inline level_axes(lvl::SparseLevel) = (level_axes(lvl.lvl)..., Base.OneTo(lvl.shape))
-@inline level_eltype(::Type{<:SparseLevel{Ti, Ptr, Idx, Val, Tbl, Lvl}}) where {Ti, Ptr, Idx, Val, Tbl, Lvl} = level_eltype(Lvl)
-@inline level_fill_value(::Type{<:SparseLevel{Ti, Ptr, Idx, Val, Tbl, Lvl}}) where {Ti, Ptr, Idx, Val, Tbl, Lvl} = level_fill_value(Lvl)
-data_rep_level(::Type{<:SparseLevel{Ti, Ptr, Idx, Val, Tbl, Lvl}}) where {Ti, Ptr, Idx, Val, Tbl, Lvl} = SparseData(data_rep_level(Lvl))
+@inline level_eltype(::Type{<:SparseLevel{Ti, Ptr, Idx, Val, Tbl, Pool, Lvl}}) where {Ti, Ptr, Idx, Val, Tbl, Pool, Lvl} = level_eltype(Lvl)
+@inline level_fill_value(::Type{<:SparseLevel{Ti, Ptr, Idx, Val, Tbl, Pool, Lvl}}) where {Ti, Ptr, Idx, Val, Tbl, Pool, Lvl} = level_fill_value(Lvl)
+data_rep_level(::Type{<:SparseLevel{Ti, Ptr, Idx, Val, Tbl, Pool, Lvl}}) where {Ti, Ptr, Idx, Val, Tbl, Pool, Lvl} = SparseData(data_rep_level(Lvl))
 
 (fbr::AbstractFiber{<:SparseLevel})() = fbr
 function (fbr::SubFiber{<:SparseLevel{Ti}})(idxs...) where {Ti}
@@ -142,6 +147,7 @@ mutable struct VirtualSparseLevel <: AbstractVirtualLevel
     idx
     val
     tbl
+    pool
     shape
     qos_stop
 end
@@ -156,12 +162,13 @@ function is_level_concurrent(ctx, lvl::VirtualSparseLevel)
     return ([data; [false]], false)
 end
 
-function virtualize(ctx, ex, ::Type{SparseLevel{Ti, Ptr, Idx, Val, Tbl, Lvl}}, tag=:lvl) where {Ti, Ptr, Idx, Val, Tbl, Lvl}
+function virtualize(ctx, ex, ::Type{SparseLevel{Ti, Ptr, Idx, Val, Tbl, Pool, Lvl}}, tag=:lvl) where {Ti, Ptr, Idx, Val, Tbl, Pool, Lvl}
     sym = freshen(ctx, tag)
     ptr = freshen(ctx, tag, :_ptr)
     idx = freshen(ctx, tag, :_idx)
     val = freshen(ctx, tag, :_val)
     tbl = freshen(ctx, tag, :_tbl)
+    pool = freshen(ctx, tag, :_pool)
     qos_stop = freshen(ctx, tag, :_qos_stop)
     push_preamble!(ctx, quote
         $sym = $ex
@@ -169,11 +176,12 @@ function virtualize(ctx, ex, ::Type{SparseLevel{Ti, Ptr, Idx, Val, Tbl, Lvl}}, t
         $idx = $sym.idx
         $val = $sym.val
         $tbl = $sym.tbl
+        $pool = $sym.pool
         $qos_stop = length($tbl)
     end)
     lvl_2 = virtualize(ctx, :($sym.lvl), Lvl, sym)
     shape = value(:($sym.shape), Int)
-    VirtualSparseLevel(lvl_2, sym, Ti, ptr, idx, val, tbl, shape, qos_stop)
+    VirtualSparseLevel(lvl_2, sym, Ti, ptr, idx, val, tbl, pool, shape, qos_stop)
 end
 function lower(ctx::AbstractCompiler, lvl::VirtualSparseLevel, ::DefaultStyle)
     quote
@@ -184,6 +192,7 @@ function lower(ctx::AbstractCompiler, lvl::VirtualSparseLevel, ::DefaultStyle)
             $(lvl.idx),
             $(lvl.val),
             $(lvl.tbl),
+            $(lvl.pool),
         )
     end
 end
@@ -213,6 +222,7 @@ function declare_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos, ini
     qos = freshen(ctx, tag, :qos)
     push_preamble!(ctx, quote
         empty!($(lvl.tbl))
+        empty!($(lvl.pool))
         $qos = $(Tp(0))
         $(lvl.qos_stop) = 0
     end)
@@ -224,32 +234,6 @@ function assemble_level!(ctx, lvl::VirtualSparseLevel, pos_start, pos_stop)
     pos_start = ctx(cache!(ctx, :p_start, pos_start))
     pos_stop = ctx(cache!(ctx, :p_start, pos_stop))
 end
-
-#=
-#before
-BenchmarkTools.Trial: 53 samples with 1 evaluation.
- Range (min … max):  83.772 ms … 149.788 ms  ┊ GC (min … max): 0.00% … 41.99%
- Time  (median):     87.880 ms               ┊ GC (median):    2.43%
- Time  (mean ± σ):   94.682 ms ±  18.937 ms  ┊ GC (mean ± σ):  9.68% ± 12.69%
-
-   ▂█▃▂                                                         
-  ▆████▆▁▄▃▃▃▄▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▃▄▃▁▁▃ ▁
-  83.8 ms         Histogram: frequency by time          150 ms <
-
- Memory estimate: 139.52 MiB, allocs estimate: 20261.
-
-#after
-BenchmarkTools.Trial: 63 samples with 1 evaluation.
- Range (min … max):  77.385 ms … 136.858 ms  ┊ GC (min … max): 0.00% … 43.67%
- Time  (median):     78.664 ms               ┊ GC (median):    2.26%
- Time  (mean ± σ):   79.770 ms ±   7.407 ms  ┊ GC (mean ± σ):  3.49% ±  5.34%
-
-       ▂█ ▇                                                     
-  ▃▁▄▃▄██▇██▅▁▅▃▁▃▁▄▃▁▁▁▃▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▃ ▁
-  77.4 ms         Histogram: frequency by time         86.9 ms <
-
- Memory estimate: 152.70 MiB, allocs estimate: 261.
-=#
 
 function freeze_level!(ctx::AbstractCompiler, lvl::VirtualSparseLevel, pos_stop)
     p = freshen(ctx, :p)
@@ -381,6 +365,28 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseLevel}, mode::Reader
     )
 end
 
+function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseLevel}, mode::Reader, subprotos, ::typeof(follow))
+    (lvl, pos) = (fbr.lvl, fbr.pos)
+    tag = lvl.ex
+    Tp = postype(lvl)
+    my_q = freshen(ctx, tag, :_q)
+
+    Furlable(
+        body = (ctx, ext) ->
+            Lookup(
+                body = (ctx, i) -> Thunk(
+                    preamble = quote
+                        $my_q = get($(lvl.tbl), ($(ctx(pos)), $(ctx(i))), 0)
+                    end,
+                    body = (ctx) -> Switch([
+                        value(:($my_q != 0)) => instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_q, Tp)), mode, subprotos),
+                        literal(true) => FillLeaf(virtual_level_fill_value(lvl))
+                    ])
+                )
+            )
+    )
+end
+
 instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseLevel}, mode::Updater, protos) = begin
     instantiate(ctx, VirtualHollowSubFiber(fbr.lvl, fbr.pos, freshen(ctx, :null)), mode, protos)
 end
@@ -397,20 +403,34 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualSparseLevel}, mode::
             body = (ctx) -> Lookup(
                 body = (ctx, idx) -> Thunk(
                     preamble = quote
-                        $qos = get($(lvl.tbl), ($(ctx(pos)), $(ctx(idx))), length($(lvl.tbl)) + 1)
-                        if $qos > $qos_stop
-                            $qos_stop = max($qos_stop << 1, 1)
-                            $(contain(ctx_2->assemble_level!(ctx_2, lvl.lvl, value(qos, Tp), value(qos_stop, Tp)), ctx))
+                        $qos = get($(lvl.tbl), ($(ctx(pos)), $(ctx(idx))), 0)
+                        if $qos == 0
+                            #If the qos is not in the table, we need to add it.
+                            #We need to commit it to the table in the event that
+                            #another accessor tries to write it in the same loop.
+                            if !isempty($(lvl.pool))
+                                $qos = pop!($(lvl.pool))
+                            else
+                                $qos = length($(lvl.tbl)) + 1
+                                if $qos > $qos_stop
+                                    $qos_stop = max($qos_stop << 1, 1)
+                                    $(contain(ctx_2->assemble_level!(ctx_2, lvl.lvl, value(qos, Tp), value(qos_stop, Tp)), ctx))
+                                    resize_if_smaller!($(lvl.val), $qos_stop)
+                                    fill_range!($(lvl.val), 0, $qos, $qos_stop)
+                                end
+                            end
+                            $(lvl.tbl)[($(ctx(pos)), $(ctx(idx)))] = $qos
                         end
                         $dirty = false
                     end,
                     body = (ctx) -> instantiate(ctx, VirtualHollowSubFiber(lvl.lvl, value(qos, Tp), dirty), mode, subprotos),
                     epilogue = quote
                         if $dirty
-                            if $qos > length($(lvl.tbl))
-                                $(lvl.tbl)[($(ctx(pos)), $(ctx(idx)))] = $qos
-                            end
+                            $(lvl.val)[$qos] = $qos
                             $(fbr.dirty) = true
+                        elseif $(lvl.val)[$qos] == 0 #here, val is being used as a dirty bit
+                            push!($(lvl.pool), $qos)
+                            delete!($(lvl.tbl), ($(ctx(pos)), $(ctx(idx))))
                         end
                     end
                 )
