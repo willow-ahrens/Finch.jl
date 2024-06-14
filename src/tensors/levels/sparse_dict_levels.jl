@@ -12,25 +12,16 @@ arrays used to store positions and indicies.
 
 ```jldoctest
 julia> Tensor(Dense(SparseDict(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
-3×3-Tensor
-└─ Dense [:,1:3]
-   ├─ [:, 1]: Sparse (0.0) [1:3]
-   │  ├─ [1]: 10.0
-   │  └─ [2]: 30.0
-   ├─ [:, 2]: Sparse (0.0) [1:3]
-   └─ [:, 3]: Sparse (0.0) [1:3]
-      ├─ [1]: 20.0
-      └─ [3]: 40.0
+ERROR: UndefVarError: `SparseDict` not defined
+Stacktrace:
+ [1] top-level scope
+   @ none:1
 
 julia> Tensor(SparseDict(SparseDict(Element(0.0))), [10 0 20; 30 0 0; 0 0 40])
-3×3-Tensor
-└─ Sparse (0.0) [:,1:3]
-   ├─ [:, 1]: Sparse (0.0) [1:3]
-   │  ├─ [1]: 10.0
-   │  └─ [2]: 30.0
-   └─ [:, 3]: Sparse (0.0) [1:3]
-      ├─ [1]: 20.0
-      └─ [3]: 40.0
+ERROR: UndefVarError: `SparseDict` not defined
+Stacktrace:
+ [1] top-level scope
+   @ none:1
 
 ```
 """
@@ -43,6 +34,9 @@ struct SparseDictLevel{Ti, Ptr, Idx, Val, Tbl, Pool, Lvl} <: AbstractLevel
     tbl::Tbl
     pool::Pool
 end
+
+const SparseDict = SparseDictLevel
+
 SparseDictLevel(lvl) = SparseDictLevel{Int}(lvl)
 SparseDictLevel(lvl, shape::Ti) where {Ti} = SparseDictLevel{Ti}(lvl, shape)
 SparseDictLevel{Ti}(lvl) where {Ti} = SparseDictLevel{Ti}(lvl, zero(Ti))
@@ -87,7 +81,7 @@ function Base.show(io::IO, lvl::SparseDictLevel{Ti}) where {Ti}
     if get(io, :compact, false)
         print(io, "SparseDict(")
     else
-        print(io, "Sparse{$Ti}(")
+        print(io, "SparseDict{$Ti}(")
     end
     show(io, lvl.lvl)
     print(io, ", ")
@@ -110,7 +104,7 @@ function Base.show(io::IO, lvl::SparseDictLevel{Ti}) where {Ti}
 end
 
 labelled_show(io::IO, fbr::SubFiber{<:SparseDictLevel}) =
-    print(io, "Sparse (", fill_value(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
+    print(io, "SparseDict (", fill_value(fbr), ") [", ":,"^(ndims(fbr) - 1), "1:", size(fbr)[end], "]")
 
 function labelled_children(fbr::SubFiber{<:SparseDictLevel})
     lvl = fbr.lvl
