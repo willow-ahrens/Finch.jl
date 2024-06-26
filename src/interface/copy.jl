@@ -66,15 +66,6 @@ format.
 """
 dropfills(src) = dropfills!(similar(src), src)
 
-"""
-    dropfills!(dst, src)
-
-Copy only the non- fill values from `src` into `dst`. The shape and format of
-`dst` must match `src`
-"""
-dropfills!(dst::AbstractTensor, src) = dropfills_helper!(dst, src)
-dropfills!(dst::SwizzleArray{dims}, src::SwizzleArray{dims}) where {dims} = swizzle(dropfills_helper!(dst.body, src.body), dims...)
-
 @staged function dropfills_helper!(dst, src)
     ndims(dst) > ndims(src) && throw(DimensionMismatch("more dimensions in destination than source"))
     ndims(dst) < ndims(src) && throw(DimensionMismatch("less dimensions in destination than source"))
@@ -83,7 +74,7 @@ dropfills!(dst::SwizzleArray{dims}, src::SwizzleArray{dims}) where {dims} = swiz
     T = eltype(dst)
     d = fill_value(dst)
     return quote
-        @finch begin
+        @finch mode=:fast begin
             dst .= $(fill_value(dst))
             $(Expr(:for, exts, quote
                 let tmp = src[$(idxs...)]
@@ -96,3 +87,42 @@ dropfills!(dst::SwizzleArray{dims}, src::SwizzleArray{dims}) where {dims} = swiz
         return dst
     end
 end
+
+"""
+    dropfills!(dst, src)
+
+Copy only the non-fill values from `src` into `dst`.
+"""
+dropfills!(dst::AbstractTensor, src::AbstractTensor) =
+    dropfills_helper!(dst, src)
+
+dropfills!(dst::AbstractTensor, src::AbstractArray) =
+    dropfills_helper!(dst, src)
+
+dropfills!(dst::AbstractArray, src::AbstractTensor) =
+    dropfills_helper!(dst, src)
+
+function dropfills_swizzled!(dst, src, perm)
+    if issorted(perm)
+        return dropfills_helper!(dst, src)
+    else
+        tmp = rep_construct(permutedims_rep(data_rep(src), perm))
+        tmp = dropfills_helper!(swizzle(tmp, invperm(perm)...), src)
+        return copyto_helper!(dst, tmp.body)
+    end
+end
+
+dropfills!(dst::AbstractArray, src::SwizzleArray{dims}) where {dims} =
+    dropfills_swizzled!(dst, src.body, dims)
+
+dropfills!(dst::AbstractTensor, src::SwizzleArray{dims}) where {dims} =
+    dropfills_swizzled!(dst, src.body, dims)
+
+dropfills!(dst::SwizzleArray{dims}, src::SwizzleArray{dims2}) where {dims, dims2} =
+    swizzle(dropfills!(dst.body, swizzle(src, invperm(dims)...)), dims...)
+
+dropfills!(dst::SwizzleArray{dims}, src::AbstractTensor) where {dims} =
+    swizzle(dropfills!(dst.body, swizzle(src, invperm(dims)...)), dims...)
+
+dropfills!(dst::SwizzleArray{dims}, src::AbstractArray) where {dims} =
+    swizzle(dropfills!(dst.body, swizzle(src, invperm(dims)...)), dims...)
