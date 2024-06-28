@@ -39,6 +39,7 @@ export Element, ElementLevel
 export Separate, SeparateLevel
 export Atomic, AtomicLevel
 export Pattern, PatternLevel
+export Iso, IsoLevel
 export Scalar, SparseScalar, ShortCircuitScalar, SparseShortCircuitScalar
 export walk, gallop, follow, extrude, laminate
 export Tensor, pattern!, dropfills, dropfills!, set_fill_value!
@@ -136,7 +137,7 @@ include("tensors/levels/dense_rle_levels.jl")
 include("tensors/levels/element_levels.jl")
 include("tensors/levels/separate_levels.jl")
 include("tensors/levels/atomic_levels.jl")
-include("tensors/levels/pattern_levels.jl")
+include("tensors/levels/iso_levels.jl")
 include("tensors/masks.jl")
 include("tensors/abstract_combinator.jl")
 include("tensors/combinators/unfurled.jl")
@@ -152,6 +153,8 @@ include("tensors/combinators/product.jl")
 
 const Sparse = SparseDictLevel
 const SparseLevel = SparseDictLevel
+const Pattern = IsoLevel{false, true, Bool}
+const PatternLevel = IsoLevel{false, true, Bool}
 
 include("postprocess.jl")
 

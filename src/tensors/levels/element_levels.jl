@@ -22,9 +22,9 @@ struct ElementLevel{Vf, Tv, Tp, Val} <: AbstractLevel
 end
 const Element = ElementLevel
 
-function ElementLevel(d, args...)
-    isbits(d) || throw(ArgumentError("Finch currently only supports isbits defaults"))
-    ElementLevel{d}(args...)
+function ElementLevel(vf, args...)
+    isbits(vf) || throw(ArgumentError("Finch currently only supports isbits fill values"))
+    ElementLevel{vf}(args...)
 end
 ElementLevel{Vf}() where {Vf} = ElementLevel{Vf, typeof(Vf)}()
 ElementLevel{Vf}(val::Val) where {Vf, Val} = ElementLevel{Vf, eltype(Val)}(val)
