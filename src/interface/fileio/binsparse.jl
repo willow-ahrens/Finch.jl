@@ -338,6 +338,12 @@ function bspwrite_level(f, desc, fmt, lvl::ElementLevel{Vf}) where {Vf}
     bspwrite_data(f, desc, "values", lvl.val)
     bspwrite_data(f, desc, "fill_value", [Vf])
 end
+function bspwrite_level(f, desc, fmt, ::IsoLevel{Vf, Vp, Tv}) where {Vf, Vp, Tv}
+    fmt["level_kind"] = "iso"
+    desc["value_type"] = "iso[$(desc["value_type"])]")
+    bspwrite_data(f, desc, "values", Tv[Vp])
+    bspwrite_data(f, desc, "fill_value", [Vf])
+end
 function bspread_level(f, desc, fmt, ::Val{:element})
     val = convert(Vector, bspread_data(f, desc, "values"))
     if haskey(f, "fill_value")
