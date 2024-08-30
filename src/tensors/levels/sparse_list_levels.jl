@@ -338,9 +338,10 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Re
             body = (ctx) -> Lookup(
                 body = (ctx, i) -> Thunk(
                     preamble = quote
+                        $my_q = max($my_q, $(lvl.ptr)[$(ctx(pos))])
                         $my_q_stop = $(lvl.ptr)[$(ctx(pos)) + $(Tp(1))]
                         $my_qos = scansearch($(lvl.idx), $(ctx(i)), $my_q, $my_q_stop-1)
-                        $my_q = $my_qos
+                        $my_q = min($my_q_stop-1, $my_qos)
                     end,
                     body = (ctx) -> Switch([
                         value(:($my_qos < $my_q_stop && $(lvl.idx)[$my_qos] == $(ctx(i)))) => instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_qos, Tp)), mode, subprotos),
