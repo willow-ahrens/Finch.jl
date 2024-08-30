@@ -330,15 +330,18 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Re
     my_q = freshen(ctx, tag, :_q)
     my_q_stop = freshen(ctx, tag, :_q_stop)
     my_qos = freshen(ctx, tag, :_qos)
-
     Furlable(
-        body = (ctx, ext) ->
-            Lookup(
+        body = (ctx, ext) -> Thunk(
+            preamble = quote
+                $my_q = $(lvl.ptr)[$(ctx(pos))]
+            end,
+            body = (ctx) -> Lookup(
                 body = (ctx, i) -> Thunk(
                     preamble = quote
-                        $my_q = $(lvl.ptr)[$(ctx(pos))]
+                        $my_q = max($my_q, $(lvl.ptr)[$(ctx(pos))])
                         $my_q_stop = $(lvl.ptr)[$(ctx(pos)) + $(Tp(1))]
-                        $my_qos = bin_scansearch($(lvl.idx), $(ctx(i)), $my_q, $my_q_stop-1)
+                        $my_qos = scansearch($(lvl.idx), $(ctx(i)), $my_q, $my_q_stop-1)
+                        $my_q = min($my_q_stop-1, $my_qos)
                     end,
                     body = (ctx) -> Switch([
                         value(:($my_qos < $my_q_stop && $(lvl.idx)[$my_qos] == $(ctx(i)))) => instantiate(ctx, VirtualSubFiber(lvl.lvl, value(my_qos, Tp)), mode, subprotos),
@@ -346,6 +349,7 @@ function instantiate(ctx, fbr::VirtualSubFiber{VirtualSparseListLevel}, mode::Re
                     ])
                 )
             )
+        )
     )
 end
 
