@@ -400,7 +400,7 @@ function assemble_level!(ctx, lvl::VirtualSparseByteMapLevel, pos_start, pos_sto
         $q_stop = $(ctx(pos_stop)) * $(ctx(lvl.shape))
         Finch.resize_if_smaller!($(lvl.ptr), $pos_stop + 1)
         Finch.fill_range!($(lvl.ptr), 0, $pos_start + 1, $pos_stop + 1)
-        $old = length($(lvl.tbl)) + 1
+        $old = $q_start
         Finch.resize_if_smaller!($(lvl.tbl), $q_stop)
         Finch.fill_range!($(lvl.tbl), false, $old, $q_stop)
         $(contain(
@@ -672,6 +672,17 @@ function setup_coalesce!(lvl::SparseByteMapLevel, max_pos, coalescent)
     lvl_srt = coalescent.srt
 
     nnz = sum(length, lvl.srt.data)
+    ##normalize guarantees positions are monotonically non-decreasing across
+    ##channels, so a column can only ever be shared at the single boundary
+    ##between two adjacent channels (never spanning non-adjacent channels or
+    ##multiple columns at once); detect and discount that double-count.
+    for p in 1:(length(lvl.srt.data) - 1)
+        srt_p = lvl.srt.data[p]
+        srt_next = lvl.srt.data[p + 1]
+        if !isempty(srt_p) && !isempty(srt_next) && srt_p[end] == srt_next[1]
+            nnz -= 1
+        end
+    end
     if nnz < 1
         return false
     end
@@ -682,7 +693,7 @@ function setup_coalesce!(lvl::SparseByteMapLevel, max_pos, coalescent)
 
     lvl_ptr[1] = 1
 
-    setup_coalesce!(lvl.lvl, nnz, coalescent.lvl)
+    setup_coalesce!(lvl.lvl, length(lvl_tbl), coalescent.lvl)
 end
 
 function coalesce_fast!(tid, meta, P, lvl::SparseByteMapLevel, coalescent, was_dense)
@@ -709,12 +720,26 @@ end
         lvl_tbl[q] = false
     end
 
+    ##normalize guarantees positions are monotonically non-decreasing across
+    ##channels, so a column can only ever be shared at the single boundary
+    ##between two adjacent channels (never spanning non-adjacent channels or
+    ##multiple columns at once). dup_offset[p] tells us whether channel p's
+    ##own first srt entry is such a duplicate of channel p-1's last entry --
+    ##already accounted for by channel p-1 -- so channel p's real srt array
+    ##must be read starting one entry in.
+    dup_offset = Vector{Int}(undef, P)
+    dup_offset[1] = 0
+    for p in 2:P
+        dup_offset[p] = (!isempty(srt[p - 1]) && !isempty(srt[p]) &&
+                          srt[p - 1][end] == srt[p][1]) ? 1 : 0
+    end
+
     ##Merge the nonzeroes into srt
     nnz_cutoffs = Vector{Int}(undef, P + 1)
     nnz_cutoffs[1] = 1
 
     for p in 2:P+1
-        nnz_cutoffs[p] = nnz_cutoffs[p - 1] + length(srt[p - 1])
+        nnz_cutoffs[p] = nnz_cutoffs[p - 1] + length(srt[p - 1]) - dup_offset[p - 1]
     end
 
     total_nnz = nnz_cutoffs[end] - 1
@@ -724,30 +749,32 @@ end
     q_lb = 1 + offset
     q_ub = q_lb + chunksize - 1
 
-    proc_id_lower = binary_search(q_lb, nnz_cutoffs)
-    nz_id_lower = q_lb - nnz_cutoffs[proc_id_lower] + 1
+    if chunksize > 0
+        proc_id_lower = binary_search(q_lb, nnz_cutoffs)
+        nz_id_lower = q_lb - nnz_cutoffs[proc_id_lower] + 1 + dup_offset[proc_id_lower]
 
-    proc = proc_id_lower
-    srt_read = nz_id_lower
-    srt_write = nnz_cutoffs[proc] + nz_id_lower - 1
-    srt_ceil = srt_write + chunksize
-    first_nz = srt[proc][srt_read]
+        proc = proc_id_lower
+        srt_read = nz_id_lower
+        srt_write = q_lb
+        srt_ceil = srt_write + chunksize
+        first_nz = srt[proc][srt_read]
 
-    while srt_write < srt_ceil
-        lvl_srt[srt_write] = srt[proc][srt_read]
-        srt_read += 1
-        srt_write += 1
+        while srt_write < srt_ceil
+            lvl_srt[srt_write] = srt[proc][srt_read]
+            srt_read += 1
+            srt_write += 1
 
-        if srt_read > length(srt[proc])
-            srt_read = 1
-            proc += 1
+            if srt_read > length(srt[proc])
+                proc += 1
+                srt_read = proc <= P ? 1 + dup_offset[proc] : 1
+            end
         end
     end
 
     ##Merge ptr and handle prefix sum
     max_pos = length(lvl_ptr) - 1
 
-    pos_base, pos_rem = divrem(max_pos - 1, P)
+    pos_base, pos_rem = divrem(max_pos, P)
     pos_offset = (tid - 1) * pos_base + min(tid - 1, pos_rem)
     pos_chunksize = pos_base + (tid <= pos_rem ? 1 : 0)
     pos_lb = 2 + pos_offset
@@ -757,9 +784,46 @@ end
         lvl_ptr[pos] = 0
     end
 
-    proc = proc_id_lower
-    pos_read = fld(first_nz - 1, shape) + 1
-    pos_write = 2
+    if chunksize > 0
+        pos_read = fld(first_nz - 1, shape) + 1
+
+        ##Does the position of my first entry continue a run started by the
+        ##previous thread? Derived from the read-only source data (never from
+        ##lvl_ptr/lvl_srt, which other threads may still be writing to), so
+        ##this is a single O(log P) lookup, not an O(P) scan of the shards.
+        shares_start = false
+        if tid > 1
+            prev_proc = binary_search(q_lb - 1, nnz_cutoffs)
+            prev_nz_id = q_lb - 1 - nnz_cutoffs[prev_proc] + 1 + dup_offset[prev_proc]
+            prev_pos = fld(srt[prev_proc][prev_nz_id] - 1, shape) + 1
+            shares_start = prev_pos == pos_read
+        end
+        shares_start || (lvl_ptr[pos_read] = q_lb)
+
+        ##Walk the rest of our own already-written slice of lvl_srt (safe to
+        ##read back, since we're the only thread that touched q_lb:q_ub) and
+        ##mark every position transition we observe.
+        p_prev = pos_read
+        for r in (q_lb + 1):q_ub
+            p = fld(lvl_srt[r] - 1, shape) + 1
+            if p != p_prev
+                lvl_ptr[p_prev + 1] = r
+                lvl_ptr[p] = r
+                p_prev = p
+            end
+        end
+
+        ##Symmetric check at the upper boundary: does our last entry's run
+        ##continue into the next thread's range?
+        shares_end = false
+        if q_ub < total_nnz
+            next_proc = binary_search(q_ub + 1, nnz_cutoffs)
+            next_nz_id = q_ub + 1 - nnz_cutoffs[next_proc] + 1 + dup_offset[next_proc]
+            next_pos = fld(srt[next_proc][next_nz_id] - 1, shape) + 1
+            shares_end = next_pos == p_prev
+        end
+        shares_end || (lvl_ptr[p_prev + 1] = q_ub + 1)
+    end
 end
 
 function coalesce_level!(

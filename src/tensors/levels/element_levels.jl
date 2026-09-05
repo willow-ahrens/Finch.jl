@@ -269,34 +269,51 @@ function coalesce_fast!(tid, meta, P, lvl::ElementLevel, coalescent, was_dense)
     val = lvl.val.data
     lvl_val = coalescent.val
 
-    fastmerge_element!(tid, val, P, lvl_val)
+    fastmerge_element!(tid, val, P, lvl_val, was_dense)
 end
 
-@inbounds function fastmerge_element!(tid, val, P, lvl_val)
-    nnz_cutoffs = Vector{Int}(undef, P + 1)
-    nnz_cutoffs[1] = 1
-    for p in 2:P+1
-        nnz_cutoffs[p] = nnz_cutoffs[p - 1] + length(val[p - 1])
-    end
-    nnz = nnz_cutoffs[end] - 1
+@inbounds function fastmerge_element!(tid, val, P, lvl_val, was_dense)
+    if was_dense
+        total = length(lvl_val)
+        base, rem = divrem(total, P)
+        offset = (tid - 1) * base + min(tid - 1, rem)
+        chunksize = base + (tid <= rem ? 1 : 0)
+        lb = 1 + offset
+        ub = lb + chunksize - 1
 
-    base, rem = divrem(nnz, P)
-    offset = (tid - 1) * base + min(tid - 1, rem)
-    chunksize = base + (tid <= rem ? 1 : 0)
-    work_lb = 1 + offset
-    work_ub = work_lb + chunksize - 1
+        for q in lb:ub
+            s = zero(eltype(lvl_val))
+            for p in 1:P
+                s += val[p][q]
+            end
+            lvl_val[q] = s
+        end
+    else
+        nnz_cutoffs = Vector{Int}(undef, P + 1)
+        nnz_cutoffs[1] = 1
+        for p in 2:P+1
+            nnz_cutoffs[p] = nnz_cutoffs[p - 1] + length(val[p - 1])
+        end
+        nnz = nnz_cutoffs[end] - 1
 
-    proc_id_lower = binary_search(work_lb, nnz_cutoffs)
-    nz_offset = work_lb - nnz_cutoffs[proc_id_lower] + 1
-    proc = proc_id_lower
-    write_idx = work_lb
-    while write_idx <= work_ub
-        lvl_val[write_idx] = val[proc][nz_offset]
-        write_idx += 1
-        nz_offset += 1
-        if nz_offset > length(val[proc])
-            proc += 1
-            nz_offset = 1
+        base, rem = divrem(nnz, P)
+        offset = (tid - 1) * base + min(tid - 1, rem)
+        chunksize = base + (tid <= rem ? 1 : 0)
+        work_lb = 1 + offset
+        work_ub = work_lb + chunksize - 1
+
+        proc_id_lower = binary_search(work_lb, nnz_cutoffs)
+        nz_offset = work_lb - nnz_cutoffs[proc_id_lower] + 1
+        proc = proc_id_lower
+        write_idx = work_lb
+        while write_idx <= work_ub
+            lvl_val[write_idx] = val[proc][nz_offset]
+            write_idx += 1
+            nz_offset += 1
+            if nz_offset > length(val[proc])
+                proc += 1
+                nz_offset = 1
+            end
         end
     end
 end
