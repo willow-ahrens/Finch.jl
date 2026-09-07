@@ -650,38 +650,62 @@ function coalesce_level!(
     )
 end
 
-function setup_coalesce!(lvl::SparseListLevel, max_pos, coalescent)
+function setup_coalesce!(lvl::SparseListLevel, max_pos, coalescent, meta, P, style::MergeFast)
     lvl_ptr = coalescent.ptr
     lvl_idx = coalescent.idx
     nnz = sum(length, lvl.idx.data)
     if nnz < 1
         return false
     end
+
     resize!(lvl_idx, nnz)
     resize!(lvl_ptr, max_pos + 1) ##maybe need fill 0
 
     lvl_ptr[1] = 1
     lvl_ptr[end] = nnz + 1
-    
-    setup_coalesce!(lvl.lvl, nnz, coalescent.lvl)
+
+    setup_coalesce!(lvl.lvl, nnz, coalescent.lvl, meta, P, style)
 end
 
-##Merging from normalized output.
-function setup_coalesce!(lvl::SparseHashLevel, max_pos, coalescent::SparseListLevel)
+function setup_coalesce!(lvl::SparseListLevel, max_pos, coalescent, meta, P, style::MergeNormalization; pos_map=nothing, was_dense=false)
     lvl_ptr = coalescent.ptr
     lvl_idx = coalescent.idx
-    nnz = sum(length, lvl.perm.data)
+    nnz = sum(length, lvl.idx.data)
     if nnz < 1
         return false
     end
+
+    @assert !isnothing(pos_map)
+
+    if !was_dense
+        for p in 1:P - 1
+            if (pos_map[p + 1] == pos_map[p + 2] - (length(lvl.ptr.data[p + 1]) - 1) + 1) && lvl.idx.data[p][end] == lvl.idx.data[p + 1][1]
+                nnz -= 1
+                resize!(lvl.idx.data[p], length(lvl.idx.data[p]) - 1)
+            end
+            pos_map[p + 1] = length(lvl.idx.data[p])
+        end
+    else
+        for p in 1:P - 1
+            last_nz_pos_p = binary_search(length(lvl.idx.data[p]), lvl.ptr.data[p])
+            first_nz_pos_p1 = binary_search(1, lvl.ptr.data[p + 1])
+            if (pos_map[p + 1] - (length(lvl.ptr.data[p]) - 1) + last_nz_pos_p ==
+                pos_map[p + 2] - (length(lvl.ptr.data[p + 1]) - 1) + first_nz_pos_p1 + 1) &&
+               lvl.idx.data[p][end] == lvl.idx.data[p + 1][1]
+                nnz -= 1
+                resize!(lvl.idx.data[p], length(lvl.idx.data[p]) - 1)
+            end
+            pos_map[p + 1] = length(lvl.idx.data[p])
+        end
+    end
+    
     resize!(lvl_idx, nnz)
     resize!(lvl_ptr, max_pos + 1) ##maybe need fill 0
 
     lvl_ptr[1] = 1
     lvl_ptr[end] = nnz + 1
 
-    setup_coalesce!(lvl.lvl, nnz, coalescent.lvl)
-    return false
+    setup_coalesce!(lvl.lvl, nnz, coalescent.lvl, meta, P, style; pos_map)
 end
 
 function coalesce_fast!(tid, meta, P, lvl::SparseListLevel, coalescent, was_dense)
@@ -747,15 +771,15 @@ end
         lfbr_lower = binary_search(nz_id_lower, ptr[proc_id_lower])
         lfbr_upper = binary_search(nz_id_upper, ptr[proc_id_upper])
 
-        pos_lb = pos_offsets[tid][proc_id_lower] + lfbr_lower - 1
-        pos_ub = min(pos_offsets[tid][proc_id_upper] + lfbr_upper - 1, max_pos - 1)
+        pos_lb = pos_offsets[tid][proc_id_lower + 1] + lfbr_lower - 1
+        pos_ub = min(pos_offsets[tid][proc_id_upper + 1] + lfbr_upper - 1, max_pos - 1)
 
         if nz_id_upper < ptr[proc_id_upper][lfbr_upper + 1] - 1
             shares_border = true
         elseif lfbr_upper < length(ptr[proc_id_upper]) - 1
             shares_border = false
         elseif proc_id_upper < P
-            shares_border = pos_offsets[tid][proc_id_upper + 1] == pos_ub
+            shares_border = pos_offsets[tid][proc_id_upper + 2] == pos_ub
         else
             shares_border = false
         end
@@ -783,14 +807,14 @@ end
         pos_write = 2
         for p in 1:proc - 1
             pos_write += length(ptr[p]) - 1
-            pos_offsets[tid][p + 1] == pos_offsets[tid][p] + length(ptr[p]) - 2 && (pos_write -= 1)
+            pos_offsets[tid][p + 2] == pos_offsets[tid][p + 1] + length(ptr[p]) - 2 && (pos_write -= 1)
         end
         pos_write += lfbr_lower - 1
 
         ceil = 3
         for p in 1:proc_id_upper - 1
             ceil += length(ptr[p]) - 1
-            pos_offsets[tid][p + 1] == pos_offsets[tid][p] + length(ptr[p]) - 2 && (ceil -= 1)
+            pos_offsets[tid][p + 2] == pos_offsets[tid][p + 1] + length(ptr[p]) - 2 && (ceil -= 1)
         end
         ceil += lfbr_upper - 1
         shares_border && (ceil -= 1)
@@ -810,14 +834,14 @@ end
                 if proc > P
                     break
                 end
-                if pos_offsets[tid][old_proc + 1] == pos_offsets[tid][old_proc] + length(ptr[old_proc]) - 2
+                if pos_offsets[tid][old_proc + 2] == pos_offsets[tid][old_proc + 1] + length(ptr[old_proc]) - 2
                     pos_write -= 1
                 end
             end
         end
 
         for p in 1:P
-            pos_offsets[tid][p] = nnz_cutoffs[p]
+            pos_offsets[tid][p + 1] = nnz_cutoffs[p]
         end
     end
 end

@@ -666,21 +666,37 @@ function unfurl(
     )
 end
 
-function setup_coalesce!(lvl::SparseByteMapLevel, max_pos, coalescent)
+function setup_coalesce!(lvl::SparseByteMapLevel, max_pos, coalescent, meta, P, style::MergeFast)
     lvl_ptr = coalescent.ptr
     lvl_tbl = coalescent.tbl
     lvl_srt = coalescent.srt
 
     nnz = sum(length, lvl.srt.data)
-    ##normalize guarantees positions are monotonically non-decreasing across
-    ##channels, so a column can only ever be shared at the single boundary
-    ##between two adjacent channels (never spanning non-adjacent channels or
-    ##multiple columns at once); detect and discount that double-count.
-    for p in 1:(length(lvl.srt.data) - 1)
+    if nnz < 1
+        return false
+    end
+
+    resize!(lvl_ptr, max_pos + 1)
+    resize!(lvl_tbl, max_pos * lvl.shape)
+    resize!(lvl_srt, nnz)
+
+    lvl_ptr[1] = 1
+
+    setup_coalesce!(lvl.lvl, length(lvl_tbl), coalescent.lvl, meta, P, style)
+end
+
+function setup_coalesce!(lvl::SparseByteMapLevel, max_pos, coalescent, meta, P, style::MergeNormalization; pos_map=nothing, was_dense=false)
+    lvl_ptr = coalescent.ptr
+    lvl_tbl = coalescent.tbl
+    lvl_srt = coalescent.srt
+
+    nnz = sum(length, lvl.srt.data)
+    for p in 1:P - 1
         srt_p = lvl.srt.data[p]
         srt_next = lvl.srt.data[p + 1]
         if !isempty(srt_p) && !isempty(srt_next) && srt_p[end] == srt_next[1]
             nnz -= 1
+            resize!(srt_p, length(srt_p) - 1)
         end
     end
     if nnz < 1
@@ -693,7 +709,13 @@ function setup_coalesce!(lvl::SparseByteMapLevel, max_pos, coalescent)
 
     lvl_ptr[1] = 1
 
-    setup_coalesce!(lvl.lvl, length(lvl_tbl), coalescent.lvl)
+    if !isnothing(pos_map)
+        for p in 1:P
+            pos_map[p + 1] *= lvl.shape
+        end
+    end
+
+    setup_coalesce!(lvl.lvl, length(lvl_tbl), coalescent.lvl, meta, P, style; pos_map=pos_map, was_dense=true)
 end
 
 function coalesce_fast!(tid, meta, P, lvl::SparseByteMapLevel, coalescent, was_dense)
@@ -704,289 +726,105 @@ function coalesce_fast!(tid, meta, P, lvl::SparseByteMapLevel, coalescent, was_d
     lvl_tbl = coalescent.tbl
     lvl_srt = coalescent.srt
 
-    fastmerge_spbytemap!(tid, ptr, srt, tbl, P, lvl.shape, lvl_ptr, lvl_srt, lvl_tbl)
+    fastmerge_spbytemap!(tid, meta, ptr, srt, tbl, P, lvl.shape, lvl_ptr, lvl_srt, lvl_tbl)
     coalesce_fast!(tid, meta, P, lvl.lvl, coalescent.lvl, true)
 end
 
-@inbounds function fastmerge_spbytemap!(tid, ptr, srt, tbl, P, shape, lvl_ptr, lvl_srt, lvl_tbl)
-    ##Init table via parallel zeroing
-    tbl_total = length(lvl_tbl)
-    tbl_base, tbl_rem = divrem(tbl_total, P)
-    tbl_offset = (tid - 1) * tbl_base + min(tid - 1, tbl_rem)
-    tbl_chunksize = tbl_base + (tid <= tbl_rem ? 1 : 0)
-    tbl_lb = 1 + tbl_offset
-    tbl_ub = tbl_lb + tbl_chunksize - 1
-    for q in tbl_lb:tbl_ub
-        lvl_tbl[q] = false
-    end
-
-    ##normalize guarantees positions are monotonically non-decreasing across
-    ##channels, so a column can only ever be shared at the single boundary
-    ##between two adjacent channels (never spanning non-adjacent channels or
-    ##multiple columns at once). dup_offset[p] tells us whether channel p's
-    ##own first srt entry is such a duplicate of channel p-1's last entry --
-    ##already accounted for by channel p-1 -- so channel p's real srt array
-    ##must be read starting one entry in.
-    dup_offset = Vector{Int}(undef, P)
-    dup_offset[1] = 0
-    for p in 2:P
-        dup_offset[p] = (!isempty(srt[p - 1]) && !isempty(srt[p]) &&
-                          srt[p - 1][end] == srt[p][1]) ? 1 : 0
-    end
-
-    ##Merge the nonzeroes into srt
+@inbounds function fastmerge_spbytemap!(tid, meta, ptr, srt, tbl, P, shape, lvl_ptr, lvl_srt, lvl_tbl)
     nnz_cutoffs = Vector{Int}(undef, P + 1)
     nnz_cutoffs[1] = 1
-
     for p in 2:P+1
-        nnz_cutoffs[p] = nnz_cutoffs[p - 1] + length(srt[p - 1]) - dup_offset[p - 1]
+        nnz_cutoffs[p] = nnz_cutoffs[p - 1] + length(srt[p - 1])
     end
+    nnz = nnz_cutoffs[end] - 1
+    max_pos = length(lvl_ptr) - 1
 
-    total_nnz = nnz_cutoffs[end] - 1
-    base, rem = divrem(total_nnz, P)
+    base, rem = divrem(nnz, P)
     offset = (tid - 1) * base + min(tid - 1, rem)
     chunksize = base + (tid <= rem ? 1 : 0)
-    q_lb = 1 + offset
-    q_ub = q_lb + chunksize - 1
 
     if chunksize > 0
-        proc_id_lower = binary_search(q_lb, nnz_cutoffs)
-        nz_id_lower = q_lb - nnz_cutoffs[proc_id_lower] + 1 + dup_offset[proc_id_lower]
+        work_lb = 1 + offset
+        work_ub = work_lb + chunksize - 1
+
+        proc_id_lower = binary_search(work_lb, nnz_cutoffs)
+        nz_id_lower = work_lb - nnz_cutoffs[proc_id_lower] + 1
+        proc_id_upper = binary_search(work_ub, nnz_cutoffs)
+        nz_id_upper = work_ub - nnz_cutoffs[proc_id_upper] + 1
+
+        lfbr_lower = binary_search(nz_id_lower, ptr[proc_id_lower])
+        lfbr_upper = binary_search(nz_id_upper, ptr[proc_id_upper])
+
+        pos_lb = meta[tid][proc_id_lower + 1] + lfbr_lower - 1
+        pos_ub = min(meta[tid][proc_id_upper + 1] + lfbr_upper - 1, max_pos)
+
+
+        if nz_id_upper < ptr[proc_id_upper][lfbr_upper + 1] - 1
+            shares_border = true
+        elseif lfbr_upper < length(ptr[proc_id_upper]) - 1
+            shares_border = false
+        elseif proc_id_upper < P
+            shares_border = meta[tid][proc_id_upper + 2] == pos_ub
+        else
+            shares_border = false
+        end
 
         proc = proc_id_lower
         srt_read = nz_id_lower
-        srt_write = q_lb
+        srt_write = work_lb
         srt_ceil = srt_write + chunksize
-        first_nz = srt[proc][srt_read]
-
         while srt_write < srt_ceil
-            lvl_srt[srt_write] = srt[proc][srt_read]
+            pos_shift = (meta[tid][proc + 1] - 1) * shape
+            ele = srt[proc][srt_read] + pos_shift
+            lvl_srt[srt_write] = ele
+            lvl_tbl[ele] = true
             srt_read += 1
             srt_write += 1
 
             if srt_read > length(srt[proc])
+                srt_read = 1
                 proc += 1
-                srt_read = proc <= P ? 1 + dup_offset[proc] : 1
-            end
-        end
-    end
-
-    ##Merge ptr and handle prefix sum
-    max_pos = length(lvl_ptr) - 1
-
-    pos_base, pos_rem = divrem(max_pos, P)
-    pos_offset = (tid - 1) * pos_base + min(tid - 1, pos_rem)
-    pos_chunksize = pos_base + (tid <= pos_rem ? 1 : 0)
-    pos_lb = 2 + pos_offset
-    pos_ub = pos_lb + pos_chunksize - 1
-
-    for pos in pos_lb:pos_ub
-        lvl_ptr[pos] = 0
-    end
-
-    if chunksize > 0
-        pos_read = fld(first_nz - 1, shape) + 1
-
-        ##Does the position of my first entry continue a run started by the
-        ##previous thread? Derived from the read-only source data (never from
-        ##lvl_ptr/lvl_srt, which other threads may still be writing to), so
-        ##this is a single O(log P) lookup, not an O(P) scan of the shards.
-        shares_start = false
-        if tid > 1
-            prev_proc = binary_search(q_lb - 1, nnz_cutoffs)
-            prev_nz_id = q_lb - 1 - nnz_cutoffs[prev_proc] + 1 + dup_offset[prev_proc]
-            prev_pos = fld(srt[prev_proc][prev_nz_id] - 1, shape) + 1
-            shares_start = prev_pos == pos_read
-        end
-        shares_start || (lvl_ptr[pos_read] = q_lb)
-
-        ##Walk the rest of our own already-written slice of lvl_srt (safe to
-        ##read back, since we're the only thread that touched q_lb:q_ub) and
-        ##mark every position transition we observe.
-        p_prev = pos_read
-        for r in (q_lb + 1):q_ub
-            p = fld(lvl_srt[r] - 1, shape) + 1
-            if p != p_prev
-                lvl_ptr[p_prev + 1] = r
-                lvl_ptr[p] = r
-                p_prev = p
             end
         end
 
-        ##Symmetric check at the upper boundary: does our last entry's run
-        ##continue into the next thread's range?
-        shares_end = false
-        if q_ub < total_nnz
-            next_proc = binary_search(q_ub + 1, nnz_cutoffs)
-            next_nz_id = q_ub + 1 - nnz_cutoffs[next_proc] + 1 + dup_offset[next_proc]
-            next_pos = fld(srt[next_proc][next_nz_id] - 1, shape) + 1
-            shares_end = next_pos == p_prev
+        proc = proc_id_lower
+        pos_read = lfbr_lower
+
+        pos_write = 2
+        for p in 1:proc - 1
+            pos_write += length(ptr[p]) - 1
+            meta[tid][p + 2] == meta[tid][p + 1] + length(ptr[p]) - 2 && (pos_write -= 1)
         end
-        shares_end || (lvl_ptr[p_prev + 1] = q_ub + 1)
-    end
-end
+        pos_write += lfbr_lower - 1
 
-function coalesce_level!(
-    lvl::SparseByteMapLevel, global_fbr_map, local_fbr_map, task_map, factor, P, coalescent
-)
-    shape = lvl.shape
-    srt = lvl.srt.data
-    pos_stop = max(maximum(global_fbr_map), factor)
-    cutoffs = compute_proc_cutoffs(srt, P)
-
-    #Don't merge zero-ed arrays.
-    if cutoffs[P + 1] <= 1
-        return nothing
-    end
-
-    global_fbr_map, local_fbr_map, task_map = merge_bytemap(
-        srt,
-        coalescent.srt,
-        coalescent.tbl,
-        coalescent.ptr,
-        cutoffs,
-        P,
-        pos_stop,
-        shape,
-    )
-
-    coalesce_level!(
-        lvl.lvl, global_fbr_map, local_fbr_map, task_map, 1, P, coalescent.lvl
-    )
-end
-
-Base.@propagate_inbounds function merge_bytemap(
-    srt, lvl_srt, lvl_tbl, lvl_ptr, cutoffs, P, pos_stop, shape
-)
-    nnz = cutoffs[P + 1] - 1
-    q_stop = pos_stop * shape
-    @inbounds for tid in 1:P
-        if !isempty(srt[tid])
-            q_stop = max(q_stop, srt[tid][end])
+        ceil = 3
+        for p in 1:proc_id_upper - 1
+            ceil += length(ptr[p]) - 1
+            meta[tid][p + 2] == meta[tid][p + 1] + length(ptr[p]) - 2 && (ceil -= 1)
         end
-    end
-    pos_stop = max(pos_stop, fld(q_stop - 1, shape) + 1)
+        ceil += lfbr_upper - 1
+        shares_border && (ceil -= 1)
 
-    q_cutoffs = Vector{Int}(undef, P + 1)
-    q_cutoffs[1] = 1
-    q_cutoffs[P + 1] = q_stop + 1
-    # Partition the q-domain by approximate input rank. Equal q values stay
-    # within one bracket, so using lvl_tbl as a parallel dedup bitmap is safe.
-    @inbounds for part in 2:P
-        target = fld((part - 1) * nnz, P)
-        lo = 1
-        hi = q_stop + 1
-        while lo < hi
-            mid = (lo + hi) >>> 1
-            count = 0
-            for tid in 1:P
-                count += searchsortedfirst(srt[tid], mid) - 1
-            end
-            if count < target
-                lo = mid + 1
-            else
-                hi = mid
-            end
-        end
-        q_cutoffs[part] = lo
-    end
+        prefix = ptr[proc][pos_read] + nnz_cutoffs[proc] - 1
+        while pos_write < ceil
+            delta = ptr[proc][pos_read + 1] - ptr[proc][pos_read]
+            mul = delta > 0 ? 1 : 0
+            prefix += delta * mul
+            lvl_ptr[pos_write] = prefix
+            pos_write += 1
+            pos_read += 1
 
-    @assert length(lvl_tbl) >= pos_stop * shape
-
-    chunk_srt = Vector{Vector{Int}}(undef, P)
-    chunk_global = Vector{Vector{Int}}(undef, P)
-    chunk_local = Vector{Vector{Int}}(undef, P)
-    chunk_task = Vector{Vector{Int}}(undef, P)
-    Threads.@threads for part in 1:P
-        lo = q_cutoffs[part]
-        hi = q_cutoffs[part + 1]
-        local_srt = Int[]
-        map_count = 0
-        @inbounds for tid in 1:P
-            xs = srt[tid]
-            start = searchsortedfirst(xs, lo)
-            stop = searchsortedfirst(xs, hi) - 1
-            map_count += max(0, stop - start + 1)
-            for r in start:stop
-                q = xs[r]
-                if !lvl_tbl[q]
-                    lvl_tbl[q] = true
-                    push!(local_srt, q)
+            if pos_read > length(ptr[proc]) - 1
+                pos_read = 1
+                old_proc = proc
+                proc += 1
+                if proc > P
+                    break
                 end
-            end
-        end
-        sort!(local_srt)
-        local_global = Vector{Int}(undef, map_count)
-        local_local = Vector{Int}(undef, map_count)
-        local_task = Vector{Int}(undef, map_count)
-        k = 1
-        @inbounds for q in local_srt
-            for tid in 1:P
-                xs = srt[tid]
-                r = searchsortedfirst(xs, q)
-                if r <= length(xs) && xs[r] == q
-                    local_global[k] = q
-                    local_local[k] = q
-                    local_task[k] = tid
-                    k += 1
-                end
-            end
-        end
-        chunk_srt[part] = local_srt
-        chunk_global[part] = local_global
-        chunk_local[part] = local_local
-        chunk_task[part] = local_task
-    end
-
-    q_offsets = Vector{Int}(undef, P)
-    map_offsets = Vector{Int}(undef, P)
-    q_offset = 1
-    map_offset = 1
-    @inbounds for part in 1:P
-        q_offsets[part] = q_offset
-        map_offsets[part] = map_offset
-        q_offset += length(chunk_srt[part])
-        map_offset += length(chunk_global[part])
-    end
-
-    seen = q_offset - 1
-    resize!(lvl_srt, seen)
-    global_fbr_map = Vector{Int}(undef, nnz)
-    local_fbr_map = Vector{Int}(undef, nnz)
-    task_map = Vector{Int}(undef, nnz)
-    Threads.@threads for part in 1:P
-        @inbounds begin
-            q_len = length(chunk_srt[part])
-            map_len = length(chunk_global[part])
-            if q_len > 0
-                copyto!(lvl_srt, q_offsets[part], chunk_srt[part], 1, q_len)
-            end
-            if map_len > 0
-                copyto!(global_fbr_map, map_offsets[part], chunk_global[part], 1, map_len)
-                copyto!(local_fbr_map, map_offsets[part], chunk_local[part], 1, map_len)
-                copyto!(task_map, map_offsets[part], chunk_task[part], 1, map_len)
-            end
-        end
-    end
-
-    @assert length(lvl_ptr) >= pos_stop + 1
-    if seen == 0
-        lvl_ptr[1] = 1
-    else
-        Threads.@threads for r in 1:seen
-            @inbounds begin
-                p = fld(lvl_srt[r] - 1, shape) + 1
-                p_prev = r == 1 ? 0 : fld(lvl_srt[r - 1] - 1, shape) + 1
-                p_next = r == seen ? 0 : fld(lvl_srt[r + 1] - 1, shape) + 1
-                if p != p_prev
-                    lvl_ptr[p_prev + 1] = r
-                    lvl_ptr[p] = r
-                end
-                if p != p_next
-                    lvl_ptr[p + 1] = r + 1
+                if meta[tid][old_proc + 2] == meta[tid][old_proc + 1] + length(ptr[old_proc]) - 2
+                    pos_write -= 1
                 end
             end
         end
     end
-    return global_fbr_map, local_fbr_map, task_map
 end

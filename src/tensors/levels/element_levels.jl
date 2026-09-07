@@ -260,33 +260,79 @@ function coalesce_level!(
     end
 end
 
-function setup_coalesce!(lvl::ElementLevel, max_pos, coalescent)
+function setup_coalesce!(lvl::ElementLevel, max_pos, coalescent, meta, P, style::MergeFast)
     resize!(coalescent.val, max_pos)
     return true
 end
 
-function coalesce_fast!(tid, meta, P, lvl::ElementLevel, coalescent, was_dense)
+function setup_coalesce!(lvl::ElementLevel, max_pos, coalescent, meta, P, style::MergeNormalization; pos_map=nothing, was_dense=false)
+    resize!(coalescent.val, max_pos)
+    return true
+end
+
+function coalesce_fast!(tid, meta, P, lvl::ElementLevel{Vf}, coalescent, was_dense) where {Vf}
     val = lvl.val.data
     lvl_val = coalescent.val
 
-    fastmerge_element!(tid, val, P, lvl_val, was_dense)
+    fastmerge_element!(tid, meta, val, P, lvl_val, was_dense, Vf)
 end
 
-@inbounds function fastmerge_element!(tid, val, P, lvl_val, was_dense)
+@inbounds function fastmerge_element!(tid, meta, val, P, lvl_val, was_dense, Vf)
     if was_dense
+        ##Each channel's own val is a dense block (shape slots per position,
+        ##not a compact nnz list), so it can't be walked like the compact
+        ##branch below. Instead, walk positions using meta (as
+        ##fastmerge_spbytemap!'s ptr-merge does), copying whichever
+        ##channel's block owns each position. A channel's own last raw
+        ##position can be a "shared border" also claimed by the next
+        ##channel's first position (when the ancestor's border-trim drops a
+        ##duplicate entry); at exactly that boundary, merge the two
+        ##channels' blocks by preferring whichever value isn't the fill
+        ##value (there are no real duplicates within a position, so this is
+        ##unambiguous).
         total = length(lvl_val)
-        base, rem = divrem(total, P)
+        last_start = meta[tid][P + 1]
+        shape = last_start > 1 ? (total - length(val[P])) ÷ (last_start - 1) : total
+        max_pos = shape > 0 ? total ÷ shape : 0
+
+        base, rem = divrem(max_pos, P)
         offset = (tid - 1) * base + min(tid - 1, rem)
         chunksize = base + (tid <= rem ? 1 : 0)
-        lb = 1 + offset
-        ub = lb + chunksize - 1
+        pos_lb = 1 + offset
+        pos_ub = pos_lb + chunksize - 1
 
-        for q in lb:ub
-            s = zero(eltype(lvl_val))
-            for p in 1:P
-                s += val[p][q]
+        if chunksize > 0
+            proc = binary_search_meta(pos_lb, meta[tid])
+            local_pos = pos_lb - meta[tid][proc] + 1
+            for pos in pos_lb:pos_ub
+                while proc <= P && pos >= meta[tid][proc + 1]
+                    proc += 1
+                    local_pos = 1
+                end
+                channel = proc - 1
+                dst_base = (pos - 1) * shape
+                src_base = (local_pos - 1) * shape
+                for k in 1:shape
+                    lvl_val[dst_base + k] = val[channel][src_base + k]
+                end
+
+                if local_pos == 1 && channel > 1
+                    prev_channel = channel - 1
+                    prev_clean_count = meta[tid][proc] - meta[tid][proc - 1]
+                    prev_raw_count = length(val[prev_channel]) ÷ shape
+                    if prev_raw_count > prev_clean_count
+                        prev_src_base = (prev_raw_count - 1) * shape
+                        for k in 1:shape
+                            if lvl_val[dst_base + k] == Vf
+                                pv = val[prev_channel][prev_src_base + k]
+                                pv != Vf && (lvl_val[dst_base + k] = pv)
+                            end
+                        end
+                    end
+                end
+
+                local_pos += 1
             end
-            lvl_val[q] = s
         end
     else
         nnz_cutoffs = Vector{Int}(undef, P + 1)

@@ -1,3 +1,6 @@
+struct MergeFast end
+struct MergeNormalization end
+
 Base.@propagate_inbounds function binary_search_lb(target, arr, lo, hi)
     result = -1
     while lo <= hi
@@ -46,7 +49,7 @@ end
     hi = length(arr)
     @assert target > 0
 
-    if target >= arr[hi]
+    if target > arr[hi]
         return -1
     end
 
@@ -55,11 +58,35 @@ end
         if arr[mid] <= target && arr[mid + 1] > target
             return mid
         elseif arr[mid] > target
-            hi = mid
+            hi = mid - 1
         else
-            lo = mid
+            lo = mid + 1
         end
     end
 
     return -1
+end
+
+
+@inbounds function binary_search_meta(target::Int, arr)
+    lo = 1
+    hi = length(arr) - 1
+    @assert target > 0
+
+    if target >= arr[end]
+        return length(arr)
+    end
+
+    while lo <= hi
+        mid = div(lo + hi, 2)
+        if arr[mid] <= target && arr[mid + 1] > target
+            return mid
+        elseif arr[mid] > target
+            hi = mid - 1
+        else
+            lo = mid + 1
+        end
+    end
+
+    return lo - 1
 end

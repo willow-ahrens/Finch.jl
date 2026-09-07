@@ -569,7 +569,8 @@ end
 
 supports_reassembly(::VirtualCoalesceLevel) = false
 init_gfm(P) = [[1] for _ in 1:P]
-init_fast_meta(P) = [ones(Int, P) for _ in 1:P]
+init_fast_meta(P) = [ones(Int, P + 1) for _ in 1:P]
+init_posmap(P) = [1 for _ in 1:P + 1]
 
 function freeze_level!(ctx, lvl::VirtualCoalesceLevel, pos)
     @assert !is_on_device(ctx, lvl.device)
@@ -582,19 +583,18 @@ function freeze_level!(ctx, lvl::VirtualCoalesceLevel, pos)
     max_pos = factor
     mode = lvl.mode
 
-    global_fbr_map = freshen(ctx, :gfm)
-    lastpos = freshen(ctx, :lastpos)
+    meta = freshen(ctx, :meta)
     tid = freshen(ctx, :tid)
     dec = freshen(ctx, :declared)
     if mode == :fast
         push_preamble!(
             ctx,
             quote
-                $dec = Finch.setup_coalesce!($(lvl_e), $max_pos, $(lvl_c))
-                $lastpos = Finch.init_fast_meta($P)
+                $meta = Finch.init_fast_meta($P)
+                $dec = Finch.setup_coalesce!($(lvl_e), $max_pos, $(lvl_c), nothing, $P, MergeFast())
                 if $dec
                     Threads.@threads for $tid in 1:($P)
-                        Finch.coalesce_fast!($tid, $lastpos, $P, $(lvl_e), $(lvl_c), false)
+                        Finch.coalesce_fast!($tid, $meta, $P, $(lvl_e), $(lvl_c), false)
                     end
                 end
             end,
@@ -605,9 +605,11 @@ function freeze_level!(ctx, lvl::VirtualCoalesceLevel, pos)
         mask = freshen(ctx, :mask)
         nnz = freshen(ctx, :nnz)
         sid = freshen(ctx, :sid)
+        unordered = freshen(ctx, :unordered)
+        pos_map = freshen(ctx, :pos_map)
         push_preamble!(ctx,
             quote
-                $nnz = Finch.get_total_nnz($(lvl_e))
+                $nnz, $unordered = Finch.get_total_nnz($(lvl_e), true)
                 if $nnz > 0
                     Threads.@threads for $tid in 1:($P)
                         $lb, $ub = Finch.balance(
@@ -709,14 +711,7 @@ function freeze_level!(ctx, lvl::VirtualCoalesceLevel, pos)
                         end)
                     end
 
-                    $dec = Finch.setup_coalesce!($(lvl_e).accumulator, $max_pos, $(lvl_c))
-                    if $dec
-                        Threads.@threads for $tid in 1:($P)
-                            Finch.coalesce_fast!(
-                                $tid, nothing, $P, $(lvl_e), $(lvl_c), false
-                            )
-                        end
-                    else
+                    if !unordered
                         Threads.@threads for $tid in 1:($P)
                             $(contain(ctx) do ctx_2
                                 diff = Dict()
@@ -773,11 +768,20 @@ function freeze_level!(ctx, lvl::VirtualCoalesceLevel, pos)
                                 nothing
                             end)
                         end
-                        
-                        $lastpos = Finch.init_fast_meta($P)
+                        $pos_map = Finch.init_posmap($P)
+                        $meta = Finch.init_fast_meta($P)
+                        Finch.setup_coalesce!($(lvl_e), $max_pos, $(lvl_c), $meta, $P, MergeNormalization(); pos_map=$pos_map, was_dense=false)
                         Threads.@threads for $tid in 1:($P)
                             Finch.coalesce_fast!(
-                                $tid, $lastpos, $P, $(lvl_e).lvl, $(lvl_c), false
+                                $tid, $meta, $P, $(lvl_e).lvl, $(lvl_c), false
+                            )
+                        end
+                    else
+                        $meta = Finch.init_fast_meta($P)
+                        Finch.setup_coalesce!($(lvl_e).accumulator, $max_pos, $(lvl_c), $meta, $P, MergeNormalization(), pos_map=nothing)
+                        Threads.@threads for $tid in 1:($P)
+                            Finch.coalesce_fast!(
+                                $tid, $meta, $P, $(lvl_e), $(lvl_c), false
                             )
                         end
                     end
@@ -833,8 +837,12 @@ function instantiate(ctx, fbr::VirtualHollowSubFiber{VirtualCoalesceLevel}, mode
     )
 end
 
-function setup_coalesce!(lvl::CoalesceLevel, max_pos, coalescent)
-    return setup_coalesce!(lvl.lvl, max_pos, coalescent)
+function setup_coalesce!(lvl::CoalesceLevel, max_pos, coalescent, meta, P, style::MergeNormalization; pos_map=nothing, was_dense=false)
+    return setup_coalesce!(lvl.lvl, max_pos, coalescent, meta, P, style; pos_map, was_dense)
+end
+
+function setup_coalesce!(lvl::CoalesceLevel, max_pos, coalescent, meta, P, style::MergeFast)
+    return setup_coalesce!(lvl.lvl, max_pos, coalescent, meta, P, style; pos_map)
 end
 
 function coalesce_level!(
@@ -853,7 +861,6 @@ end
 
 ###Load balancer stuff
 
-struct MergeNormalization end
 
 @inbounds function decrement_idxs(idxs, shapes)
     idxs = copy(idxs)
@@ -923,9 +930,10 @@ end
     return idxs
 end
 
-function get_total_nnz(lvl::AbstractLevel)
+function get_total_nnz(lvl::AbstractLevel, unordered)
     while !(lvl isa ElementLevel)
         lvl = lvl.lvl
+        unordered = unordered & !isa(lvl, SparseListLevel)
     end
-    sum(length, lvl.val.data)
+    return sum(length, lvl.val.data), unordered
 end
