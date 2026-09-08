@@ -260,6 +260,10 @@ function coalesce_level!(
     end
 end
 
+function sample(tid, lvl::ElementLevel, buffer)
+    return (), rand(1:length(lvl.val.data[tid]))
+end
+
 function setup_coalesce!(lvl::ElementLevel, max_pos, coalescent, meta, P, style::MergeFast)
     resize!(coalescent.val, max_pos)
     return true
@@ -279,17 +283,6 @@ end
 
 @inbounds function fastmerge_element!(tid, meta, val, P, lvl_val, was_dense, Vf)
     if was_dense
-        ##Each channel's own val is a dense block (shape slots per position,
-        ##not a compact nnz list), so it can't be walked like the compact
-        ##branch below. Instead, walk positions using meta (as
-        ##fastmerge_spbytemap!'s ptr-merge does), copying whichever
-        ##channel's block owns each position. A channel's own last raw
-        ##position can be a "shared border" also claimed by the next
-        ##channel's first position (when the ancestor's border-trim drops a
-        ##duplicate entry); at exactly that boundary, merge the two
-        ##channels' blocks by preferring whichever value isn't the fill
-        ##value (there are no real duplicates within a position, so this is
-        ##unambiguous).
         total = length(lvl_val)
         last_start = meta[tid][P + 1]
         shape = last_start > 1 ? (total - length(val[P])) ÷ (last_start - 1) : total

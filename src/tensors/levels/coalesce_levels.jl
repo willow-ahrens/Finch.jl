@@ -461,6 +461,9 @@ Base.summary(lvl::VirtualCoalesceLevel) = "Coalesce($(lvl.Lvl))"
 function virtual_level_resize!(ctx, lvl::VirtualCoalesceLevel, dims...)
     lvl.lvl = virtual_level_resize!(ctx, lvl.lvl, dims...)
     lvl.coalescent = virtual_level_resize!(ctx, lvl.coalescent, dims...)
+    if lvl.mode != :fast
+        lvl.accumulator = virtual_level_resize!(ctx, lvl.accumulator, dims...)
+    end
     return lvl
 end
 virtual_level_size(ctx, lvl::VirtualCoalesceLevel) = virtual_level_size(ctx, lvl.lvl)
@@ -936,4 +939,8 @@ function get_total_nnz(lvl::AbstractLevel, unordered)
         unordered = unordered & !isa(lvl, SparseListLevel)
     end
     return sum(length, lvl.val.data), unordered
+end
+
+function sample(tid, lvl::CoalesceLevel, buffer)
+    tup, idx = sample(tid, lvl.lvl, buffer)
 end

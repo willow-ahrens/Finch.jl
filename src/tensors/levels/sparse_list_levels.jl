@@ -617,37 +617,16 @@ function unfurl(
     )
 end
 
-function coalesce_level!(
-    lvl::SparseListLevel, global_fbr_map, factor, max_dim, P, coalescent, mode
-)
-    idx = lvl.idx.data
-    ptr = lvl.ptr.data
+function sample(tid, lvl::SparseListLevel, buffer)
+    tup, idx = sample(tid, lvl.lvl, buffer)
+
+    lfbr = binary_search(idx, lvl.ptr.data[tid])
+    acc = lvl.ptr.data[tid][lfbr]
+    delta = idx - acc
+    @assert delta >= 0
     
-    lvl_ptr = coalescent.ptr
-    lvl_idx = coalescent.idx
-    max_idx = lvl.shape
-
-    if sum(length, idx) < 1
-        return nothing
-    end
-
-    if factor > 1
-        unwrap_dense(global_fbr_map, factor, P)
-        was_dense = true
-        factor = 1
-    else
-        was_dense = false
-    end
-
-    if mode == :weak
-        gfm2, max_dim2 = merge_splist_weak(global_fbr_map, ptr, idx, P, max_dim, max_idx, was_dense, lvl_ptr, lvl_idx)
-    else
-        gfm2, max_dim2 = merge_splist(global_fbr_map, ptr, idx, P, max_dim, max_idx, was_dense, lvl_ptr, lvl_idx)
-    end
-
-    coalesce_level!(
-        lvl.lvl, gfm2, factor, max_dim2, P, coalescent.lvl, mode
-    )
+    idx_2 = lvl.idx.data[tid][lfbr + delta]
+    return (idx_2, tup...), lfbr
 end
 
 function setup_coalesce!(lvl::SparseListLevel, max_pos, coalescent, meta, P, style::MergeFast)

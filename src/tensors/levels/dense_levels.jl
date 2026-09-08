@@ -271,16 +271,16 @@ function unfurl(
     )
 end
 
+function sample(tid, lvl::DenseLevel, buffer)
+    tup, idx = sample(tid, lvl, buffer)
+    return tup, div(idx, lvl.shape)
+end
+
 function setup_coalesce!(lvl::DenseLevel, max_pos, coalescent, meta, P, style::MergeFast)
     setup_coalesce!(lvl.lvl, max_pos * lvl.shape, coalescent.lvl, meta, P, style)
 end
 
 function setup_coalesce!(lvl::DenseLevel, max_pos, coalescent, meta, P, style::MergeNormalization; pos_map=nothing, was_dense=false)
-    if !isnothing(pos_map)
-        for p in 1:P
-            pos_map[p + 1] *= lvl.shape
-        end
-    end
     setup_coalesce!(
         lvl.lvl, max_pos * lvl.shape, coalescent.lvl, meta, P, style; pos_map=pos_map, was_dense=true
     )
