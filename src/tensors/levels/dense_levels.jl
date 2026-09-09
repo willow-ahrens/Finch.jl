@@ -191,6 +191,7 @@ end
 
 virtual_level_eltype(lvl::VirtualDenseLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_fill_value(lvl::VirtualDenseLevel) = virtual_level_fill_value(lvl.lvl)
+@inline sample_dims(lvl::VirtualDenseLevel) = sample_dims(lvl.lvl)
 
 postype(lvl::VirtualDenseLevel) = postype(lvl.lvl)
 
@@ -271,8 +272,8 @@ function unfurl(
     )
 end
 
-function sample(tid, lvl::DenseLevel, buffer)
-    tup, idx = sample(tid, lvl, buffer)
+function sample(tid, lvl::DenseLevel)
+    tup, idx = sample(tid, lvl.lvl)
     return tup, div(idx, lvl.shape)
 end
 

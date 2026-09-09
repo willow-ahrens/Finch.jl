@@ -296,6 +296,7 @@ end
 
 virtual_level_eltype(lvl::VirtualSparseListLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_fill_value(lvl::VirtualSparseListLevel) = virtual_level_fill_value(lvl.lvl)
+@inline sample_dims(lvl::VirtualSparseListLevel) = 1 + sample_dims(lvl.lvl)
 
 postype(lvl::VirtualSparseListLevel) = postype(lvl.lvl)
 
@@ -617,16 +618,16 @@ function unfurl(
     )
 end
 
-function sample(tid, lvl::SparseListLevel, buffer)
-    tup, idx = sample(tid, lvl.lvl, buffer)
+function sample(tid, lvl::SparseListLevel)
+    tup, idx = sample(tid, lvl.lvl)
 
     lfbr = binary_search(idx, lvl.ptr.data[tid])
     acc = lvl.ptr.data[tid][lfbr]
     delta = idx - acc
     @assert delta >= 0
-    
-    idx_2 = lvl.idx.data[tid][lfbr + delta]
-    return (idx_2, tup...), lfbr
+
+    idx_2 = lvl.idx.data[tid][acc + delta]
+    return (tup..., idx_2), lfbr
 end
 
 function setup_coalesce!(lvl::SparseListLevel, max_pos, coalescent, meta, P, style::MergeFast)
@@ -660,7 +661,7 @@ function setup_coalesce!(lvl::SparseListLevel, max_pos, coalescent, meta, P, sty
         for p in 1:P - 1
             if (pos_map[p + 1] == pos_map[p + 2] - (length(lvl.ptr.data[p + 1]) - 1) + 1) && lvl.idx.data[p][end] == lvl.idx.data[p + 1][1]
                 nnz -= 1
-                resize!(lvl.idx.data[p], length(lvl.idx.data[p]) - 1)
+                lvl.idx.data[p][end] = -1
             end
             pos_map[p + 1] = length(lvl.idx.data[p])
         end
@@ -672,7 +673,7 @@ function setup_coalesce!(lvl::SparseListLevel, max_pos, coalescent, meta, P, sty
                 pos_map[p + 2] - (length(lvl.ptr.data[p + 1]) - 1) + first_nz_pos_p1 + 1) &&
                lvl.idx.data[p][end] == lvl.idx.data[p + 1][1]
                 nnz -= 1
-                resize!(lvl.idx.data[p], length(lvl.idx.data[p]) - 1)
+                lvl.idx.data[p][end] = -1
             end
             pos_map[p + 1] = length(lvl.idx.data[p])
         end
@@ -702,6 +703,9 @@ end
     nnz_cutoffs[1] = 1
     for p in 2:P+1
         nnz_cutoffs[p] = nnz_cutoffs[p - 1] + length(idx[p - 1])
+        if idx[p - 1][end] < 0
+            nnz_cutoffs[p] -= 1
+        end
     end
     nnz = nnz_cutoffs[end] - 1
     max_pos = length(lvl_ptr) - 1
@@ -769,9 +773,12 @@ end
         idx_write = nnz_cutoffs[proc] + nz_id_lower - 1
         ceil = idx_write + chunksize
         while idx_write < ceil
-            lvl_idx[idx_write] = idx[proc][idx_read]
+            val = idx[proc][idx_read]
+            if val > 0
+                lvl_idx[idx_write] = val
+                idx_write += 1
+            end
             idx_read += 1
-            idx_write += 1
 
             if idx_read > length(idx[proc])
                 idx_read = 1
@@ -780,47 +787,59 @@ end
         end
 
         ##copy pos
-        proc = proc_id_lower
-        pos_read = lfbr_lower
+        ##max_pos == 1 means lvl_ptr is just [1, nnz+1], already set by setup_coalesce!
+        if max_pos != 1
+            proc = proc_id_lower
+            pos_read = lfbr_lower
 
-        pos_write = 2
-        for p in 1:proc - 1
-            pos_write += length(ptr[p]) - 1
-            pos_offsets[tid][p + 2] == pos_offsets[tid][p + 1] + length(ptr[p]) - 2 && (pos_write -= 1)
-        end
-        pos_write += lfbr_lower - 1
+            pos_write = 2
+            for p in 1:proc - 1
+                pos_write += length(ptr[p]) - 1
+                (idx[p][end] < 0 || pos_offsets[tid][P + 1 + p] == 1) && (pos_write -= 1)
+            end
+            pos_write += lfbr_lower - 1
 
-        ceil = 3
-        for p in 1:proc_id_upper - 1
-            ceil += length(ptr[p]) - 1
-            pos_offsets[tid][p + 2] == pos_offsets[tid][p + 1] + length(ptr[p]) - 2 && (ceil -= 1)
-        end
-        ceil += lfbr_upper - 1
-        shares_border && (ceil -= 1)
+            ceil = 3
+            for p in 1:proc_id_upper - 1
+                ceil += length(ptr[p]) - 1
+                (idx[p][end] < 0 || pos_offsets[tid][P + 1 + p] == 1) && (ceil -= 1)
+            end
+            ceil += lfbr_upper - 1
+            shares_border && (ceil -= 1)
 
-        prefix = ptr[proc][pos_read] + nnz_cutoffs[proc] - 1
-        while pos_write < ceil
-            delta = ptr[proc][pos_read + 1] - ptr[proc][pos_read ]
-            prefix += delta
-            lvl_ptr[pos_write] = prefix
-            pos_write += 1
-            pos_read += 1
-
-            if pos_read > length(ptr[proc]) - 1
-                pos_read = 1
-                old_proc = proc
-                proc += 1
-                if proc > P
-                    break
+            prefix = ptr[proc][pos_read] + nnz_cutoffs[proc] - 1
+            while pos_write < ceil
+                delta = ptr[proc][pos_read + 1] - ptr[proc][pos_read ]
+                if pos_read == length(ptr[proc]) - 1 && idx[proc][end] < 0
+                    delta -= 1
                 end
-                if pos_offsets[tid][old_proc + 2] == pos_offsets[tid][old_proc + 1] + length(ptr[old_proc]) - 2
-                    pos_write -= 1
+                prefix += delta
+                lvl_ptr[pos_write] = prefix
+                pos_write += 1
+                pos_read += 1
+
+                if pos_read > length(ptr[proc]) - 1
+                    pos_read = 1
+                    old_proc = proc
+                    proc += 1
+                    if proc > P
+                        break
+                    end
+                    if idx[old_proc][end] < 0 || pos_offsets[tid][P + 1 + old_proc] == 1
+                        pos_write -= 1
+                    end
                 end
             end
         end
 
         for p in 1:P
             pos_offsets[tid][p + 1] = nnz_cutoffs[p]
+            if idx[p][end] < 0
+                pos_offsets[tid][p + 1] += 1
+                pos_offsets[tid][P + 1 + p] = 1
+            else
+                pos_offsets[tid][P + 1 + p] = 0
+            end
         end
     end
 end

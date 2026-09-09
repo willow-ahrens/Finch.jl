@@ -138,6 +138,7 @@ virtual_level_size(ctx, ::VirtualElementLevel) = ()
 virtual_level_ndims(ctx, lvl::VirtualElementLevel) = 0
 virtual_level_eltype(lvl::VirtualElementLevel) = lvl.Tv
 virtual_level_fill_value(lvl::VirtualElementLevel) = lvl.Vf
+@inline sample_dims(::VirtualElementLevel) = 0
 
 postype(lvl::VirtualElementLevel) = lvl.Tp
 
@@ -260,7 +261,7 @@ function coalesce_level!(
     end
 end
 
-function sample(tid, lvl::ElementLevel, buffer)
+function sample(tid, lvl::ElementLevel)
     return (), rand(1:length(lvl.val.data[tid]))
 end
 

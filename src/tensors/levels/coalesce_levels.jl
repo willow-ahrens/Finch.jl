@@ -256,6 +256,8 @@ mutable struct VirtualCoalesceLevel <: AbstractVirtualLevel
     Schedule
     qos_stop
     mode
+    sampler
+    declared
 end
 
 postype(lvl::VirtualCoalesceLevel) = postype(lvl.lvl)
@@ -304,6 +306,11 @@ function virtualize(
     schedule_2 = virtualize(ctx, :($tag.schedule), Schedule, tag)
     accumulator_2 = virtualize(ctx, :($tag.accumulator), Accumulator, tag)
     qos_stop = freshen(ctx, tag, :_qos_stop)
+    if mode == :fast
+        sampler = nothing
+    else
+        sampler = freshen(ctx, tag, :sampler)
+    end
     VirtualCoalesceLevel(
         tag,
         device_2,
@@ -318,6 +325,8 @@ function virtualize(
         Schedule,
         qos_stop,
         mode,
+        sampler,
+        false,
     )
 end
 
@@ -338,6 +347,8 @@ function distribute_level(
         lvl.Schedule,
         lvl.qos_stop,
         lvl.mode,
+        lvl.sampler,
+        lvl.declared,
     )
 end
 
@@ -358,6 +369,8 @@ function distribute_level(
         lvl.Schedule,
         lvl.qos_stop,
         lvl.mode,
+        lvl.sampler,
+        lvl.declared,
     )
 end
 
@@ -378,6 +391,8 @@ function distribute_level(
         lvl.Schedule,
         lvl.qos_stop,
         lvl.mode,
+        lvl.sampler,
+        lvl.declared,
     )
 end
 
@@ -392,12 +407,29 @@ function distribute_level(
         channel_task = VirtualMemoryChannel(get_task_num(arch), multi_channel_dev, arch)
         lvl_2 = distribute_level(ctx, lvl.lvl, channel_task, diff, style)
         lvl_2 = thaw_level!(ctx, lvl_2, value(lvl.qos_stop, Tp))
+
         push_epilogue!(
             ctx,
             contain(ctx) do ctx_2
                 freeze_level!(ctx_2, lvl_2, value(lvl.qos_stop))
             end,
         )
+
+        if lvl.mode != :fast && lvl.declared
+            tid = ctx(get_task_num(arch))
+            phys_level = ctx(lvl)
+            push_epilogue!(
+                ctx,
+                quote
+                    for s in 1:100
+                        $(lvl.sampler)[($tid - 1) * 100 + s] = Finch.sample(
+                            $tid, $phys_level
+                        )
+                    end
+                end,
+            )
+        end
+        
         diff[lvl.tag] = VirtualCoalesceLevel(
             lvl.tag,
             lvl.device,
@@ -412,6 +444,8 @@ function distribute_level(
             lvl.Schedule,
             lvl.qos_stop,
             lvl.mode,
+            lvl.sampler,
+            lvl.declared,
         )
     else
         dev = get_device(get_device(arch))
@@ -430,6 +464,8 @@ function distribute_level(
             lvl.Schedule,
             lvl.qos_stop,
             lvl.mode,
+            lvl.sampler,
+            lvl.declared,
         )
     end
 end
@@ -452,6 +488,8 @@ function redistribute(ctx::AbstractCompiler, lvl::VirtualCoalesceLevel, diff)
             lvl.Schedule,
             lvl.qos_stop,
             lvl.mode,
+            lvl.sampler,
+            lvl.declared,
         ),
     )
 end
@@ -469,9 +507,19 @@ end
 virtual_level_size(ctx, lvl::VirtualCoalesceLevel) = virtual_level_size(ctx, lvl.lvl)
 virtual_level_eltype(lvl::VirtualCoalesceLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_fill_value(lvl::VirtualCoalesceLevel) = virtual_level_fill_value(lvl.lvl)
+@inline sample_dims(lvl::VirtualCoalesceLevel) = sample_dims(lvl.lvl)
 
 function declare_level!(ctx, lvl::VirtualCoalesceLevel, pos, init)
     @assert !is_on_device(ctx, lvl.device)
+    if !isnothing(lvl.sampler)
+        P = ctx(get_num_tasks(lvl.device))
+        tsize = sample_dims(lvl)
+        push_preamble!(ctx,
+            quote
+                $(lvl.sampler) = Vector{NTuple{$tsize,Int}}(undef, 100 * $P)
+            end,
+        )
+    end
     push_preamble!(
         ctx,
         contain(ctx) do ctx_2
@@ -508,6 +556,7 @@ function declare_level!(ctx, lvl::VirtualCoalesceLevel, pos, init)
     )
     coalescent_2 = declare_level!(ctx, lvl.coalescent, literal(0), init)
     freeze_level!(ctx, coalescent_2, literal(0))
+    lvl.declared = true
     lvl
 end
 
@@ -572,7 +621,7 @@ end
 
 supports_reassembly(::VirtualCoalesceLevel) = false
 init_gfm(P) = [[1] for _ in 1:P]
-init_fast_meta(P) = [ones(Int, P + 1) for _ in 1:P]
+init_fast_meta(P) = [vcat(ones(Int, P + 1), zeros(Int, P)) for _ in 1:P]
 init_posmap(P) = [1 for _ in 1:P + 1]
 
 function freeze_level!(ctx, lvl::VirtualCoalesceLevel, pos)
@@ -610,14 +659,25 @@ function freeze_level!(ctx, lvl::VirtualCoalesceLevel, pos)
         sid = freshen(ctx, :sid)
         unordered = freshen(ctx, :unordered)
         pos_map = freshen(ctx, :pos_map)
+        shapes = freshen(ctx, :shapes)
         push_preamble!(ctx,
             quote
+                if sizeof($(lvl.sampler)) > 0
+                    weight_sample($(lvl.sampler), $(lvl_e))
+                    sort!($(lvl.sampler), by=reverse)
+                end
                 $nnz, $unordered = Finch.get_total_nnz($(lvl_e), true)
+                $shapes = Finch.level_size($(lvl_e))
                 if $nnz > 0
                     Threads.@threads for $tid in 1:($P)
-                        $lb, $ub = Finch.balance(
-                            $(lvl_e).lvl, $tid, $P, $nnz, Finch.MergeNormalization()
-                        )
+                        if sizeof($(lvl.sampler)) > 0
+                            $lb, $ub = Finch.balance($(lvl.sampler), $tid, $P, $shapes, MergeRandom())
+                        else
+                            $lb, $ub = nothing, nothing ##TODO: all dense pass, can make optimization
+                        end
+                        # $lb, $ub = Finch.balance(
+                        #     $(lvl_e).lvl, $tid, $P, $nnz, Finch.MergeNormalization()
+                        # )
                         $mask = Finch.tuplemask($lb, $ub)
 
                         $(contain(ctx) do ctx_2
@@ -845,7 +905,7 @@ function setup_coalesce!(lvl::CoalesceLevel, max_pos, coalescent, meta, P, style
 end
 
 function setup_coalesce!(lvl::CoalesceLevel, max_pos, coalescent, meta, P, style::MergeFast)
-    return setup_coalesce!(lvl.lvl, max_pos, coalescent, meta, P, style; pos_map)
+    return setup_coalesce!(lvl.lvl, max_pos, coalescent, meta, P, style)
 end
 
 function coalesce_level!(
@@ -878,6 +938,26 @@ end
         end
     end
     error("nnz too small to load balance across P processors")
+end
+
+@inbounds function balance(sampler::Vector{NTuple{m,Int}}, tid, P, shapes, style::MergeRandom) where {m}
+    neg = ntuple(_ -> -1, m)
+    start = searchsortedlast(sampler, neg; by=reverse) + 1
+    n = length(sampler) - start + 1
+    base = div(n, P)
+    remainder = n % P
+
+    lb_at(t) = t == 1 ? ntuple(_ -> 1, m) : sampler[start + (t - 1) * base + min(t - 1, remainder)]
+
+    lb = Tuple(lb_at(tid))
+
+    if tid == P
+        ub = Tuple(shapes)
+    else
+        ub = Tuple(decrement_idxs(collect(lb_at(tid + 1)), shapes))
+    end
+
+    return (lb, ub)
 end
 
 @inbounds function balance(lvl, tid, P, nnz, style::Union{MergeNormalization})
@@ -941,6 +1021,24 @@ function get_total_nnz(lvl::AbstractLevel, unordered)
     return sum(length, lvl.val.data), unordered
 end
 
-function sample(tid, lvl::CoalesceLevel, buffer)
-    tup, idx = sample(tid, lvl.lvl, buffer)
+function sample(tid, lvl::CoalesceLevel)
+    tup, idx = sample(tid, lvl.lvl)
+    return tup
+end
+
+function weight_sample(sampler::Vector{NTuple{m, Int}}, lvl::AbstractLevel) where {m}
+    while !(lvl isa ElementLevel)
+        lvl = lvl.lvl
+    end
+    nnz = sum(length, lvl.val.data)
+    nnz == 0 && return
+    P = length(lvl.val.data)
+    neg = ntuple(_ -> -1, m)
+
+    for p in 1:P
+        active = round(Int, 100 * length(lvl.val.data[p]) / nnz)
+        for loc in (p - 1) * 100 + active + 1:p * 100
+            sampler[loc] = neg
+        end
+    end
 end

@@ -170,7 +170,6 @@ function data_rep_level(
 ) where {Ti,Ptr,Tbl,Srt,Lvl}
     SparseData(data_rep_level(Lvl))
 end
-
 function isstructequal(a::T, b::T) where {T<:SparseByteMap}
     a.shape == b.shape &&
         a.ptr == b.ptr &&
@@ -308,6 +307,7 @@ end
 
 virtual_level_eltype(lvl::VirtualSparseByteMapLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_fill_value(lvl::VirtualSparseByteMapLevel) = virtual_level_fill_value(lvl.lvl)
+@inline sample_dims(lvl::VirtualSparseByteMapLevel) = sample_dims(lvl.lvl)
 
 postype(lvl::VirtualSparseByteMapLevel) = postype(lvl.lvl)
 
