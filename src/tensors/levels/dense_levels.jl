@@ -192,6 +192,7 @@ end
 virtual_level_eltype(lvl::VirtualDenseLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_fill_value(lvl::VirtualDenseLevel) = virtual_level_fill_value(lvl.lvl)
 @inline sample_dims(lvl::VirtualDenseLevel) = 1 + sample_dims(lvl.lvl)
+@inline all_dense(lvl::VirtualDenseLevel) = true & all_dense(lvl.lvl)
 
 postype(lvl::VirtualDenseLevel) = postype(lvl.lvl)
 
@@ -291,4 +292,8 @@ end
 
 function coalesce_fast!(tid, meta, P, lvl::DenseLevel, coalescent::DenseLevel, was_dense)
     coalesce_fast!(tid, meta, P, lvl.lvl, coalescent.lvl, true)
+end
+
+function coalesce_dense!(tid, meta, P, lvl::DenseLevel, coalescent::DenseLevel)
+    coalesce_dense!(tid, meta, P, lvl.lvl, coalescent.lvl)
 end

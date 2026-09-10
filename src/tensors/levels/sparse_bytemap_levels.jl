@@ -308,6 +308,7 @@ end
 virtual_level_eltype(lvl::VirtualSparseByteMapLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_fill_value(lvl::VirtualSparseByteMapLevel) = virtual_level_fill_value(lvl.lvl)
 @inline sample_dims(lvl::VirtualSparseByteMapLevel) = 1 + sample_dims(lvl.lvl)
+@inline all_dense(lvl::VirtualSparseByteMapLevel) = true & all_dense(lvl.lvl)
 
 postype(lvl::VirtualSparseByteMapLevel) = postype(lvl.lvl)
 
@@ -736,12 +737,24 @@ function coalesce_fast!(tid, meta, P, lvl::SparseByteMapLevel, coalescent, was_d
     coalesce_fast!(tid, meta, P, lvl.lvl, coalescent.lvl, true)
 end
 
+function coalesce_dense!(tid, meta, P, lvl::SparseByteMapLevel, coalescent)
+    ptr = lvl.ptr.data
+    srt = lvl.srt.data
+    tbl = lvl.tbl.data
+    lvl_ptr = coalescent.ptr
+    lvl_tbl = coalescent.tbl
+    lvl_srt = coalescent.srt
+
+    fastmerge_spbytemap!(tid, meta, ptr, srt, tbl, P, lvl.shape, lvl_ptr, lvl_srt, lvl_tbl)
+    coalesce_dense!(tid, meta, P, lvl.lvl, coalescent.lvl)
+end
+
 @inbounds function fastmerge_spbytemap!(tid, meta, ptr, srt, tbl, P, shape, lvl_ptr, lvl_srt, lvl_tbl)
     nnz_cutoffs = Vector{Int}(undef, P + 1)
     nnz_cutoffs[1] = 1
     for p in 2:P+1
         nnz_cutoffs[p] = nnz_cutoffs[p - 1] + length(srt[p - 1])
-        if srt[p - 1][end] < 0
+        if !isempty(srt[p - 1]) && srt[p - 1][end] < 0
             nnz_cutoffs[p] -= 1
         end
     end

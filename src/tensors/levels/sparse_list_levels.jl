@@ -297,6 +297,7 @@ end
 virtual_level_eltype(lvl::VirtualSparseListLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_fill_value(lvl::VirtualSparseListLevel) = virtual_level_fill_value(lvl.lvl)
 @inline sample_dims(lvl::VirtualSparseListLevel) = 1 + sample_dims(lvl.lvl)
+@inline all_dense(lvl::VirtualSparseListLevel) = false
 
 postype(lvl::VirtualSparseListLevel) = postype(lvl.lvl)
 

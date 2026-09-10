@@ -139,6 +139,7 @@ virtual_level_ndims(ctx, lvl::VirtualElementLevel) = 0
 virtual_level_eltype(lvl::VirtualElementLevel) = lvl.Tv
 virtual_level_fill_value(lvl::VirtualElementLevel) = lvl.Vf
 @inline sample_dims(::VirtualElementLevel) = 0
+@inline all_dense(lvl::VirtualElementLevel) = true
 
 postype(lvl::VirtualElementLevel) = lvl.Tp
 
@@ -280,6 +281,24 @@ function coalesce_fast!(tid, meta, P, lvl::ElementLevel{Vf}, coalescent, was_den
     lvl_val = coalescent.val
 
     fastmerge_element!(tid, meta, val, P, lvl_val, was_dense, Vf)
+end
+
+function coalesce_dense!(tid, meta, P, lvl::ElementLevel, coalescent)
+    val = lvl.val.data
+    lvl_val = coalescent.val
+
+    fastmerge_element_dense!(tid, val, P, lvl_val)
+end
+
+@inbounds function fastmerge_element_dense!(tid, val, P, lvl_val)
+    total = length(lvl_val)
+    base, rem = divrem(total, P)
+    lower = (tid - 1) * base + min(tid - 1, rem) + 1
+    upper = tid * base + min(tid, rem)
+
+    for k in lower:upper
+        lvl_val[k] = val[tid][k]
+    end
 end
 
 @inbounds function fastmerge_element!(tid, meta, val, P, lvl_val, was_dense, Vf)

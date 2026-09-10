@@ -1,10 +1,5 @@
 using Finch, Random, Statistics
 
-##Monkeypatch Finch.balance(::MergeRandom) to record the real (lb, ub) it picks
-##per tid, without touching library source. Body is copy-pasted verbatim from
-##coalesce_levels.jl so behavior is unchanged -- we only add a capture.
-##Uses a preallocated Vector (not a Dict) since P threads call this concurrently
-##and Base.Dict is not safe for concurrent insertion.
 CAPTURED = Vector{Tuple}(undef, 0)
 
 import Finch: balance, decrement_idxs, MergeRandom, build_sampler, sample
@@ -18,12 +13,10 @@ import Finch: balance, decrement_idxs, MergeRandom, build_sampler, sample
     lb_at(t) = t == 1 ? ntuple(_ -> 1, m) : sampler[start + (t - 1) * base + min(t - 1, remainder)]
     lb = Tuple(lb_at(tid))
     ub = tid == P ? Tuple(shapes) : Tuple(decrement_idxs(collect(lb_at(tid + 1)), shapes))
-    CAPTURED[tid] = (lb, ub) ##each tid writes its own slot only -- no cross-thread races
+    CAPTURED[tid] = (lb, ub)
     return (lb, ub)
 end
 
-##Rate knob for build_sampler's per-task sample target (real source hardcodes
-##1000; parameterized here so we can compare 1000 vs 500 without touching it).
 const RATE = Ref(1000)
 function Finch.build_sampler(lvl::Finch.AbstractLevel, P, nnz, tsize)
     elvl = lvl
@@ -41,9 +34,6 @@ function Finch.build_sampler(lvl::Finch.AbstractLevel, P, nnz, tsize)
     sampler
 end
 
-##Ground truth: walk the final merged CSC-style arrays directly (bypasses the
-##balancer/merge entirely) to get every (row, col) actually stored -- same
-##tuple convention as the sampler: (row, col), col most-significant.
 function collect_tuples(outer)
     inner = outer.lvl
     tuples = NTuple{2,Int}[]
@@ -97,7 +87,7 @@ function run_once(n, m, P, density_fn, seed)
 
     ideal = total_nnz / P
     fairness = sum(counts)^2 / (P * sum(abs2, counts)) ##Jain's fairness index, 1.0 = perfect
-    efficiency = ideal / maximum(counts) ##the metric that maps to actual wall-clock parallel speedup
+    efficiency = ideal / maximum(counts)
     (efficiency=efficiency, fairness=fairness, min_shard=minimum(shard_nnz))
 end
 

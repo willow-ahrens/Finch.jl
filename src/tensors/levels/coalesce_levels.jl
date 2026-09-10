@@ -273,6 +273,7 @@ mutable struct VirtualCoalesceLevel <: AbstractVirtualLevel
     qos_stop
     mode
     sampler
+    declared
 end
 
 postype(lvl::VirtualCoalesceLevel) = postype(lvl.lvl)
@@ -342,6 +343,7 @@ function virtualize(
         qos_stop,
         mode,
         sampler,
+        false,
     )
 end
 
@@ -363,6 +365,7 @@ function distribute_level(
         lvl.qos_stop,
         lvl.mode,
         lvl.sampler,
+        lvl.declared,
     )
 end
 
@@ -384,6 +387,7 @@ function distribute_level(
         lvl.qos_stop,
         lvl.mode,
         lvl.sampler,
+        lvl.declared,
     )
 end
 
@@ -405,6 +409,7 @@ function distribute_level(
         lvl.qos_stop,
         lvl.mode,
         lvl.sampler,
+        lvl.declared,
     )
 end
 
@@ -442,6 +447,7 @@ function distribute_level(
             lvl.qos_stop,
             lvl.mode,
             lvl.sampler,
+            lvl.declared,
         )
     else
         dev = get_device(get_device(arch))
@@ -461,6 +467,7 @@ function distribute_level(
             lvl.qos_stop,
             lvl.mode,
             lvl.sampler,
+            lvl.declared,
         )
     end
 end
@@ -484,6 +491,7 @@ function redistribute(ctx::AbstractCompiler, lvl::VirtualCoalesceLevel, diff)
             lvl.qos_stop,
             lvl.mode,
             lvl.sampler,
+            lvl.declared,
         ),
     )
 end
@@ -502,6 +510,7 @@ virtual_level_size(ctx, lvl::VirtualCoalesceLevel) = virtual_level_size(ctx, lvl
 virtual_level_eltype(lvl::VirtualCoalesceLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_fill_value(lvl::VirtualCoalesceLevel) = virtual_level_fill_value(lvl.lvl)
 @inline sample_dims(lvl::VirtualCoalesceLevel) = sample_dims(lvl.lvl)
+@inline all_dense(lvl::VirtualCoalesceLevel) = true & all_dense(lvl.lvl)
 
 function declare_level!(ctx, lvl::VirtualCoalesceLevel, pos, init)
     @assert !is_on_device(ctx, lvl.device)
@@ -541,6 +550,7 @@ function declare_level!(ctx, lvl::VirtualCoalesceLevel, pos, init)
     )
     coalescent_2 = declare_level!(ctx, lvl.coalescent, literal(0), init)
     freeze_level!(ctx, coalescent_2, literal(0))
+    lvl.declared = true
     lvl
 end
 
@@ -609,6 +619,7 @@ init_fast_meta(P) = [vcat(ones(Int, P + 1), zeros(Int, P)) for _ in 1:P]
 init_posmap(P) = [1 for _ in 1:(P + 1)]
 
 function freeze_level!(ctx, lvl::VirtualCoalesceLevel, pos)
+    lvl.declared || return lvl
     @assert !is_on_device(ctx, lvl.device)
     P = ctx(get_num_tasks(lvl.device))
     lvl_e = ctx(lvl)
@@ -647,26 +658,24 @@ function freeze_level!(ctx, lvl::VirtualCoalesceLevel, pos)
         pos_map = freshen(ctx, :pos_map)
         shapes = freshen(ctx, :shapes)
         tsize = sample_dims(lvl)
+        dense = all_dense(lvl)
 
         push_preamble!(ctx,
             quote
                 $nnz, $unordered = Finch.get_total_nnz($(lvl_e), true)
                 $shapes = Finch.level_size($(lvl_e))
                 if $nnz > 0
-                    if $tsize > 0
+                    if !$dense
                         $(lvl.sampler) = Finch.build_sampler($(lvl_e), $P, $nnz, $tsize)
                     end
                     Threads.@threads for $tid in 1:($P)
-                        if $tsize > 0
+                        if !$dense
                             $lb, $ub = Finch.balance(
                                 $(lvl.sampler), $tid, $P, $shapes, MergeRandom()
                             )
                         else
-                            $lb, $ub = nothing, nothing ##TODO: all dense pass, can make optimization
+                            $lb, $ub = Finch.balance($tid, $P, $shapes, MergeDense()) ##all dense pass, can make optimization
                         end
-                        # $lb, $ub = Finch.balance(
-                        #     $(lvl_e).lvl, $tid, $P, $nnz, Finch.MergeNormalization()
-                        # )
                         $mask = Finch.tuplemask($lb, $ub)
 
                         $(contain(ctx) do ctx_2
@@ -837,6 +846,22 @@ function freeze_level!(ctx, lvl::VirtualCoalesceLevel, pos)
                                 $tid, $meta, $P, $(lvl_e).lvl, $(lvl_c), false
                             )
                         end
+                    elseif $dense
+                        $meta = Finch.init_fast_meta($P)
+                        Finch.setup_coalesce!(
+                            $(lvl_e).accumulator,
+                            $max_pos,
+                            $(lvl_c),
+                            $meta,
+                            $P,
+                            MergeNormalization();
+                            pos_map=nothing,
+                        )
+                        Threads.@threads for $tid in 1:($P)
+                            Finch.coalesce_dense!(
+                                $tid, $meta, $P, $(lvl_e).accumulator, $(lvl_c)
+                            )
+                        end
                     else
                         $meta = Finch.init_fast_meta($P)
                         Finch.setup_coalesce!(
@@ -1000,6 +1025,28 @@ end
         ub_idxs = decrement_idxs(next_lb_idxs, shapes)
     end
     ub = Tuple(ub_idxs)
+
+    return (lb, ub)
+end
+
+@inbounds function idxs_at_flat(flat, shapes)
+    idxs = Vector{Int}(undef, length(shapes))
+    remaining = flat - 1
+    for pos in 1:length(shapes)
+        idxs[pos] = remaining % shapes[pos] + 1
+        remaining = remaining ÷ shapes[pos]
+    end
+    idxs
+end
+
+@inbounds function balance(tid, P, shapes, style::MergeDense)
+    total = prod(shapes)
+    base, rem = divrem(total, P)
+    lower = (tid - 1) * base + min(tid - 1, rem) + 1
+    upper = tid * base + min(tid, rem)
+
+    lb = Tuple(idxs_at_flat(lower, shapes))
+    ub = Tuple(idxs_at_flat(upper, shapes))
 
     return (lb, ub)
 end

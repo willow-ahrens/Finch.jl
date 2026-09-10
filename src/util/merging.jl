@@ -1,6 +1,7 @@
 struct MergeFast end
 struct MergeNormalization end
 struct MergeRandom end
+struct MergeDense end
 
 Base.@propagate_inbounds function binary_search_lb(target, arr, lo, hi)
     result = -1
