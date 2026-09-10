@@ -285,9 +285,8 @@ end
 @inbounds function fastmerge_element!(tid, meta, val, P, lvl_val, was_dense, Vf)
     if was_dense
         total = length(lvl_val)
-        last_start = meta[tid][P + 1]
-        shape = last_start > 1 ? (total - length(val[P])) ÷ (last_start - 1) : total
-        max_pos = shape > 0 ? total ÷ shape : 0
+        max_pos = meta[tid][P + 1]
+        shape = max_pos > 0 ? total ÷ max_pos : total
 
         base, rem = divrem(max_pos, P)
         offset = (tid - 1) * base + min(tid - 1, rem)
@@ -296,31 +295,27 @@ end
         pos_ub = pos_lb + chunksize - 1
 
         if chunksize > 0
-            proc = binary_search_meta(pos_lb, meta[tid])
-            local_pos = pos_lb - meta[tid][proc] + 1
+            proc = binary_search_meta(pos_lb, meta[tid], 1, P)
+            shared_with_prev = proc > 1 && meta[tid][P + proc] == 1
+            local_pos = pos_lb - meta[tid][proc] + (shared_with_prev ? 1 : 0)
             for pos in pos_lb:pos_ub
-                while proc <= P && pos >= meta[tid][proc + 1]
+                while proc < P && pos > meta[tid][proc + 1]
                     proc += 1
-                    local_pos = 1
+                    local_pos = meta[tid][P + proc] == 1 ? 2 : 1
                 end
-                channel = proc - 1
+                channel = proc
                 dst_base = (pos - 1) * shape
                 src_base = (local_pos - 1) * shape
                 for k in 1:shape
                     lvl_val[dst_base + k] = val[channel][src_base + k]
                 end
 
-                if local_pos == 1 && channel > 1
-                    prev_channel = channel - 1
-                    prev_clean_count = meta[tid][proc] - meta[tid][proc - 1]
-                    prev_raw_count = length(val[prev_channel]) ÷ shape
-                    if prev_raw_count > prev_clean_count
-                        prev_src_base = (prev_raw_count - 1) * shape
-                        for k in 1:shape
-                            if lvl_val[dst_base + k] == Vf
-                                pv = val[prev_channel][prev_src_base + k]
-                                pv != Vf && (lvl_val[dst_base + k] = pv)
-                            end
+                if channel < P && pos == meta[tid][channel + 1] &&
+                    meta[tid][P + 1 + channel] == 1
+                    for k in 1:shape
+                        if lvl_val[dst_base + k] == Vf
+                            pv = val[channel + 1][k]
+                            pv != Vf && (lvl_val[dst_base + k] = pv)
                         end
                     end
                 end

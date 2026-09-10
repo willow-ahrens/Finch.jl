@@ -307,7 +307,7 @@ end
 
 virtual_level_eltype(lvl::VirtualSparseByteMapLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_fill_value(lvl::VirtualSparseByteMapLevel) = virtual_level_fill_value(lvl.lvl)
-@inline sample_dims(lvl::VirtualSparseByteMapLevel) = sample_dims(lvl.lvl)
+@inline sample_dims(lvl::VirtualSparseByteMapLevel) = 1 + sample_dims(lvl.lvl)
 
 postype(lvl::VirtualSparseByteMapLevel) = postype(lvl.lvl)
 
@@ -666,7 +666,14 @@ function unfurl(
     )
 end
 
-function setup_coalesce!(lvl::SparseByteMapLevel, max_pos, coalescent, meta, P, style::MergeFast)
+function sample(tid, lvl::SparseByteMapLevel)
+    tup, idx = sample(tid, lvl.lvl)
+    idx_2 = mod1(idx, lvl.shape)
+    pos_2 = fld(idx - 1, lvl.shape) + 1
+    return (tup..., idx_2), pos_2
+end
+
+@inbounds function setup_coalesce!(lvl::SparseByteMapLevel, max_pos, coalescent, meta, P, style::MergeFast)
     lvl_ptr = coalescent.ptr
     lvl_tbl = coalescent.tbl
     lvl_srt = coalescent.srt
@@ -685,34 +692,33 @@ function setup_coalesce!(lvl::SparseByteMapLevel, max_pos, coalescent, meta, P, 
     setup_coalesce!(lvl.lvl, length(lvl_tbl), coalescent.lvl, meta, P, style)
 end
 
-function setup_coalesce!(lvl::SparseByteMapLevel, max_pos, coalescent, meta, P, style::MergeNormalization; pos_map=nothing, was_dense=false)
+@inbounds function setup_coalesce!(lvl::SparseByteMapLevel, max_pos, coalescent, meta, P, style::MergeNormalization; pos_map=nothing, was_dense=false)
     lvl_ptr = coalescent.ptr
     lvl_tbl = coalescent.tbl
     lvl_srt = coalescent.srt
 
     nnz = sum(length, lvl.srt.data)
+    if nnz < 1
+        return false
+    end
+
     for p in 1:P - 1
         srt_p = lvl.srt.data[p]
         srt_next = lvl.srt.data[p + 1]
         if !isempty(srt_p) && !isempty(srt_next) && srt_p[end] == srt_next[1]
             nnz -= 1
-            resize!(srt_p, length(srt_p) - 1)
+            srt_p[end] = -1
         end
     end
-    if nnz < 1
-        return false
-    end
+
 
     resize!(lvl_ptr, max_pos + 1)
     resize!(lvl_tbl, max_pos * lvl.shape)
     resize!(lvl_srt, nnz)
 
     lvl_ptr[1] = 1
-
-    if !isnothing(pos_map)
-        for p in 1:P
-            pos_map[p + 1] *= lvl.shape
-        end
+    if max_pos == 1
+        lvl_ptr[end] = nnz + 1
     end
 
     setup_coalesce!(lvl.lvl, length(lvl_tbl), coalescent.lvl, meta, P, style; pos_map=pos_map, was_dense=true)
@@ -735,6 +741,9 @@ end
     nnz_cutoffs[1] = 1
     for p in 2:P+1
         nnz_cutoffs[p] = nnz_cutoffs[p - 1] + length(srt[p - 1])
+        if srt[p - 1][end] < 0
+            nnz_cutoffs[p] -= 1
+        end
     end
     nnz = nnz_cutoffs[end] - 1
     max_pos = length(lvl_ptr) - 1
@@ -774,12 +783,15 @@ end
         srt_write = work_lb
         srt_ceil = srt_write + chunksize
         while srt_write < srt_ceil
-            pos_shift = (meta[tid][proc + 1] - 1) * shape
+            raw_start = meta[tid][proc + 1] - (meta[tid][P + 1 + proc] == 1 ? 1 : 0)
+            pos_shift = (raw_start - 1) * shape
             ele = srt[proc][srt_read] + pos_shift
-            lvl_srt[srt_write] = ele
-            lvl_tbl[ele] = true
+            if ele > 0
+                lvl_tbl[ele] = true
+                lvl_srt[srt_write] = ele
+                srt_write += 1
+            end
             srt_read += 1
-            srt_write += 1
 
             if srt_read > length(srt[proc])
                 srt_read = 1
@@ -787,44 +799,60 @@ end
             end
         end
 
-        proc = proc_id_lower
-        pos_read = lfbr_lower
+        if max_pos != 1
+            proc = proc_id_lower
+            pos_read = lfbr_lower
 
-        pos_write = 2
-        for p in 1:proc - 1
-            pos_write += length(ptr[p]) - 1
-            meta[tid][p + 2] == meta[tid][p + 1] + length(ptr[p]) - 2 && (pos_write -= 1)
-        end
-        pos_write += lfbr_lower - 1
+            pos_write = 2
+            for p in 1:proc - 1
+                pos_write += length(ptr[p]) - 1
+                meta[tid][P + 1 + p] == 1 && (pos_write -= 1)
+            end
+            pos_write += lfbr_lower - 1
 
-        ceil = 3
-        for p in 1:proc_id_upper - 1
-            ceil += length(ptr[p]) - 1
-            meta[tid][p + 2] == meta[tid][p + 1] + length(ptr[p]) - 2 && (ceil -= 1)
-        end
-        ceil += lfbr_upper - 1
-        shares_border && (ceil -= 1)
+            ceil = 3
+            for p in 1:proc_id_upper - 1
+                ceil += length(ptr[p]) - 1
+                meta[tid][P + 1 + p] == 1 && (ceil -= 1)
+            end
+            ceil += lfbr_upper - 1
+            shares_border && (ceil -= 1)
 
-        prefix = ptr[proc][pos_read] + nnz_cutoffs[proc] - 1
-        while pos_write < ceil
-            delta = ptr[proc][pos_read + 1] - ptr[proc][pos_read]
-            mul = delta > 0 ? 1 : 0
-            prefix += delta * mul
-            lvl_ptr[pos_write] = prefix
-            pos_write += 1
-            pos_read += 1
+            prefix = ptr[proc][pos_read] + nnz_cutoffs[proc] - 1
+            while pos_write < ceil
+                delta = ptr[proc][pos_read + 1] - ptr[proc][pos_read]
+                mul = delta > 0
+                prefix += delta * mul
+                lvl_ptr[pos_write] = prefix
+                pos_write += 1
+                pos_read += 1
 
-            if pos_read > length(ptr[proc]) - 1
-                pos_read = 1
-                old_proc = proc
-                proc += 1
-                if proc > P
-                    break
-                end
-                if meta[tid][old_proc + 2] == meta[tid][old_proc + 1] + length(ptr[old_proc]) - 2
-                    pos_write -= 1
+                if pos_read > length(ptr[proc]) - 1
+                    pos_read = 1
+                    old_proc = proc
+                    proc += 1
+                    if proc > P
+                        break
+                    end
+                    if meta[tid][P + 1 + old_proc] == 1
+                        pos_write -= 1
+                    end
                 end
             end
+        end
+    end
+
+    meta[tid][1] = 0
+    last_pos = 0
+    for p in 1:P
+        ancestor_shared = meta[tid][P + 1 + p] == 1
+        last_pos += length(ptr[p]) - 1
+        meta[tid][p + 1] = last_pos
+        if ancestor_shared
+            meta[tid][P + 1 + p] = 1
+            last_pos -= 1
+        else
+            meta[tid][P + 1 + p] = 0
         end
     end
 end

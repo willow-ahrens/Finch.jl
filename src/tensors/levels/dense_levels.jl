@@ -191,7 +191,7 @@ end
 
 virtual_level_eltype(lvl::VirtualDenseLevel) = virtual_level_eltype(lvl.lvl)
 virtual_level_fill_value(lvl::VirtualDenseLevel) = virtual_level_fill_value(lvl.lvl)
-@inline sample_dims(lvl::VirtualDenseLevel) = sample_dims(lvl.lvl)
+@inline sample_dims(lvl::VirtualDenseLevel) = 1 + sample_dims(lvl.lvl)
 
 postype(lvl::VirtualDenseLevel) = postype(lvl.lvl)
 
@@ -274,7 +274,9 @@ end
 
 function sample(tid, lvl::DenseLevel)
     tup, idx = sample(tid, lvl.lvl)
-    return tup, div(idx, lvl.shape)
+    idx_2 = mod1(idx, lvl.shape)
+    pos_2 = fld(idx - 1, lvl.shape) + 1
+    return (tup..., idx_2), pos_2
 end
 
 function setup_coalesce!(lvl::DenseLevel, max_pos, coalescent, meta, P, style::MergeFast)

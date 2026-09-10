@@ -69,13 +69,30 @@ end
 end
 
 
-@inbounds function binary_search_meta(target::Int, arr)
-    lo = 1
-    hi = length(arr) - 1
+@inbounds function binary_search_meta(target::Int, arr, lo::Int, hi::Int)
     @assert target > 0
 
-    if target >= arr[end]
-        return length(arr)
+    result = hi
+    while lo <= hi
+        mid = div(lo + hi, 2)
+        if arr[mid + 1] >= target
+            result = mid
+            hi = mid - 1
+        else
+            lo = mid + 1
+        end
+    end
+
+    return result
+end
+
+@inbounds function binary_search_first_increase(arr)
+    lo = 1
+    hi = length(arr)
+    target = arr[lo]
+
+    if arr[hi] == target
+        return -1
     end
 
     while lo <= hi
@@ -83,11 +100,11 @@ end
         if arr[mid] <= target && arr[mid + 1] > target
             return mid
         elseif arr[mid] > target
-            hi = mid - 1
+            hi = mid
         else
-            lo = mid + 1
+            lo = mid
         end
     end
 
-    return lo - 1
+    return -1
 end
