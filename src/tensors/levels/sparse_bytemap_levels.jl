@@ -855,7 +855,6 @@ end
         end
     end
 
-    meta[tid][1] = 0
     last_pos = 0
     for p in 1:P
         ancestor_shared = meta[tid][P + 1 + p] == 1

@@ -316,7 +316,8 @@ end
         if chunksize > 0
             proc = binary_search_meta(pos_lb, meta[tid], 1, P)
             shared_with_prev = proc > 1 && meta[tid][P + proc] == 1
-            local_pos = pos_lb - meta[tid][proc] + (shared_with_prev ? 1 : 0)
+            base = proc > 1 ? meta[tid][proc] : 0
+            local_pos = pos_lb - base + (shared_with_prev ? 1 : 0)
             for pos in pos_lb:pos_ub
                 while proc < P && pos > meta[tid][proc + 1]
                     proc += 1
