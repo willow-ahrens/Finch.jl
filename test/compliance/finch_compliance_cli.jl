@@ -20,7 +20,10 @@ using SparseArrays
 
 function cmd_binsparse_to_npy(args)
     if length(args) != 4
-        println(stderr, "usage: binsparse_to_npy <tensor_in> <tensor_out> <pattern_out> <fill_value_out>")
+        println(
+            stderr,
+            "usage: binsparse_to_npy <tensor_in> <tensor_out> <pattern_out> <fill_value_out>",
+        )
         return 2
     end
     tensor_in, tensor_out, pattern_out, fill_value_out = args
@@ -49,7 +52,10 @@ end
 
 function cmd_npy_to_binsparse(args)
     if length(args) != 5
-        println(stderr, "usage: npy_to_binsparse <tensor_in> <pattern_in> <fill_value_in> <header_in> <tensor_out>")
+        println(
+            stderr,
+            "usage: npy_to_binsparse <tensor_in> <pattern_in> <fill_value_in> <header_in> <tensor_out>",
+        )
         return 2
     end
     tensor_in, pattern_in, fill_value_in, header_in, tensor_out = args
@@ -63,20 +69,27 @@ function cmd_npy_to_binsparse(args)
     # Build a Finch tensor from dense + pattern + fill
     N = ndims(dense)
     if N == 0
-        elem = Element{fill_val, eltype(dense), Int}([dense[]])
+        elem = Element{fill_val,eltype(dense),Int}([dense[]])
         tns = Tensor(elem)
     else
         coords = findall(x -> x != 0, pattern)
         if isempty(coords)
             if N == 1
-                tns = Tensor(SparseList(Element{fill_val, eltype(dense), Int}(), size(dense, 1)))
+                tns = Tensor(
+                    SparseList(Element{fill_val,eltype(dense),Int}(), size(dense, 1))
+                )
             elseif N == 2
-                tns = Tensor(Dense{Int}(SparseList(Element{fill_val, eltype(dense), Int}(), size(dense, 1)), size(dense, 2)))
+                tns = Tensor(
+                    Dense{Int}(
+                        SparseList(Element{fill_val,eltype(dense),Int}(), size(dense, 1)),
+                        size(dense, 2),
+                    ),
+                )
             else
                 idx_arrays = ntuple(i -> Int[], N)
                 vals = eltype(dense)[]
-                elem = Element{fill_val, eltype(dense), Int}()
-                coo = SparseCOO{N, NTuple{N, Int}}(elem, ntuple(i -> size(dense, i), N))
+                elem = Element{fill_val,eltype(dense),Int}()
+                coo = SparseCOO{N,NTuple{N,Int}}(elem, ntuple(i -> size(dense, i), N))
                 tns = Tensor(coo)
             end
         else
@@ -86,15 +99,17 @@ function cmd_npy_to_binsparse(args)
                 perm = sortperm(idx_arrays[1])
                 idx_sorted = idx_arrays[1][perm]
                 vals_sorted = vals[perm]
-                elem = Element{fill_val, eltype(dense), Int}(vals_sorted)
-                sl = SparseList{Int}(elem, size(dense, 1), Int[1, length(vals_sorted)+1], idx_sorted)
+                elem = Element{fill_val,eltype(dense),Int}(vals_sorted)
+                sl = SparseList{Int}(
+                    elem, size(dense, 1), Int[1, length(vals_sorted) + 1], idx_sorted
+                )
                 tns = Tensor(sl)
             elseif N == 2
                 tns = Tensor(
                     Dense{Int}(
-                        SparseList(Element{fill_val, eltype(dense), Int}(), size(dense, 1)),
-                        size(dense, 2)
-                    )
+                        SparseList(Element{fill_val,eltype(dense),Int}(), size(dense, 1)),
+                        size(dense, 2),
+                    ),
                 )
                 for c in coords
                     tns[c[1], c[2]] = dense[c]
@@ -103,7 +118,7 @@ function cmd_npy_to_binsparse(args)
                 # General N-D: build via dense and dropfills
                 tns = Tensor(
                     ntuple(i -> Dense{Int}(nothing, size(dense, i)), N)...,
-                    Element{fill_val, eltype(dense), Int}()
+                    Element{fill_val,eltype(dense),Int}(),
                 )
 
                 full = zeros(eltype(dense), size(dense)...) .+ fill_val
@@ -111,9 +126,9 @@ function cmd_npy_to_binsparse(args)
                     full[c] = dense[c]
                 end
 
-                elem = Element{fill_val, eltype(dense), Int}()
+                elem = Element{fill_val,eltype(dense),Int}()
                 shape = ntuple(i -> size(dense, i), N)
-                coo_lvl = SparseCOO{N, NTuple{N, Int}}(elem, shape)
+                coo_lvl = SparseCOO{N,NTuple{N,Int}}(elem, shape)
                 tns = Tensor(coo_lvl)
                 for c in coords
                     tns[Tuple(c)...] = dense[c]
